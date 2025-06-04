@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"  crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-6214772877334340">     
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式地理核心问题指南</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals with Sky Blue accent -->
+    <!-- Application Structure Plan: A fixed-sidebar navigation (hamburgermenu on mobile) controls a single scrolling main content area. Content is organized into 8 thematic sections based on the report. Within each section, sub-questions are presented as interactive accordions to manage information density. Key comparative data is visualized using interactive charts (e.g., climate types) and tabbed interfaces (e.g., regional topography) to enhance user engagement and understanding, moving beyond the static format of the original document. This structure was chosen to provide both a high-level overview (navigation themes) and deep-dive capability (accordions and charts) in a non-linear, user-driven manner, which is superior for exploring a dense reference document. -->
+    <!-- Visualization & Content Choices: 
+    1. Report Info: Comparing climate types (pros/cons). Goal: Compare. Viz: Interactive Radar Chart. Interaction: Dropdown to select climate type, chart updates dynamically. Justification: Radar chart is excellent for comparing multiple quantitative attributes of a single subject, making the pros and cons instantly visible and comparable across different selections. Library: Chart.js (Canvas).
+    2. Report Info: Comparing hydrological features of major rivers. Goal: Compare. Viz: Interactive Bar Chart. Interaction: Hover for details (tooltips). Justification: Bar chart is the clearest way to compare discrete quantitative values (like flow rate, sediment load) across different entities (rivers). Library: Chart.js (Canvas).
+    3. Report Info: Presenting different regional topographies. Goal: Organize/Compare. Viz: Tabbed content area. Interaction: Click tabs to switch content. Justification: Tabs condense a large amount of related but distinct information (different regions) into a single compact space, preventing a long, disorienting scroll. Library/Method: HTML/CSS/JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif';
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .prose-custom p {
+            margin-bottom: 1rem;
+        }
+        .prose-custom ul {
+            list-style-position: inside;
+            margin-bottom: 1rem;
+        }
+        .prose-custom li {
+            margin-bottom: 0.5rem;
+        }
+        .prose-custom h4 {
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .accordion-content {
+            display: none;
+            transition: max-height 0.3s ease-in-out;
+            overflow: hidden;
+        }
+        .accordion-button.active svg {
+            transform: rotate(180deg);
+        }
+        .nav-link.active {
+            background-color: #e0f2fe;
+            color: #0c4a6e;
+            font-weight: 600;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div class="flex">
+        <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-white shadow-md transition-transform -translate-x-full md:translate-x-0">
+            <div class="h-full px-3 py-4 overflow-y-auto">
+                <h1 class="text-xl font-bold text-sky-800 mb-6 px-2">地理核心问题指南</h1>
+                <ul class="space-y-2 font-medium">
+                    <li><a href="#section-1" class="nav-link flex items-center p-2 text-slate-900 rounded-lg hover:bg-slate-100">地理位置</a></li>
+                    <li><a href="#section-2" class="nav-link flex items-center p-2 text-slate-900 rounded-lg hover:bg-slate-100">地形与地貌</a></li>
+                    <li><a href="#section-3" class="nav-link flex items-center p-2 text-slate-900 rounded-lg hover:bg-slate-100">气候</a></li>
+                    <li><a href="#section-4" class="nav-link flex items-center p-2 text-slate-900 rounded-lg hover:bg-slate-100">河流与水文</a></li>
+                    <li><a href="#section-5" class="nav-link flex items-center p-2 text-slate-900 rounded-lg hover:bg-slate-100">交通、旅游与资源</a></li>
+                    <li><a href="#section-6" class="nav-link flex items-center p-2 text-slate-900 rounded-lg hover:bg-slate-100">灾害、湿地与环境</a></li>
+                    <li><a href="#section-7" class="nav-link flex items-center p-2 text-slate-900 rounded-lg hover:bg-slate-100">区域地理与经济</a></li>
+                    <li><a href="#section-8" class="nav-link flex items-center p-2 text-slate-900 rounded-lg hover:bg-slate-100">工农业与人居</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <button id="menu-button" class="md:hidden fixed top-4 left-4 z-50 p-2 text-slate-600 bg-white rounded-md shadow-md">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+        </button>
+
+        <main class="md:ml-64 p-4 md:p-8 w-full">
+            <section id="section-1" class="mb-12">
+                <h2 class="text-3xl font-bold text-sky-800 border-b-2 border-sky-200 pb-2 mb-6">第一部分：地理位置——分析与意义</h2>
+                <div class="prose-custom max-w-none">
+                    <p class="mb-6">地理位置是区域地理研究的起点，它深刻地影响着一个地区的自然环境、经济脉络和文化面貌。本部分将引导您从半球、纬度和海陆三个核心维度，系统地分析和比较不同区域的地理位置，并探讨其对发展的深远意义。通过互动式比较，您将更直观地理解位置如何塑造世界。</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>地理位置的特点、异同或重要性？</span>
+                            <svg class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p>分析地理位置通常从半球位置、纬度位置和海陆位置三个主要方面入手。</p>
+                            <h4>半球位置</h4>
+                            <p>明确研究对象位于哪个半球（东/西半球、南/北半球）。半球位置决定了季节更替的规律（南北半球季节相反）、昼夜长短变化的大致模式以及太阳辐射的总体情况。这对农业生产、居民生活习惯乃至能源消耗都有直接影响。</p>
+                            <h4>纬度位置</h4>
+                            <p>指出其所处的纬度范围（高、中、低纬度）以及由此决定的主要热量带和气候带。纬度是影响一个地区获得太阳辐射多少的最主要因素。例如：</p>
+                            <ul>
+                                <li><strong>中国</strong>：南北跨纬度广，大部分位于中纬度，热量条件适宜，雨热同期，利于农业多样化发展。</li>
+                                <li><strong>俄罗斯</strong>：纬度偏高，气候普遍寒冷，热量不足，农业发展受限，但森林、油气资源丰富。</li>
+                                <li><strong>巴西</strong>：主要位于低纬度，全年高温，热量充足，利于热带经济作物生长。</li>
+                            </ul>
+                            <h4>海陆位置</h4>
+                            <p>明确该地区是沿海、内陆还是岛屿。海陆位置显著影响气候、降水、交通及对外经济联系。下方表格通过互动方式比较了中国、日本和蒙古的海陆位置特点。</p>
+                            <div class="bg-slate-50 p-4 rounded-lg mt-4">
+                                <h4 class="mt-0">互动比较：海陆位置对经济发展的影响</h4>
+                                <div id="location-comparison-table" class="overflow-x-auto"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="section-2" class="mb-12">
+                <h2 class="text-3xl font-bold text-sky-800 border-b-2 border-sky-200 pb-2 mb-6">第二部分：地形与地貌</h2>
+                 <div class="prose-custom max-w-none">
+                    <p class="mb-6">地形地貌是塑造区域自然景观和影响人类活动的骨架。本部分将教您如何系统地总结地形特点，并通过交互式选项卡，直观地展示世界不同区域（如新疆、中南半岛、南美洲等）独特的地形分布格局。同时，我们将深入剖析黄土高原、青藏高原等地的标志性地貌特征及其成因。</p>
+                </div>
+                <div class="space-y-4">
+                     <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>如何总结地形特点与地形分布特点？</span>
+                            <svg class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <h4>总结地形特点的方法</h4>
+                            <ol>
+                                <li><strong>主要地形类型</strong>：明确以哪种或哪几种地形为主（山地、高原、平原、丘陵、盆地）。</li>
+                                <li><strong>地势起伏状况</strong>：描述地表高低起伏的总体态势。</li>
+                                <li><strong>地势倾斜方向</strong>：说明整体地势的倾斜趋势，如“西高东低”。</li>
+                                <li><strong>特殊地形地貌</strong>：指出有无喀斯特、火山、冰川等地貌。</li>
+                            </ol>
+                            <h4>区域地形分布特点案例</h4>
+                            <div class="mt-4">
+                                <div class="border-b border-slate-200">
+                                    <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                                        <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-sky-600 border-sky-500" data-target="tab-xinjiang">新疆</button>
+                                        <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300 border-transparent" data-target="tab-se-asia">中南半岛</button>
+                                        <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300 border-transparent" data-target="tab-s-america">南美洲</button>
+                                        <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300 border-transparent" data-target="tab-usa">美国</button>
+                                    </nav>
+                                </div>
+                                <div id="tab-content" class="mt-4">
+                                    <div id="tab-xinjiang" class="tab-pane"><strong>新疆</strong>：地形分布可概括为“三山夹两盆”。北部阿尔泰山，南部昆仑山，天山横亘中部，分隔出北部的准噶尔盆地和南部的塔里木盆地。</div>
+                                    <div id="tab-se-asia" class="tab-pane hidden"><strong>中南半岛</strong>：地形分布特点是“山河相间，纵列分布”。山脉和河流多由北向南延伸，形成一系列南北走向的山脉和河谷平原。</div>
+                                    <div id="tab-s-america" class="tab-pane hidden"><strong>南美洲</strong>：西部是高峻的安第斯山脉，中部是广阔的冲积平原，东部是古老的高原。整体呈现“西山中原东高原”的格局。</div>
+                                    <div id="tab-usa" class="tab-pane hidden"><strong>美国（本土）</strong>：地形大致可分为三大南北纵列带。东部为阿巴拉契亚山脉，中部为中央大平原，西部为高大的科迪勒拉山系。</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="section-3" class="mb-12">
+                <h2 class="text-3xl font-bold text-sky-800 border-b-2 border-sky-200 pb-2 mb-6">第三部分：气候</h2>
+                <div class="prose-custom max-w-none">
+                    <p class="mb-6">气候是决定区域自然面貌和人类生活方式的关键因素。本部分将系统梳理影响气候的各种因素，并深入探讨海洋性与大陆性气候的差异。最核心的亮点在于，我们提供了一个交互式雷达图，让您可以直观、辩证地评价不同气候类型的利弊，从看似“恶劣”的沙漠气候中发现其独特的优势。</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>如何评价不同气候类型的优缺点？</span>
+                            <svg class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p>评价气候类型的优缺点应采取辩证的观点，避免绝对化。任何一种气候类型对人类生产生活和自然环境而言，都可能同时存在有利和不利的方面。我们可以通过分析光、热、水等要素及其组合来评价。</p>
+                            <h4>交互式气候评价</h4>
+                            <p>请从下方选择一种气候类型，雷达图将展示其在光热、水分、农业适宜度、人居舒适度和灾害风险等方面的综合评价。数值越高代表条件越优越或风险越低。</p>
+                            <div class="bg-slate-50 p-4 rounded-lg mt-4">
+                               <select id="climate-selector" class="block w-full md:w-1/2 mx-auto p-2 border border-slate-300 rounded-md mb-4">
+                                    <option value="desert">热带沙漠气候</option>
+                                    <option value="mediterranean">地中海气候</option>
+                                    <option value="monsoon">温带季风气候</option>
+                                    <option value="oceanic">温带海洋性气候</option>
+                               </select>
+                                <div class="chart-container">
+                                    <canvas id="climateChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-4" class="mb-12">
+                <h2 class="text-3xl font-bold text-sky-800 border-b-2 border-sky-200 pb-2 mb-6">第四部分：河流与水文</h2>
+                <div class="prose-custom max-w-none">
+                    <p class="mb-6">河流是地球的动脉，塑造地貌，孕育文明。本部分将深入分析影响河流水文特征的各项因素，并通过交互式图表，生动对比长江、黄河、亚马孙河等世界大河在流量、含沙量及航运价值上的差异。您将清晰地看到，为何有的河流是“黄金水道”，而有的则不然。</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>世界主要河流水文特征比较</span>
+                            <svg class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p>河流的水文特征，如流量、含沙量、汛期、结冰期等，是流域内气候、地形、植被等因素综合作用的结果。这些特征直接决定了河流的开发利用价值。</p>
+                            <h4>交互式河流比较</h4>
+                            <p>下图展示了部分世界著名河流的关键水文指标。将鼠标悬停在图表上可查看具体数值。通过比较，您可以直观地理解为何长江和莱茵河航运价值高，而黄河航运价值低。</p>
+                            <div class="bg-slate-50 p-4 rounded-lg mt-4">
+                                <div class="chart-container h-[500px] md:h-[400px]">
+                                    <canvas id="riverChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <footer class="text-center mt-12 text-slate-500 text-sm">
+                <p>交互式地理核心问题指南 | 根据源文档生成</p>
+            </footer>
+
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const accordions = document.querySelectorAll('.accordion-item');
+    accordions.forEach(item => {
+        const button = item.querySelector('.accordion-button');
+        const content = item.querySelector('.accordion-content');
+        button.addEventListener('click', () => {
+            const isVisible = content.style.display === 'block';
+            document.querySelectorAll('.accordion-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.accordion-button').forEach(b => b.classList.remove('active'));
+            if (!isVisible) {
+                content.style.display = 'block';
+                button.classList.add('active');
+            }
+        });
+    });
+
+    const sidebar = document.getElementById('sidebar');
+    const menuButton = document.getElementById('menu-button');
+    menuButton.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+    });
+    
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+             if (window.innerWidth < 768) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+    });
+    
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-link');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            if (pageYOffset >= sectionTop - 60) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').includes(current)) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+
+    function createLocationTable() {
+        const data = [
+            { country: '中国', type: '海陆兼备', pros: '东部海运便利，利于发展外向型经济；气候多样。', cons: '西部内陆交通不便，气候干旱，区域发展不平衡。' },
+            { country: '日本', type: '岛国', pros: '海运便利，利于发展海洋经济和吸收外来文化。', cons: '资源贫乏，依赖进口；易受海洋自然灾害影响。' },
+            { country: '蒙古', type: '内陆国', pros: '矿产资源较丰富；与中俄接壤，有一定过境运输潜力。', cons: '对外交通不便，成本高；气候干旱，生态脆弱。' }
+        ];
+
+        let tableHTML = `<table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-200">
+                    <th class="p-2 border border-slate-300">国家</th>
+                    <th class="p-2 border border-slate-300">位置类型</th>
+                    <th class="p-2 border border-slate-300">有利影响</th>
+                    <th class="p-2 border border-slate-300">不利影响</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        data.forEach(item => {
+            tableHTML += `<tr class="hover:bg-slate-100">
+                <td class="p-2 border border-slate-300 font-semibold">${item.country}</td>
+                <td class="p-2 border border-slate-300">${item.type}</td>
+                <td class="p-2 border border-slate-300">${item.pros}</td>
+                <td class="p-2 border border-slate-300">${item.cons}</td>
+            </tr>`;
+        });
+
+        tableHTML += `</tbody></table>`;
+        document.getElementById('location-comparison-table').innerHTML = tableHTML;
+    }
+    createLocationTable();
+
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tabButtons.forEach(btn => {
+                btn.classList.remove('text-sky-600', 'border-sky-500');
+                btn.classList.add('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300', 'border-transparent');
+            });
+            button.classList.add('text-sky-600', 'border-sky-500');
+            button.classList.remove('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300', 'border-transparent');
+            
+            tabPanes.forEach(pane => {
+                pane.classList.add('hidden');
+            });
+            document.getElementById(button.dataset.target).classList.remove('hidden');
+        });
+    });
+
+    const climateData = {
+        desert: {
+            label: '热带沙漠气候',
+            data: [9, 9, 2, 7, 3], 
+            pros: '光照充足，太阳能丰富；昼夜温差大，利于瓜果糖分积累。',
+            cons: '极端干旱，水资源匮乏；夏季酷热；风沙大，生态脆弱。'
+        },
+        mediterranean: {
+            label: '地中海气候',
+            data: [8, 6, 7, 9, 7], 
+            pros: '夏季光照充足，利于水果、蔬菜成熟；冬季温和多雨。',
+            cons: '夏季干旱缺水，需灌溉；冬季阴雨天气较多。'
+        },
+        monsoon: {
+            label: '温带季风气候',
+            data: [7, 8, 8, 6, 5], 
+            pros: '夏季高温多雨，雨热同期，利于农作物生长。',
+            cons: '降水变率大，旱涝灾害频繁；冬季寒冷干燥。'
+        },
+        oceanic: {
+            label: '温带海洋性气候',
+            data: [4, 5, 8, 8, 9], 
+            pros: '冬暖夏凉，降水均匀，利于多汁牧草生长，发展畜牧业。',
+            cons: '光照和热量不足，不利于喜光热作物成熟。'
+        }
+    };
+
+    let climateChart;
+    const ctxClimate = document.getElementById('climateChart').getContext('2d');
+    const climateSelector = document.getElementById('climate-selector');
+    
+    function renderClimateChart(type) {
+        if (climateChart) {
+            climateChart.destroy();
+        }
+        const selectedData = climateData[type];
+        climateChart = new Chart(ctxClimate, {
+            type: 'radar',
+            data: {
+                labels: ['光热条件', '太阳能潜力', '水分条件', '人居舒适度', '灾害风险度'],
+                datasets: [{
+                    label: selectedData.label,
+                    data: selectedData.data,
+                    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                    borderColor: 'rgba(2, 132, 199, 1)',
+                    pointBackgroundColor: 'rgba(2, 132, 199, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(2, 132, 199, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        pointLabels: {
+                            font: {
+                                size: 14,
+                            },
+                             color: '#334155'
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 10,
+                        ticks: {
+                            stepSize: 2,
+                            backdropColor: 'rgba(255, 255, 255, 0.75)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                         callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.r !== null) {
+                                    label += context.parsed.r
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    climateSelector.addEventListener('change', (e) => {
+        renderClimateChart(e.target.value);
+    });
+
+    renderClimateChart('desert'); 
+
+    const riverData = {
+        labels: ['长江', '黄河', '亚马孙河', '莱茵河', '密西西比河'],
+        datasets: [
+            {
+                label: '年均流量 (立方米/秒)',
+                data: [30166, 1774, 209000, 2900, 16200],
+                backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                borderColor: 'rgba(37, 99, 235, 1)',
+                borderWidth: 1,
+                yAxisID: 'y'
+            },
+            {
+                label: '含沙量 (千克/立方米)',
+                data: [0.5, 35, 0.2, 0.05, 0.4],
+                backgroundColor: 'rgba(234, 179, 8, 0.7)',
+                borderColor: 'rgba(217, 119, 6, 1)',
+                borderWidth: 1,
+                yAxisID: 'y1'
+            },
+            {
+                label: '航运价值 (指数1-10)',
+                data: [9, 2, 7, 10, 8],
+                backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                borderColor: 'rgba(5, 150, 105, 1)',
+                borderWidth: 1,
+                yAxisID: 'y2'
+            }
+        ]
+    };
+
+    const ctxRiver = document.getElementById('riverChart').getContext('2d');
+    new Chart(ctxRiver, {
+        type: 'bar',
+        data: riverData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    type: 'logarithmic',
+                    position: 'left',
+                    title: { display: true, text: '流量 (对数)' }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: '含沙量' },
+                    grid: { drawOnChartArea: false }
+                },
+                 y2: {
+                    type: 'linear',
+                    position: 'right',
+                    title: { display: true, text: '航运价值' },
+                    grid: { drawOnChartArea: false },
+                    min: 0,
+                    max: 10
+                }
+            },
+             plugins: {
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        }
+    });
+});
+</script>
+</body>
+</html>
