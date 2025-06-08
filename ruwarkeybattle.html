@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Chosen Palette: Somber Teal and Gray -->
+    <!-- Application Structure Plan: A single-page, chronological analysis of major battles. A sticky top navigation allows users to select a battle from a dropdown, scrolling them to the relevant section. Each battle is a self-contained module with a consistent structure: a summary stats card, a detailed narrative in tabbed panes (Objectives, Timeline, Impact), and a data visualization chart for estimated losses. This modular, tabbed structure is chosen to present dense, multi-faceted information for each battle in a digestible way, preventing overwhelming walls of text while allowing for deep dives into specific aspects. -->
+    <!-- Visualization & Content Choices:
+        - Goal: Overview of Conflict Timeline -> Interactive Dropdown Navigator. Interaction: Select a battle to scroll to its section. Justification: Provides a quick, scannable index of the war's key ground campaigns, more suitable than a complex chart for this narrative-heavy topic.
+        - Goal: Compare Battle Intensity -> Standardized "Key Facts" cards (HTML/Tailwind). Interaction: Static display. Justification: Offers a quick, at-a-glance summary of core statistics for each battle, allowing for easy comparison across different sections.
+        - Goal: Analyze Battle Losses -> Horizontal Bar Chart (Chart.js) for each battle. Interaction: Tooltips on hover. Justification: Clearly visualizes the scale of estimated personnel and equipment losses for both sides in a compact, easy-to-read format.
+        - Goal: Organize Detailed Analysis -> Tabbed Panes (HTML/Tailwind/JS). Interaction: Click tabs for different analysis categories (Objectives, Timeline, Impact). Justification: Breaks down complex information into thematic chunks, improving readability and user engagement by allowing them to choose their focus.
+        - Library/Method: Chart.js on Canvas for visualizations, Vanilla JS for navigation and tabbed content logic. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <title>Key Battles of the Russo-Ukrainian War | An Interactive Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* A cool, light gray-blue */
+        }
+        .battle-card {
+            border-left: 4px solid #0d9488; /* Teal 600 */
+        }
+        .tab-button.active {
+            border-color: #0d9488;
+            color: #0d9488;
+            background-color: #f0fdfa; /* Teal 50 */
+        }
+        .tab-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .chart-container-small {
+            position: relative;
+            width: 100%;
+            height: 250px;
+        }
+         @media (min-width: 768px) {
+            .chart-container-small {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+    <header class="bg-white/90 backdrop-blur-lg sticky top-0 z-50 shadow-md">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-lg md:text-xl font-bold text-gray-900">Key Battles of the War</h1>
+                <div class="flex items-center gap-2">
+                    <label for="battleNavigator" class="text-sm font-medium hidden sm:block">Jump to Battle:</label>
+                    <select id="battleNavigator" class="bg-gray-100 border border-gray-300 rounded-md p-2 text-sm focus:ring-teal-500 focus:border-teal-500">
+                        <option value="intro">Introduction</option>
+                        <option value="kyiv">Battle of Kyiv</option>
+                        <option value="mariupol">Siege of Mariupol</option>
+                        <option value="kharkiv2022">Kharkiv Counteroffensive (2022)</option>
+                        <option value="kherson">Kherson Counteroffensive</option>
+                        <option value="bakhmut">Battle of Bakhmut</option>
+                        <option value="counteroffensive2023">2023 Counteroffensive</option>
+                        <option value="avdiivka">Battle of Avdiivka</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="intro" class="mb-16 scroll-mt-24 text-center">
+            <h2 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">An Interactive Analysis of Key Battles in the Russo-Ukrainian War</h2>
+            <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">This report provides a chronological analysis of the major ground campaigns since the full-scale invasion began on February 24, 2022. Each section examines a pivotal battle, detailing its objectives, timeline, forces involved, and strategic impact. All data, especially casualty figures, are estimates based on open-source intelligence and should be viewed as indicative rather than definitive.</p>
+        </section>
+
+        <!-- Battle of Kyiv -->
+        <section id="kyiv" class="mb-20 scroll-mt-24">
+            <h3 class="text-3xl font-bold text-gray-800 mb-6">Battle of Kyiv</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-lg battle-card">
+                    <h4 class="text-xl font-bold mb-4">Key Facts</h4>
+                    <ul class="space-y-3 text-gray-700">
+                        <li><strong>Duration:</strong> Feb 24, 2022 – Apr 2, 2022</li>
+                        <li><strong>Initiator:</strong> Russia</li>
+                        <li><strong>Objective (RUS):</strong> Rapid decapitation of Ukrainian government; capture capital.</li>
+                        <li><strong>Objective (UKR):</strong> Defend the capital; preserve national leadership.</li>
+                        <li><strong>Outcome:</strong> Decisive Ukrainian strategic victory; Russian withdrawal.</li>
+                        <li><strong>Key Units (RUS):</strong> VDV (Airborne Forces), elements of 35th, 36th, 41st Combined Arms Armies.</li>
+                        <li><strong>Key Units (UKR):</strong> 72nd Mech Brigade, 4th Rapid Reaction Brigade, Territorial Defense Forces, special forces.</li>
+                    </ul>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg">
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
+                            <button data-battle="kyiv" data-tab="objectives" class="tab-button active py-3 px-1 border-b-2 font-medium text-sm">Objectives & Strategy</button>
+                            <button data-battle="kyiv" data-tab="timeline" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Key Events</button>
+                            <button data-battle="kyiv" data-tab="impact" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Impact & Aftermath</button>
+                        </nav>
+                    </div>
+                    <div id="content-kyiv" class="text-gray-600 leading-relaxed"></div>
+                    <div class="mt-6">
+                        <h4 class="font-bold text-center mb-2">Estimated Losses</h4>
+                        <div class="chart-container-small">
+                            <canvas id="chart-kyiv"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Siege of Mariupol -->
+        <section id="mariupol" class="mb-20 scroll-mt-24">
+            <h3 class="text-3xl font-bold text-gray-800 mb-6">Siege of Mariupol</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-lg battle-card">
+                    <h4 class="text-xl font-bold mb-4">Key Facts</h4>
+                    <ul class="space-y-3 text-gray-700">
+                        <li><strong>Duration:</strong> Feb 24, 2022 – May 20, 2022</li>
+                        <li><strong>Initiator:</strong> Russia</li>
+                        <li><strong>Objective (RUS):</strong> Secure a land bridge to Crimea; capture key port.</li>
+                        <li><strong>Objective (UKR):</strong> Tie down Russian forces; defend strategic city.</li>
+                        <li><strong>Outcome:</strong> Russian pyrrhic victory; city destroyed, thousands of casualties.</li>
+                        <li><strong>Key Units (RUS):</strong> 8th CAA, 150th Motor Rifle Div, Chechen units, DNR forces.</li>
+                        <li><strong>Key Units (UKR):</strong> Azov Regiment, 36th Marine Brigade, 56th Motorized Brigade.</li>
+                    </ul>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg">
+                     <div class="border-b border-gray-200 mb-4">
+                        <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
+                            <button data-battle="mariupol" data-tab="objectives" class="tab-button active py-3 px-1 border-b-2 font-medium text-sm">Objectives & Strategy</button>
+                            <button data-battle="mariupol" data-tab="timeline" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Key Events</button>
+                            <button data-battle="mariupol" data-tab="impact" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Impact & Aftermath</button>
+                        </nav>
+                    </div>
+                    <div id="content-mariupol" class="text-gray-600 leading-relaxed"></div>
+                    <div class="mt-6">
+                        <h4 class="font-bold text-center mb-2">Estimated Losses</h4>
+                        <div class="chart-container-small">
+                             <canvas id="chart-mariupol"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Kharkiv Counteroffensive -->
+        <section id="kharkiv2022" class="mb-20 scroll-mt-24">
+            <h3 class="text-3xl font-bold text-gray-800 mb-6">Kharkiv Counteroffensive (2022)</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-lg battle-card">
+                    <h4 class="text-xl font-bold mb-4">Key Facts</h4>
+                    <ul class="space-y-3 text-gray-700">
+                        <li><strong>Duration:</strong> Sep 6, 2022 – Sep 12, 2022</li>
+                        <li><strong>Initiator:</strong> Ukraine</li>
+                        <li><strong>Objective (UKR):</strong> Liberate occupied territory in Kharkiv Oblast; collapse Russian northern front.</li>
+                        <li><strong>Objective (RUS):</strong> Maintain control of key logistics hubs (Kupiansk, Izyum).</li>
+                        <li><strong>Outcome:</strong> Decisive Ukrainian operational victory; rapid liberation of thousands of sq km.</li>
+                        <li><strong>Key Units (UKR):</strong> 92nd Mech Brigade, 25th Airborne Brigade, 80th Air Assault Brigade.</li>
+                        <li><strong>Key Units (RUS):</strong> Elements of 1st Guards Tank Army, 20th CAA; Rosgvardia units.</li>
+                    </ul>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg">
+                     <div class="border-b border-gray-200 mb-4">
+                        <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
+                            <button data-battle="kharkiv2022" data-tab="objectives" class="tab-button active py-3 px-1 border-b-2 font-medium text-sm">Objectives & Strategy</button>
+                            <button data-battle="kharkiv2022" data-tab="timeline" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Key Events</button>
+                            <button data-battle="kharkiv2022" data-tab="impact" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Impact & Aftermath</button>
+                        </nav>
+                    </div>
+                    <div id="content-kharkiv2022" class="text-gray-600 leading-relaxed"></div>
+                    <div class="mt-6">
+                        <h4 class="font-bold text-center mb-2">Estimated Losses</h4>
+                        <div class="chart-container-small">
+                             <canvas id="chart-kharkiv2022"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Kherson Counteroffensive -->
+        <section id="kherson" class="mb-20 scroll-mt-24">
+            <h3 class="text-3xl font-bold text-gray-800 mb-6">Kherson Counteroffensive</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-lg battle-card">
+                    <h4 class="text-xl font-bold mb-4">Key Facts</h4>
+                    <ul class="space-y-3 text-gray-700">
+                        <li><strong>Duration:</strong> Aug 29, 2022 – Nov 11, 2022</li>
+                        <li><strong>Initiator:</strong> Ukraine</li>
+                        <li><strong>Objective (UKR):</strong> Liberate Kherson city and west bank of Dnipro River.</li>
+                        <li><strong>Objective (RUS):</strong> Defend the only regional capital captured since Feb 2022.</li>
+                        <li><strong>Outcome:</strong> Decisive Ukrainian strategic victory; organized Russian withdrawal from west bank.</li>
+                         <li><strong>Key Units (UKR):</strong> Elements of four army corps; extensive use of HIMARS.</li>
+                        <li><strong>Key Units (RUS):</strong> VDV units (e.g., 76th Guards Air Assault Div), 49th CAA, 22nd Army Corps.</li>
+                    </ul>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg">
+                     <div class="border-b border-gray-200 mb-4">
+                        <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
+                            <button data-battle="kherson" data-tab="objectives" class="tab-button active py-3 px-1 border-b-2 font-medium text-sm">Objectives & Strategy</button>
+                            <button data-battle="kherson" data-tab="timeline" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Key Events</button>
+                            <button data-battle="kherson" data-tab="impact" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Impact & Aftermath</button>
+                        </nav>
+                    </div>
+                    <div id="content-kherson" class="text-gray-600 leading-relaxed"></div>
+                    <div class="mt-6">
+                        <h4 class="font-bold text-center mb-2">Estimated Losses</h4>
+                        <div class="chart-container-small">
+                             <canvas id="chart-kherson"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Battle of Bakhmut -->
+        <section id="bakhmut" class="mb-20 scroll-mt-24">
+            <h3 class="text-3xl font-bold text-gray-800 mb-6">Battle of Bakhmut</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-lg battle-card">
+                    <h4 class="text-xl font-bold mb-4">Key Facts</h4>
+                    <ul class="space-y-3 text-gray-700">
+                        <li><strong>Duration:</strong> Aug 1, 2022 – May 21, 2023</li>
+                        <li><strong>Initiator:</strong> Russia (primarily Wagner Group)</li>
+                        <li><strong>Objective (RUS):</strong> Capture city to open advance on Kramatorsk/Slovyansk; attrit Ukrainian forces.</li>
+                        <li><strong>Objective (UKR):</strong> Inflict maximum casualties on attackers; fix Russian forces.</li>
+                        <li><strong>Outcome:</strong> Russian tactical victory (city captured); Ukrainian strategic success (high Russian casualties).</li>
+                        <li><strong>Key Units (RUS):</strong> Wagner Group (incl. convicts), VDV regular units.</li>
+                        <li><strong>Key Units (UKR):</strong> 93rd Mech Brigade, 3rd Assault Brigade, 46th Airmobile Brigade.</li>
+                    </ul>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg">
+                     <div class="border-b border-gray-200 mb-4">
+                        <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
+                            <button data-battle="bakhmut" data-tab="objectives" class="tab-button active py-3 px-1 border-b-2 font-medium text-sm">Objectives & Strategy</button>
+                            <button data-battle="bakhmut" data-tab="timeline" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Key Events</button>
+                            <button data-battle="bakhmut" data-tab="impact" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Impact & Aftermath</button>
+                        </nav>
+                    </div>
+                    <div id="content-bakhmut" class="text-gray-600 leading-relaxed"></div>
+                    <div class="mt-6">
+                        <h4 class="font-bold text-center mb-2">Estimated Losses</h4>
+                        <div class="chart-container-small">
+                             <canvas id="chart-bakhmut"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2023 Counteroffensive -->
+        <section id="counteroffensive2023" class="mb-20 scroll-mt-24">
+            <h3 class="text-3xl font-bold text-gray-800 mb-6">2023 Ukrainian Counteroffensive</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-lg battle-card">
+                    <h4 class="text-xl font-bold mb-4">Key Facts</h4>
+                    <ul class="space-y-3 text-gray-700">
+                        <li><strong>Duration:</strong> ~June 2023 – Nov 2023</li>
+                        <li><strong>Initiator:</strong> Ukraine</li>
+                        <li><strong>Objective (UKR):</strong> Breach Russian defensive lines ("Surovikin Line"); sever land bridge to Crimea.</li>
+                        <li><strong>Objective (RUS):</strong> Withstand offensive; inflict maximum attrition on attackers.</li>
+                        <li><strong>Outcome:</strong> Russian strategic defensive victory; Ukraine made limited tactical gains but failed to achieve breakthrough.</li>
+                        <li><strong>Key Units (UKR):</strong> Newly formed brigades with Western equipment (Leopard, Bradley), e.g., 47th Mech, 82nd Air Assault.</li>
+                        <li><strong>Key Units (RUS):</strong> 58th CAA, 5th CAA; extensive use of minefields, Ka-52 helicopters, Lancet drones.</li>
+                    </ul>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg">
+                     <div class="border-b border-gray-200 mb-4">
+                        <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
+                            <button data-battle="counteroffensive2023" data-tab="objectives" class="tab-button active py-3 px-1 border-b-2 font-medium text-sm">Objectives & Strategy</button>
+                            <button data-battle="counteroffensive2023" data-tab="timeline" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Key Events</button>
+                            <button data-battle="counteroffensive2023" data-tab="impact" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Impact & Aftermath</button>
+                        </nav>
+                    </div>
+                    <div id="content-counteroffensive2023" class="text-gray-600 leading-relaxed"></div>
+                    <div class="mt-6">
+                        <h4 class="font-bold text-center mb-2">Estimated Losses</h4>
+                        <div class="chart-container-small">
+                             <canvas id="chart-counteroffensive2023"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Battle of Avdiivka -->
+        <section id="avdiivka" class="mb-20 scroll-mt-24">
+            <h3 class="text-3xl font-bold text-gray-800 mb-6">Battle of Avdiivka</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-lg battle-card">
+                    <h4 class="text-xl font-bold mb-4">Key Facts</h4>
+                    <ul class="space-y-3 text-gray-700">
+                        <li><strong>Duration:</strong> Oct 2023 – Feb 17, 2024</li>
+                        <li><strong>Initiator:</strong> Russia</li>
+                        <li><strong>Objective (RUS):</strong> Encircle and capture heavily fortified city; secure a political victory.</li>
+                        <li><strong>Objective (UKR):</strong> Defend fortified positions; inflict high casualties on attacking forces.</li>
+                        <li><strong>Outcome:</strong> Russian victory; Ukrainian withdrawal. Russia suffered very high equipment and personnel losses.</li>
+                        <li><strong>Key Units (RUS):</strong> 8th CAA, 1st Army Corps (DNR); massive use of artillery and FAB glide bombs.</li>
+                        <li><strong>Key Units (UKR):</strong> 110th Mech Brigade, 47th Mech Brigade, 3rd Assault Brigade.</li>
+                    </ul>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg">
+                     <div class="border-b border-gray-200 mb-4">
+                        <nav class="flex space-x-4 -mb-px" aria-label="Tabs">
+                            <button data-battle="avdiivka" data-tab="objectives" class="tab-button active py-3 px-1 border-b-2 font-medium text-sm">Objectives & Strategy</button>
+                            <button data-battle="avdiivka" data-tab="timeline" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Key Events</button>
+                            <button data-battle="avdiivka" data-tab="impact" class="tab-button py-3 px-1 border-b-2 font-medium text-sm">Impact & Aftermath</button>
+                        </nav>
+                    </div>
+                    <div id="content-avdiivka" class="text-gray-600 leading-relaxed"></div>
+                    <div class="mt-6">
+                        <h4 class="font-bold text-center mb-2">Estimated Losses</h4>
+                        <div class="chart-container-small">
+                             <canvas id="chart-avdiivka"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white mt-8 border-t border-gray-200">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-500">
+            <p>This interactive report is based on open-source intelligence. All data, especially casualty and equipment figures, are estimates and should be treated as such. The complexities of war make precise accounting impossible.</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const battleData = {
+        kyiv: {
+            content: {
+                objectives: `
+                    <p><strong>Russian Objectives:</strong> The primary goal was a "thunder run" to capture Kyiv within days. This involved a multi-axis advance aiming to encircle the city, seize key infrastructure like Hostomel Airport via an air assault by elite VDV troops, and ultimately force the collapse or surrender of the Ukrainian government.</p>
+                    <p class="mt-2"><strong>Ukrainian Objectives:</strong> The strategy was one of determined, mobile defense. The objectives were to prevent encirclement, inflict heavy casualties on advancing Russian columns, disrupt logistics, preserve President Zelenskyy's government in the capital, and rally international support.</p>`,
+                timeline: `
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>Feb 24:</strong> Russian forces advance from Belarus, engage in battles for Hostomel Airport.</li>
+                        <li><strong>Feb 25-28:</strong> Ukrainian forces halt the Russian advance in the suburbs of Bucha, Irpin, and Hostomel. Russian logistics lines become overstretched and targeted.</li>
+                        <li><strong>Early March:</strong> Russian forces attempt to encircle Kyiv from the west and east but are bogged down by fierce resistance and logistical failures.</li>
+                        <li><strong>Late March:</strong> Russia announces a "regrouping" and begins to withdraw its forces from the Kyiv and Chernihiv axes.</li>
+                        <li><strong>Apr 2:</strong> Ukrainian forces regain full control of the Kyiv Oblast border.</li>
+                    </ul>`,
+                impact: `
+                    <p><strong>Strategic Impact:</strong> Russia's failure to capture Kyiv was its first major strategic defeat of the war. It shattered the Kremlin's initial war plan, forced a re-evaluation of objectives to focus on the Donbas, and proved the resilience of the Ukrainian state and military. It was a massive morale boost for Ukraine and galvanized international support.</p>
+                    <p class="mt-2"><strong>International Reaction:</strong> The successful defense of Kyiv was crucial in convincing Western partners that Ukraine could win, leading to a significant increase in military and financial aid. The atrocities uncovered in liberated towns like Bucha led to widespread international condemnation and accusations of Russian war crimes.</p>`
+            },
+            chartData: { labels: ['Personnel', 'Tanks', 'Armored Vehicles'], rus: [15000, 300, 600], ukr: [4500, 80, 150] }
+        },
+        mariupol: {
+            content: {
+                objectives: `
+                    <p><strong>Russian Objectives:</strong> Capturing Mariupol was critical to securing a land bridge from Russia to occupied Crimea. It would also give Russia full control of the Sea of Azov and destroy a major center of Ukrainian economic and military power, specifically targeting the Azov Regiment.</p>
+                    <p class="mt-2"><strong>Ukrainian Objectives:</strong> To hold the city for as long as possible, tying down a significant number of Russian troops that could otherwise be used elsewhere. The defense was also symbolic, representing Ukrainian defiance against overwhelming odds.</p>`,
+                timeline: `
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>Feb 24:</strong> Initial attacks on the city begin.</li>
+                        <li><strong>Mar 2:</strong> Russian forces fully encircle Mariupol, beginning a brutal siege.</li>
+                        <li><strong>Mar 9 & 16:</strong> A maternity hospital and the Donetsk Academic Regional Drama Theater (sheltering civilians) are bombed, causing mass casualties and international outrage.</li>
+                        <li><strong>Mid-April:</strong> The last Ukrainian defenders are pushed into the massive Azovstal steel plant.</li>
+                        <li><strong>May 17-20:</strong> After a prolonged siege, the last defenders in Azovstal are ordered by Kyiv to surrender to save their lives.</li>
+                    </ul>`,
+                impact: `
+                    <p><strong>Strategic Impact:</strong> Russia achieved its primary objective of securing the land bridge, but at an immense cost. The city was almost completely destroyed. For Ukraine, the defense became a national symbol of martyrdom and resistance, known as the "Ukrainian Thermopylae."</p>
+                    <p class="mt-2"><strong>Humanitarian Impact:</strong> The siege resulted in one of the worst humanitarian catastrophes of the war. Tens of thousands of civilians are estimated to have been killed. The destruction was near-total, and Russia was widely accused of committing extensive war crimes.</p>`
+            },
+            chartData: { labels: ['Personnel', 'Tanks', 'Armored Vehicles'], rus: [6000, 100, 200], ukr: [10000, 100, 250] } // Includes defenders killed/captured + high civilian losses
+        },
+         kharkiv2022: {
+            content: {
+                objectives: `
+                    <p><strong>Ukrainian Objectives:</strong> To exploit thin Russian frontlines with a surprise, rapid offensive. The primary goal was to sever Russian logistics by capturing the key hubs of Kupiansk and Izyum, thereby forcing a collapse of the entire Russian position in the region.</p>
+                    <p class="mt-2"><strong>Russian Objectives:</strong> To maintain control over Kharkiv Oblast, which was crucial for their logistics supporting operations in the Donbas. The presence of lightly-manned lines held by Rosgvardia and DNR/LPR units indicated a gross underestimation of Ukrainian capabilities.</p>`,
+                timeline: `
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>Sep 6:</strong> Ukrainian forces launch a surprise attack, breaking through Russian lines near Balakliia.</li>
+                        <li><strong>Sep 8-9:</strong> The offensive accelerates rapidly. Ukrainian troops bypass strongpoints and drive deep into Russian-held territory.</li>
+                        <li><strong>Sep 10:</strong> Ukrainian forces liberate the crucial railway hub of Kupiansk and enter Izyum, causing a complete rout of Russian forces.</li>
+                        <li><strong>Sep 11-12:</strong> The Russian Ministry of Defense announces a "regrouping" of its troops as the front collapses. Ukrainian forces reach the international border in some areas.</li>
+                    </ul>`,
+                impact: `
+                    <p><strong>Strategic Impact:</strong> This was a stunning operational success for Ukraine. It demonstrated their ability to conduct complex combined arms operations and led to the liberation of over 8,000 sq km of territory in a matter of days. It was a major blow to Russian military prestige and morale, and prompted the Kremlin's unpopular "partial mobilization."</p>
+                    <p class="mt-2"><strong>Equipment Gains:</strong> The hasty Russian retreat led to Ukraine capturing vast amounts of abandoned equipment, including tanks, artillery, and ammunition, effectively re-arming some Ukrainian units with Russian hardware.</p>`
+            },
+            chartData: { labels: ['Personnel', 'Tanks', 'Armored Vehicles'], rus: [5000, 200, 400], ukr: [2500, 40, 90] }
+        },
+        kherson: {
+            content: {
+                objectives: `
+                    <p><strong>Ukrainian Objectives:</strong> To methodically degrade Russian capabilities on the west bank of the Dnipro River. The strategy focused on using long-range precision strikes (notably with HIMARS) to destroy bridges, command posts, and ammo depots, making the Russian position untenable without a costly direct assault.</p>
+                    <p class="mt-2"><strong>Russian Objectives:</strong> Initially, to hold Kherson city at all costs due to its political and strategic importance. As their position became unsustainable due to logistical isolation, the objective shifted to conducting an organized withdrawal to preserve their forces.</p>`,
+                timeline: `
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>Late August:</strong> Ukraine announces the start of the offensive.</li>
+                        <li><strong>September-October:</strong> A grinding campaign ensues. Ukraine makes slow but steady territorial gains while HIMARS strikes systematically cripple Russian logistics and command.</li>
+                        <li><strong>Nov 9:</strong> Russian Defense Minister Sergey Shoigu orders a full withdrawal from the west bank of the Dnipro River.</li>
+                        <li><strong>Nov 11:</strong> Ukrainian forces enter Kherson city to jubilant celebrations.</li>
+                    </ul>`,
+                impact: `
+                    <p><strong>Strategic Impact:</strong> The liberation of Kherson was a major political and military victory for Ukraine. It denied Russia a critical foothold on the west bank of the Dnipro, secured Mykolaiv from threat, and brought Ukrainian artillery in range of positions in Crimea. It further demonstrated the effectiveness of Western long-range fires.</p>
+                    <p class="mt-2"><strong>Russian Response:</strong> The withdrawal, though a defeat, was conducted in a relatively organized manner, allowing Russia to save many of its experienced VDV units. These forces were later redeployed to other fronts, such as Bakhmut.</p>`
+            },
+            chartData: { labels: ['Personnel', 'Tanks', 'Armored Vehicles'], rus: [10000, 150, 300], ukr: [7500, 100, 250] }
+        },
+        bakhmut: {
+            content: {
+                objectives: `
+                    <p><strong>Russian Objectives:</strong> Led primarily by the Wagner Group, the goal was to capture Bakhmut to claim a symbolic victory after a series of defeats. Strategically, it was intended to serve as a stepping stone for further advances in the Donbas. A key secondary objective was attrition: to draw Ukrainian forces into a meat grinder and bleed them dry.</p>
+                    <p class="mt-2"><strong>Ukrainian Objectives:</strong> The "Fortress Bakhmut" strategy aimed to do the opposite: to inflict disproportionately high casualties on the attacking Russian forces, particularly the Wagner Group, thereby degrading Russia's most effective offensive formations. Holding the city became a symbol of national resistance.</p>`,
+                timeline: `
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>Aug 2022:</strong> Russian forces begin their assault on the city.</li>
+                        <li><strong>Winter 2022-23:</strong> The battle intensifies into brutal, close-quarters urban warfare, characterized by Wagner's "human wave" attacks.</li>
+                        <li><strong>Spring 2023:</strong> Russian forces slowly gain ground, flanking the city from the north and south.</li>
+                        <li><strong>May 21, 2023:</strong> Wagner chief Yevgeny Prigozhin declares the full capture of the city. Ukraine contests this but acknowledges holding only minor positions on the western outskirts.</li>
+                    </ul>`,
+                impact: `
+                    <p><strong>Strategic Impact:</strong> The battle resulted in catastrophic casualties for both sides, particularly for the Wagner Group, which was severely degraded. While Russia took the ruined city, it failed to achieve a strategic breakthrough. Ukraine successfully fixed and attrited elite Russian forces, arguably achieving its strategic goal despite losing the city. The immense cost of the battle for Russia is widely seen as a pyrrhic victory.</p>
+                    <p class="mt-2"><strong>The Prigozhin Mutiny:</strong> The intense infighting between Wagner and the Russian MoD over ammunition and tactics during the battle directly led to Prigozhin's short-lived mutiny in June 2023, a major shock to Putin's regime.</p>`
+            },
+            chartData: { labels: ['Personnel', 'Tanks', 'Armored Vehicles'], rus: [60000, 300, 500], ukr: [20000, 150, 350] }
+        },
+        counteroffensive2023: {
+            content: {
+                objectives: `
+                    <p><strong>Ukrainian Objectives:</strong> The main strategic goal was to achieve a decisive breakthrough in the south, primarily along the Orikhiv-Tokmak-Melitopol axis. The aim was to sever the Russian "land bridge" to Crimea, splitting Russian forces and undermining their entire southern front.</p>
+                    <p class="mt-2"><strong>Russian Objectives:</strong> To defend in depth and defeat the offensive. Russia spent months constructing extensive, multi-layered defensive fortifications (the "Surovikin Line"), including vast minefields, anti-tank ditches, and trench networks, designed to absorb the Ukrainian attack and inflict maximum attrition.</p>`,
+                timeline: `
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>Early June 2023:</strong> Ukraine launches attacks along multiple axes in Zaporizhzhia and Donetsk Oblasts.</li>
+                        <li><strong>June-August:</strong> Ukrainian forces, using newly supplied Western armor, struggle to breach the main defensive lines, suffering significant losses in dense minefields and to Russian Ka-52 attack helicopters and Lancet drones.</li>
+                        <li><strong>Late August:</strong> Ukraine achieves a tactical success by liberating Robotyne, but fails to exploit the breach further.</li>
+                        <li><strong>September-November:</strong> The offensive transitions to a grinding attritional fight with minimal territorial gains. The onset of autumn mud and dwindling resources effectively ends the offensive.</li>
+                    </ul>`,
+                impact: `
+                    <p><strong>Strategic Impact:</strong> The offensive did not achieve its strategic objectives. The inability to breach Russia's prepared defenses was a major setback for Ukraine and led to a period of strategic reassessment and "war weariness" among some Western partners. It highlighted the immense difficulty of conducting large-scale offensive operations against well-prepared defenses.</p>
+                    <p class="mt-2"><strong>Russian Success:</strong> For Russia, successfully blunting the offensive was a major defensive victory. It stabilized the front lines, boosted morale, and allowed Russia to regain the strategic initiative heading into 2024.</p>`
+            },
+            chartData: { labels: ['Personnel', 'Tanks', 'Armored Vehicles'], rus: [35000, 200, 400], ukr: [45000, 250, 550] }
+        },
+        avdiivka: {
+            content: {
+                objectives: `
+                    <p><strong>Russian Objectives:</strong> To capture the heavily fortified city of Avdiivka, a Ukrainian stronghold since 2014 that protruded into Russian-controlled territory near Donetsk city. The capture would be a significant tactical and propaganda victory, pushing the front line away from Donetsk.</p>
+                    <p class="mt-2"><strong>Ukrainian Objectives:</strong> To leverage their strong fortifications to inflict massive, unsustainable losses on the attacking Russian forces, similar to the strategy at Bakhmut. The goal was to hold the city as long as it was tactically feasible without allowing their forces to be encircled.</p>`,
+                timeline: `
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>Oct 2023:</strong> Russia launches a massive, multi-pronged mechanized assault on the city, suffering catastrophic armor losses.</li>
+                        <li><strong>Nov 2023 - Jan 2024:</strong> The battle shifts to grinding infantry assaults, with Russia slowly gaining ground on the flanks. Russia begins the massive use of FAB glide bombs to destroy Ukrainian fortifications.</li>
+                        <li><strong>Early Feb 2024:</strong> Russian forces secure a key breakthrough into the city's urban areas, threatening the main Ukrainian supply line.</li>
+                        <li><strong>Feb 17, 2024:</strong> Facing encirclement, Ukrainian Commander-in-Chief Oleksandr Syrskyi orders a withdrawal from the city to preserve forces.</li>
+                    </ul>`,
+                impact: `
+                    <p><strong>Strategic Impact:</strong> Russia's capture of Avdiivka was its most significant battlefield gain since Bakhmut. However, it came at an exceptionally high cost in personnel and, especially, armored vehicles. For Ukraine, the withdrawal was a difficult but necessary decision made amid severe ammunition shortages ("shell hunger").</p>
+                    <p class="mt-2"><strong>Tactical Shift:</strong> The battle highlighted Russia's successful adaptation of massive glide bomb (FAB) usage, dropped from standoff range, to systematically obliterate fixed defenses, a tactic that would be used extensively in subsequent operations.</p>`
+            },
+            chartData: { labels: ['Personnel', 'Tanks', 'Armored Vehicles'], rus: [47000, 360, 750], ukr: [8000, 50, 120] }
+        },
+    };
+
+    const battleCharts = {};
+
+    function renderLossChart(canvasId, data, battleName) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        if (battleCharts[canvasId]) {
+            battleCharts[canvasId].destroy();
+        }
+        battleCharts[canvasId] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [
+                    {
+                        label: 'Russia (Est. Loss)',
+                        data: data.rus,
+                        backgroundColor: 'rgba(220, 38, 38, 0.7)',
+                        borderColor: 'rgba(220, 38, 38, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Ukraine (Est. Loss)',
+                        data: data.ukr,
+                        backgroundColor: 'rgba(37, 99, 235, 0.7)',
+                        borderColor: 'rgba(37, 99, 235, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Estimated Number' }
+                    }
+                },
+                plugins: {
+                    title: { display: false },
+                    legend: { position: 'bottom' },
+                    tooltip: { mode: 'index', intersect: false }
+                }
+            }
+        });
+    }
+
+    function setupTabs() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const battleId = button.dataset.battle;
+                const tabId = button.dataset.tab;
+
+                // Update button styles for the current battle group
+                document.querySelectorAll(`.tab-button[data-battle="${battleId}"]`).forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+
+                // Update content
+                const contentDiv = document.getElementById(`content-${battleId}`);
+                contentDiv.innerHTML = battleData[battleId].content[tabId];
+            });
+        });
+    }
+
+    function initializeContent() {
+        Object.keys(battleData).forEach(battleId => {
+            const data = battleData[battleId];
+            // Load initial tab content
+            document.getElementById(`content-${battleId}`).innerHTML = data.content.objectives;
+            // Render chart
+            renderLossChart(`chart-${battleId}`, data.chartData, battleId);
+        });
+    }
+    
+    document.getElementById('battleNavigator').addEventListener('change', function() {
+        const sectionId = this.value;
+        document.getElementById(sectionId).scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    });
+
+    setupTabs();
+    initializeContent();
+});
+</script>
+</body>
+</html>
