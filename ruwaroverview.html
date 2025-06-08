@@ -6,14 +6,14 @@
     <!-- Chosen Palette: Neutral Gray, Deep Blue, Amber Accent -->
     <!-- Application Structure Plan: A single-page application structured with a top navigation bar linking to distinct sections. This update adds a new section for territorial changes and significantly expands the 'Core Figures' and 'Force Evolution' sections with more granular data and analysis, including military commanders and specific technology domains (air power, drones, C4ISR). The structure remains a single-page dashboard to keep all related information within one explorable context. Key interactions include a clickable timeline, tabbed battle analyses, and new interactive charts. -->
     <!-- Visualization & Content Choices: 
-        - Goal: Show territorial changes -> An interactive schematic map with a timeline slider (HTML/CSS/JS). Interaction: Drag slider to see quarterly map changes. Justification: Provides a clear, interactive visualization of front-line shifts without the overhead of external mapping libraries, ensuring fast loading and self-contained functionality. This is a direct implementation of the user's request for an "abstract drawing".
+        - Goal: Show territorial changes -> An interactive schematic map with a timeline slider (HTML/CSS/JS). Interaction: Drag slider to see quarterly map changes. Map blocks are enhanced with labels and subtle textures for better visual appeal. Justification: Provides a clear, interactive visualization of front-line shifts without the overhead of external mapping libraries, ensuring fast loading and self-contained functionality. This is a direct implementation of the user's request for a more "vivid" map.
         - Goal: Compare military leaders -> Added dedicated profile cards within a grid layout. Interaction: Static display. Justification: Clearly separates and profiles key military figures alongside political leaders.
         - Goal: Detail force evolution -> Restructured with tabs for different domains (Ground, Air, Drones, etc.) and added new charts. Interaction: Click tabs, hover charts. Justification: Organizes complex, multi-domain information logically.
-        - Goal: Add new battle -> A new card added to the battle grid for Ukrainian drone strikes on airbases, with a specific chart for aircraft losses. Interaction: Consistent with other battle cards. Justification: Incorporates a key asymmetric warfare event.
+        - Goal: Monetization -> Integrated user-provided Google Adsense code in a non-intrusive container before the final section.
         - Library/Method: Chart.js for all canvas-based charts, Vanilla JS for all DOM manipulation and interactive logic. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
-    <title>俄乌战争全景扫描 - 交互式分析报告 v2.1</title>
+    <title>俄乌战争全景扫描 - 交互式分析报告 v2.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,22 +32,6 @@
             border-color: #fbbf24; /* amber-400 */
             background-color: #fffbeb; /* amber-50 */
             color: #b45309; /* amber-700 */
-        }
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: -31px;
-            top: 5px;
-            width: 12px;
-            height: 12px;
-            border: 2px solid #94a3b8; /* slate-400 */
-            border-radius: 50%;
-            background: #f8fafc;
-            z-index: 1;
-        }
-        .timeline-item.active::before {
-            background: #0369a1;
-            border-color: #0369a1;
         }
         .chart-container {
             position: relative;
@@ -109,28 +93,102 @@
             transition: background-color 0.5s ease;
         }
         #region-north { top: 0; left: 20%; width: 60%; height: 25%; clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%); }
-        #region-center { top: 25%; left: 15%; width: 70%; height: 40%; clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%); }
         #region-east { top: 20%; left: 65%; width: 35%; height: 50%; clip-path: polygon(25% 0, 100% 20%, 100% 80%, 25% 100%, 0 50%); }
         #region-south { top: 65%; left: 25%; width: 50%; height: 35%; clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%); }
+        #region-center { top: 25%; left: 15%; width: 70%; height: 40%; clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%); }
         #region-west { top: 20%; left: 0; width: 30%; height: 50%; clip-path: polygon(0 20%, 75% 0, 75% 100%, 0 80%); }
         
-        .bg-control-rus { background-color: rgba(239, 68, 68, 0.6); } /* Red-500 */
-        .bg-control-ukr { background-color: rgba(59, 130, 246, 0.6); } /* Blue-500 */
-        .bg-control-contested { background-color: rgba(251, 191, 36, 0.6); } /* Amber-400 */
+        .bg-control-rus {
+            background-color: rgba(239, 68, 68, 0.7);
+            background-image: linear-gradient(45deg, rgba(0,0,0,0.08) 25%, transparent 25%, transparent 50%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.08) 75%, transparent 75%, transparent);
+            background-size: 15px 15px;
+        }
+        .bg-control-ukr {
+            background-color: rgba(59, 130, 246, 0.7);
+            background-image: linear-gradient(45deg, rgba(255,255,255,0.08) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.08) 75%, transparent 75%, transparent);
+            background-size: 15px 15px;
+        }
+        .bg-control-contested { background-color: rgba(251, 191, 36, 0.7); }
+
+        .map-label {
+            position: absolute;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            pointer-events: none;
+            opacity: 0.9;
+        }
+        #label-kyiv { top: 40%; left: 50%; transform: translate(-50%, -50%); }
+        #label-kharkiv { top: 50%; left: 85%; transform: translate(-50%, -50%); }
+        #label-donbas { top: 65%; left: 80%; transform: translate(-50%, -50%); }
+        #label-kherson { top: 85%; left: 40%; transform: translate(-50%, -50%); }
+        #label-crimea { top: 95%; left: 55%; transform: translate(-50%, -50%); }
+        #label-lviv { top: 50%; left: 15%; transform: translate(-50%, -50%); }
+
+        /* Horizontal Timeline Styles */
+        .timeline-wrapper {
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+        .timeline-track {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-width: 1200px;
+            height: 100px;
+        }
+        .timeline-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: #cbd5e1; /* slate-300 */
+            transform: translateY(-50%);
+        }
+        .timeline-node {
+            position: relative;
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+        }
+        .timeline-dot {
+            position: relative;
+            z-index: 1;
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-color: #cbd5e1; /* slate-300 */
+            border: 3px solid #f8fafc; /* slate-50 */
+            border-radius: 50%;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .timeline-label {
+            position: absolute;
+            width: 150px;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 500;
+            color: #475569; /* slate-600 */
+        }
+        .timeline-node.active .timeline-dot {
+            background-color: #0369a1; /* sky-700 */
+            transform: scale(1.25);
+        }
+         .timeline-node.active .timeline-label {
+            font-weight: 700;
+            color: #0c4a6e; /* sky-900 */
+        }
+        #timeline-content-panel {
+            transition: opacity 0.5s;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
-      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
-     crossorigin="anonymous"></script>
-<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-format="fluid"
-     data-ad-layout-key="-fy+4+18-27-l"
-     data-ad-client="ca-pub-6214772877334340"
-     data-ad-slot="1537824208"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script>
+
     <header class="bg-white/95 backdrop-blur-sm sticky top-0 z-50 shadow-md">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-16">
@@ -165,13 +223,27 @@
         
         <!-- 1. 战争进程 -->
         <section id="timeline" class="scroll-mt-20 mb-16">
-            <h2 class="text-3xl font-bold mb-8 text-center">1. 战争进程：关键节点时间轴</h2>
-            <div class="relative pl-8 border-l-2 border-slate-300">
-                <!-- Timeline items will be injected here by JS -->
-            </div>
-            <div id="timeline-details" class="mt-8 p-6 bg-white rounded-lg shadow-lg hidden">
-                <h4 id="details-title" class="text-xl font-bold mb-2"></h4>
-                <p id="details-content" class="text-slate-600"></p>
+            <h2 class="text-3xl font-bold mb-6 text-center">1. 战争进程：关键节点时间轴</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="md:hidden">
+                    <p class="text-sm text-center text-slate-500">在移动设备上，时间轴将以纵向模式显示，请点击查看详情。</p>
+                    <div id="vertical-timeline" class="relative pl-8 border-l-2 border-slate-300 mt-4">
+                        <!-- Vertical timeline for mobile will be injected here -->
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                     <p class="text-sm text-center text-slate-500 mb-2">点击下方时间轴上的节点，查看该阶段的关键事件。</p>
+                    <div class="timeline-wrapper">
+                        <div id="horizontal-timeline" class="timeline-track">
+                            <div class="timeline-line"></div>
+                             <!-- Horizontal timeline nodes for desktop will be injected here -->
+                        </div>
+                    </div>
+                </div>
+                <div id="timeline-content-panel" class="mt-6 p-6 bg-slate-50 rounded-lg border border-slate-200 min-h-[150px]">
+                    <h3 id="timeline-title" class="text-xl font-bold text-slate-800 mb-2"></h3>
+                    <p id="timeline-content" class="text-slate-600"></p>
+                </div>
             </div>
         </section>
 
@@ -183,7 +255,7 @@
             </div>
         </section>
 
-        <!-- UPDATED: 战线变化 -->
+        <!-- 3. 战线变化 -->
         <section id="territory" class="scroll-mt-20 mb-16">
             <h2 class="text-3xl font-bold mb-8 text-center">3. 战线变化模拟图</h2>
             <div class="bg-white p-6 rounded-lg shadow-lg">
@@ -194,7 +266,14 @@
                         <div id="region-south" class="map-region"></div>
                         <div id="region-center" class="map-region"></div>
                         <div id="region-west" class="map-region"></div>
-                         <div class="absolute bottom-2 right-2 text-xs text-slate-700 bg-white/70 p-2 rounded">
+                        <!-- Labels for key locations -->
+                        <span id="label-kyiv" class="map-label">基辅</span>
+                        <span id="label-kharkiv" class="map-label">哈尔科夫</span>
+                        <span id="label-donbas" class="map-label">顿巴斯</span>
+                        <span id="label-kherson" class="map-label">赫尔松</span>
+                        <span id="label-crimea" class="map-label">克里米亚</span>
+                        <span id="label-lviv" class="map-label">利沃夫</span>
+                        <div class="absolute bottom-2 right-2 text-xs text-slate-700 bg-white/70 p-2 rounded">
                             <h4 class="font-bold">图例</h4>
                             <div class="flex items-center mt-1"><div class="w-4 h-4 mr-2 bg-control-rus"></div>俄方控制</div>
                             <div class="flex items-center mt-1"><div class="w-4 h-4 mr-2 bg-control-ukr"></div>乌方控制</div>
@@ -216,7 +295,7 @@
             <h2 class="text-3xl font-bold mb-8 text-center">4. 核心人物分析</h2>
              <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="text-2xl font-bold mb-4 text-center">�🇺 弗拉基米尔·普京</h3>
+                    <h3 class="text-2xl font-bold mb-4 text-center">🇷🇺 弗拉基米尔·普京</h3>
                     <p class="text-slate-600">作为最高决策者，他为战争构建“历史合法性”，以北约东扩为由发动“特别军事行动”。战时通过强硬讲话塑造“与西方集体”的生存之战叙事，下达“部分动员”令，并改组国防部以适应长期战争，在国际上被西方孤立，但在“全球南方”获得部分支持。</p>
                 </div>
                 <div class="bg-white p-6 rounded-lg shadow-lg">
@@ -298,6 +377,24 @@
             </div>
         </section>
 
+        <!-- Ad Section -->
+        <section id="ad-break" class="my-12">
+            <div class="max-w-3xl mx-auto p-4 bg-slate-100 rounded-lg text-center">
+                 <p class="text-xs text-slate-400 mb-2">广告</p>
+                 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+                 crossorigin="anonymous"></script>
+                 <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-format="fluid"
+                 data-ad-layout-key="-fy+4+18-27-l"
+                 data-ad-client="ca-pub-6214772877334340"
+                 data-ad-slot="1537824208"></ins>
+                 <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+                 </script>
+            </div>
+        </section>
+
         <!-- 8. 未来展望 -->
         <section id="future" class="scroll-mt-20">
             <h2 class="text-3xl font-bold mb-8 text-center">8. 战争未来走向预测</h2>
@@ -312,35 +409,61 @@ document.addEventListener('DOMContentLoaded', function() {
     // Section 1: Timeline Logic
     const timelineData = [
         { year: '战前', title: '普京发表《论历史统一》', content: '2021年7月，普京发表长文，系统性地否定乌克兰作为一个独立民族和国家存在的历史合法性，为后续行动提供理论基础。' },
-        { year: '战前', title: '俄军边境集结与安全要求', content: '2021年底，俄罗斯在乌克兰边境集结超过10万军队，并向美国和北约提出安全保障协议草案，要求北约停止东扩，遭到拒绝。' },
+        { year: '战前', title: '俄军边境集结', content: '2021年底，俄罗斯在乌克兰边境集结超过10万军队，并向美国和北约提出安全保障协议草案，要求北约停止东扩，遭到拒绝。' },
         { year: '2022 Q1', title: '战争全面爆发', content: '2022年2月24日，普京宣布进行“特别军事行动”，俄军从北、东、南三线全面进攻乌克兰。基辅战役打响。' },
         { year: '2022 Q2', title: '俄军重点转向顿巴斯', content: '俄军从基辅撤退后，将战略重心转向乌克兰东部和南部。经过残酷围困，俄军于5月占领马里乌波尔。' },
-        { year: '2022 Q3', title: '乌克兰哈尔科夫大反攻', content: '9月，乌军在哈尔科夫地区发起闪电反攻，迅速收复大片失地。普京于9月21日宣布“部分动员”。' },
-        { year: '2022 Q4', title: '解放赫尔松与能源战', content: '11月，乌军解放第聂伯河西岸的唯一一座州府城市赫尔松。随后，俄罗斯开始对乌克兰全境的能源设施进行系统性打击。' },
+        { year: '2022 Q3', title: '哈尔科夫大反攻', content: '9月，乌军在哈尔科夫地区发起闪电反攻，迅速收复大片失地。普京于9月21日宣布“部分动员”。' },
+        { year: '2022 Q4', title: '解放赫尔松', content: '11月，乌军解放第聂伯河西岸的唯一一座州府城市赫尔松。随后，俄罗斯开始对乌克兰全境的能源设施进行系统性打击。' },
         { year: '2023 Q1-Q2', title: '巴赫穆特“绞肉机”', content: '瓦格纳集团主导了对巴赫穆特的漫长攻势，双方在此地展开了战争中最血腥的消耗战。5月，俄方宣布占领该城。' },
         { year: '2023 Q3', title: '乌克兰夏季大反攻', content: '6月，乌克兰在南部扎波罗热等地发起大规模反攻，但面对俄军坚固的“苏罗维金防线”，未能取得战略性突破。' },
         { year: '2024 Q1', title: '阿夫迪伊夫卡易手', content: '在西方援助延迟、弹药短缺的背景下，坚守多年的乌军于2月宣布从顿巴斯重镇阿夫迪伊夫卡撤退。' },
-        { year: '2024 Q2', title: '俄军开辟哈尔科夫新战线', content: '5月，俄军在哈尔科夫州北部发起攻势，试图分散乌军兵力，并建立缓冲区。' },
-        { year: '2024 Q3-Q4', title: '消耗战与远程打击升级', content: '战线进入相对僵持的消耗战。乌克兰获准使用部分西方武器打击俄本土目标。F-16战机开始交付。' },
-        { year: '2025 Q1-Q2', title: '持久战态势巩固', content: '战争进入第四个年头，双方都已深度适应长期冲突。战场焦点集中于技术对抗（无人机、电子战）和后方生产能力的较量。' },
+        { year: '2024 Q2', title: '哈尔科夫新战线', content: '5月，俄军在哈尔科夫州北部发起攻势，试图分散乌军兵力，并建立缓冲区。' },
+        { year: '2024 Q3-Q4', title: '消耗战升级', content: '战线进入相对僵持的消耗战。乌克兰获准使用部分西方武器打击俄本土目标。F-16战机开始交付。' },
+        { year: '2025 Q1-Q2', title: '持久战态势', content: '战争进入第四个年头，双方都已深度适应长期冲突。战场焦点集中于技术对抗（无人机、电子战）和后方生产能力的较量。' },
     ];
-    const timelineContainer = document.querySelector('#timeline .border-l-2');
-    const detailsContainer = document.getElementById('timeline-details');
-    const detailsTitle = document.getElementById('details-title');
-    const detailsContent = document.getElementById('details-content');
-    timelineData.forEach((item) => {
-        const div = document.createElement('div');
-        div.className = 'timeline-item relative mb-8 cursor-pointer';
-        div.innerHTML = `<div class="font-bold text-sky-700">${item.year}</div><h4 class="font-semibold text-slate-800">${item.title}</h4>`;
-        div.addEventListener('click', () => {
-            document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
-            div.classList.add('active');
-            detailsTitle.textContent = item.title;
-            detailsContent.textContent = item.content;
-            detailsContainer.classList.remove('hidden');
+    
+    const hTimeline = document.getElementById('horizontal-timeline');
+    const vTimeline = document.getElementById('vertical-timeline');
+    const timelineTitle = document.getElementById('timeline-title');
+    const timelineContent = document.getElementById('timeline-content');
+
+    function updateTimelineContent(index) {
+        const item = timelineData[index];
+        timelineTitle.textContent = `${item.year} - ${item.title}`;
+        timelineContent.textContent = item.content;
+        
+        document.querySelectorAll('.timeline-node').forEach((node, i) => node.classList.toggle('active', i === index));
+        document.querySelectorAll('.v-timeline-item').forEach((node, i) => {
+             const dot = node.querySelector('.v-timeline-dot');
+             node.classList.toggle('active', i === index);
+             dot.classList.toggle('bg-slate-300', i !== index);
+             dot.classList.toggle('bg-sky-700', i === index);
         });
-        timelineContainer.appendChild(div);
+    }
+
+    timelineData.forEach((item, index) => {
+        // Horizontal for desktop
+        const hNode = document.createElement('div');
+        hNode.className = 'timeline-node';
+        hNode.innerHTML = `<span class="timeline-dot"></span><span class="timeline-label">${item.year}<br>${item.title}</span>`;
+        hNode.addEventListener('click', () => updateTimelineContent(index));
+        hTimeline.appendChild(hNode);
+
+        // Vertical for mobile
+        const vNode = document.createElement('div');
+        vNode.className = 'v-timeline-item relative mb-8 cursor-pointer';
+        vNode.innerHTML = `
+            <div class="v-timeline-dot absolute left-[-37px] top-1 w-3 h-3 rounded-full bg-slate-300 border-2 border-white transition-colors"></div>
+            <div class="font-bold text-sky-700">${item.year}</div>
+            <h4 class="font-semibold text-slate-800">${item.title}</h4>
+        `;
+        vNode.addEventListener('click', () => {
+             updateTimelineContent(index);
+             document.getElementById('timeline-content-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        vTimeline.appendChild(vNode);
     });
+    updateTimelineContent(0);
 
     // Section 2: Battle Analyses Logic
     const battleAnalyses = [
@@ -416,7 +539,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     mapSlider.addEventListener('input', (e) => updateMap(parseInt(e.target.value, 10)));
-    updateMap(0); // Initial state
+    updateMap(0);
 
     // Section 5: Force Evolution Logic
     const forcesTabs = document.getElementById('forces-tabs');
@@ -506,4 +629,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
-�
