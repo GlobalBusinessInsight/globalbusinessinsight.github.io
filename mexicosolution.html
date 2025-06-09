@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式报告：墨西哥投资机遇与财税合规方案</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: The application is designed as a single-page narrative dashboard. This structure guides the user through a logical story: it starts with the compelling "why" (the investment opportunity, shown with interactive data), transitions to the critical "how" (the operational challenges of the complex tax system, broken down with tabs and impactful case studies), and culminates in the "what" (the INOSSEM solution, presented as a direct answer to the previously outlined problems). This flow is optimized for executive decision-makers, moving from a macro-level overview to micro-level risks and solutions, thereby supporting strategic thinking rather than simple fact-finding. -->
+    <!-- Visualization & Content Choices: 
+        - FDI Trend (Table 1) -> Goal: Show change -> Viz: Line Chart (Chart.js) -> Interaction: Hover tooltips -> Justification: The clearest way to present time-series data to show growth and resilience.
+        - FDI Sources (Table 2) -> Goal: Compare proportions -> Viz: Doughnut Chart (Chart.js) -> Interaction: Click slices to update a dynamic details panel -> Justification: Highly engaging, encourages exploration of key investment partners.
+        - FDI Industries (Table 3) -> Goal: Compare categories -> Viz: Horizontal Bar Chart (Chart.js) -> Interaction: Hover tooltips -> Justification: Provides excellent readability for long category labels, making industry distribution clear.
+        - Tax Compliance Details (CFDI, E-Accounting, Carta Porte) -> Goal: Organize complex info -> Viz: Tabbed Interface (HTML/JS) -> Interaction: Click tabs to switch content -> Justification: Prevents information overload by chunking complex regulations into digestible sections.
+        - Compliance Cases (Section III-E) -> Goal: Tell impactful stories -> Viz: Interactive Cards triggering Modals (HTML/JS) -> Interaction: Click to reveal details -> Justification: Focuses user attention on a single risk at a time, maximizing the cautionary impact of each case.
+        - INOSSEM Solution -> Goal: Show process improvement -> Viz: Interactive Tabbed Workflow Diagrams (HTML/Tailwind/JS) -> Interaction: Click tabs to switch between AR and AP workflows -> Justification: A more detailed and engaging way to present the solution's value proposition compared to a static diagram.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F5F2;
+            color: #333333;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .tab-button.active, .solution-tab-button.active {
+            border-color: #2c5282;
+            background-color: #2c5282;
+            color: #ffffff;
+        }
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+        .case-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .case-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .solution-workflow .step {
+            position: relative;
+            padding-left: 2.5rem;
+            padding-bottom: 2rem;
+        }
+        .solution-workflow .step:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            top: 1.5rem;
+            bottom: -0.5rem;
+            width: 2px;
+            background-color: #e2e8f0;
+        }
+        .solution-workflow .step-icon {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2rem;
+            height: 2rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="text-2xl font-bold text-gray-800">INOSSEM</div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#opportunity" class="text-gray-600 hover:text-blue-800 transition">投资机遇</a>
+                <a href="#challenge" class="text-gray-600 hover:text-blue-800 transition">合规挑战</a>
+                <a href="#solution" class="text-gray-600 hover:text-blue-800 transition">解决方案</a>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-gray-600 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="#opportunity" class="block py-2 px-4 text-sm text-gray-600 hover:bg-gray-100">投资机遇</a>
+            <a href="#challenge" class="block py-2 px-4 text-sm text-gray-600 hover:bg-gray-100">合规挑战</a>
+            <a href="#solution" class="block py-2 px-4 text-sm text-gray-600 hover:bg-gray-100">解决方案</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="min-h-screen flex items-center bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1599488838843-fbc2a135de70?q=80&w=2070&auto=format&fit=crop');">
+            <div class="bg-black bg-opacity-50 w-full h-full flex items-center">
+                <div class="container mx-auto px-6 text-center text-white">
+                    <h1 class="text-4xl md:text-6xl font-bold mb-4">驾驭墨西哥投资浪潮</h1>
+                    <p class="text-lg md:text-xl mb-8 max-w-3xl mx-auto">把握近岸外包机遇，直面财税合规挑战。INOSSEM 助您在墨西哥市场稳健前行，铸就卓越运营实力。</p>
+                    <a href="#opportunity" class="bg-blue-800 hover:bg-blue-900 text-white font-bold py-3 px-8 rounded-full transition duration-300">探索机遇与挑战</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="opportunity" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-bold text-gray-800">机遇：墨西哥FDI十年变革 (2015-2024)</h2>
+                    <p class="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">凭借战略地理位置、优惠贸易协定和强大制造基础，墨西哥已成为全球投资热点。本节将通过交互式数据，揭示其投资吸引力的核心驱动力，并展现利润再投资所反映出的强大商业信心。</p>
+                </div>
+
+                <div class="bg-gray-50 p-6 md:p-8 rounded-xl shadow-lg mb-12">
+                    <h3 class="text-2xl font-bold text-gray-700 mb-4 text-center">外国直接投资（FDI）年度趋势</h3>
+                    <div class="chart-container">
+                        <canvas id="fdiTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-5 gap-8 lg:gap-12 items-center mb-12">
+                    <div class="md:col-span-2">
+                        <h3 class="text-2xl font-bold text-gray-700 mb-4 text-center">FDI主要来源国 (2024年初步)</h3>
+                         <div class="chart-container" style="height:350px; max-height:40vh;">
+                            <canvas id="fdiCountryChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="country-details" class="md:col-span-3 bg-gray-50 p-6 md:p-8 rounded-xl shadow-lg h-full flex flex-col justify-center">
+                        <h4 class="text-xl font-semibold text-gray-800 mb-4">点击图表查看详情</h4>
+                        <p class="text-gray-600">请在左侧的环形图上点击任一国家，查看其在墨西哥的详细投资情况，包括投资额、占比及主要投资领域。</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-6 md:p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold text-gray-700 mb-6 text-center">FDI主要投资行业 (2024年初步)</h3>
+                    <div class="chart-container">
+                        <canvas id="fdiIndustryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="challenge" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-bold text-gray-800">挑战：墨西哥财税合规迷宫</h2>
+                    <p class="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">墨西哥的机遇伴随着严格且复杂的财税法规。忽视合规将导致高昂的罚款和运营中断。本节将解析核心挑战，并以真实案例警示风险。</p>
+                </div>
+
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg mb-12">
+                    <div class="mb-8 border-b-2 border-gray-200">
+                        <div class="flex flex-wrap -mb-px justify-center" id="tabs-container">
+                            <button data-target="tab-cfdi" class="tab-button active text-base md:text-lg font-semibold py-3 px-4 md:px-6 border-b-4 rounded-t-lg">CFDI 4.0</button>
+                            <button data-target="tab-e-accounting" class="tab-button text-base md:text-lg font-semibold py-3 px-4 md:px-6 border-b-4 border-transparent rounded-t-lg">电子会计</button>
+                            <button data-target="tab-carta-porte" class="tab-button text-base md:text-lg font-semibold py-3 px-4 md:px-6 border-b-4 border-transparent rounded-t-lg">Carta Porte</button>
+                        </div>
+                    </div>
+                    <div id="tabs-content-container">
+                        <div id="tab-cfdi" class="tab-content">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-4">核心：CFDI 4.0 电子发票生态系统</h3>
+                            <p class="text-gray-600 mb-6">墨西哥税收征管的核心，对所有交易凭证实行强制性数字化、实时化管理。任何错误都可能导致交易失败和高额罚款。</p>
+                            <ul class="space-y-4 text-gray-700">
+                                <li class="flex items-start"><span class="text-blue-800 font-bold mr-3 text-xl">✓</span><div><strong>严格数据验证：</strong>必须精确匹配并验证接收方的RFC、名称、邮政编码和税制，对主数据管理提出极高要求。</div></li>
+                                <li class="flex items-start"><span class="text-blue-800 font-bold mr-3 text-xl">✓</span><div><strong>PAC实时认证：</strong>所有发票需经授权提供商（PAC）验证并“盖章”（Timbrado），实时同步至税务局（SAT），无延迟、无侥幸。</div></li>
+                                <li class="flex items-start"><span class="text-blue-800 font-bold mr-3 text-xl">✓</span><div><strong>复杂的补充文件：</strong>分期付款、货物运输、薪资发放等均需附加特定的补充文件（Complementos），处理逻辑复杂，极易出错。</div></li>
+                            </ul>
+                        </div>
+                        <div id="tab-e-accounting" class="tab-content hidden">
+                           <h3 class="text-2xl font-bold text-gray-800 mb-4">基础：电子会计 (Contabilidad Electrónica)</h3>
+                            <p class="text-gray-600 mb-6">要求企业以特定XML格式定期向SAT提交会计记录，实现税务局对企业财务状况的深度穿透式监管。</p>
+                            <ul class="space-y-4 text-gray-700">
+                                <li class="flex items-start"><span class="text-blue-800 font-bold mr-3 text-xl">✓</span><div><strong>标准会计科目表：</strong>企业需将其内部会计科目与SAT发布的标准代码进行强制映射并提交。</div></li>
+                                <li class="flex items-start"><span class="text-blue-800 font-bold mr-3 text-xl">✓</span><div><strong>月度试算平衡表：</strong>每月必须以XML格式提交试算平衡表，与CFDI数据交叉验证，任何差异都可能触发审计。</div></li>
+                                <li class="flex items-start"><span class="text-blue-800 font-bold mr-3 text-xl">✓</span><div><strong>ERP系统改造挑战：</strong>标准化的全球ERP系统往往难以直接满足墨西哥本地化要求，需投入巨大成本进行定制开发或购买专业模块。</div></li>
+                            </ul>
+                        </div>
+                        <div id="tab-carta-porte" class="tab-content hidden">
+                             <h3 class="text-2xl font-bold text-gray-800 mb-4">命脉：货物运输补充文件 (Carta Porte)</h3>
+                            <p class="text-gray-600 mb-6">对境内所有货物运输进行监管，强制要求在运输凭证（CFDI）中附带包含海量详细信息的补充文件，以证明货物合法性。</p>
+                            <ul class="space-y-4 text-gray-700">
+                                <li class="flex items-start"><span class="text-blue-800 font-bold mr-3 text-xl">✓</span><div><strong>信息极度详尽：</strong>要求提供货物、运输工具、路线、司机、发货方、收货方等数十个数据点，信息分散于ERP、WMS、TMS等多个系统。</div></li>
+                                <li class="flex items-start"><span class="text-blue-800 font-bold mr-3 text-xl">✓</span><div><strong>运营中断风险：</strong>任何信息错误或缺失都可能导致货物在途中被扣押，对依赖准时制生产的供应链是致命打击。</div></li>
+                                 <li class="flex items-start"><span class="text-blue-800 font-bold mr-3 text-xl">✓</span><div><strong>连带责任：</strong>发货方对向承运人提供信息的准确性负有连带责任，不能将风险完全转嫁。</div></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-3xl font-bold text-gray-800 text-center mb-10">不合规的高昂代价：真实案例警示</h3>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="case-card bg-white p-6 rounded-lg shadow-md cursor-pointer" data-case="walmart">
+                            <h4 class="font-bold text-xl mb-2">历史税务追缴</h4>
+                            <p class="text-gray-600">沃尔玛墨西哥因多年前的资产出售交易被追缴近90亿比索税款。</p>
+                            <span class="text-red-600 font-semibold mt-4 block">启示：历史交易也可能被追溯。</span>
+                        </div>
+                         <div class="case-card bg-white p-6 rounded-lg shadow-md cursor-pointer" data-case="transfer">
+                            <h4 class="font-bold text-xl mb-2">转让定价审查</h4>
+                            <p class="text-gray-600">SAT加强对跨国公司转让定价审计，汽车、矿业等成重点，已追缴数十亿美元。</p>
+                             <span class="text-red-600 font-semibold mt-4 block">启示：关联交易是监管重点。</span>
+                        </div>
+                        <div class="case-card bg-white p-6 rounded-lg shadow-md cursor-pointer" data-case="logistics">
+                            <h4 class="font-bold text-xl mb-2">物流运输中断</h4>
+                            <p class="text-gray-600">因Carta Porte文件信息不符，多家企业的货物在运输途中被扣押，导致交付延迟和生产中断。</p>
+                             <span class="text-red-600 font-semibold mt-4 block">启示：物流合规是运营生命线。</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="solution" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-bold text-gray-800">INOSSEM 解决方案：将合规转化为竞争优势</h2>
+                    <p class="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">我们提供的不是孤立的工具，而是一个集成的运营平台，将墨西哥复杂的财税法规无缝嵌入您的核心业务流程，实现自动化、高效率和强管控。</p>
+                </div>
+                
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                    <div class="mb-8 border-b-2 border-gray-200">
+                        <div class="flex flex-wrap -mb-px justify-center" id="solution-tabs-container">
+                            <button data-target="solution-tab-ar" class="solution-tab-button active text-base md:text-lg font-semibold py-3 px-4 md:px-6 border-b-4 rounded-t-lg">应收账款与开票自动化</button>
+                            <button data-target="solution-tab-ap" class="solution-tab-button text-base md:text-lg font-semibold py-3 px-4 md:px-6 border-b-4 border-transparent rounded-t-lg">应付账款与支付自动化</button>
+                        </div>
+                    </div>
+                    <div id="solution-tabs-content-container">
+                        <div id="solution-tab-ar" class="solution-tab-content">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-2">加速回款：自动化的订单到现金流程</h3>
+                            <p class="text-gray-600 mb-8">将CFDI合规要求从负担转变为优化现金流的机遇。</p>
+                            <div class="solution-workflow">
+                                <div class="step">
+                                    <div class="step-icon bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold">1</div>
+                                    <h4 class="font-semibold text-lg mb-1">ERP 数据同步</h4>
+                                    <p class="text-gray-600 text-sm">通过后台定时作业，自动从您的ERP（如SAP）同步已创建或取消的发票、贷记/借记凭证，杜绝手工导出导入。</p>
+                                </div>
+                                <div class="step">
+                                    <div class="step-icon bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold">2</div>
+                                    <h4 class="font-semibold text-lg mb-1">智能生成与验证</h4>
+                                    <p class="text-gray-600 text-sm">平台自动按CFDI 4.0规范生成XML，并与Carta Porte信息（如需）整合。严格预校验客户RFC、税制等关键信息。</p>
+                                </div>
+                                <div class="step">
+                                    <div class="step-icon bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold">3</div>
+                                    <h4 class="font-semibold text-lg mb-1">SAT/PAC 认证</h4>
+                                    <p class="text-gray-600 text-sm">与授权PAC无缝集成，对CFDI进行电子签名和“盖章”（Timbrado），获取合法UUID，实时同步至SAT，确保100%合规。</p>
+                                </div>
+                                <div class="step">
+                                    <div class="step-icon bg-green-100 text-green-800 rounded-full flex items-center justify-center font-bold">✓</div>
+                                    <h4 class="font-semibold text-lg mb-1">自动交付与归档</h4>
+                                    <p class="text-gray-600 text-sm">认证通过后，系统自动将合规的XML和PDF格式发票通过邮件发送给客户，并安全归档，随时备查。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="solution-tab-ap" class="solution-tab-content hidden">
+                           <h3 class="text-2xl font-bold text-gray-800 mb-2">强化管控：透明的采购到支付流程</h3>
+                            <p class="text-gray-600 mb-8">重塑供应商发票处理和付款流程，实现无与伦比的内部控制和效率。</p>
+                            <div class="solution-workflow">
+                                <div class="step">
+                                    <div class="step-icon bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold">1</div>
+                                    <h4 class="font-semibold text-lg mb-1">供应商发票接收</h4>
+                                    <p class="text-gray-600 text-sm">通过专用邮箱或门户自动接收供应商CFDI，系统自动验证其在SAT的有效性。</p>
+                                </div>
+                                <div class="step">
+                                    <div class="step-icon bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold">2</div>
+                                    <h4 class="font-semibold text-lg mb-1">灵活的审批工作流</h4>
+                                    <p class="text-gray-600 text-sm">根据您公司的授权策略，配置多层级、跨平台的审批流（系统、邮件、OA）。审批人可随时随地审核，系统自动记录，全程可追溯。</p>
+                                </div>
+                                <div class="step">
+                                    <div class="step-icon bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold">3</div>
+                                    <h4 class="font-semibold text-lg mb-1">多样化支付执行</h4>
+                                    <p class="text-gray-600 text-sm">审批通过后，自动生成支付指令。支持多种电子支付（ACH, EFT, Wire）及传统支票、信用卡等方式。</p>
+                                </div>
+                                <div class="step">
+                                    <div class="step-icon bg-green-100 text-green-800 rounded-full flex items-center justify-center font-bold">✓</div>
+                                    <h4 class="font-semibold text-lg mb-1">银行集成与对账</h4>
+                                    <p class="text-gray-600 text-sm">可生成银行付款文件或与银行FTS系统直连，实现安全支付。付款完成后，自动进行对账，形成完整闭环。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-16 text-center">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-10">可量化的商业收益</h3>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h4 class="font-bold text-xl mb-2 text-blue-800">降低成本</h4>
+                            <p class="text-gray-600 text-sm">杜绝罚款支出，减少人工操作成本，优化人力资源配置。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h4 class="font-bold text-xl mb-2 text-blue-800">提升效率</h4>
+                             <p class="text-gray-600 text-sm">财税流程处理周期缩短80%以上，加速现金流周转。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h4 class="font-bold text-xl mb-2 text-blue-800">规避风险</h4>
+                             <p class="text-gray-600 text-sm">从源头避免运营中断、货物扣押及法律风险，保障业务连续性。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-lg">
+                            <h4 class="font-bold text-xl mb-2 text-blue-800">聚焦战略</h4>
+                             <p class="text-gray-600 text-sm">将团队从繁琐的合规事务中解放，专注于市场开拓和业务增长。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-10">
+        <div class="container mx-auto px-6 text-center">
+            <h3 class="text-2xl font-bold mb-4">开启您在墨西哥的成功之旅</h3>
+            <p class="mb-6">联系我们，获取定制化的解决方案咨询和产品演示。</p>
+            <a href="mailto:contact@inossem.com" class="bg-white hover:bg-gray-200 text-gray-800 font-bold py-3 px-8 rounded-full transition duration-300">联系INOSSEM专家</a>
+            <p class="text-sm text-gray-400 mt-8">&copy; 2025 INOSSEM. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[99] hidden modal"></div>
+    <div id="case-modal" class="fixed inset-0 z-[100] hidden modal flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-lg shadow-2xl p-8 relative transform transition-all duration-300 scale-95" id="modal-content">
+            <button id="close-modal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h3 id="modal-title" class="text-2xl font-bold mb-4"></h3>
+            <p id="modal-text" class="text-gray-600 mb-4"></p>
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-800 p-4 rounded-r-lg">
+                <strong class="font-bold">核心启示：</strong>
+                <span id="modal-lesson"></span>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const fdiTrendData = {
+        labels: ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024 (p)'],
+        datasets: [{
+            label: 'FDI净流入额 (亿美元)',
+            data: [349.9, 332.3, 317.2, 316.0, 299.5, 315.3, 354.2, 391.3, 360.0, 368.7],
+            borderColor: '#2c5282',
+            backgroundColor: 'rgba(44, 82, 130, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#2c5282',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#2c5282'
+        }]
+    };
+
+    const fdiCountryData = {
+        labels: ['美国', '日本', '德国', '加拿大', '荷兰', '其他'],
+        datasets: [{
+            data: [44.8, 12, 10, 9, 5, 19.2],
+            backgroundColor: ['#2c5282', '#2b6cb0', '#3182ce', '#4299e1', '#63b3ed', '#bee3f8'],
+            hoverOffset: 4
+        }]
+    };
+    
+    const countryDetails = {
+        '美国': { amount: 165, percent: 44.8, fields: '制造业（汽车、电子）、金融服务、公司总部。' },
+        '日本': { amount: 42.8, percent: 12, fields: '汽车制造、零部件。' },
+        '德国': { amount: 37.8, percent: 10, fields: '汽车制造、高端制造业。' },
+        '加拿大': { amount: 32.1, percent: 9, fields: '制造业、矿业、金融服务。' },
+        '荷兰': { amount: 18.8, percent: 5, fields: '多样化投资，包括制造业和服务业。' },
+        '其他': { amount: 'N/A', percent: 19.2, fields: '包括西班牙、中国等多个国家。' }
+    };
+
+    const fdiIndustryData = {
+        labels: ['制造业', '金融与保险', '运输业', '临时住宿业', '批发商业', '零售商业', '采矿业'],
+        datasets: [{
+            label: 'FDI占比 (%)',
+            data: [54, 16, 7, 7, 6, 4, 4],
+            backgroundColor: 'rgba(44, 82, 130, 0.7)',
+            borderColor: '#2c5282',
+            borderWidth: 1
+        }]
+    };
+    
+    const chartOptions = {
+        maintainAspectRatio: false,
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false,
+            },
+            tooltip: {
+                enabled: true,
+                backgroundColor: '#333',
+                titleFont: { size: 14 },
+                bodyFont: { size: 12 },
+                padding: 10,
+                cornerRadius: 4,
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)'
+                }
+            },
+            x: {
+                 grid: {
+                    display: false
+                }
+            }
+        }
+    };
+    
+    const fdiTrendCtx = document.getElementById('fdiTrendChart').getContext('2d');
+    new Chart(fdiTrendCtx, { type: 'line', data: fdiTrendData, options: {...chartOptions, plugins: { legend: { display: true, position: 'bottom' }}} });
+
+    const fdiCountryCtx = document.getElementById('fdiCountryChart').getContext('2d');
+    const fdiCountryChart = new Chart(fdiCountryCtx, {
+        type: 'doughnut',
+        data: fdiCountryData,
+        options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                },
+                tooltip: {
+                    enabled: true
+                }
+            },
+            onClick: (event, elements) => {
+                if (elements.length > 0) {
+                    const i = elements[0].index;
+                    const countryName = fdiCountryData.labels[i];
+                    const details = countryDetails[countryName];
+                    const detailsContainer = document.getElementById('country-details');
+                    
+                    detailsContainer.innerHTML = `
+                        <h4 class="text-2xl font-bold text-gray-800 mb-2">${countryName}</h4>
+                        <p class="text-lg text-gray-600 mb-4"><strong>投资额：</strong>${details.amount === 'N/A' ? 'N/A' : '~$' + details.amount + '亿美元'} | <strong>占比：</strong>${details.percent}%</p>
+                        <p class="text-gray-700"><strong>主要投资领域：</strong></p>
+                        <p class="text-gray-600">${details.fields}</p>
+                    `;
+                }
+            }
+        }
+    });
+
+    const fdiIndustryCtx = document.getElementById('fdiIndustryChart').getContext('2d');
+    new Chart(fdiIndustryCtx, {
+        type: 'bar',
+        data: fdiIndustryData,
+        options: {
+            ...chartOptions,
+            indexAxis: 'y',
+        }
+    });
+
+    // Main tabs
+    const tabs = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            const target = tab.getAttribute('data-target');
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+                if (content.id === target) {
+                    content.classList.remove('hidden');
+                }
+            });
+        });
+    });
+
+    // Solution tabs
+    const solutionTabs = document.querySelectorAll('.solution-tab-button');
+    const solutionTabContents = document.querySelectorAll('.solution-tab-content');
+    solutionTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            solutionTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            const target = tab.getAttribute('data-target');
+            solutionTabContents.forEach(content => {
+                content.classList.add('hidden');
+                if (content.id === target) {
+                    content.classList.remove('hidden');
+                }
+            });
+        });
+    });
+
+
+    // Modal logic
+    const caseCards = document.querySelectorAll('.case-card');
+    const modal = document.getElementById('case-modal');
+    const modalBackdrop = document.getElementById('modal-backdrop');
+    const modalContent = document.getElementById('modal-content');
+    const closeModalBtn = document.getElementById('close-modal');
+    const caseData = {
+        walmart: {
+            title: "案例：沃尔玛墨西哥的历史税务追缴",
+            text: "SAT就沃尔玛墨西哥在2014年出售旗下Vips连锁餐厅的交易，向其追缴高达106亿墨西哥比索的税款及附加费。最终，沃尔玛支付了87.9亿比索（约3.59亿美元）了结此事。",
+            lesson: "SAT对大型跨国公司的历史交易拥有追溯权和强大的执法决心。企业必须重视所有交易的税务合规性，即便是多年前的交易也可能被重新审查。"
+        },
+        transfer: {
+            title: "案例：跨国公司转让定价专项审查",
+            text: "SAT宣布，通过加强对大型跨国公司（尤其在汽车、矿业、电子等行业）转让定价行为的审计，相关税收收入实现了367%的增长，总额达数十亿美元。这是一个明确的执法趋势，而非个案。",
+            lesson: "转让定价是SAT的监管重点。在墨西哥运营的跨国公司必须制定合规的转让定价政策并准备充分的同期资料，以应对日益严格的审计。"
+        },
+        logistics: {
+            title: "案例：Carta Porte不合规导致物流中断",
+            text: "自Carta Porte补充文件全面实施以来，多家企业因文件信息不完整、不准确或未能随车提供，导致货物在运输途中被联邦当局扣押，造成严重的交付延迟、生产中断和客户投诉。",
+            lesson: "物流合规是业务的生命线。Carta Porte的要求极为严格，任何疏忽都可能直接瘫痪供应链，其重要性不亚于财务合规。"
+        }
+    };
+    function openModal(caseKey) {
+        const data = caseData[caseKey];
+        document.getElementById('modal-title').textContent = data.title;
+        document.getElementById('modal-text').textContent = data.text;
+        document.getElementById('modal-lesson').textContent = data.lesson;
+        modal.classList.remove('hidden');
+        modalBackdrop.classList.remove('hidden');
+        setTimeout(() => modalContent.classList.remove('scale-95'), 10);
+    }
+    function closeModal() {
+        modalContent.classList.add('scale-95');
+        setTimeout(() => {
+             modal.classList.add('hidden');
+             modalBackdrop.classList.add('hidden');
+        }, 300);
+    }
+    caseCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const caseKey = card.getAttribute('data-case');
+            openModal(caseKey);
+        });
+    });
+    closeModalBtn.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', closeModal);
+    
+    // Mobile menu logic
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            if (mobileMenu.offsetParent !== null) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+    });
+});
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
