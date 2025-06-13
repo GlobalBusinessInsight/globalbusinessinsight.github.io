@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中美关税战深度分析 (2018-2025)</title>
+    <!-- Chosen Palette: Calm Harmony (Warm Neutrals) -->
+    <!-- Application Structure Plan: A narrative, single-page scrolling application is chosen over a rigid report structure to guide the user through the complex topic of the US-China trade war. The structure is thematic: 1. Hero/Intro, 2. Interactive Timeline (for evolution), 3. Core Conflicts (thematic breakdown), 4. Key Players (profiles), 5. Global Impact (data visualization), 6. Broader Implications (deeper dive), 7. Future Outlook. A sticky navigation bar with a language switcher allows for easy exploration and accessibility. This flow is designed to build understanding progressively, from the historical context to future predictions, making the dense information digestible and engaging for a general audience. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Timeline of tariff actions (2018-2025). Goal: Show change. Viz: Interactive horizontal timeline (HTML/CSS/JS). Interaction: Clicking a year reveals key events in a modal/card. Justification: Condenses a long history into a manageable, exploratory format. Library/Method: Custom JS.
+        - Report Info: Economic impact on US/China (GDP forecasts). Goal: Compare. Viz: Bar Chart. Interaction: Tooltips on hover for specific data. Justification: Direct, clear comparison of economic consequences. Library/Method: Chart.js.
+        - Report Info: Global supply chain disruption & trade shifts. Goal: Show relationships/distribution. Viz: Donut Chart (sector disruption) & Grouped Bar Chart (regional trade shifts). Interaction: Tooltips. Justification: Donut chart shows parts of a whole effectively. Grouped bar chart is a robust alternative to a map for comparing regional impacts without SVG. Library/Method: Chart.js.
+        - Report Info: Broader implications (Tech, WTO, Climate). Goal: Organize dense info. Viz: Tabbed content sections. Interaction: Clicking tabs reveals different content panels. Justification: Prevents information overload and keeps the layout clean. Library/Method: Custom JS.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: #f8f7f2;
+            color: #3d3d3d;
+        }
+        .active-nav {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: #3b82f6;
+        }
+        .lang-btn {
+            background-color: #eaddd7;
+            color: #3d3d3d;
+            transition: background-color 0.3s;
+        }
+        .lang-btn:hover {
+            background-color: #d1c4b9;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .timeline-item {
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .timeline-item:hover {
+            transform: translateY(-5px);
+        }
+        .timeline-item.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .tab-btn.active {
+            border-bottom-color: #3b82f6;
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header id="header" class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4">
+            <nav class="flex justify-between items-center py-4">
+                <h1 class="text-xl md:text-2xl font-bold text-gray-800" data-lang-key="nav_title">分析</h1>
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="#timeline" class="nav-link" data-lang-key="nav_timeline">演变历程</a>
+                    <a href="#conflict" class="nav-link" data-lang-key="nav_conflict">核心矛盾</a>
+                    <a href="#players" class="nav-link" data-lang-key="nav_players">关键人物</a>
+                    <a href="#impact" class="nav-link" data-lang-key="nav_impact">全球影响</a>
+                    <a href="#implications" class="nav-link" data-lang-key="nav_implications">深远影响</a>
+                    <a href="#future" class="nav-link" data-lang-key="nav_future">未来展望</a>
+                </div>
+                <button id="lang-switcher" class="lang-btn font-semibold py-2 px-4 rounded-full text-sm">
+                    English
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+
+        <!-- Hero Section -->
+        <section id="hero" class="text-center mb-16 md:mb-24">
+            <h2 class="text-4xl md:text-6xl font-bold mb-4" data-lang-key="hero_title">中美关税战深度分析</h2>
+            <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto" data-lang-key="hero_subtitle">
+                探索2018至2025年间，这场定义时代的经济、技术与地缘政治对抗的演变、影响与未来。
+            </p>
+        </section>
+
+        <!-- 1. Timeline Section -->
+        <section id="timeline" class="mb-16 md:mb-24 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-4" data-lang-key="timeline_title">演变历程：从升级到休战</h3>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto" data-lang-key="timeline_intro">
+                关税战并非一蹴而就，而是一个反复升级、谈判和暂时缓和的动态过程。点击下方年份，了解每个阶段的关键事件和政策转变。
+            </p>
+            <div class="relative">
+                <!-- Timeline line -->
+                <div class="hidden sm:block absolute top-1/2 left-0 w-full h-0.5 bg-gray-300 -translate-y-1/2"></div>
+                <!-- Timeline items -->
+                <div id="timeline-controls" class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div class="timeline-item p-4 rounded-lg bg-white shadow-md" data-year="2018-2019">
+                        <span class="font-bold text-lg">2018-2019</span>
+                        <p class="text-sm" data-lang-key="timeline_tag_1">初步触发与升级</p>
+                    </div>
+                    <div class="timeline-item p-4 rounded-lg bg-white shadow-md" data-year="2020-2021">
+                        <span class="font-bold text-lg">2020-2021</span>
+                        <p class="text-sm" data-lang-key="timeline_tag_2">第一阶段协议</p>
+                    </div>
+                    <div class="timeline-item p-4 rounded-lg bg-white shadow-md" data-year="2021-2023">
+                        <span class="font-bold text-lg">2021-2023</span>
+                        <p class="text-sm" data-lang-key="timeline_tag_3">技术战与脱钩</p>
+                    </div>
+                    <div class="timeline-item p-4 rounded-lg bg-white shadow-md" data-year="2024-2025">
+                        <span class="font-bold text-lg">2024-2025</span>
+                        <p class="text-sm" data-lang-key="timeline_tag_4">关税重燃与休战</p>
+                    </div>
+                </div>
+            </div>
+            <div id="timeline-content" class="mt-8 p-6 bg-white rounded-lg shadow-lg min-h-[150px]">
+                <!-- Dynamic content will be injected here -->
+            </div>
+        </section>
+        
+        <!-- 2. Core Conflict Section -->
+        <section id="conflict" class="mb-16 md:mb-24 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-4" data-lang-key="conflict_title">三大核心矛盾</h3>
+             <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto" data-lang-key="conflict_intro">
+                贸易争端表面之下，是经济失衡、技术霸权和地缘政治竞争三大深层矛盾的交织。这三者共同构成了这场持久对抗的根源。
+            </p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-bold mb-2" data-lang-key="conflict1_title">经济失衡</h4>
+                    <p class="text-gray-600" data-lang-key="conflict1_desc">美国聚焦于巨额贸易逆差和市场准入壁垒，而中国则视关税为保护主义，捍卫自身发展模式。双方对“公平贸易”的定义截然不同。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-bold mb-2" data-lang-key="conflict2_title">技术霸权</h4>
+                    <p class="text-gray-600" data-lang-key="conflict2_desc">冲突的核心已演变为对半导体、人工智能等关键技术领导权的争夺。国家安全考量超越了纯粹的经济利益，导致“技术脱钩”加剧。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-bold mb-2" data-lang-key="conflict3_title">地缘政治</h4>
+                    <p class="text-gray-600" data-lang-key="conflict3_desc">贸易战是更广泛的全球领导力竞争的体现。它反映了两种不同治理模式和价值观的根本性差异，经济政策已成为地缘政治博弈的工具。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Key Players Section -->
+        <section id="players" class="mb-16 md:mb-24 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-4" data-lang-key="players_title">谈判桌上的关键人物</h3>
+             <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto" data-lang-key="players_intro">
+                谈判的走向深刻受到双方核心人物的背景、价值观和政策主张的影响。了解他们，就是了解两国战略意图的窗口。
+            </p>
+            <div class="grid md:grid-cols-2 gap-12">
+                <div>
+                    <h4 class="text-2xl font-bold mb-6 text-center" data-lang-key="players_us_title">美国团队</h4>
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h5 class="font-bold text-lg" data-lang-key="player_us1_name">斯科特·贝森特 (财长)</h5>
+                            <p class="text-sm text-gray-500" data-lang-key="player_us1_claim">主张：通过减税和“公平贸易”重新平衡全球经济，视关税为实现目标的工具。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h5 class="font-bold text-lg" data-lang-key="player_us2_name">霍华德·卢特尼克 (商务部长)</h5>
+                            <p class="text-sm text-gray-500" data-lang-key="player_us2_claim">主张：坚定的“美国优先”贸易保护主义者，认为关税是保护美国工人和产业的关键。</p>
+                        </div>
+                         <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h5 class="font-bold text-lg" data-lang-key="player_us3_name">杰米森·格里尔 (贸易代表)</h5>
+                            <p class="text-sm text-gray-500" data-lang-key="player_us3_claim">主张：致力于打击不公平贸易行为，确保贸易关系的平衡与互惠，是关税政策的坚定执行者。</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-2xl font-bold mb-6 text-center" data-lang-key="players_cn_title">中国团队</h4>
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h5 class="font-bold text-lg" data-lang-key="player_cn1_name">何立峰 (副总理)</h5>
+                            <p class="text-sm text-gray-500" data-lang-key="player_cn1_claim">主张：强调“互利共赢”，谈判“既有诚意也有原则”，立场被认为比前任更强硬。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h5 class="font-bold text-lg" data-lang-key="player_cn2_name">王文涛 (商务部长)</h5>
+                            <p class="text-sm text-gray-500" data-lang-key="player_cn2_claim">主张：面对“无理关税”必须采取坚决反制，维护国家利益与国际公平。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-md">
+                            <h5 class="font-bold text-lg" data-lang-key="player_cn3_name">李成钢 (国际贸易谈判代表)</h5>
+                            <p class="text-sm text-gray-500" data-lang-key="player_cn3_claim">主张：批评美国单边主义破坏全球贸易体系，是WTO规则的坚定捍卫者。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Global Impact Section -->
+        <section id="impact" class="mb-16 md:mb-24 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-4" data-lang-key="impact_title">全球经济的连锁反应</h3>
+             <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto" data-lang-key="impact_intro">
+                关税战的影响远超中美两国边界，它重塑了全球供应链，改变了国际贸易格局，并对世界各地的经济体产生了深远的涟漪效应。
+            </p>
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h4 class="text-xl font-bold text-center mb-4" data-lang-key="impact_chart1_title">对中美经济增长的预测</h4>
+                    <div class="chart-container">
+                        <canvas id="economicImpactChart"></canvas>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-4 text-center" data-lang-key="impact_chart1_desc">世界银行预测，由于贸易壁垒增加，两国2025年的经济增长均将放缓。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h4 class="text-xl font-bold text-center mb-4" data-lang-key="impact_chart2_title">全球供应链重构与贸易转移</h4>
+                     <div class="chart-container">
+                        <canvas id="tradeShiftChart"></canvas>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-4 text-center" data-lang-key="impact_chart2_desc">企业将生产转移出中国，越南、印度和墨西哥等国成为主要受益者，但也面临成本和效率挑战。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Broader Implications Section -->
+        <section id="implications" class="mb-16 md:mb-24 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-4" data-lang-key="implications_title">超越经济：更深远的影响</h3>
+             <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto" data-lang-key="implications_intro">
+                关税战的战火已蔓延至经济领域之外，深刻影响着技术安全、全球治理和国际合作的未来。
+            </p>
+            <div>
+                <div class="border-b border-gray-200">
+                    <nav id="implications-tabs" class="-mb-px flex space-x-6" aria-label="Tabs">
+                        <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm active" data-tab="tech" data-lang-key="tab1_title">技术脱钩</button>
+                        <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="governance" data-lang-key="tab2_title">全球治理</button>
+                        <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="climate" data-lang-key="tab3_title">气候合作</button>
+                    </nav>
+                </div>
+                <div id="implications-content" class="mt-8">
+                    <!-- Dynamic content will be injected here -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- 6. Future Outlook Section -->
+        <section id="future" class="scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-4" data-lang-key="future_title">未来展望：波动中的新秩序</h3>
+             <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto" data-lang-key="future_intro">
+                虽然短期内可能出现战术性缓和，但长期的战略竞争似乎不可避免。世界正走向一个更加碎片化、竞争更激烈的经济新格局。
+            </p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-bold mb-2" data-lang-key="future1_title">短期：不稳定的休战</h4>
+                    <p class="text-gray-600" data-lang-key="future1_desc">临时协议缓解了即时危机，但核心矛盾未解。双方距离再次对抗可能仅一步之遥，市场和企业信心持续受到不确定性的抑制。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-bold mb-2" data-lang-key="future2_title">长期：经济冷战与碎片化</h4>
+                    <p class="text-gray-600" data-lang-key="future2_desc">趋势指向更广泛的经济冷战，全球可能形成以美中为核心的竞争性经济集团。供应链持续“去风险化”，导致一个效率更低但更具区域化的全球贸易体系。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="mt-16 md:mt-24 border-t border-gray-200">
+        <div class="container mx-auto px-4 py-6 text-center text-gray-500">
+            <p data-lang-key="footer_text">基于2025年分析报告生成。仅供信息参考。</p>
+        </div>
+    </footer>
+
+<script>
+const langData = {
+    zh: {
+        nav_title: "分析",
+        nav_timeline: "演变历程",
+        nav_conflict: "核心矛盾",
+        nav_players: "关键人物",
+        nav_impact: "全球影响",
+        nav_implications: "深远影响",
+        nav_future: "未来展望",
+        hero_title: "中美关税战深度分析",
+        hero_subtitle: "探索2018至2025年间，这场定义时代的经济、技术与地缘政治对抗的演变、影响与未来。",
+        timeline_title: "演变历程：从升级到休战",
+        timeline_intro: "关税战并非一蹴而就，而是一个反复升级、谈判和暂时缓和的动态过程。点击下方年份，了解每个阶段的关键事件和政策转变。",
+        timeline_tag_1: "初步触发与升级",
+        timeline_tag_2: "第一阶段协议",
+        timeline_tag_3: "技术战与脱钩",
+        timeline_tag_4: "关税重燃与休战",
+        timeline_content: {
+            "2018-2019": {
+                title: "2018-2019: 初步触发与升级",
+                text: "特朗普政府以“301调查”为由，对数千亿美元中国商品加征关税，理由是知识产权盗窃和不公平贸易行为。中国迅速采取对等报复，引发“以牙还牙”的关税升级，为后续冲突奠定了模式。"
+            },
+            "2020-2021": {
+                title: "2020-2021: 《第一阶段协议》签署",
+                text: "双方签署协议，带来短暂缓和。中国承诺扩大采购美国商品并加强知识产权保护。然而，由于疫情和结构性分歧，中国的采购承诺最终未能完全兑现，未能解决根本矛盾。"
+            },
+            "2021-2023": {
+                title: "2021-2023: 战略脱钩与技术战",
+                text: "拜登政府保留大部分关税，但重点转向技术领域。美国收紧对半导体、AI等先进技术的出口管制，中国则加快国内技术自主步伐并限制关键矿产出口，冲突从贸易战升级为技术战。"
+            },
+            "2024-2025": {
+                title: "2024-2025: 关税重燃与“90天休战”",
+                text: "特朗普第二任期开启后，关税迅速升级至历史高位（美方145%，中方125%），引发全球市场恐慌。在巨大经济压力下，双方达成“90天休战”，关税暂时降低，为新一轮谈判创造空间。"
+            }
+        },
+        conflict_title: "三大核心矛盾",
+        conflict_intro: "贸易争端表面之下，是经济失衡、技术霸权和地缘政治竞争三大深层矛盾的交织。这三者共同构成了这场持久对抗的根源。",
+        conflict1_title: "经济失衡",
+        conflict1_desc: "美国聚焦于巨额贸易逆差和市场准入壁垒，而中国则视关税为保护主义，捍卫自身发展模式。双方对“公平贸易”的定义截然不同。",
+        conflict2_title: "技术霸权",
+        conflict2_desc: "冲突的核心已演变为对半导体、人工智能等关键技术领导权的争夺。国家安全考量超越了纯粹的经济利益，导致“技术脱钩”加剧。",
+        conflict3_title: "地缘政治",
+        conflict3_desc: "贸易战是更广泛的全球领导力竞争的体现。它反映了两种不同治理模式和价值观的根本性差异，经济政策已成为地缘政治博弈的工具。",
+        players_title: "谈判桌上的关键人物",
+        players_intro: "谈判的走向深刻受到双方核心人物的背景、价值观和政策主张的影响。了解他们，就是了解两国战略意图的窗口。",
+        players_us_title: "美国团队",
+        player_us1_name: "斯科特·贝森特 (财长)",
+        player_us1_claim: "主张：通过减税和“公平贸易”重新平衡全球经济，视关税为实现目标的工具。",
+        player_us2_name: "霍华德·卢特尼克 (商务部长)",
+        player_us2_claim: "主张：坚定的“美国优先”贸易保护主义者，认为关税是保护美国工人和产业的关键。",
+        player_us3_name: "杰米森·格里尔 (贸易代表)",
+        player_us3_claim: "主张：致力于打击不公平贸易行为，确保贸易关系的平衡与互惠，是关税政策的坚定执行者。",
+        players_cn_title: "中国团队",
+        player_cn1_name: "何立峰 (副总理)",
+        player_cn1_claim: "主张：强调“互利共赢”，谈判“既有诚意也有原则”，立场被认为比前任更强硬。",
+        player_cn2_name: "王文涛 (商务部长)",
+        player_cn2_claim: "主张：面对“无理关税”必须采取坚决反制，维护国家利益与国际公平。",
+        player_cn3_name: "李成钢 (国际贸易谈判代表)",
+        player_cn3_claim: "主张：批评美国单边主义破坏全球贸易体系，是WTO规则的坚定捍卫者。",
+        impact_title: "全球经济的连锁反应",
+        impact_intro: "关税战的影响远超中美两国边界，它重塑了全球供应链，改变了国际贸易格局，并对世界各地的经济体产生了深远的涟漪效应。",
+        impact_chart1_title: "对中美经济增长的预测 (2025)",
+        impact_chart1_desc: "世界银行预测，由于贸易壁垒增加，两国2025年的经济增长均将放缓。",
+        impact_chart2_title: "全球供应链重构与贸易转移",
+        impact_chart2_desc: "企业将生产转移出中国，越南、印度和墨西哥等国成为主要受益者，但也面临成本和效率挑战。",
+        implications_title: "超越经济：更深远的影响",
+        implications_intro: "关税战的战火已蔓延至经济领域之外，深刻影响着技术安全、全球治理和国际合作的未来。",
+        tab1_title: "技术脱钩",
+        tab2_title: "全球治理",
+        tab3_title: "气候合作",
+        implications_content: {
+            tech: {
+                title: "“数字铁幕”正在落下",
+                text: "贸易战加速了技术领域的“脱钩”。数据安全被“安全化”，从电动汽车到社交媒体的数据流都受到严格审查。美国限制华为等中企的技术准入，中国则加强数据主权。这不仅加剧不信任，也可能形成两个平行的技术生态系统，损害全球创新。"
+            },
+            governance: {
+                title: "多边贸易体系的危机",
+                text: "中美双方绕开WTO采取单边行动，严重削弱了其权威。特别是美国通过瘫痪WTO上诉机构，使全球贸易争端解决机制陷入停摆。这标志着世界正从以规则为基础的体系，滑向一个更加碎片化和以实力为基础的强权政治体系。"
+            },
+            climate: {
+                title: "全球气候议程受阻",
+                text: "作为全球最大的两个碳排放国，中美的对抗给气候合作蒙上阴影。对太阳能电池板、锂电池等清洁能源产品征收关税，直接增加了绿色转型的成本，减缓了全球应对气候变化的速度。地缘政治竞争压倒了集体气候责任。"
+            }
+        },
+        future_title: "未来展望：波动中的新秩序",
+        future_intro: "虽然短期内可能出现战术性缓和，但长期的战略竞争似乎不可避免。世界正走向一个更加碎片化、竞争更激烈的经济新格局。",
+        future1_title: "短期：不稳定的休战",
+        future1_desc: "临时协议缓解了即时危机，但核心矛盾未解。双方距离再次对抗可能仅一步之遥，市场和企业信心持续受到不确定性的抑制。",
+        future2_title: "长期：经济冷战与碎片化",
+        future2_desc: "趋势指向更广泛的经济冷战，全球可能形成以美中为核心的竞争性经济集团。供应链持续“去风险化”，导致一个效率更低但更具区域化的全球贸易体系。",
+        footer_text: "基于2025年分析报告生成。仅供信息参考。"
+    },
+    en: {
+        nav_title: "Analysis",
+        nav_timeline: "Timeline",
+        nav_conflict: "Core Conflicts",
+        nav_players: "Key Players",
+        nav_impact: "Global Impact",
+        nav_implications: "Broader Implications",
+        nav_future: "Future Outlook",
+        hero_title: "In-Depth Analysis of the U.S.-China Tariff War",
+        hero_subtitle: "Explore the evolution, impact, and future of this era-defining economic, technological, and geopolitical confrontation from 2018 to 2025.",
+        timeline_title: "The Evolution: From Escalation to Truce",
+        timeline_intro: "The tariff war was not a single event, but a dynamic process of repeated escalation, negotiation, and temporary de-escalation. Click on the years below to understand the key events and policy shifts of each phase.",
+        timeline_tag_1: "Initial Trigger & Escalation",
+        timeline_tag_2: "Phase One Deal",
+        timeline_tag_3: "Tech War & Decoupling",
+        timeline_tag_4: "Tariff Resurgence & Truce",
+        timeline_content: {
+            "2018-2019": {
+                title: "2018-2019: Initial Trigger and Escalation",
+                text: "Citing its 'Section 301' investigation, the Trump administration imposed tariffs on hundreds of billions of dollars of Chinese goods, alleging intellectual property theft and unfair trade practices. China swiftly retaliated in kind, sparking a tit-for-tat escalation that set the pattern for the conflict."
+            },
+            "2020-2021": {
+                title: "2020-2021: The 'Phase One' Agreement",
+                text: "The two sides signed an agreement, providing a temporary detente. China committed to increasing purchases of U.S. goods and strengthening IP protections. However, due to the pandemic and structural disagreements, China's purchase commitments fell short, failing to resolve the underlying conflicts."
+            },
+            "2021-2023": {
+                title: "2021-2023: Strategic Decoupling and Tech War",
+                text: "The Biden administration largely retained the tariffs but shifted focus to the technology sector. The U.S. tightened export controls on advanced technologies like semiconductors and AI, while China accelerated its domestic tech self-sufficiency and restricted exports of critical minerals, escalating the conflict from a trade war to a tech war."
+            },
+            "2024-2025": {
+                title: "2024-2025: Tariff Resurgence and '90-Day Truce'",
+                text: "After Trump's second inauguration, tariffs quickly escalated to historic highs (145% U.S., 125% China), causing global market panic. Under immense economic pressure, the two sides agreed to a '90-day truce,' temporarily lowering tariffs to create space for new negotiations."
+            }
+        },
+        conflict_title: "Three Core Conflicts",
+        conflict_intro: "Beneath the surface of the trade dispute lies an entanglement of three deeper conflicts: economic imbalances, the race for technological supremacy, and geopolitical competition. Together, these form the root of this enduring confrontation.",
+        conflict1_title: "Economic Imbalances",
+        conflict1_desc: "The U.S. focuses on its large trade deficit and market access barriers, while China views the tariffs as protectionism to defend its development model. Their definitions of 'fair trade' are fundamentally different.",
+        conflict2_title: "Technological Supremacy",
+        conflict2_desc: "The conflict has increasingly become a battle for leadership in key technologies like semiconductors and AI. National security concerns have overtaken purely economic interests, leading to an accelerated 'tech decoupling'.",
+        conflict3_title: "Geopolitical Rivalry",
+        conflict3_desc: "The trade war is a manifestation of a broader competition for global leadership. It reflects fundamental differences in governance models and values, with economic policy now a tool in the geopolitical chessboard.",
+        players_title: "Key Players at the Negotiating Table",
+        players_intro: "The direction of negotiations is profoundly shaped by the backgrounds, values, and policy stances of the key figures on both sides. To understand them is to get a window into the strategic intentions of both nations.",
+        players_us_title: "Team USA",
+        player_us1_name: "Scott Bessent (Treasury Secretary)",
+        player_us1_claim: "Advocates for rebalancing the global economy through tax cuts and 'fair trade,' viewing tariffs as a tool to achieve these goals.",
+        player_us2_name: "Howard Lutnick (Commerce Secretary)",
+        player_us2_claim: "A staunch 'America First' protectionist who sees tariffs as essential for protecting American workers and industries.",
+        player_us3_name: "Jamieson Greer (Trade Representative)",
+        player_us3_claim: "Committed to fighting unfair trade practices and ensuring balanced, reciprocal trade relationships; a firm implementer of tariff policy.",
+        players_cn_title: "Team China",
+        player_cn1_name: "He Lifeng (Vice Premier)",
+        player_cn1_claim: "Emphasizes 'mutual benefit and win-win,' negotiating with 'sincerity and principles.' His stance is considered tougher than his predecessor's.",
+        player_cn2_name: "Wang Wentao (Minister of Commerce)",
+        player_cn2_claim: "Advocates for firm countermeasures against 'unreasonable tariffs' to protect national interests and international fairness.",
+        player_cn3_name: "Li Chenggang (Int'l Trade Negotiator)",
+        player_cn3_claim: "A staunch defender of WTO rules who criticizes U.S. unilateralism for undermining the global trading system.",
+        impact_title: "A Ripple Effect on the Global Economy",
+        impact_intro: "The effects of the tariff war extend far beyond the borders of the U.S. and China. It has reshaped global supply chains, altered international trade patterns, and sent profound ripple effects through economies worldwide.",
+        impact_chart1_title: "Forecasted Economic Growth (2025)",
+        impact_chart1_desc: "The World Bank predicts that due to increased trade barriers, economic growth in both countries will slow in 2025.",
+        impact_chart2_title: "Global Supply Chain Restructuring",
+        impact_chart2_desc: "Companies are shifting production out of China, with countries like Vietnam, India, and Mexico emerging as key beneficiaries, though they face challenges in cost and efficiency.",
+        implications_title: "Beyond Economics: Broader Implications",
+        implications_intro: "The tariff war has spilled beyond the economic realm, profoundly impacting the future of technological security, global governance, and international cooperation.",
+        tab1_title: "Tech Decoupling",
+        tab2_title: "Global Governance",
+        tab3_title: "Climate Cooperation",
+        implications_content: {
+            tech: {
+                title: "A 'Digital Iron Curtain' is Descending",
+                text: "The trade war has accelerated 'decoupling' in the tech sector. Data security has been 'securitized,' with data flows from electric vehicles to social media coming under intense scrutiny. The U.S. restricts access for Chinese firms like Huawei, while China strengthens its data sovereignty. This not only increases mistrust but also risks creating two parallel tech ecosystems, harming global innovation."
+            },
+            governance: {
+                title: "Crisis of the Multilateral Trading System",
+                text: "Both sides have bypassed the WTO to take unilateral actions, severely weakening its authority. The U.S., in particular, has crippled the global trade dispute settlement system by paralyzing the WTO's Appellate Body. This marks a shift from a rules-based system toward a more fragmented, power-based geopolitical order."
+            },
+            climate: {
+                title: "The Global Climate Agenda is Hindered",
+                text: "As the world's two largest carbon emitters, the U.S.-China confrontation casts a shadow over climate cooperation. Tariffs on clean energy products like solar panels and lithium batteries directly increase the cost of the green transition, slowing the global response to climate change. Geopolitical competition has overridden collective climate responsibility."
+            }
+        },
+        future_title: "未来展望：波动中的新秩序",
+        future_intro: "虽然短期内可能出现战术性缓和，但长期的战略竞争似乎不可避免。世界正走向一个更加碎片化、竞争更激烈的经济新格局。",
+        future1_title: "短期：不稳定的休战",
+        future1_desc: "临时协议缓解了即时危机，但核心矛盾未解。双方距离再次对抗可能仅一步之遥，市场和企业信心持续受到不确定性的抑制。",
+        future2_title: "长期：经济冷战与碎片化",
+        future2_desc: "趋势指向更广泛的经济冷战，全球可能形成以美中为核心的竞争性经济集团。供应链持续“去风险化”，导致一个效率更低但更具区域化的全球贸易体系。",
+        footer_text: "基于2025年分析报告生成。仅供信息参考。"
+    }
+};
+
+let currentLang = 'zh';
+
+document.addEventListener('DOMContentLoaded', () => {
+    const langSwitcher = document.getElementById('lang-switcher');
+    const timelineControls = document.getElementById('timeline-controls');
+    const timelineContent = document.getElementById('timeline-content');
+    const implicationsTabs = document.getElementById('implications-tabs');
+    const implicationsContent = document.getElementById('implications-content');
+
+    // Initialize chart variables to null
+    let economicImpactChart = null;
+    let tradeShiftChart = null;
+
+    const switchLanguage = (lang) => {
+        currentLang = lang;
+        document.documentElement.lang = lang;
+        langSwitcher.textContent = lang === 'zh' ? 'English' : '中文';
+        
+        document.querySelectorAll('[data-lang-key]').forEach(el => {
+            const key = el.dataset.langKey;
+            const keys = key.split('.');
+            let text = langData[lang];
+            keys.forEach(k => {
+                if (text && typeof text === 'object' && k in text) {
+                    text = text[k];
+                } else {
+                    text = undefined;
+                }
+            });
+            if (typeof text === 'string') {
+                el.innerHTML = text;
+            }
+        });
+
+        updateTimelineContent(document.querySelector('.timeline-item.active')?.dataset.year || '2018-2019');
+        updateImplicationsContent(document.querySelector('.tab-btn.active')?.dataset.tab || 'tech');
+        renderCharts();
+    };
+
+    langSwitcher.addEventListener('click', () => {
+        const newLang = currentLang === 'zh' ? 'en' : 'zh';
+        switchLanguage(newLang);
+    });
+
+    // Timeline
+    const updateTimelineContent = (year) => {
+        const content = langData[currentLang].timeline_content[year];
+        if (content) {
+            timelineContent.innerHTML = `<h5 class="font-bold text-xl mb-2">${content.title}</h5><p>${content.text}</p>`;
+            document.querySelectorAll('.timeline-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.year === year);
+            });
+        }
+    };
+    
+    timelineControls.addEventListener('click', (e) => {
+        const target = e.target.closest('.timeline-item');
+        if (target) {
+            updateTimelineContent(target.dataset.year);
+        }
+    });
+
+    // Implications Tabs
+    const updateImplicationsContent = (tab) => {
+        const content = langData[currentLang].implications_content[tab];
+        if (content) {
+            implicationsContent.innerHTML = `<div class="bg-white p-6 rounded-lg shadow-md"><h5 class="font-bold text-xl mb-2">${content.title}</h5><p>${content.text}</p></div>`;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+        }
+    };
+
+    implicationsTabs.addEventListener('click', (e) => {
+        const target = e.target.closest('.tab-btn');
+        if (target) {
+            updateImplicationsContent(target.dataset.tab);
+        }
+    });
+
+    // Initial setup
+    switchLanguage('zh');
+
+    // Charts
+    function renderCharts() {
+        // Chart 1: Economic Impact
+        const econCtx = document.getElementById('economicImpactChart').getContext('2d');
+        const econData = {
+            labels: [currentLang === 'zh' ? '2024年增长' : '2024 Growth', currentLang === 'zh' ? '2025年预测' : '2025 Forecast'],
+            datasets: [{
+                label: currentLang === 'zh' ? '美国' : 'USA',
+                data: [2.8, 1.4],
+                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1
+            }, {
+                label: currentLang === 'zh' ? '中国' : 'China',
+                data: [5.0, 4.5],
+                backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                borderColor: 'rgba(239, 68, 68, 1)',
+                borderWidth: 1
+            }]
+        };
+        if (economicImpactChart) economicImpactChart.destroy();
+        economicImpactChart = new Chart(econCtx, {
+            type: 'bar',
+            data: econData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: currentLang === 'zh' ? 'GDP增长率 (%)' : 'GDP Growth Rate (%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Chart 2: Trade Shift
+        const tradeCtx = document.getElementById('tradeShiftChart').getContext('2d');
+        const tradeData = {
+            labels: [
+                currentLang === 'zh' ? '越南' : 'Vietnam', 
+                currentLang === 'zh' ? '印度' : 'India', 
+                currentLang === 'zh' ? '墨西哥' : 'Mexico',
+                currentLang === 'zh' ? '欧洲' : 'Europe',
+                currentLang === 'zh' ? '其他亚洲地区' : 'Other Asia'
+            ],
+            datasets: [{
+                label: currentLang === 'zh' ? '贸易/投资流入变化' : 'Change in Trade/Investment Inflow',
+                data: [25, 22, 18, -14, 15],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.6)',
+                    'rgba(249, 115, 22, 0.6)',
+                    'rgba(14, 165, 233, 0.6)',
+                    'rgba(239, 68, 68, 0.5)',
+                    'rgba(139, 92, 246, 0.6)',
+                ],
+                borderColor: [
+                    'rgba(16, 185, 129, 1)',
+                    'rgba(249, 115, 22, 1)',
+                    'rgba(14, 165, 233, 1)',
+                    'rgba(239, 68, 68, 1)',
+                    'rgba(139, 92, 246, 1)',
+                ],
+                borderWidth: 1
+            }]
+        };
+        if (tradeShiftChart) tradeShiftChart.destroy();
+        tradeShiftChart = new Chart(tradeCtx, {
+            type: 'doughnut',
+            data: tradeData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${context.raw > 0 ? '+' : ''}${context.raw}% (est.)`;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    }
+
+});
+
+</script>
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
