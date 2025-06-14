@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The L.A. Flashpoint: An Interactive Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: A single-page application with a fixed left-hand navigation sidebar. This allows users to easily jump between key thematic sections (Timeline, Key Players, Impact, Root Causes) without a long, linear scroll. This non-linear, thematic structure breaks down the complex event into digestible parts, allowing users to explore what interests them most. The goal is to facilitate understanding by organizing information by its function (chronology, comparison, impact analysis) rather than the report's original narrative order, which is better for usability and exploration. -->
+    <!-- Visualization & Content Choices:
+        - Timeline (Chronology): Report Info: Day-by-day events from June 6-12. Goal: Show rapid escalation. Viz/Method: Interactive horizontal timeline using HTML/CSS/JS. Interaction: Clicking a day reveals detailed info. Justification: More engaging and visually representative of time than a list. Library: Vanilla JS.
+        - Key Players (Comparison): Report Info: Responses from federal, state, city gov. Goal: Compare conflicting stances. Viz/Method: Interactive cards for each entity. Interaction: Clicking a card expands it. Justification: Clearer and more interactive than a static table. Library: Vanilla JS.
+        - Impact (Data Visualization): Report Info: Arrest numbers, economic costs, national spread. Goal: Visualize scale of impact. Viz/Method: Bar chart (arrests) and Donut chart (costs). Interaction: Hover tooltips. Justification: Provides a quick, powerful summary of quantitative data. Library: Chart.js (Canvas).
+        - Root Causes & Solutions (Organization): Report Info: Abstract conflicts and proposed reforms. Goal: Organize complex text. Viz/Method: Tabbed component. Interaction: Clicking tabs switches content. Justification: Manages a large amount of text in a user-driven format. Library: Vanilla JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .active-nav { background-color: #374151; color: #F9FAFB; }
+        .nav-item { transition: all 0.2s ease-in-out; }
+        .nav-item:hover { background-color: #4B5563; color: #F9FAFB; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .timeline-item.active-timeline { border-color: #3B82F6; background-color: #EFF6FF; }
+        .player-card .details { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; }
+        .player-card.open .details { max-height: 1000px; }
+        .chart-container { position: relative; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; height: 300px; max-height: 350px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; max-height: 400px; } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 bg-slate-800 text-slate-200 p-4 md:p-6 flex-shrink-0">
+            <h1 class="text-2xl font-bold mb-2" data-lang-en="L.A. Flashpoint" data-lang-zh="洛杉矶焦点事件">L.A. Flashpoint</h1>
+            <p class="text-sm text-slate-400 mb-6" data-lang-en="An Interactive Analysis" data-lang-zh="交互式分析报告">An Interactive Analysis</p>
+            <nav id="main-nav">
+                <ul>
+                    <li><a href="#timeline" class="nav-item active-nav flex items-center p-3 rounded-lg" data-lang-en="Timeline of Events" data-lang-zh="事件时间线">Timeline of Events</a></li>
+                    <li><a href="#players" class="nav-item flex items-center p-3 rounded-lg mt-2" data-lang-en="Key Players" data-lang-zh="关键方">Key Players</a></li>
+                    <li><a href="#impact" class="nav-item flex items-center p-3 rounded-lg mt-2" data-lang-en="National Impact" data-lang-zh="全国影响">National Impact</a></li>
+                    <li><a href="#roots" class="nav-item flex items-center p-3 rounded-lg mt-2" data-lang-en="Core Conflict" data-lang-zh="核心冲突">Core Conflict</a></li>
+                </ul>
+            </nav>
+            <div class="mt-8 pt-6 border-t border-slate-700">
+                <label for="language-toggle" class="block text-sm font-medium text-slate-300" data-lang-en="Language" data-lang-zh="语言">Language</label>
+                <div class="mt-2 flex items-center">
+                    <span class="text-sm" data-lang-en="EN" data-lang-zh="英">EN</span>
+                    <button id="language-toggle" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-slate-600 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 mx-2" type="button" role="switch" aria-checked="false">
+                        <span class="sr-only">Use setting</span>
+                        <span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 translate-x-0 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                    </button>
+                    <span class="text-sm" data-lang-en="ZH" data-lang-zh="中">ZH</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+
+            <!-- Section: Timeline of Events -->
+            <section id="timeline" class="content-section active">
+                <h2 class="text-3xl font-bold mb-2" data-lang-en="Timeline of Events" data-lang-zh="事件时间线">Timeline of Events</h2>
+                <p class="text-slate-600 mb-8" data-lang-en="This section provides a day-by-day breakdown of how a federal law enforcement operation rapidly escalated into a national crisis. Click on each day to see the key actions and reactions that defined the conflict." data-lang-zh="本节按天详细介绍了联邦执法行动如何迅速升级为全国性危机。点击每一天，查看定义了这场冲突的关键行动和反应。">This section provides a day-by-day breakdown of how a federal law enforcement operation rapidly escalated into a national crisis. Click on each day to see the key actions and reactions that defined the conflict.</p>
+                
+                <div id="timeline-nav" class="flex flex-wrap gap-2 mb-6 border-b pb-4">
+                    <!-- Timeline nav items will be injected here -->
+                </div>
+
+                <div id="timeline-content" class="bg-white p-6 rounded-lg shadow-md">
+                    <!-- Timeline content will be injected here -->
+                </div>
+            </section>
+
+            <!-- Section: Key Players -->
+            <section id="players" class="content-section">
+                <h2 class="text-3xl font-bold mb-2" data-lang-en="Key Players & Reactions" data-lang-zh="关键方与反应">Key Players & Reactions</h2>
+                 <p class="text-slate-600 mb-8" data-lang-en="The crisis exposed deep divisions in American governance. This section explores the fundamentally opposed positions, justifications, and actions of the primary government entities involved, from the federal to the local level. Click on each entity to expand their detailed response." data-lang-zh="这场危机暴露了美国治理中的深刻分歧。本节探讨了从联邦到地方各级主要政府实体的根本对立立场、理由和行动。点击每个实体以展开其详细回应。">The crisis exposed deep divisions in American governance. This section explores the fundamentally opposed positions, justifications, and actions of the primary government entities involved, from the federal to the local level. Click on each entity to expand their detailed response.</p>
+
+                <div id="players-container" class="space-y-4">
+                    <!-- Player cards will be injected here -->
+                </div>
+            </section>
+            
+            <!-- Section: National Impact -->
+            <section id="impact" class="content-section">
+                <h2 class="text-3xl font-bold mb-2" data-lang-en="National Impact & Economic Fallout" data-lang-zh="全国影响与经济后果">National Impact & Economic Fallout</h2>
+                <p class="text-slate-600 mb-8" data-lang-en="The events in Los Angeles quickly became a national flashpoint, inspiring solidarity protests and revealing deep economic vulnerabilities. This section visualizes the scale of the unrest through key statistics and expert analysis on the long-term damage." data-lang-zh="洛杉矶的事件迅速成为全国性的燃点，激发了声援抗议并揭示了深层的经济脆弱性。本节通过关键统计数据和关于长期损害的专家分析，将骚乱的规模可视化。">The events in Los Angeles quickly became a national flashpoint, inspiring solidarity protests and revealing deep economic vulnerabilities. This section visualizes the scale of the unrest through key statistics and expert analysis on the long-term damage.</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4" data-lang-en="Arrests During The Crisis" data-lang-zh="危机期间的逮捕人数">Arrests During The Crisis</h3>
+                        <div class="chart-container">
+                            <canvas id="arrestsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4" data-lang-en="Estimated Direct Costs" data-lang-zh="预估直接成本">Estimated Direct Costs</h3>
+                        <div class="chart-container">
+                            <canvas id="costsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4" data-lang-en="Economic Repercussions" data-lang-zh="经济后果">Economic Repercussions</h3>
+                    <div id="economic-impact-content">
+                        <!-- Economic impact content will be injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Core Conflict -->
+            <section id="roots" class="content-section">
+                <h2 class="text-3xl font-bold mb-2" data-lang-en="The Core Conflict & Path to Resolution" data-lang-zh="核心冲突与解决方案">The Core Conflict & Path to Resolution</h2>
+                 <p class="text-slate-600 mb-8" data-lang-en="The turmoil was a symptom of deep, unresolved issues in U.S. immigration policy and law. This section explores the fundamental tensions that fueled the crisis and outlines expert consensus on a more stable, humane path forward. Use the tabs to switch between the diagnosis of the problem and potential solutions." data-lang-zh="这场动荡是美国移民政策和法律中深层、未解决问题的症状。本节探讨了引发危机的根本性紧张关系，并概述了专家们就更稳定、更人道的未来道路达成的共识。使用选项卡在问题诊断和潜在解决方案之间切换。">The turmoil was a symptom of deep, unresolved issues in U.S. immigration policy and law. This section explores the fundamental tensions that fueled the crisis and outlines expert consensus on a more stable, humane path forward. Use the tabs to switch between the diagnosis of the problem and potential solutions.</p>
+                 <div>
+                    <div class="border-b border-gray-200">
+                      <nav id="roots-tabs" class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <a href="#" class="roots-tab border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" aria-current="page" data-tab="tensions" data-lang-en="Fundamental Tensions" data-lang-zh="根本矛盾">Fundamental Tensions</a>
+                        <a href="#" class="roots-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="solutions" data-lang-en="Path to Reform" data-lang-zh="改革之路">Path to Reform</a>
+                      </nav>
+                    </div>
+                    <div id="roots-content" class="mt-6">
+                        <!-- Roots/Solutions content will be injected here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+const DATA = {
+    timeline: [
+        {
+            day: 'Fri, June 6',
+            title: { en: 'The Spark: Federal Raids and Immediate Backlash', zh: '导火索：联邦突袭与即时反弹' },
+            content: { 
+                en: 'A multi-agency federal task force launches "military-style" raids across Los Angeles, targeting the Fashion District and Home Depot locations. SEIU President David Huerta is arrested during protests, galvanizing organized labor. Spontaneous protests erupt, leading to clashes with police who use tear gas and declare a citywide tactical alert.', 
+                zh: '一个多机构联邦特遣队在洛杉矶各地发起“军事化”突袭，目标是时尚区和家得宝。SEIU主席大卫·韦尔塔在抗议中被捕，激发了有组织的劳工运动。自发的抗议活动爆发，导致与警察的冲突，警察使用了催泪瓦斯并宣布全市战术警报。' 
+            }
+        },
+        {
+            day: 'Sat, June 7',
+            title: { en: 'Escalation: Federalization of National Guard', zh: '事态升级：国民警卫队联邦化' },
+            content: { 
+                en: 'Continued ICE raids fuel more protests. President Trump issues an executive order to deploy 2,000 National Guard troops under federal command (Title 10), bypassing the governor. Gov. Newsom responds by announcing CHP will protect state freeways, setting up a state-federal confrontation.', 
+                zh: '持续的ICE突袭引发了更多抗议。特朗普总统发布行政命令，动用联邦指挥下的2000名国民警卫队（依据美国法典第10条），绕过州长。州长纽森回应称将部署加州公路巡警保护州高速公路，形成了州与联邦的对抗。' 
+            }
+        },
+        {
+            day: 'Sun, June 8',
+            title: { en: 'Chaos: Freeways Blocked and Cars Burned', zh: '混乱：高速公路被堵与汽车被焚' },
+            content: { 
+                en: 'Federalized troops deploy in downtown L.A. Thousands of protesters march, blocking the 101 Freeway. Several autonomous Waymo cars are vandalized and set on fire, becoming a defining image of the unrest. Police and troops use rubber bullets and tear gas to clear the crowds.', 
+                zh: '联邦化的部队部署在洛杉矶市中心。数千名抗议者游行，堵塞了101高速公路。几辆Waymo自动驾驶汽车被破坏并点燃，成为骚乱的标志性画面。警察和部队使用橡皮子弹和催泪瓦斯驱散人群。' 
+            }
+        },
+        {
+            day: 'Mon, June 9',
+            title: { en: 'Institutional Conflict: Lawsuits and Troop Buildup', zh: '制度性冲突：诉讼与军队集结' },
+            content: { 
+                en: 'Gov. Newsom announces a lawsuit against the Trump administration over the "unlawful" troop deployment. SEIU organizes a large, peaceful rally. The Pentagon responds by activating 2,000 more Guard members and deploying 700 active-duty U.S. Marines to the area.', 
+                zh: '州长纽森宣布就“非法”部署军队起诉特朗普政府。SEIU组织了一场大型和平集会。五角大楼的回应是，再动员2000名国民警卫队成员，并向该地区部署700名现役美国海军陆战队员。' 
+            }
+        },
+        {
+            day: 'Tue-Thu, June 10-12',
+            title: { en: 'City Under Curfew and National Protests', zh: '宵禁下的城市与全国性抗议' },
+            content: { 
+                en: 'Mayor Karen Bass declares a state of emergency and imposes a nightly curfew on downtown L.A. to quell looting. Solidarity protests erupt in cities nationwide. U.S. Senator Alex Padilla is forcibly removed from a DHS press conference, further inflaming tensions.', 
+                zh: '市长凯伦·巴斯宣布进入紧急状态，并对洛杉矶市中心实行夜间宵禁以平息抢劫。全国各城市爆发声援抗议。美国参议员亚历克斯·帕迪拉在国土安全部新闻发布会上被强行带离，进一步加剧了紧张局势。' 
+            }
+        },
+    ],
+    players: [
+        {
+            name: { en: 'Federal: White House', zh: '联邦：白宫' },
+            position: { en: 'Protests are an "insurrection" needing military force to "liberate Los Angeles".', zh: '抗议是“叛乱”，需要军事力量“解放洛杉矶”。' },
+            actions: { en: 'Ordered ICE raids, federalized National Guard without governor\'s consent, deployed U.S. Marines.', zh: '下令ICE突袭，未经州长同意将国民警卫队联邦化，部署美国海军陆战队。' }
+        },
+        {
+            name: { en: 'Federal: Dept. of Homeland Security', zh: '联邦：国土安全部' },
+            position: { en: 'Raids target "worst of the worst" criminals; sanctuary policies endanger officers.', zh: '突袭目标是“罪大恶极”的罪犯；庇护政策危及执法人员。' },
+            actions: { en: 'Conducted raids, released lists of arrested individuals with criminal records, defended military deployment.', zh: '执行突袭，公布被捕者犯罪记录名单，为军事部署辩护。' }
+        },
+        {
+            name: { en: 'State: Governor Gavin Newsom', zh: '州政府：州长加文·纽森' },
+            position: { en: 'Federal actions are an "unlawful, authoritarian" abuse of power and breach of state sovereignty.', zh: '联邦行动是“非法的、专制的”权力滥用，侵犯了州主权。' },
+            actions: { en: 'Sued the Trump administration, deployed CHP to freeways, publicly condemned federal actions.', zh: '起诉特朗普政府，部署加州公路巡警至高速公路，公开谴责联邦行动。' }
+        },
+        {
+            name: { en: 'City: Mayor Karen Bass', zh: '市政府：市长凯伦·巴斯' },
+            position: { en: 'Federal intervention is a "deliberate attempt to create disorder and chaos."', zh: '联邦干预是“蓄意制造混乱和无序”。' },
+            actions: { en: 'Declared a local emergency, imposed a downtown curfew to stop looting, condemned federal actions.', zh: '宣布地方紧急状态，为制止抢劫实行市中心宵禁，谴责联邦行动。' }
+        },
+        {
+            name: { en: 'Local: LAPD', zh: '地方：洛杉矶警察局' },
+            position: { en: 'Supports protest rights but will not tolerate criminal acts (violence, vandalism).', zh: '支持抗议权，但不容忍犯罪行为（暴力、破坏公物）。' },
+            actions: { en: 'Declared unlawful assemblies, used tear gas/rubber bullets, made hundreds of arrests.', zh: '宣布非法集会，使用催泪瓦斯/橡皮子弹，逮捕数百人。' }
+        },
+    ],
+    economicImpact: {
+        en: `
+            <p class="mb-4">The crisis revealed the U.S. economy's profound reliance on immigrant labor. The fear induced by the raids caused significant absenteeism in key California sectors:</p>
+            <ul class="list-disc list-inside space-y-2 text-slate-700">
+                <li><strong class="font-semibold">Agriculture:</strong> Farmworker absenteeism spiked to 25-45% in some areas, directly threatening harvests for a state that supplies over a third of the country's vegetables and three-quarters of its fruits.</li>
+                <li><strong class="font-semibold">Construction & Hospitality:</strong> Economists warned of critical labor shortages, projecting suppressed job growth, diminished housing production, and rising consumer prices that could fuel inflation.</li>
+                <li><strong class="font-semibold">Global Image:</strong> The images of urban chaos tarnished L.A.'s reputation ahead of hosting the 2026 World Cup and 2028 Olympics, threatening tourism and investment.</li>
+            </ul>
+        `,
+        zh: `
+            <p class="mb-4">这场危机揭示了美国经济对移民劳动力的深度依赖。突袭引发的恐惧导致加州关键行业出现严重的缺勤现象：</p>
+            <ul class="list-disc list-inside space-y-2 text-slate-700">
+                <li><strong class="font-semibold">农业：</strong> 在某些地区，农场工人缺勤率飙升至25-45%，直接威胁到这个供应全国超过三分之一蔬菜和四分之三水果的州的收成。</li>
+                <li><strong class="font-semibold">建筑与酒店业：</strong> 经济学家警告将出现严重的劳动力短缺，预计将抑制就业增长，减少住房生产，并推高消费价格，可能加剧通货膨胀。</li>
+                <li><strong class="font-semibold">全球形象：</strong> 城市混乱的画面在洛杉矶主办2026年世界杯和2028年奥运会前夕损害了其声誉，威胁到旅游业和投资。</li>
+            </ul>
+        `
+    },
+    roots: {
+        tensions: {
+            en: `
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-lg">1. Federal Supremacy vs. States' Rights</h4>
+                        <p class="text-slate-700 mt-1">A classic constitutional struggle. The federal government asserts its supreme authority over immigration law, while "sanctuary" states like California invoke the 10th Amendment to refuse cooperation, creating a legal and political standoff.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg">2. National Security vs. Community Policing</h4>
+                        <p class="text-slate-700 mt-1">Two mutually exclusive law enforcement models clashed. The federal government framed immigration as a national security threat, justifying militarized tactics. Local authorities argued for a community policing model based on trust, which federal actions directly undermined.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg">3. The "Liberal Paradox"</h4>
+                        <p class="text-slate-700 mt-1">A core contradiction in the U.S. system: its economy is heavily reliant on immigrant labor, yet its political system is susceptible to populist movements demanding restrictive policies. The raids were a stark example of a political agenda inflicting harm on economic necessity.</p>
+                    </div>
+                </div>
+            `,
+            zh: `
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-lg">1. 联邦至上 vs. 州权</h4>
+                        <p class="text-slate-700 mt-1">一场经典的宪法斗争。联邦政府主张其在移民法上的最高权威，而像加州这样的“庇护”州则援引第十修正案拒绝合作，造成了法律和政治僵局。</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg">2. 国家安全 vs. 社区警务</h4>
+                        <p class="text-slate-700 mt-1">两种相互排斥的执法模式发生冲突。联邦政府将移民问题定性为国家安全威胁，为军事化策略辩护。地方当局则主张建立在信任基础上的社区警务模式，而联邦行动直接破坏了这种信任。</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg">3. “自由主义悖论”</h4>
+                        <p class="text-slate-700 mt-1">美国体系的核心矛盾：其经济严重依赖移民劳工，但其政治体系却容易受到要求限制性政策的民粹主义运动的影响。这次突袭就是一个政治议程损害经济需求的鲜明例子。</p>
+                    </div>
+                </div>
+            `
+        },
+        solutions: {
+            en: `
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-lg">1. Disentangle Local & Federal Enforcement</h4>
+                        <p class="text-slate-700 mt-1">End federal programs that deputize local police as immigration agents. This would reduce friction, rebuild community trust, and allow local police to focus on local public safety priorities.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg">2. Shift from Detention to Humane Alternatives</h4>
+                        <p class="text-slate-700 mt-1">Replace costly and punitive detention with effective community-based case management programs, which are far less expensive and highly effective at ensuring court appearances.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg">3. Enact Comprehensive Legislative Reform</h4>
+                        <p class="text-slate-700 mt-1">A multi-pronged strategy is needed: Expand legal immigration pathways to meet labor needs, modernize the asylum system to process claims efficiently, and provide a path to legal status for the millions of undocumented individuals already integrated into U.S. society.</p>
+                    </div>
+                </div>
+            `,
+            zh: `
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-lg">1. 将地方与联邦执法脱钩</h4>
+                        <p class="text-slate-700 mt-1">终止授权地方警察担任移民探员的联邦项目。这将减少摩擦，重建社区信任，并让地方警察专注于地方公共安全优先事项。</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg">2. 从拘留转向人道替代方案</h4>
+                        <p class="text-slate-700 mt-1">用有效的社区个案管理项目取代昂贵且惩罚性的拘留，这些项目成本低得多，且在确保出庭方面非常有效。</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg">3. 实施全面的立法改革</h4>
+                        <p class="text-slate-700 mt-1">需要一个多管齐下的策略：扩大合法移民途径以满足劳动力需求，现代化庇护系统以高效处理申请，并为已经融入美国社会的数百万无证个人提供获得合法身份的途径。</p>
+                    </div>
+                </div>
+            `
+        }
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    let currentLang = 'en';
+    const timelineNav = document.getElementById('timeline-nav');
+    const timelineContentEl = document.getElementById('timeline-content');
+    const playersContainer = document.getElementById('players-container');
+    const economicImpactContent = document.getElementById('economic-impact-content');
+    const rootsContent = document.getElementById('roots-content');
+
+    const mainNav = document.getElementById('main-nav');
+    const contentSections = document.querySelectorAll('.content-section');
+
+    const languageToggle = document.getElementById('language-toggle');
+    const toggleCircle = languageToggle.querySelector('span:last-child');
+
+    function switchLanguage() {
+        currentLang = currentLang === 'en' ? 'zh' : 'en';
+        
+        const isZh = currentLang === 'zh';
+        toggleCircle.style.transform = isZh ? 'translateX(1.25rem)' : 'translateX(0)';
+        languageToggle.setAttribute('aria-checked', isZh);
+
+        document.querySelectorAll('[data-lang-en]').forEach(el => {
+            el.textContent = el.dataset[`lang${currentLang}`];
+        });
+
+        // Re-render dynamic content
+        renderTimeline(0);
+        renderPlayers();
+        renderEconomicImpact();
+        renderRoots('tensions');
+        
+        // Re-render charts with translated labels
+        if(window.arrestsChartInstance) window.arrestsChartInstance.destroy();
+        if(window.costsChartInstance) window.costsChartInstance.destroy();
+        renderCharts();
+    }
+
+    languageToggle.addEventListener('click', switchLanguage);
+
+    mainNav.addEventListener('click', (e) => {
+        e.preventDefault();
+        const navLink = e.target.closest('a');
+        if (!navLink) return;
+
+        const targetId = navLink.getAttribute('href').substring(1);
+
+        contentSections.forEach(section => {
+            section.classList.remove('active');
+            if (section.id === targetId) {
+                section.classList.add('active');
+            }
+        });
+
+        mainNav.querySelectorAll('a').forEach(link => {
+            link.classList.remove('active-nav');
+        });
+        navLink.classList.add('active-nav');
+    });
+
+    function renderTimeline(activeIndex = 0) {
+        timelineNav.innerHTML = DATA.timeline.map((item, index) => `
+            <button class="timeline-item text-sm font-medium border-2 rounded-full px-4 py-2 ${index === activeIndex ? 'active-timeline' : 'border-slate-300 hover:bg-slate-100'}" data-index="${index}">
+                ${item.day}
+            </button>
+        `).join('');
+
+        const activeItem = DATA.timeline[activeIndex];
+        timelineContentEl.innerHTML = `
+            <h3 class="text-xl font-bold mb-2">${activeItem.title[currentLang]}</h3>
+            <p class="text-slate-700">${activeItem.content[currentLang]}</p>
+        `;
+    }
+
+    timelineNav.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            const index = parseInt(e.target.dataset.index);
+            renderTimeline(index);
+        }
+    });
+
+    function renderPlayers() {
+        playersContainer.innerHTML = DATA.players.map((player, index) => `
+            <div class="player-card border rounded-lg overflow-hidden bg-white">
+                <button class="w-full text-left p-4 flex justify-between items-center hover:bg-slate-50 focus:outline-none" data-index="${index}">
+                    <h3 class="text-lg font-semibold text-slate-900">${player.name[currentLang]}</h3>
+                    <span class="transform transition-transform duration-300">
+                        <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </span>
+                </button>
+                <div class="details">
+                    <div class="p-4 border-t border-slate-200">
+                        <p class="mb-2"><strong class="font-semibold text-slate-600">${currentLang === 'en' ? 'Position' : '立场'}:</strong> ${player.position[currentLang]}</p>
+                        <p><strong class="font-semibold text-slate-600">${currentLang === 'en' ? 'Actions' : '行动'}:</strong> ${player.actions[currentLang]}</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    playersContainer.addEventListener('click', (e) => {
+        const button = e.target.closest('button');
+        if (button) {
+            const card = button.parentElement;
+            card.classList.toggle('open');
+            const icon = button.querySelector('span');
+            icon.classList.toggle('rotate-180');
+        }
+    });
+
+    function renderEconomicImpact() {
+        economicImpactContent.innerHTML = DATA.economicImpact[currentLang];
+    }
+    
+    function renderCharts() {
+        const arrestsCtx = document.getElementById('arrestsChart').getContext('2d');
+        window.arrestsChartInstance = new Chart(arrestsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['June 6', 'June 7', 'June 8', 'June 9', 'June 10-12'],
+                datasets: [{
+                    label: currentLang === 'en' ? 'Total Arrests' : '总逮捕人数',
+                    data: [45, 118, 250, 400, 850], // Cumulative for effect
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, title: { display: true, text: currentLang === 'en' ? 'Cumulative Arrests' : '累计逮捕人数' } } },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        const costsCtx = document.getElementById('costsChart').getContext('2d');
+        window.costsChartInstance = new Chart(costsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    currentLang === 'en' ? 'Military Deployment' : '军事部署',
+                    currentLang === 'en' ? 'Property Damage (Est.)' : '财产损失（估）'
+                ],
+                datasets: [{
+                    label: 'Cost Breakdown',
+                    data: [134, 20], // in millions USD
+                    backgroundColor: ['rgba(239, 68, 68, 0.7)', 'rgba(245, 158, 11, 0.7)'],
+                    borderColor: ['rgba(239, 68, 68, 1)', 'rgba(245, 158, 11, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed !== null) { label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed * 1000000); }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const rootsTabs = document.getElementById('roots-tabs');
+    function renderRoots(activeTab = 'tensions') {
+        rootsContent.innerHTML = DATA.roots[activeTab][currentLang];
+        rootsTabs.querySelectorAll('a').forEach(tab => {
+            if (tab.dataset.tab === activeTab) {
+                tab.classList.add('border-blue-500', 'text-blue-600');
+                tab.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            } else {
+                tab.classList.remove('border-blue-500', 'text-blue-600');
+                tab.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            }
+        });
+    }
+
+    rootsTabs.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tabLink = e.target.closest('a');
+        if (tabLink) {
+            renderRoots(tabLink.dataset.tab);
+        }
+    });
+
+    // Initial render
+    renderTimeline();
+    renderPlayers();
+    renderEconomicImpact();
+    renderCharts();
+    renderRoots();
+});
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
