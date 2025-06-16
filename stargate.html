@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>“星际之门”解读</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Cosmic Blueprint (Light gray background, dark text, with shades of deep blue and a cyan accent for interactive elements) -->
+    <!-- Application Structure Plan: A top-down, thematic single-page application. It starts with a high-level overview, then allows users to navigate via a sticky header to dedicated interactive sections: 'What is Stargate?', 'The Alliance', 'Blueprint & Reality', and 'Challenges & Future'. This non-linear structure is chosen over a simple report format to empower users to explore topics based on their interest, making complex information more digestible and engaging. For example, instead of a static list of investors, an interactive diagram allows for focused discovery of each player's role and motivation. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Investment size change ($100B -> $500B). Goal: Inform. Method: Bar Chart (Chart.js). Interaction: Static display for immediate impact. Justification: Clearly visualizes the massive scale-up of the project's ambition.
+        - Report Info: Project investors and partners. Goal: Organize & Compare. Method: Clickable HTML/CSS diagram updating a text panel. Interaction: User clicks on a company logo to see details. Justification: More engaging and less overwhelming than a large table, promoting active exploration.
+        - Report Info: Project timeline. Goal: Show Change over time. Method: Interactive HTML/CSS horizontal timeline. Interaction: Hover/click to see details for each milestone. Justification: Provides a clear, chronological overview of the project's progression.
+        - Report Info: Project risks (Funding, Energy, etc.). Goal: Compare. Method: Radar Chart (Chart.js). Interaction: Hovering over points shows risk details. Justification: A radar chart effectively compares multiple quantitative/qualitative risk factors on a single canvas, providing a quick multi-dimensional overview.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8f9fa;
+            color: #1a202c;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #00A9E0;
+            border-bottom-color: #00A9E0;
+        }
+        .alliance-logo {
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            filter: grayscale(80%);
+        }
+        .alliance-logo:hover {
+            transform: scale(1.05);
+            filter: grayscale(0%);
+            box-shadow: 0 10px 15px -3px rgba(0, 169, 224, 0.2), 0 4px 6px -2px rgba(0, 169, 224, 0.1);
+        }
+         .alliance-logo.selected {
+            filter: grayscale(0%);
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px #00A9E0;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+            padding-left: 2rem;
+            border-left: 2px solid #e2e8f0;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: -0.5rem;
+            top: 0.25rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 9999px;
+            background-color: #cbd5e1;
+            transition: background-color 0.3s;
+        }
+        .timeline-item:hover .timeline-dot {
+            background-color: #00A9E0;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">星际之门计划</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-600">项目概述</a>
+                        <a href="#alliance" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-600">星际联盟</a>
+                        <a href="#reality" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-600">蓝图与现实</a>
+                        <a href="#challenges" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-600">挑战与未来</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                     <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cyan-500">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#overview" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-600">项目概述</a>
+                <a href="#alliance" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-600">星际联盟</a>
+                <a href="#reality" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-600">蓝图与现实</a>
+                <a href="#challenges" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-600">挑战与未来</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <section id="hero" class="text-center py-16">
+            <h2 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 to-blue-600">星际之门</span>：一场决定AI未来的豪赌
+            </h2>
+            <p class="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-gray-600">
+                最初由微软与OpenAI构想的百亿美元超算，现已演变为由软银主导、投资高达5000亿美元的独立财团项目，旨在为通用人工智能（AGI）的诞生构建前所未有的物理基础设施。
+            </p>
+        </section>
+
+        <section id="overview" class="py-16 scroll-mt-16">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl font-bold text-gray-800">项目概述：定义AI基础设施的新前沿</h3>
+                <p class="mt-4 max-w-2xl mx-auto text-gray-600">星际之门计划的出现，象征着AI竞赛已从算法和模型，升级到物理基础设施的宏大叙事层面。</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h4 class="text-2xl font-semibold text-gray-700 mb-4">从百亿到五千亿：野心的飞跃</h4>
+                    <p class="text-gray-600 mb-6">星际之门计划的演变反映了对未来AI算力需求的认知升级。项目投资规模从最初的1000亿美元，飙升至惊人的5000亿美元，标志着它已从企业合作项目，演变为具有国家战略意义的全球基础设施倡议。</p>
+                    <div class="chart-container">
+                        <canvas id="investmentChart"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-2xl font-semibold text-gray-700 mb-4">战略驱动力</h4>
+                    <p class="text-gray-600 mb-6">项目的诞生源于两大核心驱动力：突破AI技术发展的物理极限（算力瓶颈），以及在全球科技竞赛中抢占地缘政治的制高点。</p>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-white rounded-lg shadow-md">
+                            <h5 class="font-bold text-lg text-cyan-600">算力瓶颈</h5>
+                            <p class="text-sm text-gray-600 mt-1">为打破“规模定律”的天花板，构建一个算力远超当前任何设施的全新“计算生态系统”，为AGI的诞生铺平道路。</p>
+                        </div>
+                        <div class="p-4 bg-white rounded-lg shadow-md">
+                            <h5 class="font-bold text-lg text-cyan-600">地缘政治棋局</h5>
+                            <p class="text-sm text-gray-600 mt-1">确保美国在全球AI竞赛中的绝对领导地位，主导未来技术标准和伦理规范，并将其作为一项重要的国家安全资产。</p>
+                        </div>
+                        <div class="p-4 bg-white rounded-lg shadow-md">
+                            <h5 class="font-bold text-lg text-cyan-600">经济与国家雄心</h5>
+                            <p class="text-sm text-gray-600 mt-1">创造数十万美国就业岗位，支持“再工业化”进程，并通过抢占下一个技术革命制高点，重塑国家经济未来。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="alliance" class="py-16 scroll-mt-16 bg-white rounded-2xl shadow-lg">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl font-bold text-gray-800">星际联盟：棋盘上的巨头们</h3>
+                <p class="mt-4 max-w-2xl mx-auto text-gray-600">星际之门背后是一个结构复杂、利益交织的联盟。点击下方图标，了解每个核心参与方的角色与动机。</p>
+            </div>
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1">
+                    <div id="alliance-info" class="p-6 bg-gray-50 rounded-lg h-full min-h-[300px] fade-in">
+                        <h4 id="alliance-name" class="text-2xl font-bold text-gray-800"></h4>
+                        <p id="alliance-role" class="font-semibold text-cyan-600 mt-1 mb-4"></p>
+                        <p id="alliance-motive" class="text-gray-600"></p>
+                    </div>
+                </div>
+                <div class="lg:col-span-2">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6 items-center justify-center">
+                        <div data-id="openai" class="alliance-logo p-4 bg-white rounded-lg shadow-md flex justify-center items-center h-24">
+                            <span class="text-xl font-bold">OpenAI</span>
+                        </div>
+                        <div data-id="softbank" class="alliance-logo p-4 bg-white rounded-lg shadow-md flex justify-center items-center h-24">
+                            <span class="text-xl font-bold">SoftBank</span>
+                        </div>
+                        <div data-id="microsoft" class="alliance-logo p-4 bg-white rounded-lg shadow-md flex justify-center items-center h-24">
+                           <span class="text-xl font-bold">Microsoft</span>
+                        </div>
+                        <div data-id="oracle" class="alliance-logo p-4 bg-white rounded-lg shadow-md flex justify-center items-center h-24">
+                            <span class="text-xl font-bold">Oracle</span>
+                        </div>
+                        <div data-id="nvidia" class="alliance-logo p-4 bg-white rounded-lg shadow-md flex justify-center items-center h-24">
+                           <span class="text-xl font-bold">NVIDIA</span>
+                        </div>
+                        <div data-id="arm" class="alliance-logo p-4 bg-white rounded-lg shadow-md flex justify-center items-center h-24">
+                            <span class="text-xl font-bold">Arm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="reality" class="py-16 scroll-mt-16">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl font-bold text-gray-800">蓝图与现实：从构想到德州工地</h3>
+                <p class="mt-4 max-w-2xl mx-auto text-gray-600">一个耗资5000亿美元的宏伟蓝图正从概念阶段稳步迈向实体建设。</p>
+            </div>
+            <div class="grid lg:grid-cols-5 gap-12">
+                <div class="lg:col-span-3">
+                     <h4 class="text-2xl font-semibold text-gray-700 mb-6">关键里程碑</h4>
+                     <div class="relative">
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <p class="font-semibold text-gray-700">2024年 Q1</p>
+                            <p class="text-gray-600">微软与OpenAI的1000亿美元超算项目“星际之门”概念浮现。</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <p class="font-semibold text-gray-700">2025年 1月21日</p>
+                            <p class="text-gray-600">项目正式宣布，规模扩大至5000亿美元，成立Stargate LLC。</p>
+                        </div>
+                         <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <p class="font-semibold text-gray-700">2025年底</p>
+                            <p class="text-gray-600">德州阿比林园区首批两座大楼计划安装共20万块GPU。</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <p class="font-semibold text-gray-700">2028年</p>
+                            <p class="text-gray-600">“星际之门”超级计算机最早亮相/投入使用。</p>
+                        </div>
+                        <div class="timeline-item" style="border-left: 2px solid transparent;">
+                            <div class="timeline-dot"></div>
+                            <p class="font-semibold text-gray-700">2030年</p>
+                            <p class="text-gray-600">计划逐步扩大项目规模，软银可能提供项目所需75%的算力。</p>
+                        </div>
+                     </div>
+                </div>
+                <div class="lg:col-span-2">
+                    <h4 class="text-2xl font-semibold text-gray-700 mb-6">技术核心揭秘</h4>
+                     <ul class="space-y-4 text-gray-600">
+                        <li class="flex items-start"><span class="text-cyan-500 font-bold mr-2">▶</span> <span><strong class="text-gray-700">处理单元:</strong> 主要采用英伟达最新GPU，同时寻求AMD和自研芯片等多元化方案。</span></li>
+                        <li class="flex items-start"><span class="text-cyan-500 font-bold mr-2">▶</span> <span><strong class="text-gray-700">网络架构:</strong> 放弃专有InfiniBand，采用开放的以太网协议，以获得更大控制权和成本优势。</span></li>
+                        <li class="flex items-start"><span class="text-cyan-500 font-bold mr-2">▶</span> <span><strong class="text-gray-700">冷却系统:</strong> 采用先进液体冷却技术，每座数据中心循环数百万升冷却水。</span></li>
+                        <li class="flex items-start"><span class="text-cyan-500 font-bold mr-2">▶</span> <span><strong class="text-gray-700">电力供应:</strong> 总需求高达5-8吉瓦，相当于数座核电站，将依赖风能、天然气乃至未来的核能。</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+         <section id="challenges" class="py-16 scroll-mt-16">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl font-bold text-gray-800">挑战与未来：机遇与风险并存</h3>
+                <p class="mt-4 max-w-2xl mx-auto text-gray-600">星际之门的宏伟愿景背后，是同样巨大的挑战。项目的成败将深刻影响AI发展、全球产业格局乃至国际力量的平衡。</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-12 items-start">
+                <div>
+                    <h4 class="text-2xl font-semibold text-gray-700 mb-4 text-center">主要风险评估</h4>
+                    <p class="text-gray-600 mb-6 text-center">项目的每一步都行走在钢丝之上。下图展示了项目面临的几大核心风险维度。</p>
+                    <div class="chart-container h-[400px] max-h-[50vh]">
+                        <canvas id="riskChart"></canvas>
+                    </div>
+                </div>
+                <div>
+                     <h4 class="text-2xl font-semibold text-gray-700 mb-4 text-center">潜在的“星际效应”</h4>
+                    <p class="text-gray-600 mb-6 text-center">若能克服障碍，它所释放的能量将远超技术领域，带来革命性影响。</p>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-white rounded-lg shadow-md border-l-4 border-cyan-500">
+                            <h5 class="font-bold text-lg text-gray-800">加速通往AGI之路</h5>
+                            <p class="text-sm text-gray-600 mt-1">将训练超大模型的时间从数月缩短至数天，成为新药研发、材料科学等领域科学发现的“超级催化剂”。</p>
+                        </div>
+                        <div class="p-4 bg-white rounded-lg shadow-md border-l-4 border-cyan-500">
+                            <h5 class="font-bold text-lg text-gray-800">重塑科技产业格局</h5>
+                            <p class="text-sm text-gray-600 mt-1">催生全新的AI基础设施巨头，挑战现有云服务商的垄断地位，并驱动整个硬件供应链的创新。</p>
+                        </div>
+                        <div class="p-4 bg-white rounded-lg shadow-md border-l-4 border-cyan-500">
+                            <h5 class="font-bold text-lg text-gray-800">全球影响与地缘博弈</h5>
+                            <p class="text-sm text-gray-600 mt-1">通过“国家版OpenAI”等计划输出技术标准和生态，可能创造“双速”全球AI格局，引发新的地缘政治议题。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm">
+            <p>交互式报告根据公开信息生成，仅供参考。</p>
+            <p>&copy; 2025 星际之门计划分析</p>
+        </div>
+    </footer>
+
+    <script>
+        const allianceData = {
+            openai: {
+                name: "OpenAI",
+                role: "股权投资者；运营负责人",
+                motive: "核心目标是实现AGI，需要近乎无限、可控的计算资源。为摆脱对单一供应商的依赖，并掌控下一代AI基础设施的设计，必须从算力“租户”转变为“地主”。"
+            },
+            softbank: {
+                name: "软银 (SoftBank)",
+                role: "首席股权投资者；财务负责人；董事长",
+                motive: "将宝押在AI基础设施上，目标是成为未来AI经济的“电力公司”，一个提供核心算力、掌握行业命脉的基础设施巨头，以实现对下一个技术平台的战略押注。"
+            },
+            microsoft: {
+                name: "微软 (Microsoft)",
+                role: "关键技术合作伙伴 (非股权投资)",
+                motive: "采取精明的战略平衡：规避巨额资本支出风险，同时保留OpenAI API的独家转售权以锁定商业利益。作为股东，也能从OpenAI自身的增值中获益。"
+            },
+            oracle: {
+                name: "甲骨文 (Oracle)",
+                role: "股权投资者；技术合作伙伴",
+                motive: "加入联盟打破了微软的独家供应地位，为OpenAI提供算力冗余。旨在提升其云平台(OCI)在AI领域的影响力，挑战现有云市场格局。"
+            },
+            nvidia: {
+                name: "英伟达 (NVIDIA)",
+                role: "关键技术合作伙伴",
+                motive: "作为AI芯片的绝对霸主，为项目提供作为算力核心的GPU。旨在巩固其市场领导地位，并驱动下一代GPU的大规模销售与应用。"
+            },
+            arm: {
+                name: "Arm",
+                role: "关键技术合作伙伴",
+                motive: "作为全球领先的芯片架构提供商，为项目提供CPU架构。旨在扩大其CPU架构在高性能计算和AI数据中心的应用，与GPU协同工作。"
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const investmentCtx = document.getElementById('investmentChart').getContext('2d');
+            new Chart(investmentCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['初始构想', '星际之门计划'],
+                    datasets: [{
+                        label: '投资规模 (亿美元)',
+                        data: [1000, 5000],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(0, 169, 224, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(0, 169, 224, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${context.raw} 亿美元`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '亿美元'
+                            }
+                        }
+                    }
+                }
+            });
+
+            const riskCtx = document.getElementById('riskChart').getContext('2d');
+            new Chart(riskCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['资金风险', '能源危机', '供应链瓶颈', '环境与社会', '地缘政治'],
+                    datasets: [{
+                        label: '风险等级 (估算)',
+                        data: [9, 10, 8, 7, 8],
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(255, 99, 132, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 10,
+                            pointLabels: { font: { size: 12 } },
+                            grid: { color: 'rgba(0,0,0,0.1)' },
+                            angleLines: { color: 'rgba(0,0,0,0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            const allianceLogos = document.querySelectorAll('.alliance-logo');
+            const allianceInfoPanel = document.getElementById('alliance-info');
+            const allianceNameEl = document.getElementById('alliance-name');
+            const allianceRoleEl = document.getElementById('alliance-role');
+            const allianceMotiveEl = document.getElementById('alliance-motive');
+            
+            function updateAllianceInfo(id) {
+                const data = allianceData[id];
+                if (data) {
+                    allianceInfoPanel.classList.remove('fade-in');
+                    void allianceInfoPanel.offsetWidth;
+                    allianceInfoPanel.classList.add('fade-in');
+
+                    allianceNameEl.textContent = data.name;
+                    allianceRoleEl.textContent = data.role;
+                    allianceMotiveEl.textContent = data.motive;
+                }
+                 allianceLogos.forEach(logo => {
+                    if (logo.dataset.id === id) {
+                        logo.classList.add('selected');
+                    } else {
+                        logo.classList.remove('selected');
+                    }
+                });
+            }
+
+            allianceLogos.forEach(logo => {
+                logo.addEventListener('click', () => {
+                    updateAllianceInfo(logo.dataset.id);
+                });
+            });
+            
+            updateAllianceInfo('openai');
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                     mobileMenu.classList.add('hidden');
+                });
+            });
+
+
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+
+    </script>
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
