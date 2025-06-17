@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式报告：伊朗防空体系脆弱性剖析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Slate Gray & Teal -->
+    <!-- Application Structure Plan: A top-navigation driven single-page application. The structure is thematic rather than linear, allowing users to jump directly to areas of interest: 1. Overview (key thesis), 2. Iran's Arsenal (interactive inventory), 3. Israel's Playbook (visual breakdown of the attack), 4. Iran vs. Ukraine (comparative analysis with charts), 5. Future of Air Defense (forward-looking trends), 6. Strategic Lessons (conclusions). This structure facilitates better understanding by grouping related concepts and providing multiple layers of detail on demand, which is more effective for data exploration than a static report. -->
+    <!-- Visualization & Content Choices: 1. Iran's Systems: Goal=Compare. Method=Interactive Bar Chart (Chart.js) showing system ranges. Justification=Clear visual comparison of a key performance metric. 2. Iran vs. Ukraine: Goal=Compare. Method=Radar Chart (Chart.js). Justification=Excellent for multi-variable comparison between two entities, showing systemic strengths/weaknesses at a glance. 3. Israel's Tactic: Goal=Organize/Explain. Method=HTML/CSS Flexbox-based flowchart. Justification=Visually explains a complex, sequential process (the kill chain) far more intuitively than text. Interaction=Clicking elements reveals detailed text. 4. Video Content: Goal=Engage/Illustrate. Method=Modal pop-ups for embedded YouTube videos. Justification=Provides rich media context without cluttering the main UI. All text content is stored in JS objects for dynamic rendering. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-weight: 500;
+            color: #475569; /* slate-600 */
+        }
+        .nav-link.active, .nav-link:hover {
+            background-color: #f0f9ff; /* sky-50 */
+            color: #0369a1; /* sky-700 */
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            max-width: 90%;
+            width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            background: #000;
+        }
+        .modal-video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .tab-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .tab-button.active {
+            border-color: #0d9488; /* teal-600 */
+            background-color: #ccfbf1; /* teal-100 */
+            color: #0f766e; /* teal-700 */
+        }
+        .kill-chain-step {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .kill-chain-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+
+    <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-40 shadow-sm">
+        <nav class="container mx-auto px-4 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl md:text-2xl font-bold text-slate-800">伊朗防空体系剖析</h1>
+                </div>
+                <div class="hidden md:flex items-center space-x-2">
+                    <a data-target="home" class="nav-link active">报告总览</a>
+                    <a data-target="arsenal" class="nav-link">伊朗的武库</a>
+                    <a data-target="playbook" class="nav-link">以色列的破局之策</a>
+                    <a data-target="comparison" class="nav-link">案例对比</a>
+                    <a data-target="future" class="nav-link">未来趋势</a>
+                    <a data-target="conclusion" class="nav-link">战略总结</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="p-2 rounded-md text-slate-600 hover:bg-slate-100 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="hidden md:hidden pb-4">
+                <a data-target="home" class="block nav-link active">报告总览</a>
+                <a data-target="arsenal" class="block nav-link">伊朗的武库</a>
+                <a data-target="playbook" class="block nav-link">以色列的破局之策</a>
+                <a data-target="comparison" class="block nav-link">案例对比</a>
+                <a data-target="future" class="block nav-link">未来趋势</a>
+                <a data-target="conclusion" class="block nav-link">战略总结</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        
+        <section id="home" class="section active animate-fade-in">
+            <div class="text-center bg-white p-8 rounded-lg shadow-lg border border-slate-200">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">体系对抗的完败</h2>
+                <p class="text-lg text-slate-600 max-w-3xl mx-auto mb-6">
+                    本报告深入剖析了伊朗防空体系在面对现代化、网络化空袭时的系统性崩溃。这并非单一武器的失败，而是其封闭、割裂、技术落后的防御思想在21世纪体系对抗中的必然结果。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left mt-8">
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h3 class="font-bold text-xl mb-2 text-sky-800">结构性缺陷</h3>
+                        <p class="text-slate-600">国防军与革命卫队的双轨指挥体系造成了无法弥补的协同裂痕，为对手提供了可乘之机。</p>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h3 class="font-bold text-xl mb-2 text-teal-800">技术代差</h3>
+                        <p class="text-slate-600">无论是外购的S-300还是国产的“巴瓦尔-373”，在面对隐身突防与强电子干扰时均显无力。</p>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h3 class="font-bold text-xl mb-2 text-amber-800">战术僵化</h3>
+                        <p class="text-slate-600">缺乏网络化作战能力、机动性和纵深防御，使得其防空节点被逐一“点名”清除。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="arsenal" class="section">
+             <div class="bg-white p-6 md:p-8 rounded-lg shadow-lg border border-slate-200">
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 text-center">伊朗的防空武库：新旧交织的盾牌</h2>
+                <p class="text-center text-slate-500 mb-8 max-w-3xl mx-auto">伊朗的防空系统由外购的俄制核心与不断发展的国产型号混合构成，理论上覆盖了远、中、近程防御。然而，这种“大杂烩”式的构成缺乏有效的系统融合，使其真实战力远低于纸面数据。</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-700 mb-4 text-center">主要防空系统性能对比</h3>
+                        <div class="chart-container">
+                            <canvas id="iranSystemsChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <div id="system-details-container" class="space-y-4">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="playbook" class="section">
+            <div class="bg-white p-6 md:p-8 rounded-lg shadow-lg border border-slate-200">
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 text-center">以色列的破局之策：教科书级的体系破击战</h2>
+                <p class="text-center text-slate-500 mb-8 max-w-3xl mx-auto">以色列的空袭并非简单的“炸弹换导弹”，而是一场精心策划、多维协同的压制/摧毁敌方防空系统（SEAD/DEAD）战役。其成功关键在于利用体系优势，系统性地瘫痪而非硬碰硬地摧毁伊朗的防御网络。</p>
+                
+                <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 mb-8">
+                    <div id="kill-chain-visual" class="flex flex-col md:flex-row items-stretch justify-center w-full gap-2 md:gap-0">
+                    </div>
+                </div>
+
+                <div id="playbook-details" class="mt-8 p-6 bg-slate-50 rounded-lg border border-slate-200 min-h-[200px]">
+                    <h3 id="playbook-title" class="font-bold text-xl text-teal-700 mb-2"></h3>
+                    <p id="playbook-text" class="text-slate-600"></p>
+                    <div id="playbook-video-button-container" class="mt-4"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="comparison" class="section">
+             <div class="bg-white p-6 md:p-8 rounded-lg shadow-lg border border-slate-200">
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 text-center">天空的两种叙事：伊朗 vs. 乌克兰</h2>
+                <p class="text-center text-slate-500 mb-8 max-w-3xl mx-auto">将伊朗与乌克兰的防空作战进行对比，可以深刻揭示现代防空成败的关键。两者都以俄式系统为基础，却因系统整合、外部支援和作战理念的巨大差异，走向了截然不同的结局。</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+                    <div class="lg:col-span-3">
+                         <div class="chart-container mx-auto">
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 space-y-4">
+                        <div id="comparison-tabs" class="flex flex-wrap gap-2 mb-4">
+                        </div>
+                        <div id="comparison-details" class="p-4 bg-slate-50 rounded-lg border border-slate-200 min-h-[150px]">
+                           <h3 id="comparison-title" class="font-bold text-lg text-teal-700"></h3>
+                           <p id="comparison-text" class="mt-2 text-slate-600"></p>
+                           <div id="comparison-video-button-container" class="mt-4"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="section">
+            <div class="bg-white p-6 md:p-8 rounded-lg shadow-lg border border-slate-200">
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 text-center">未来空防：网络化、智能化、多层化的新战场</h2>
+                <p class="text-center text-slate-500 mb-8 max-w-3xl mx-auto">伊朗的失败与乌克兰的经验共同预示着未来空防的发展方向。单点强大的武器平台正在被淘汰，取而代之的是一个由天基传感器、人工智能、定向能武器和高超音速攻防构成的综合防御体系。</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </div>
+        </section>
+
+        <section id="conclusion" class="section">
+             <div class="bg-white p-6 md:p-8 rounded-lg shadow-lg border border-slate-200">
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 text-center">战略启示与最终结论</h2>
+                <p class="text-center text-slate-500 mb-8 max-w-3xl mx-auto">以色列对伊朗的胜利，是一次具有深远影响的战略事件。它不仅改变了地区力量平衡，也为全球各国，特别是致力于构建现代化防御体系的国家，提供了宝贵的经验与教训。</p>
+                 <div class="space-y-6 max-w-4xl mx-auto">
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h3 class="font-bold text-xl mb-2 text-sky-800">1. 优先网络化，而非孤立的平台</h3>
+                        <p class="text-slate-600">未来的投资重点应放在构建强大的C4ISR网络上，实现跨军种、跨域的无缝协同。不成体系，就必然被摧毁。</p>
+                    </div>
+                     <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h3 class="font-bold text-xl mb-2 text-sky-800">2. 大力投资“软杀伤”能力</h3>
+                        <p class="text-slate-600">强大的、自适应的电子战能力是现代防空的入场券。利用电子战手段致盲、欺骗和瘫痪敌方网络，是效费比最高的防御方式。</p>
+                    </div>
+                     <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h3 class="font-bold text-xl mb-2 text-sky-800">3. 坚定拥抱多层化防御</h3>
+                        <p class="text-slate-600">防御体系必须能够应对从高超音速导弹到廉价无人机蜂群的全谱威胁。定向能武器等低成本手段将成为关键一环。</p>
+                    </div>
+                     <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h3 class="font-bold text-xl mb-2 text-sky-800">4. 从上方俯瞰战场</h3>
+                        <p class="text-slate-600">必须摆脱对地面雷达的过度依赖。发展天基和空基预警与跟踪能力，拥有“上帝视角”，是赢得未来空防作战的决定性优势。</p>
+                    </div>
+                 </div>
+             </div>
+        </section>
+    </main>
+    
+    <div id="video-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="video-modal-title" class="text-xl font-bold"></h3>
+                <button id="close-modal-button" class="text-slate-500 hover:text-slate-800">&times;</button>
+            </div>
+            <div id="video-modal-container" class="modal-video-container">
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const reportData = {
+            iranSystems: [
+                { name: 'S-300PMU2', range: 200, origin: '俄罗斯', type: '远程', details: '伊朗防空核心，对常规四代机威胁大。但雷达频段已知，面对协同电子战和隐身飞机时生存能力存疑。' },
+                { name: '巴瓦尔-373', range: 200, origin: '伊朗', type: '远程', details: '伊朗国产旗舰，号称媲美S-300。技术基础为逆向工程，缺乏实战检验和成熟的抗干扰算法。' },
+                { name: '霍尔达德-15', range: 120, origin: '伊朗', type: '中远程', details: '宣称具备反隐身能力，但拦截距离（45公里）不足以在F-35的打击范围外构成安全威胁。' },
+                { name: '霍尔达德-3', range: 75, origin: '伊朗', type: '中程', details: '曾击落美军RQ-4无人机，但该战例不代表其能对抗高机动、隐身的战斗机编队。' },
+                { name: '道尔-M1', range: 12, origin: '俄罗斯', type: '近程/点防御', details: '用于要地防空，拦截精确制导弹药。但在饱和攻击面前，其拦截通道和火力储备有限。' },
+                { name: '升级版S-200', range: 350, origin: '苏联/伊朗', type: '远程/高空', details: '技术陈旧，机动性差，阵地固定，电子系统极易受干扰，象征意义大于实战价值。' }
+            ],
+            playbook: [
+                { id: 'intelligence', title: '第一步：情报与渗透', text: '空袭的胜利在起飞前就已奠定。以色列通过卫星、网络及人力情报，精确掌握了伊朗防空阵地的位置、运作模式甚至指挥裂痕，并可能动用地面特工进行引导和破坏，在物理打击前已瘫痪其“神经系统”。', videoId: '73K_t-Yd9ag', videoTitle: '概念视频：现代情报战' },
+                { id: 'stealth', title: '第二步：隐身“踹门”', text: 'F-35I“阿迪尔”隐身战机作为矛尖，利用其极低的雷达反射截面和先进的电子战能力，深入伊朗腹地，对S-300等关键防空节点进行“外科手术式”猎杀，为后续非隐身机群打开安全走廊。', videoId: '3j-24-22X1M', videoTitle: '概念视频：F-35能力展示' },
+                { id: 'sead', title: '第三步：电子压制与防区外打击', text: '专用电子战飞机和诱饵“致盲”并“欺骗”伊朗的雷达。F-15I等战机在安全距离外发射“狂暴”等高速空地导弹，对暴露或已知的目标进行精确清除，使得伊朗防空系统顾此失彼，陷入混乱。', videoId: 'Z_n9shVICsY', videoTitle: '概念视频：SEAD/DEAD战术解析' },
+                { id: 'destruction', title: '第四步：穿透与摧毁', text: '在远程防空网络被瓦解后，伊朗全国性防空体系实际已崩溃。攻击机群得以深入伊朗领空，使用精确制导炸弹，对导弹基地、核设施、指挥中心等更深层次的目标进行大规模打击。', videoId: null }
+            ],
+            comparison: {
+                labels: ['技术整合能力', '外部情报支援', '体系弹性与冗余', '反隐身能力', '指挥控制效率', '成本效益'],
+                iran:   { name: '伊朗', data: [2, 1, 2, 2, 3, 4], color: 'rgba(244, 63, 94, 0.4)'},
+                ukraine:{ name: '乌克兰', data: [7, 9, 7, 5, 6, 3], color: 'rgba(59, 130, 246, 0.4)'},
+                details: [
+                    { title: '系统哲学', iranText: '封闭、自给自足，基于逆向工程，追求“形似”的独立。', ukraineText: '开放、务实整合，主动将苏制与西方系统“混搭”，追求“能用”的实效。', videoId: '6oom4pU0CUg', videoTitle: '概念视频：乌克兰的FrankenSAM' },
+                    { title: '指挥结构', iranText: '双轨制（国防军/革命卫队），分裂且协同困难，是致命内伤。', ukraineText: '统一指挥，虽有技术挑战，但指挥链统一，目标明确。' },
+                    { title: '外部支援', iranText: '孤立。仅从俄罗斯等少数国家获得有限技术支持。', ukraineText: '极高。获得北约全方位支持，包括装备、弹药和关键的实时情报。' },
+                    { title: '主要威胁', iranText: '高技术、隐身突防为主的“外科手术式”打击（质的挑战）。', ukraineText: '大规模、非隐身的导弹和无人机饱和攻击（量的挑战）。' },
+                ]
+            },
+            futureTrends: [
+                { icon: '🛰️', title: '天基传感器网络', text: '摆脱地面雷达局限，从太空构建无死角的“上帝视角”，持续跟踪高超音速武器等所有威胁。' },
+                { icon: '🤖', title: 'AI驱动的指挥控制', text: '以机器速度处理海量数据，自动识别威胁并分配火力，将决策-行动循环从分钟缩短至秒。' },
+                { icon: '⚡', title: '定向能武器 (DEW)', text: '以极低成本（电力）和无限“弹匣”对抗无人机蜂群等低价值目标，彻底改变防空作战的成本效益。' },
+                { icon: '🚀', title: '高超音速攻防', text: '开发能在滑翔阶段拦截的新型拦截器（GPI），应对速度与机动性兼备的高超音速威胁。' },
+                { icon: '🌐', title: '分布式网络化作战', text: '未来的防御核心不再是单个强大节点，而是由所有传感器和武器组成的分布式、有弹性的“作战云”。' },
+                { icon: '🛡️', title: '多层化、一体化防御', text: '结合动能、非动能（DEW）等多种手段，构建能应对从弹道导弹到迫击炮弹全谱威胁的综合防御体系。' }
+            ]
+        };
+
+        const sections = document.querySelectorAll('.section');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        function switchTab(targetId) {
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+
+            const targetSection = document.getElementById(targetId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            document.querySelectorAll(`.nav-link[data-target="${targetId}"]`).forEach(link => {
+                 link.classList.add('active');
+            });
+            window.scrollTo(0, 0);
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = e.currentTarget.getAttribute('data-target');
+                switchTab(targetId);
+                if (mobileMenu.classList.contains('hidden') === false) {
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        function createIranSystemsChart() {
+            const ctx = document.getElementById('iranSystemsChart').getContext('2d');
+            const sortedSystems = [...reportData.iranSystems].sort((a, b) => b.range - a.range);
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedSystems.map(s => s.name),
+                    datasets: [{
+                        label: '最大作战范围 (对飞机, 公里)',
+                        data: sortedSystems.map(s => s.range),
+                        backgroundColor: '#0f766e', // teal-700
+                        borderColor: '#0d9488', // teal-600
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        label += context.parsed.x + ' km';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '射程 (公里)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function populateSystemDetails() {
+            const container = document.getElementById('system-details-container');
+            container.innerHTML = '';
+            reportData.iranSystems.forEach(system => {
+                const div = document.createElement('div');
+                div.className = 'bg-slate-50 p-4 rounded-lg border border-slate-200';
+                div.innerHTML = `
+                    <h4 class="font-bold text-lg text-slate-800">${system.name} <span class="text-sm font-normal text-slate-500">(${system.origin}, ${system.type})</span></h4>
+                    <p class="text-slate-600 mt-1">${system.details}</p>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function createPlaybookVisual() {
+            const container = document.getElementById('kill-chain-visual');
+            container.innerHTML = '';
+            reportData.playbook.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'kill-chain-step flex-1 bg-white p-4 rounded-lg border-2 border-slate-200 cursor-pointer text-center';
+                stepDiv.dataset.id = step.id;
+                stepDiv.innerHTML = `
+                    <div class="text-3xl">${['🎯', '✈️', '📡', '💥'][index]}</div>
+                    <h4 class="font-bold mt-2 text-slate-700">${step.title}</h4>
+                `;
+                container.appendChild(stepDiv);
+
+                if (index < reportData.playbook.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'hidden md:flex items-center justify-center text-3xl text-slate-400 mx-2';
+                    arrow.innerHTML = '→';
+                    const downArrow = document.createElement('div');
+                    downArrow.className = 'flex md:hidden items-center justify-center text-3xl text-slate-400 my-2 transform rotate-90';
+                    downArrow.innerHTML = '→';
+
+                    container.appendChild(arrow);
+                    container.appendChild(downArrow);
+                }
+            });
+
+            const steps = document.querySelectorAll('.kill-chain-step');
+            steps.forEach(step => {
+                step.addEventListener('click', () => {
+                    steps.forEach(s => s.classList.remove('border-teal-500', 'shadow-md'));
+                    step.classList.add('border-teal-500', 'shadow-md');
+                    updatePlaybookDetails(step.dataset.id);
+                });
+            });
+            
+            updatePlaybookDetails(reportData.playbook[0].id);
+            steps[0].classList.add('border-teal-500', 'shadow-md');
+        }
+
+        function updatePlaybookDetails(id) {
+            const detail = reportData.playbook.find(p => p.id === id);
+            if (!detail) return;
+            document.getElementById('playbook-title').textContent = detail.title;
+            document.getElementById('playbook-text').textContent = detail.text;
+            const videoButtonContainer = document.getElementById('playbook-video-button-container');
+            videoButtonContainer.innerHTML = '';
+            if (detail.videoId) {
+                const button = document.createElement('button');
+                button.className = 'inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500';
+                button.innerHTML = `▶️ 观看${detail.videoTitle}`;
+                button.onclick = () => openVideoModal(detail.videoId, detail.videoTitle);
+                videoButtonContainer.appendChild(button);
+            }
+        }
+        
+        function createComparisonChart() {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: reportData.comparison.labels,
+                    datasets: [
+                        {
+                            label: reportData.comparison.iran.name,
+                            data: reportData.comparison.iran.data,
+                            fill: true,
+                            backgroundColor: reportData.comparison.iran.color,
+                            borderColor: 'rgb(244, 63, 94)',
+                            pointBackgroundColor: 'rgb(244, 63, 94)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgb(244, 63, 94)'
+                        },
+                        {
+                            label: reportData.comparison.ukraine.name,
+                            data: reportData.comparison.ukraine.data,
+                            fill: true,
+                            backgroundColor: reportData.comparison.ukraine.color,
+                            borderColor: 'rgb(59, 130, 246)',
+                            pointBackgroundColor: 'rgb(59, 130, 246)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgb(59, 130, 246)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            pointLabels: { font: { size: 12 } },
+                            suggestedMin: 0,
+                            suggestedMax: 10,
+                            ticks: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        }
+        
+        function setupComparisonTabs() {
+            const tabsContainer = document.getElementById('comparison-tabs');
+            reportData.comparison.details.forEach((detail, index) => {
+                const button = document.createElement('button');
+                button.className = 'tab-button border-b-2 border-transparent px-3 py-1 text-sm font-medium text-slate-600 hover:text-teal-600';
+                button.textContent = detail.title;
+                button.dataset.index = index;
+                if (index === 0) {
+                    button.classList.add('active');
+                }
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                    button.classList.add('active');
+                    updateComparisonDetails(index);
+                });
+                tabsContainer.appendChild(button);
+            });
+            updateComparisonDetails(0);
+        }
+
+        function updateComparisonDetails(index) {
+            const detail = reportData.comparison.details[index];
+            document.getElementById('comparison-title').textContent = detail.title;
+            document.getElementById('comparison-text').innerHTML = `
+                <strong class="text-red-600">伊朗:</strong> ${detail.iranText}<br>
+                <strong class="text-blue-600">乌克兰:</strong> ${detail.ukraineText}
+            `;
+            const videoButtonContainer = document.getElementById('comparison-video-button-container');
+            videoButtonContainer.innerHTML = '';
+            if (detail.videoId) {
+                const button = document.createElement('button');
+                button.className = 'inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500';
+                button.innerHTML = `▶️ 观看${detail.videoTitle}`;
+                button.onclick = () => openVideoModal(detail.videoId, detail.videoTitle);
+                videoButtonContainer.appendChild(button);
+            }
+        }
+        
+        function populateFutureTrends() {
+            const container = document.querySelector('#future .grid');
+            container.innerHTML = '';
+            reportData.futureTrends.forEach(trend => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-50 p-6 rounded-lg border border-slate-200';
+                card.innerHTML = `
+                    <div class="text-3xl mb-3">${trend.icon}</div>
+                    <h3 class="font-bold text-xl mb-2 text-slate-800">${trend.title}</h3>
+                    <p class="text-slate-600">${trend.text}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        const modal = document.getElementById('video-modal');
+        const closeModalButton = document.getElementById('close-modal-button');
+        
+        function openVideoModal(videoId, title) {
+            document.getElementById('video-modal-title').textContent = title;
+            document.getElementById('video-modal-container').innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+            modal.classList.add('visible');
+        }
+
+        function closeModal() {
+            document.getElementById('video-modal-container').innerHTML = '';
+            modal.classList.remove('visible');
+        }
+
+        closeModalButton.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        createIranSystemsChart();
+        populateSystemDetails();
+        createPlaybookVisual();
+        createComparisonChart();
+        setupComparisonTabs();
+        populateFutureTrends();
+    });
+    </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
