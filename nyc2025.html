@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Mayoral Primary 2025: Interactive Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Muted Blue/Teal Accents -->
+    <!-- Application Structure Plan: A narrative, single-page dashboard. The structure starts with the main conclusion, then allows users to explore the central conflict via a side-by-side candidate comparison. Following this, interactive data visualizations for polls, demographics, and finances provide evidence. The experience concludes with contextual 'X-factors' and the final prediction. This structure transforms the linear report into an exploratory journey, prioritizing user understanding of the core dynamics (Cuomo vs. Mamdani) before delving into the details, which is more intuitive for a web experience. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Frontrunner comparison -> Goal: Compare -> Viz/Method: Side-by-side interactive card layout (HTML/CSS/JS) -> Interaction: Tabs to switch between Platform/Vulnerabilities -> Justification: Allows direct, apples-to-apples comparison of the two main figures.
+        - Report Info: Polling data (1st Choice vs. RCV) -> Goal: Compare/Show Change -> Viz/Method: Two separate Bar Charts (Chart.js) -> Interaction: Hover tooltips -> Justification: Clearly illustrates the crucial difference between initial support and the final RCV outcome, which is central to the report's thesis.
+        - Report Info: Voter Demographics -> Goal: Compare Proportions -> Viz/Method: Grouped Donut Charts (Chart.js) -> Interaction: Buttons to switch data view (Age/Race) -> Justification: Effectively shows the composition of each candidate's base and highlights the stark demographic divide.
+        - Report Info: Campaign Finance -> Goal: Compare/Inform -> Viz/Method: Grouped Bar Chart & Big-Number Cards (Chart.js & HTML/CSS) -> Justification: Visualizes both the overall financial power and the telling metric of average donation size, revealing the different fundraising models.
+        - Report Info: RCV Alliances -> Goal: Explain Process -> Viz/Method: Flow Diagram (HTML/Tailwind) -> Justification: Simplifies the complex RCV strategy into an easily understandable visual flow, avoiding complex libraries. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f7f4; color: #1f2937; }
+        .chart-container { position: relative; width: 100%; max-width: 700px; margin-left: auto; margin-right: auto; height: 350px; max-height: 40vh; }
+        .nav-link { transition: color 0.3s, border-color 0.3s; }
+        .nav-link.active, .nav-link:hover { color: #0f766e; border-color: #0f766e; }
+        .candidate-tab.active { background-color: #0f766e; color: white; }
+        .candidate-tab { transition: background-color 0.3s, color 0.3s; }
+        .data-btn.active { background-color: #3b82f6 !important; color: white !important; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .flow-arrow::after { content: '→'; color: #6b7280; font-size: 1.5rem; margin: 0 0.5rem; }
+        .flow-item:last-child .flow-arrow::after { content: ''; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-gray-800">NYC Mayor 2025</h1>
+            <div class="hidden md:flex space-x-6">
+                <a href="#overview" class="nav-link text-gray-600 font-semibold border-b-2 border-transparent pb-1">Overview</a>
+                <a href="#frontrunners" class="nav-link text-gray-600 font-semibold border-b-2 border-transparent pb-1">The Frontrunners</a>
+                <a href="#data" class="nav-link text-gray-600 font-semibold border-b-2 border-transparent pb-1">Data Deep Dive</a>
+                <a href="#xfactors" class="nav-link text-gray-600 font-semibold border-b-2 border-transparent pb-1">The X-Factors</a>
+                <a href="#verdict" class="nav-link text-gray-600 font-semibold border-b-2 border-transparent pb-1">Final Verdict</a>
+            </div>
+             <div class="md:hidden">
+                <select id="mobile-nav" class="bg-white border border-gray-300 rounded-md py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline-blue focus:border-blue-300">
+                    <option value="#overview">Overview</option>
+                    <option value="#frontrunners">Frontrunners</option>
+                    <option value="#data">Data</option>
+                    <option value="#xfactors">X-Factors</option>
+                    <option value="#verdict">Verdict</option>
+                </select>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8 md:py-12">
+
+        <section id="overview" class="text-center mb-16 fade-in">
+            <h2 class="text-4xl md:text-5xl font-extrabold text-gray-800 leading-tight">The Battle for Gracie Mansion</h2>
+            <p class="mt-4 max-w-4xl mx-auto text-lg md:text-xl text-gray-600">
+                The 2025 Democratic primary has become a profound battle for the soul of New York City. An incumbent's exit has paved the way for a stark ideological clash, primarily between establishment veteran <span class="font-bold text-blue-600">Andrew Cuomo</span> and progressive insurgent <span class="font-bold text-teal-600">Zohran Mamdani</span>. This interactive report unpacks the race, the data, and the dynamics that will decide the next Democratic nominee.
+            </p>
+        </section>
+
+        <section id="frontrunners" class="mb-16">
+            <h3 class="text-3xl font-bold text-center mb-2 text-gray-800">Meet the Frontrunners</h3>
+            <p class="text-center text-gray-600 mb-10 max-w-3xl mx-auto">This primary has narrowed to a tale of two candidates with vastly different visions for New York. One offers a return to experienced, moderate governance focused on stability. The other champions a grassroots, progressive movement centered on affordability. Explore their platforms, support, and vulnerabilities to understand the core choice facing voters.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <div id="cuomo-card" class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-600 fade-in">
+                    <div class="text-center">
+                        <img src="https://placehold.co/100x100/EBF4FF/1E40AF?text=AC" alt="Andrew Cuomo" class="w-24 h-24 mx-auto rounded-full mb-4 bg-blue-100 ring-4 ring-white">
+                        <h4 class="text-2xl font-bold text-gray-800">Andrew Cuomo</h4>
+                        <p class="text-blue-600 font-semibold">Moderate, Establishment Democrat</p>
+                    </div>
+                    <div class="mt-6">
+                        <div class="flex border border-gray-200 rounded-lg p-1 mb-4">
+                            <button data-candidate="cuomo" data-tab="platform" class="candidate-tab w-1/2 p-2 rounded-md font-semibold text-sm focus:outline-none active">Platform</button>
+                            <button data-candidate="cuomo" data-tab="vulnerabilities" class="candidate-tab w-1/2 p-2 rounded-md font-semibold text-sm focus:outline-none">Vulnerabilities</button>
+                        </div>
+                        <div id="cuomo-content" class="text-gray-700 space-y-3">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="mamdani-card" class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-teal-600 fade-in">
+                     <div class="text-center">
+                        <img src="https://placehold.co/100x100/D6FFFA/0F766E?text=ZM" alt="Zohran Mamdani" class="w-24 h-24 mx-auto rounded-full mb-4 bg-teal-100 ring-4 ring-white">
+                        <h4 class="text-2xl font-bold text-gray-800">Zohran Mamdani</h4>
+                        <p class="text-teal-600 font-semibold">Democratic Socialist</p>
+                    </div>
+                    <div class="mt-6">
+                        <div class="flex border border-gray-200 rounded-lg p-1 mb-4">
+                            <button data-candidate="mamdani" data-tab="platform" class="candidate-tab w-1/2 p-2 rounded-md font-semibold text-sm focus:outline-none active" style="background-color: #0f766e; color: white;">Platform</button>
+                            <button data-candidate="mamdani" data-tab="vulnerabilities" class="candidate-tab w-1/2 p-2 rounded-md font-semibold text-sm focus:outline-none">Vulnerabilities</button>
+                        </div>
+                        <div id="mamdani-content" class="text-gray-700 space-y-3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="data" class="mb-16">
+            <h3 class="text-3xl font-bold text-center mb-2 text-gray-800">Data Deep Dive</h3>
+            <p class="text-center text-gray-600 mb-10 max-w-3xl mx-auto">Numbers tell a crucial story in this election. From polling that shifts dramatically under Ranked-Choice Voting to the vast differences in campaign funding and voter demographics, these interactive charts reveal the empirical forces shaping the primary. This is the data behind the headlines.</p>
+            
+            <div class="space-y-12">
+                <div class="bg-white p-6 rounded-xl shadow-lg fade-in">
+                    <h4 class="text-xl font-bold text-center mb-1 text-gray-800">The Polls: A Two-Part Story</h4>
+                    <p class="text-center text-gray-500 mb-6">Initial preference is not the end game. See how the race changes from voters' first choice to the final round prediction under Ranked-Choice Voting (RCV).</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                        <div>
+                             <h5 class="text-lg font-semibold text-center text-gray-700">1st Choice Preference</h5>
+                             <div class="chart-container h-80 max-h-[350px]"><canvas id="firstChoiceChart"></canvas></div>
+                        </div>
+                        <div>
+                             <h5 class="text-lg font-semibold text-center text-gray-700">Final RCV Round Simulation</h5>
+                            <div class="chart-container h-80 max-h-[350px]"><canvas id="rcvChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg fade-in">
+                    <h4 class="text-xl font-bold text-center mb-1 text-gray-800">Who Supports Whom? The Demographic Divide</h4>
+                     <p class="text-center text-gray-500 mb-4">The two frontrunners have built mirror-image coalitions. Explore the demographic data that defines their bases of support.</p>
+                    <div class="flex justify-center space-x-2 mb-6">
+                        <button id="view-by-race" class="data-btn bg-white border border-blue-500 text-blue-500 font-semibold py-2 px-4 rounded-lg focus:outline-none transition-all duration-200">By Race</button>
+                        <button id="view-by-age" class="data-btn bg-white border border-blue-500 text-blue-500 font-semibold py-2 px-4 rounded-lg focus:outline-none transition-all duration-200">By Age</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h5 id="cuomo-demo-title" class="text-lg font-semibold text-center text-gray-700">Cuomo's Coalition</h5>
+                            <div class="chart-container h-80 max-h-[300px]"><canvas id="cuomoDemographicsChart"></canvas></div>
+                        </div>
+                        <div>
+                            <h5 id="mamdani-demo-title" class="text-lg font-semibold text-center text-gray-700">Mamdani's Coalition</h5>
+                           <div class="chart-container h-80 max-h-[300px]"><canvas id="mamdaniDemographicsChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg fade-in">
+                    <h4 class="text-xl font-bold text-center mb-1 text-gray-800">Following the Money</h4>
+                     <p class="text-center text-gray-500 mb-6">Campaign finance data reveals two starkly different fundraising models: a traditional high-dollar machine versus a modern small-dollar grassroots movement.</p>
+                    <div class="chart-container h-96 max-h-[450px]"><canvas id="financeChart"></canvas></div>
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-lg text-blue-800 font-semibold">Cuomo's Average Donation</p>
+                            <p class="text-4xl font-bold text-blue-600">$714</p>
+                            <p class="text-sm text-blue-700">from 5,463 contributors</p>
+                        </div>
+                        <div class="bg-teal-50 p-4 rounded-lg">
+                            <p class="text-lg text-teal-800 font-semibold">Mamdani's Average Donation</p>
+                            <p class="text-4xl font-bold text-teal-600">$82</p>
+                             <p class="text-sm text-teal-700">from 20,398 contributors</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+        
+        <section id="xfactors" class="mb-16">
+            <h3 class="text-3xl font-bold text-center mb-2 text-gray-800">The X-Factors</h3>
+            <p class="text-center text-gray-600 mb-10 max-w-3xl mx-auto">This primary isn't just about the candidates; it's being shaped by a unique political environment. The incumbent's shocking exit and the strategic complexities of Ranked-Choice Voting are game-changers that have defined the race. Understanding these factors is key to understanding the potential outcome.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div class="bg-white p-6 rounded-xl shadow-lg fade-in">
+                    <h4 class="text-xl font-bold text-gray-800 mb-2">The Adams Effect</h4>
+                    <p class="text-gray-600">Incumbent Mayor Eric Adams's decision to exit the Democratic primary and run as an independent created a massive power vacuum. His move, prompted by a federal indictment and collapsing approval ratings (19% favorability), transformed the race from a referendum on him into an open battle for the party's future. Now, Democrats must choose a nominee they believe can win a competitive three-way general election.</p>
+                </div>
+                 <div class="bg-white p-6 rounded-xl shadow-lg fade-in">
+                    <h4 class="text-xl font-bold text-gray-800 mb-2">The Ranked-Choice Voting Game</h4>
+                    <p class="text-gray-600">RCV isn't just a voting method; it's a strategic battlefield. To counter Cuomo, progressives formed alliances to consolidate their vote. This ensures that as weaker candidates are eliminated, their votes transfer to stronger ideological allies. It's a calculated effort to prevent a split vote from handing Cuomo an easy win.</p>
+                    <div class="mt-4 bg-gray-50 p-4 rounded-lg">
+                        <p class="font-semibold text-center text-gray-700">The Progressive Consolidation Strategy</p>
+                        <div class="flex items-center justify-center mt-2 text-sm flex-wrap">
+                            <div class="text-center flow-item">
+                                <span class="font-bold bg-teal-100 text-teal-800 py-1 px-2 rounded">Mamdani</span>
+                                <div class="text-xs text-gray-500">Rank #1</div>
+                            </div>
+                             <div class="flow-arrow"></div>
+                             <div class="text-center flow-item">
+                                <span class="font-bold bg-green-100 text-green-800 py-1 px-2 rounded">Lander</span>
+                                <div class="text-xs text-gray-500">Rank #2</div>
+                             </div>
+                             <div class="flow-arrow"></div>
+                             <div class="text-center flow-item">
+                                <span class="font-bold bg-purple-100 text-purple-800 py-1 px-2 rounded">A. Adams</span>
+                               <div class="text-xs text-gray-500">Rank #3</div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="verdict" class="text-center bg-white p-8 md:p-12 rounded-xl shadow-lg border-t-4 border-gray-800 fade-in">
+            <h3 class="text-3xl font-bold text-gray-800 mb-4">The Final Prediction</h3>
+            <p class="text-lg text-gray-600 max-w-4xl mx-auto mb-6">After analyzing the polls, the demographics, and the race's unique dynamics, a likely winner emerges. Zohran Mamdani has run a brilliant insurgent campaign, but his path to victory relies on a historically unprecedented youth turnout. Andrew Cuomo's coalition of older, moderate, and Black voters is a more traditionally reliable and high-turnout bloc in NYC primaries.</p>
+            <div class="bg-gray-100 rounded-lg p-6 max-w-md mx-auto">
+                <p class="text-xl font-semibold text-gray-500">Predicted Winner</p>
+                <p class="text-5xl font-extrabold text-blue-600 my-2">Andrew Cuomo</p>
+                <p class="text-2xl font-bold text-gray-700">with a projected <span class="text-blue-600">54%</span> to <span class="text-teal-600">46%</span></p>
+                <p class="text-gray-500 mt-2">in the final RCV round over Zohran Mamdani.</p>
+            </div>
+            <p class="mt-8 text-gray-600 max-w-3xl mx-auto">The winner will face a daunting general election against incumbent Eric Adams (Independent) and Curtis Sliwa (Republican), requiring them to quickly unify a deeply fractured Democratic party.</p>
+        </section>
+    </main>
+    <footer class="text-center py-6 mt-8 border-t border-gray-200">
+        <p class="text-gray-500 text-sm">Interactive report based on the "Battle for Gracie Mansion" analysis. For informational purposes only.</p>
+    </footer>
+
+    <script>
+        const candidateData = {
+            cuomo: {
+                platform: `
+                    <p class="font-semibold text-gray-800">Core Message: Experience & Stability</p>
+                    <p>Positions himself as the only candidate with the proven toughness and executive experience to manage a city in crisis. His campaign is a bid to restore order and competence.</p>
+                    <ul class="list-disc list-inside mt-2 space-y-1">
+                        <li><strong>Public Safety:</strong> More police officers and tougher crime policies.</li>
+                        <li><strong>Affordability:</strong> Focus on economic growth to make the city more affordable, but opposes a rent freeze.</li>
+                        <li><strong>Anti-Antisemitism:</strong> A central pillar of his campaign platform.</li>
+                        <li><strong>Experience:</strong> Highlights his record as Governor, AG, and HUD Secretary as essential for the job.</li>
+                    </ul>`,
+                vulnerabilities: `
+                    <p class="font-semibold text-gray-800">Core Vulnerability: Past Scandals</p>
+                    <p>His candidacy is haunted by the credible sexual harassment allegations and "toxic workplace" reports that led to his resignation as governor in 2021.</p>
+                    <ul class="list-disc list-inside mt-2 space-y-1">
+                        <li><strong>Character Questions:</strong> Opponents constantly attack his fitness for office over the scandals.</li>
+                        <li><strong>Polarizing Figure:</strong> Has very high negative ratings, especially among progressive and female voters.</li>
+                        <li><strong>Refusal to Apologize:</strong> Has largely avoided expressing remorse, which opponents use to frame him as arrogant.</li>
+                    </ul>`
+            },
+            mamdani: {
+                platform: `
+                    <p class="font-semibold text-gray-800">Core Message: Progressive Change & Affordability</p>
+                    <p>An unapologetically socialist and populist platform focused on tackling the city's crushing cost of living, funded by taxing the wealthy and corporations.</p>
+                    <ul class="list-disc list-inside mt-2 space-y-1">
+                        <li><strong>Housing:</strong> Complete rent freeze on all stabilized apartments.</li>
+                        <li><strong>Transportation:</strong> Make the entire MTA bus system fare-free.</li>
+                        <li><strong>Childcare:</strong> Universal, no-cost childcare for ages 6 weeks to 5 years.</li>
+                        <li><strong>Community Safety:</strong> Create a new department to handle non-violent calls, freeing up police.</li>
+                    </ul>`,
+                vulnerabilities: `
+                     <p class="font-semibold text-gray-800">Core Vulnerability: Inexperience & Radicalism</p>
+                    <p>Opponents frame his platform as "pie-in-the-sky" and attack his thin legislative resume, arguing he's not ready to lead the city.</p>
+                    <ul class="list-disc list-inside mt-2 space-y-1">
+                        <li><strong>'On Training Wheels':</strong> Attacked by rivals for a lack of executive or deep legislative experience.</li>
+                        <li><strong>Socialist Ideology:</strong> His DSA affiliation and pro-Palestine stance are targets for moderate and pro-Israel voters.</li>
+                        <li><strong>NYT Critique:</strong> The New York Times urged voters not to rank him, calling his agenda a "turbocharged version of Mr. de Blasio's dismaying mayoralty."</li>
+                    </ul>`
+            }
+        };
+
+        const pollData = {
+            firstChoice: {
+                labels: ['Cuomo', 'Mamdani', 'Lander', 'Others'],
+                values: [35, 23, 11, 31]
+            },
+            rcv: {
+                labels: ['Cuomo', 'Mamdani'],
+                values: [54, 46]
+            }
+        };
+
+        const demographics = {
+            race: {
+                cuomo: { labels: ['Black Voters', 'Other Voters'], values: [39, 61] },
+                mamdani: { labels: ['Black Voters', 'Other Voters'], values: [16, 84] }
+            },
+            age: {
+                cuomo: { labels: ['Over 50', 'Under 50'], values: [66, 34] },
+                mamdani: { labels: ['Under 50', 'Over 50'], values: [61, 39] }
+            }
+        };
+
+        const financeData = {
+            labels: ['Mamdani', 'Cuomo', 'Lander'],
+            receipts: [8.38, 7.68, 7.48],
+            public_funds: [6.70, 1.76, 5.76]
+        };
+        
+        const styleUtils = {
+            colors: {
+                cuomo: 'rgba(59, 130, 246, 0.8)',
+                cuomoBorder: 'rgba(59, 130, 246, 1)',
+                mamdani: 'rgba(20, 184, 166, 0.8)',
+                mamdaniBorder: 'rgba(20, 184, 166, 1)',
+                lander: 'rgba(139, 92, 246, 0.8)',
+                landerBorder: 'rgba(139, 92, 246, 1)',
+                other: 'rgba(156, 163, 175, 0.8)',
+                otherBorder: 'rgba(156, 163, 175, 1)',
+                publicFunds: 'rgba(234, 179, 8, 0.8)',
+                publicFundsBorder: 'rgba(234, 179, 8, 1)',
+            },
+            font: {
+                family: 'Inter',
+                size: 12
+            }
+        };
+
+        function createBarChart(ctx, labels, data, dataLabel, backgroundColor, borderColor) {
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: dataLabel,
+                        data: data,
+                        backgroundColor: backgroundColor,
+                        borderColor: borderColor,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 60,
+                            ticks: { font: styleUtils.font, color: '#6b7280' },
+                            grid: { drawOnChartArea: false }
+                        },
+                        y: { 
+                            ticks: { font: styleUtils.font, color: '#374151' },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: true,
+                            backgroundColor: '#1f2937',
+                            titleFont: { size: 14, family: 'Inter' },
+                            bodyFont: { size: 12, family: 'Inter' },
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createGroupedBarChart(ctx, labels, dataset1, dataset2, label1, label2, color1, color2) {
+             return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: label1,
+                            data: dataset1,
+                            backgroundColor: color1,
+                            borderColor: styleUtils.colors.cuomoBorder,
+                            borderWidth: 1
+                        },
+                        {
+                            label: label2,
+                            data: dataset2,
+                            backgroundColor: color2,
+                            borderColor: styleUtils.colors.publicFundsBorder,
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                     responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { font: styleUtils.font, color: '#374151' }, grid: { display: false } },
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { 
+                                font: styleUtils.font, color: '#6b7280',
+                                callback: function(value) { return '$' + value + 'M'; }
+                            },
+                             grid: { color: '#e5e7eb' }
+                        },
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { font: styleUtils.font } },
+                         tooltip: {
+                            enabled: true,
+                            backgroundColor: '#1f2937',
+                            titleFont: { size: 14, family: 'Inter' },
+                            bodyFont: { size: 12, family: 'Inter' },
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: $${context.raw}M`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createDoughnutChart(ctx, labels, data, backgroundColors, borderColors, title) {
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: styleUtils.font, color: '#4b5563', boxWidth: 15 } },
+                         tooltip: {
+                            enabled: true,
+                            backgroundColor: '#1f2937',
+                            titleFont: { size: 14, family: 'Inter' },
+                            bodyFont: { size: 12, family: 'Inter' },
+                             callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        let cuomoDemoChart, mamdaniDemoChart;
+
+        function updateDoughnutCharts(dataType) {
+            const cuomoData = demographics[dataType].cuomo;
+            const mamdaniData = demographics[dataType].mamdani;
+
+            cuomoDemoChart.data.labels = cuomoData.labels;
+            cuomoDemoChart.data.datasets[0].data = cuomoData.values;
+            mamdaniDemoChart.data.labels = mamdaniData.labels;
+            mamdaniDemoChart.data.datasets[0].data = mamdaniData.values;
+
+            const titleText = dataType === 'race' ? 'Coalition by Race' : 'Coalition by Age';
+            document.getElementById('cuomo-demo-title').textContent = `Cuomo's ${titleText}`;
+            document.getElementById('mamdani-demo-title').textContent = `Mamdani's ${titleText}`;
+            
+            cuomoDemoChart.update();
+            mamdaniDemoChart.update();
+
+            document.getElementById('view-by-race').classList.toggle('active', dataType === 'race');
+            document.getElementById('view-by-age').classList.toggle('active', dataType === 'age');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const cuomoContent = document.getElementById('cuomo-content');
+            const mamdaniContent = document.getElementById('mamdani-content');
+            
+            cuomoContent.innerHTML = candidateData.cuomo.platform;
+            mamdaniContent.innerHTML = candidateData.mamdani.platform;
+
+            document.querySelectorAll('.candidate-tab').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const candidate = e.target.dataset.candidate;
+                    const tab = e.target.dataset.tab;
+                    const contentEl = document.getElementById(`${candidate}-content`);
+                    contentEl.innerHTML = candidateData[candidate][tab];
+                    
+                    document.querySelectorAll(`button[data-candidate="${candidate}"]`).forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                });
+            });
+
+            const firstChoiceCtx = document.getElementById('firstChoiceChart').getContext('2d');
+            createBarChart(firstChoiceCtx, pollData.firstChoice.labels, pollData.firstChoice.values, '% 1st Choice', 
+                [styleUtils.colors.cuomo, styleUtils.colors.mamdani, styleUtils.colors.lander, styleUtils.colors.other],
+                [styleUtils.colors.cuomoBorder, styleUtils.colors.mamdaniBorder, styleUtils.colors.landerBorder, styleUtils.colors.otherBorder]
+            );
+
+            const rcvCtx = document.getElementById('rcvChart').getContext('2d');
+            createBarChart(rcvCtx, pollData.rcv.labels, pollData.rcv.values, '% Final Round',
+                [styleUtils.colors.cuomo, styleUtils.colors.mamdani],
+                [styleUtils.colors.cuomoBorder, styleUtils.colors.mamdaniBorder]
+            );
+            
+            const cuomoDemoCtx = document.getElementById('cuomoDemographicsChart').getContext('2d');
+            cuomoDemoChart = createDoughnutChart(cuomoDemoCtx, [], [], 
+                [styleUtils.colors.cuomo, styleUtils.colors.other],
+                ['#ffffff', '#ffffff'], "Cuomo's Coalition"
+            );
+
+            const mamdaniDemoCtx = document.getElementById('mamdaniDemographicsChart').getContext('2d');
+            mamdaniDemoChart = createDoughnutChart(mamdaniDemoCtx, [], [],
+                 [styleUtils.colors.mamdani, styleUtils.colors.other],
+                 ['#ffffff', '#ffffff'], "Mamdani's Coalition"
+            );
+            
+            document.getElementById('view-by-race').addEventListener('click', () => updateDoughnutCharts('race'));
+            document.getElementById('view-by-age').addEventListener('click', () => updateDoughnutCharts('age'));
+            updateDoughnutCharts('race');
+            
+            const financeCtx = document.getElementById('financeChart').getContext('2d');
+            createGroupedBarChart(financeCtx, financeData.labels, financeData.receipts, financeData.public_funds, 'Total Receipts', 'Public Funds Received', styleUtils.colors.lander, styleUtils.colors.publicFunds);
+
+            const mobileNav = document.getElementById('mobile-nav');
+            mobileNav.addEventListener('change', () => {
+                window.location.href = mobileNav.value;
+            });
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 100) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if(link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+
+        });
+    </script>
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
