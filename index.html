@@ -1,0 +1,6 @@
+---
+layout: home
+title: Home
+---
+
+Welcome to **My Jekyll Site** — powered by GitHub Pages and Jekyll.
