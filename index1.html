@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<!-- Visualization & Content Choices:
+    - Report Info: Overall trade performance (Sec 2.1) -> Goal: Show trends -> Viz: Line charts (Import/Export over time) -> Interaction: Hover for details -> Justification: Clear visual trend representation -> Library: Chart.js.
+    - Report Info: Top 10 Economies by GDP (Table 1) -> Goal: Inform & Compare -> Viz: Interactive Bar Chart/Table -> Interaction: Sortable table, hover on chart -> Justification: Easy comparison of economic standing -> Library: Chart.js / HTML+JS.
+    - Report Info: Top Trade Partners (Table 2) -> Goal: Identify key relationships -> Viz: Donut/Bar chart for partner share -> Interaction: Click to filter (future enhancement, for now static display) -> Justification: Quick visual breakdown of trade concentration -> Library: Chart.js.
+    - Report Info: Key Import/Export Categories (Sec 2.3) -> Goal: Show commodity focus -> Viz: Grouped Bar Charts (Top 5-10 categories) -> Interaction: Filter by country (if feasible with data structure) -> Justification: Highlights trade composition -> Library: Chart.js.
+    - Report Info: Country-specific trade data (Sec 2.4) -> Goal: Detailed exploration -> Viz: Bar charts for top commodities, tables for values -> Interaction: Dropdown to select country -> Justification: Allows focused analysis -> Library: Chart.js / HTML+JS.
+    - Report Info: Logistics Challenges (Sec 3.1, 3.2) -> Goal: Explain issues -> Viz: HTML/CSS styled cards/diagrams (e.g., road issues, port congestion) -> Interaction: Click to expand details -> Justification: Visually engaging way to present qualitative info -> Library: HTML/CSS/Tailwind + JS.
+    - Report Info: LPI Rankings (Table 3) -> Goal: Compare logistics performance -> Viz: Interactive sorted Table / Horizontal Bar Chart -> Interaction: Sort by score/country, hover for details -> Justification: Clear ranking and comparison -> Library: HTML+JS / Chart.js.
+    - Report Info: Digitalization Status (Sec 4.1, Table 4 DEI) -> Goal: Show adoption & evolution -> Viz: Bar chart for tech adoption, Table/Bar chart for DEI -> Interaction: Hover for details -> Justification: Visualizes digital maturity -> Library: Chart.js / HTML+JS.
+    - Report Info: Challenges & Opportunities (Sec 5) -> Goal: Summarize key factors -> Viz: Interactive lists/cards -> Interaction: Click to reveal more info/case studies -> Justification: Digestible presentation of complex issues -> Library: HTML/CSS/Tailwind + JS.
+    - Report Info: Future Trends/Recommendations (Sec 6.3) -> Goal: Provide actionable insights -> Viz: Accordion list or styled bullet points -> Interaction: Expandable sections -> Justification: Organized and accessible forward-looking statements -> Library: HTML/CSS/Tailwind + JS.
+    CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<html lang="zh-CN">
+<head>
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"  crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-6214772877334340">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">拉丁美洲供应链全景</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340" crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Using Inter as a fallback, assuming a common sans-serif for Chinese */
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            border-color: #F59E0B; /* amber-500 */
+            color: #F59E0B;
+            font-weight: 600;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px; /* Adjusted for better readability */
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px; /* Base height */
+            max-height: 400px;
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .section-title {
+            font-size: 1.75rem; /* text-2xl equivalent */
+            font-weight: 600; /* semibold */
+            margin-bottom: 1rem; /* mb-4 */
+            color: #1F2937; /* gray-800 */
+            border-bottom: 2px solid #F59E0B; /* amber-500 */
+            padding-bottom: 0.5rem; /* pb-2 */
+        }
+        .content-card {
+            background-color: #FFFAF0; /* floralwhite - a very light warm neutral */
+            border: 1px solid #FDE68A; /* amber-200 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 1.5rem; /* p-6 */
+            margin-bottom: 1.5rem; /* mb-6 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+        }
+        .sub-section-title {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600; /* semibold */
+            margin-top: 1.5rem; /* mt-6 */
+            margin-bottom: 0.75rem; /* mb-3 */
+            color: #374151; /* gray-700 */
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 0.5rem;
+            background: #111827; /* gray-900 */
+            color: white;
+            border-radius: 0.25rem; /* rounded-md */
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem; /* text-sm */
+            z-index: 10;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #E5E7EB; /* gray-200 */
+            padding: 0.75rem; /* p-3 */
+            text-align: left;
+        }
+        th {
+            background-color: #F9FAFB; /* gray-50 */
+            font-weight: 600; /* semibold */
+        }
+        /* Accordion styles */
+        .accordion-header {
+            cursor: pointer;
+            padding: 1rem;
+            background-color: #FEF3C7; /* amber-100 */
+            border: 1px solid #FDE68A; /* amber-200 */
+            border-radius: 0.375rem; /* rounded-md */
+            margin-bottom: 0.25rem; /* mb-1 */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .accordion-content {
+            padding: 1rem;
+            border: 1px solid #FDE68A; /* amber-200 */
+            border-top: none;
+            border-radius: 0 0 0.375rem 0.375rem; /* rounded-b-md */
+            display: none;
+            background-color: #FFFBEB; /* amber-50 */
+        }
+        .accordion-item.active .accordion-content {
+            display: block;
+        }
+        .accordion-item.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+        .accordion-icon {
+            transition: transform 0.3s ease;
+        }
+    </style>
+    <meta name="google-site-verification" content="0TpXKVS0kk7-_qTXb-hYWOMKcdv4LLCkgmZN19wvSeM" />
+</head>
+<body class="bg-amber-50 text-neutral-700 antialiased">
+
+    <header class="bg-orange-500 text-white p-6 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <h1 id="mainTitle" class="text-3xl font-bold">拉丁美洲供应链全景分析</h1>
+                <img src="https://placehold.co/60x60/FFF/000?text=INOSSEM" alt="INOSSEM Logo" class="w-12 h-12 rounded-full shadow-md">
+            </div>
+            <nav class="mt-4 md:mt-0 flex space-x-2">
+                <button class="lang-button py-1 px-2 rounded-md bg-white text-orange-500 text-sm font-semibold" onclick="setLanguage('zh-CN')">中文</button>
+                <button class="lang-button py-1 px-2 rounded-md bg-white text-orange-500 text-sm font-semibold" onclick="setLanguage('en')">English</button>
+                <button class="lang-button py-1 px-2 rounded-md bg-white text-orange-500 text-sm font-semibold" onclick="setLanguage('fr')">Français</button>
+            </nav>
+            <nav class="mt-4 md:mt-0">
+                <button id="tabButtonOverview" class="tab-button active text-sm md:text-base py-2 px-3 md:px-4 border-b-2 border-transparent hover:border-white" onclick="showTab('overview')">概览</button>
+                <button id="tabButtonTrade" class="tab-button text-sm md:text-base py-2 px-3 md:px-4 border-b-2 border-transparent hover:border-white" onclick="showTab('trade')">贸易动态</button>
+                <button id="tabButtonInfrastructure" class="tab-button text-sm md:text-base py-2 px-3 md:px-4 border-b-2 border-transparent hover:border-white" onclick="showTab('infrastructure')">基础设施</button>
+                <button id="tabButtonDigitalization" class="tab-button text-sm md:text-base py-2 px-3 md:px-4 border-b-2 border-transparent hover:border-white" onclick="showTab('digitalization')">数字化转型</button>
+                <button id="tabButtonChallenges" class="tab-button text-sm md:text-base py-2 px-3 md:px-4 border-b-2 border-transparent hover:border-white" onclick="showTab('challenges')">挑战与机遇</button>
+                <button id="tabButtonOutlook" class="tab-button text-sm md:text-base py-2 px-3 md:px-4 border-b-2 border-transparent hover:border-white" onclick="showTab('outlook')">未来展望</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        <div id="overview" class="tab-content">
+            <h2 id="overviewTitle" class="section-title">概览</h2>
+            <div class="content-card">
+                <h3 id="execSummaryTitle" class="sub-section-title">执行摘要</h3>
+                <p id="execSummaryP1" class="mb-4">拉丁美洲供应链正处于深刻转型期，其特点是贸易格局的动态演变、基础设施的持续发展以及数字技术的加速采纳。本报告深入分析了2019年至2024年间该地区的贸易往来、物流基础设施现状、数字化进程以及跨国公司面临的挑战与机遇。</p>
+                <p id="execSummaryP2" class="mb-4">研究发现，拉丁美洲的贸易表现呈现区域差异性，南美洲依赖大宗商品出口，易受价格波动影响，而墨西哥的制造业出口则深度融入北美价值链。美国和中国是该地区最重要的贸易伙伴。基础设施建设虽有进步，但道路、铁路和海关效率仍存在显著差距，制约了物流效率。数字化转型正在加速，人工智能、物联网和云计算等技术被广泛采纳，尤其是在电子商务和仓储自动化领域，但不同国家和企业间的成熟度差异明显。</p>
+                <p id="execSummaryP3">对于国际企业而言，该地区提供了巨大的市场增长和近岸外包（nearshoring）机遇，得益于其丰富的自然资源和地理优势。然而，它们必须应对基础设施不足、监管复杂、货运盗窃、政治经济不稳定以及劳动力短缺等挑战。</p>
+            </div>
+             <div class="content-card">
+                <h3 id="introTitle" class="sub-section-title">引言</h3>
+                <p id="introP1" class="mb-4">本报告旨在对拉丁美洲的供应链格局进行全面深入的分析。报告将剖析2019年至2024年间该地区贸易动态、基础设施发展和数字化转型之间错综复杂的相互作用。通过对关键数据、深层观察和实际案例的整合，本报告旨在为在拉丁美洲运营或考虑进入该市场的企业和政策制定者提供可操作的见解。</p>
+                <p id="introP2">拉丁美洲是一个广阔而经济多元的区域。该地区的经济增长预计将较为温和，2025年增长2.1%，2026年增长2.4%，使其成为全球增长最慢的地区。这种经济背景对供应链的韧性和效率提出了独特的要求。</p>
+            </div>
+        </div>
+
+        <div id="trade" class="tab-content" style="display:none;">
+            <h2 id="tradeTitle" class="section-title">贸易动态</h2>
+            <div class="content-card">
+                <h3 id="tradePerformanceTitle" class="sub-section-title">整体贸易表现与趋势（2019-2024）</h3>
+                <p id="tradePerformanceP1" class="mb-4">拉丁美洲的商品出口在2023年收缩了1.3%，但在2024年第一季度同比增长1.3%。服务出口表现出强劲增长。2024年上半年，商品和服务贸易总额增长，出口同比增长5%，进口同比增长1%。服务出口增长11%，超过商品出口的4%。这种非统一的贸易表现表明拉丁美洲次区域经济结构和贸易驱动因素存在根本性差异。</p>
+                <div class="chart-container mb-8">
+                    <canvas id="latamTradeTrendChart"></canvas>
+                </div>
+                <p id="tradePerformanceChartDesc" class="text-sm text-gray-600">图表说明：展示拉丁美洲商品和服务进出口的年度增长趋势。南美洲对初级商品的依赖使其贸易易受全球大宗商品价格波动的影响，而墨西哥的制造业出口则深度融入北美价值链。</p>
+            </div>
+
+            <div class="content-card">
+                <h3 id="topEconomiesPartnersTitle" class="sub-section-title">拉丁美洲十大经济体及主要贸易伙伴</h3>
+                <p id="topEconomiesPartnersP1" class="mb-4">根据2024年人均GDP，拉丁美洲的主要经济体包括圭亚那、乌拉圭、巴拿马等。美国和中国是拉丁美洲最主要的贸易伙伴，分别占贸易总额的41.71%和12.97%。</p>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="chart-container">
+                        <canvas id="topEconomiesChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="topTradePartnersChart"></canvas>
+                    </div>
+                </div>
+                 <div class="table-responsive mt-6">
+                    <h4 id="topEconomiesTableTitle" class="text-lg font-semibold mb-2">表1：2024年拉丁美洲十大经济体（按人均GDP）</h4>
+                    <table id="topEconomiesTable">
+                        <thead>
+                            <tr><th id="topEconomiesTableCol1">排名</th><th id="topEconomiesTableCol2">国家</th><th id="topEconomiesTableCol3">2024年人均GDP（美元）</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <h3 id="mainCommoditiesTitle" class="sub-section-title">主要进出口商品类别</h3>
+                <p id="mainCommoditiesP1" class="mb-4">拉丁美洲整体商品出口中，原材料占最大份额（32.72%）。进口方面，消费品（31.38%）和资本货物（30.39%）占主导地位。这种贸易结构反映了典型的“大宗商品出口国”模式。</p>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="chart-container">
+                        <canvas id="exportCategoriesChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="importCategoriesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h3 id="countryTradeQueryTitle" class="sub-section-title">重点国家贸易数据查询</h3>
+                <p id="countryTradeQueryP1" class="mb-4">选择一个国家查看其主要的进出口商品类别和贸易伙伴信息（数据主要基于2023/2024年）。</p>
+                <select id="countrySelector" class="mb-4 p-2 border border-gray-300 rounded-md w-full md:w-1/3">
+                    <option value="brazil" id="countryOptionBrazil">巴西</option>
+                    <option value="mexico" id="countryOptionMexico">墨西哥</option>
+                    <option value="argentina" id="countryOptionArgentina">阿根廷</option>
+                    <option value="colombia" id="countryOptionColombia">哥伦比亚</option>
+                    <option value="chile" id="countryOptionChile">智利</option>
+                    <option value="peru" id="countryOptionPeru">秘鲁</option>
+                </select>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="chart-container">
+                         <h4 id="countryExportChartTitle" class="text-center font-semibold mb-2">主要出口商品</h4>
+                        <canvas id="countryExportChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h4 id="countryImportChartTitle" class="text-center font-semibold mb-2">主要进口商品</h4>
+                        <canvas id="countryImportChart"></canvas>
+                    </div>
+                </div>
+                <div id="countryTradeInfo" class="mt-4"></div>
+            </div>
+        </div>
+
+        <div id="infrastructure" class="tab-content" style="display:none;">
+            <h2 id="infrastructureTitle" class="section-title">供应链基础设施</h2>
+            <div class="content-card">
+                <h3 id="crossBorderLogisticsTitle" class="sub-section-title">跨境物流与贸易便利化</h3>
+                <p id="crossBorderLogisticsP1" class="mb-4">拉丁美洲的跨境贸易便利化面临多重挑战，包括各国海关法规差异、透明度不足和官僚主义。尽管如此，一些港口如巴拿马的巴尔博亚港在多式联运方面表现突出。贸易便利化倡议，如WTO的《贸易便利化协定》和联合边境控制模式，正在帮助改善现状。</p>
+                <div class="bg-amber-100 p-4 rounded-lg">
+                    <p id="crossBorderLogisticsChallenge"><span class="font-semibold">挑战：</span> 卡车平均通过速度仅16公里/小时（全球平均60公里/小时），部分过境点等待时间长达6小时以上。</p>
+                    <p id="crossBorderLogisticsSolution"><span class="font-semibold">解决方案：</span> 海关数字化转型、单一窗口贸易系统、智能监控技术（GPS, RFID）。</p>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <h3 id="domesticLogisticsTitle" class="sub-section-title">国内物流网络</h3>
+                <p id="domesticLogisticsP1" class="mb-4">拉丁美洲的交通运输主要依赖公路（占85%货运），但仅23%的道路铺设路面。铁路网络不发达。航空货运有所复苏，但面临基础设施限制。物流市场预计持续增长，最后一公里配送面临客户期望高、交通拥堵等挑战，并通过路线优化、微型配送中心等方案应对。</p>
+                 <div class="chart-container">
+                    <canvas id="transportModesChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="content-card">
+                <h3 id="keyIndustriesTitle" class="sub-section-title">重点行业供应链分析</h3>
+                <div id="industryAccordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="accordionAutoTitle">汽车行业</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="accordionAutoContent">墨西哥是领导者，预计2025年市场规模达3030亿美元，为美国提供约40%汽车零部件。USMCA鼓励区域内生产。阿根廷、巴西、哥伦比亚也是关键参与者。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="accordionManufTitle">制造业/设备行业</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="accordionManufContent">面临基础设施不足（仅投资GDP的1.3%）、政治不稳定等挑战。区域内贸易仅占12%。近岸外包带来机遇，阿根廷因资源和劳动力具有优势。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="accordionFMCGTitle">快速消费品 (FMCG)</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="accordionFMCGContent">面临缓慢复苏、需求变化、供应链中断、能源和食品价格上涨。食品饮料通胀高。区域内贸易不发达（占22%），为墨西哥、哥伦比亚等国提供增长机会。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <h3 id="lpiAnalysisTitle" class="sub-section-title">物流绩效指数 (LPI) 分析 (2023)</h3>
+                <p id="lpiAnalysisP1" class="mb-4">世界银行的LPI评估国家在海关、基础设施、国际运输、物流能力、追踪追溯和及时性方面的表现。巴西在拉丁美洲地区表现最为突出。</p>
+                <div class="chart-container mb-6">
+                    <canvas id="lpiChart"></canvas>
+                </div>
+                <div class="table-responsive">
+                    <h4 id="lpiTableTitle" class="text-lg font-semibold mb-2">表3：2023年拉丁美洲部分国家物流绩效指数（LPI）</h4>
+                    <table id="lpiTable">
+                        <thead><tr><th id="lpiTableCol1">国家</th><th id="lpiTableCol2">LPI排名</th><th id="lpiTableCol3">LPI得分</th><th id="lpiTableCol4">海关</th><th id="lpiTableCol5">基础设施</th><th id="lpiTableCol6">国际运输</th><th id="lpiTableCol7">物流能力</th><th id="lpiTableCol8">追踪追溯</th><th id="lpiTableCol9">及时性</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="digitalization" class="tab-content" style="display:none;">
+            <h2 id="digitalizationTitle" class="section-title">供应链数字化转型</h2>
+            <div class="content-card">
+                <h3 id="digitalStatusTitle" class="sub-section-title">数字化现状</h3>
+                <p id="digitalStatusP1" class="mb-4">拉丁美洲供应链数字化转型加速，但采纳程度不一。70%团队已部署ERP。TMS市场预计增长。物联网、人工智能提高可见性和预测能力。区块链用于农业供应链追溯。</p>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="chart-container">
+                        <canvas id="techAdoptionChart"></canvas>
+                    </div>
+                     <div class="chart-container">
+                        <canvas id="tmsMarketGrowthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="content-card">
+                <h3 id="ecommerceLogisticsTitle" class="sub-section-title">电子商务物流与数字支付</h3>
+                <p id="ecommerceLogisticsP1" class="mb-4">拉丁美洲是全球增长最快的电子商务市场，预计2022-2027年年增长率19%。移动商务蓬勃发展。巴西的Pix等数字支付系统简化交易。电子商务增长对最后一公里配送和订单履行产生重大影响。</p>
+                 <div class="chart-container">
+                    <canvas id="ecommerceGrowthChart"></canvas>
+                </div>
+            </div>
+            <div class="content-card">
+                <h3 id="deiTitle" class="sub-section-title">拉丁美洲国家数字演进指数 (DEI)</h3>
+                <p id="deiP1" class="mb-4">DEI衡量国家数字发展的成熟度和速度。智利、波多黎各、巴哈马等国领先。</p>
+                <div class="chart-container mb-6">
+                    <canvas id="deiChart"></canvas>
+                </div>
+                <div class="table-responsive">
+                     <h4 id="deiTableTitle" class="text-lg font-semibold mb-2">表4：拉丁美洲国家数字演进指数（DEI）</h4>
+                    <table id="deiTable">
+                        <thead><tr><th id="deiTableCol1">排名</th><th id="deiTableCol2">国家</th><th id="deiTableCol3">DEI得分</th><th id="deiTableCol4">数字化发展速度(%)</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="challenges" class="tab-content" style="display:none;">
+            <h2 id="challengesOpportunitiesTitle" class="section-title">挑战与机遇</h2>
+            <div class="content-card">
+                <h3 id="mainChallengesTitle" class="sub-section-title">主要供应链挑战</h3>
+                <div id="challengesAccordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="challengeInfraTitle">基础设施缺陷与瓶颈</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="challengeInfraContent">过时的港口、道路和物流网络。基础设施投资仅占GDP的1.3%。公路运输占85%，但仅23%道路铺设路面。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="challengeRegTitle">监管复杂性与官僚主义</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="challengeRegContent">各国监管环境、海关协议多样。繁琐官僚程序和缺乏透明度导致延误和成本增加。腐败仍是问题。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="challengeSecurityTitle">安全风险（货运盗窃、网络威胁）</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="challengeSecurityContent">货运盗窃严重，南美洲68%发生在巴西。食品饮料是主要目标。网络威胁日益受关注。</p>
+                        </div>
+                    </div>
+                     <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="challengePoliticalTitle">政治与经济不稳定</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="challengePoliticalContent">政治变革导致新贸易政策、关税和限制。监管不确定性、货币波动和劳动力中断。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="challengeLaborTitle">劳动力短缺与发展</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="challengeLaborContent">熟练劳动力短缺，尤其在可再生能源等行业。工作条件、实际工资和工人保护不足。</p>
+                        </div>
+                    </div>
+                     <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="challengeCultureTitle">商业运营中的文化差异</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="challengeCultureContent">沟通方式、等级制度、守时和决策过程与西方标准不同。决策过程通常较慢，更注重共识。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="content-card">
+                <h3 id="opportunitiesTitle" class="sub-section-title">竞争优势与机遇</h3>
+                 <div id="opportunitiesAccordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="opportunityNearshoringTitle">近岸外包与友岸外包趋势</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="opportunityNearshoringContent">IDB估计可使年出口额增加近780亿美元。汽车、纺织、制药和可再生能源潜力巨大。墨西哥是热点。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="opportunityMarketGrowthTitle">市场增长与消费需求</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="opportunityMarketGrowthContent">庞大人口，约一半是中产阶级。电子商务市场增长快，预计到2027年年增长率19%。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="opportunityResourcesTitle">丰富的自然资源</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="opportunityResourcesContent">“锂三角”（阿根廷、玻利维亚、智利）对电动汽车供应链至关重要。可再生能源、采矿和汽车行业投资增加。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="opportunityLocationTitle">战略地理位置</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="opportunityLocationContent">与北美和欧洲地理邻近。墨西哥是连接北美和拉美其他地区的桥梁。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="outlook" class="tab-content" style="display:none;">
+            <h2 id="outlookTitle" class="section-title">结论与未来展望</h2>
+            <div class="content-card">
+                <h3 id="supplyChainMatchTitle" class="sub-section-title">供应链与经济贸易发展的匹配度</h3>
+                <p id="supplyChainMatchP1" class="mb-4">拉丁美洲供应链与经济贸易发展存在显著差距，但也展现独特优势。作为主要原材料和农产品出口国，经济高度依赖大宗商品价格。基础设施不足仍是制约因素，导致物流成本高、效率低。数字化转型不均衡。然而，自然资源丰富、消费市场庞大、地理位置优越以及近岸外包趋势是重要机遇。</p>
+            </div>
+            <div class="content-card">
+                <h3 id="futureChallengesTitle" class="sub-section-title">未来五年的关键挑战</h3>
+                <ul class="list-disc list-inside space-y-2">
+                    <li id="futureChallenge1">政治与经济不确定性</li>
+                    <li id="futureChallenge2">基础设施投资不足（目前仅占GDP的1.3%）</li>
+                    <li id="futureChallenge3">气候变化影响（如巴拿马运河干旱）</li>
+                    <li id="futureChallenge4">数字化鸿沟（数字文化、人才、技术采纳差距）</li>
+                    <li id="futureChallenge5">安全与合规风险（货运盗窃、网络威胁、海关复杂性）</li>
+                </ul>
+            </div>
+             <div class="content-card">
+                <h3 id="futureTrendsRecsTitle" class="sub-section-title">未来增长的关键趋势与建议</h3>
+                <div id="recommendationsAccordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="recInfraTechTitle">战略性基础设施与技术投资</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li id="recInfraTech1">推动公私合作升级交通网络、港口和数字基础设施。</li>
+                                <li id="recInfraTech2">现代化港口与道路，投资自动化和数字化。</li>
+                                <li id="recInfraTech3">加速数字技术采纳（AI, IoT, 区块链等），尤其在仓储自动化和最后一公里配送。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="recIntegrationTradeTitle">加强区域一体化与贸易便利化</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                             <ul class="list-disc list-inside space-y-1">
+                                <li id="recIntegrationTrade1">协调海关法规，简化程序，提高效率和透明度。</li>
+                                <li id="recIntegrationTrade2">深化区域内贸易，减少贸易壁垒，整合区域价值链。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="recWorkforceTitle">发展高素质劳动力</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li id="recWorkforce1">投资培训项目，培养熟练物流和技术专业人才。</li>
+                                <li id="recWorkforce2">制定激励措施，吸引和留住人才，改善工作条件。</li>
+                            </ul>
+                        </div>
+                    </div>
+                     <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span id="recSustainabilityTitle">优先考虑可持续性与韧性</span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li id="recSustainability1">建设气候韧性基础设施，制定应急计划。</li>
+                                <li id="recSustainability2">推广绿色物流（电动车、优化路线、可回收包装）。</li>
+                                <li id="recSustainability3">多元化供应商网络，分散风险，增强灵活性。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-orange-600 text-white text-center p-6 mt-12">
+        <p id="footerText">&copy; 2024 拉丁美洲供应链全景分析。根据提供报告生成。</p>
+    </footer>
+
+    <script>
+        const translations = {
+            'zh-CN': {
+                pageTitle: '拉丁美洲供应链全景',
+                mainTitle: '拉丁美洲供应链全景分析',
+                tabButtonOverview: '概览',
+                tabButtonTrade: '贸易动态',
+                tabButtonInfrastructure: '基础设施',
+                tabButtonDigitalization: '数字化转型',
+                tabButtonChallenges: '挑战与机遇',
+                tabButtonOutlook: '未来展望',
+                overviewTitle: '概览',
+                execSummaryTitle: '执行摘要',
+                execSummaryP1: '拉丁美洲供应链正处于深刻转型期，其特点是贸易格局的动态演变、基础设施的持续发展以及数字技术的加速采纳。本报告深入分析了2019年至2024年间该地区的贸易往来、物流基础设施现状、数字化进程以及跨国公司面临的挑战与机遇。',
+                execSummaryP2: '研究发现，拉丁美洲的贸易表现呈现区域差异性，南美洲依赖大宗商品出口，易受价格波动影响，而墨西哥的制造业出口则深度融入北美价值链。美国和中国是该地区最重要的贸易伙伴。基础设施建设虽有进步，但道路、铁路和海关效率仍存在显著差距，制约了物流效率。数字化转型正在加速，人工智能、物联网和云计算等技术被广泛采纳，尤其是在电子商务和仓储自动化领域，但不同国家和企业间的成熟度差异明显。',
+                execSummaryP3: '对于国际企业而言，该地区提供了巨大的市场增长和近岸外包（nearshoring）机遇，得益于其丰富的自然资源和地理优势。然而，它们必须应对基础设施不足、监管复杂、货运盗窃、政治经济不稳定以及劳动力短缺等挑战。',
+                introTitle: '引言',
+                introP1: '本报告旨在对拉丁美洲的供应链格局进行全面深入的分析。报告将剖析2019年至2024年间该地区贸易动态、基础设施发展和数字化转型之间错综复杂的相互作用。通过对关键数据、深层观察和实际案例的整合，本报告旨在为在拉丁美洲运营或考虑进入该市场的企业和政策制定者提供可操作的见解。',
+                introP2: '拉丁美洲是一个广阔而经济多元的区域。该地区的经济增长预计将较为温和，2025年增长2.1%，2026年增长2.4%，使其成为全球增长最慢的地区。这种经济背景对供应链的韧性和效率提出了独特的要求。',
+                tradeTitle: '贸易动态',
+                tradePerformanceTitle: '整体贸易表现与趋势（2019-2024）',
+                tradePerformanceP1: '拉丁美洲的商品出口在2023年收缩了1.3%，但在2024年第一季度同比增长1.3%。服务出口表现出强劲增长。2024年上半年，商品和服务贸易总额增长，出口同比增长5%，进口同比增长1%。服务出口增长11%，超过商品出口的4%。这种非统一的贸易表现表明拉丁美洲次区域经济结构和贸易驱动因素存在根本性差异。',
+                tradePerformanceChartDesc: '图表说明：展示拉丁美洲商品和服务进出口的年度增长趋势。南美洲对初级商品的依赖使其贸易易受全球大宗商品价格波动的影响，而墨西哥的制造业出口则深度融入北美价值链。',
+                topEconomiesPartnersTitle: '拉丁美洲十大经济体及主要贸易伙伴',
+                topEconomiesPartnersP1: '根据2024年人均GDP，拉丁美洲的主要经济体包括圭亚那、乌拉圭、巴拿马等。美国和中国是拉丁美洲最主要的贸易伙伴，分别占贸易总额的41.71%和12.97%。',
+                topEconomiesTableTitle: '表1：2024年拉丁美洲十大经济体（按人均GDP）',
+                topEconomiesTableCol1: '排名',
+                topEconomiesTableCol2: '国家',
+                topEconomiesTableCol3: '2024年人均GDP（美元）',
+                mainCommoditiesTitle: '主要进出口商品类别',
+                mainCommoditiesP1: '拉丁美洲整体商品出口中，原材料占最大份额（32.72%）。进口方面，消费品（31.38%）和资本货物（30.39%）占主导地位。这种贸易结构反映了典型的“大宗商品出口国”模式。',
+                countryTradeQueryTitle: '重点国家贸易数据查询',
+                countryTradeQueryP1: '选择一个国家查看其主要的进出口商品类别和贸易伙伴信息（数据主要基于2023/2024年）。',
+                countryOptionBrazil: '巴西',
+                countryOptionMexico: '墨西哥',
+                countryOptionArgentina: '阿根廷',
+                countryOptionColombia: '哥伦比亚',
+                countryOptionChile: '智利',
+                countryOptionPeru: '秘鲁',
+                countryExportChartTitle: '主要出口商品',
+                countryImportChartTitle: '主要进口商品',
+                countryTradeInfoDesc: '以上图表显示了<strong>{countryName}</strong>的主要进出口商品类别占比（示意数据）。详细数据请参考报告原文。',
+                infrastructureTitle: '供应链基础设施',
+                crossBorderLogisticsTitle: '跨境物流与贸易便利化',
+                crossBorderLogisticsP1: '拉丁美洲的跨境贸易便利化面临多重挑战，包括各国海关法规差异、透明度不足和官僚主义。尽管如此，一些港口如巴拿马的巴尔博亚港在多式联运方面表现突出。贸易便利化倡议，如WTO的《贸易便利化协定》和联合边境控制模式，正在帮助改善现状。',
+                crossBorderLogisticsChallenge: '挑战：卡车平均通过速度仅16公里/小时（全球平均60公里/小时），部分过境点等待时间长达6小时以上。',
+                crossBorderLogisticsSolution: '解决方案：海关数字化转型、单一窗口贸易系统、智能监控技术（GPS, RFID）。',
+                domesticLogisticsTitle: '国内物流网络',
+                domesticLogisticsP1: '拉丁美洲的交通运输主要依赖公路（占85%货运），但仅23%的道路铺设路面。铁路网络不发达。航空货运有所复苏，但面临基础设施限制。物流市场预计持续增长，最后一公里配送面临客户期望高、交通拥堵等挑战，并通过路线优化、微型配送中心等方案应对。',
+                keyIndustriesTitle: '重点行业供应链分析',
+                accordionAutoTitle: '汽车行业',
+                accordionAutoContent: '墨西哥是领导者，预计2025年市场规模达3030亿美元，为美国提供约40%汽车零部件。USMCA鼓励区域内生产。阿根廷、巴西、哥伦比亚也是关键参与者。',
+                accordionManufTitle: '制造业/设备行业',
+                accordionManufContent: '面临基础设施不足（仅投资GDP的1.3%）、政治不稳定等挑战。区域内贸易仅占12%。近岸外包带来机遇，阿根廷因资源和劳动力具有优势。',
+                accordionFMCGTitle: '快速消费品 (FMCG)',
+                accordionFMCGContent: '面临缓慢复苏、需求变化、供应链中断、能源和食品价格上涨。食品饮料通胀高。区域内贸易不发达（占22%），为墨西哥、哥伦比亚等国提供增长机会。',
+                lpiAnalysisTitle: '物流绩效指数 (LPI) 分析 (2023)',
+                lpiAnalysisP1: '世界银行的LPI评估国家在海关、基础设施、国际运输、物流能力、追踪追溯和及时性方面的表现。巴西在拉丁美洲地区表现最为突出。',
+                lpiTableTitle: '表3：2023年拉丁美洲部分国家物流绩效指数（LPI）',
+                lpiTableCol1: '国家', lpiTableCol2: 'LPI排名', lpiTableCol3: 'LPI得分', lpiTableCol4: '海关', lpiTableCol5: '基础设施', lpiTableCol6: '国际运输', lpiTableCol7: '物流能力', lpiTableCol8: '追踪追溯', lpiTableCol9: '及时性',
+                digitalizationTitle: '供应链数字化转型',
+                digitalStatusTitle: '数字化现状',
+                digitalStatusP1: '拉丁美洲供应链数字化转型加速，但采纳程度不一。70%团队已部署ERP。TMS市场预计增长。物联网、人工智能提高可见性和预测能力。区块链用于农业供应链追溯。',
+                ecommerceLogisticsTitle: '电子商务物流与数字支付',
+                ecommerceLogisticsP1: '拉丁美洲是全球增长最快的电子商务市场，预计2022-2027年年增长率19%。移动商务蓬勃发展。巴西的Pix等数字支付系统简化交易。电子商务增长对最后一公里配送和订单履行产生重大影响。',
+                deiTitle: '拉丁美洲国家数字演进指数 (DEI)',
+                deiP1: 'DEI衡量国家数字发展的成熟度和速度。智利、波多黎各、巴哈马等国领先。',
+                deiTableTitle: '表4：拉丁美洲国家数字演进指数（DEI）',
+                deiTableCol1: '排名', deiTableCol2: '国家', deiTableCol3: 'DEI得分', deiTableCol4: '数字化发展速度(%)',
+                challengesOpportunitiesTitle: '挑战与机遇',
+                mainChallengesTitle: '主要供应链挑战',
+                challengeInfraTitle: '基础设施缺陷与瓶颈',
+                challengeInfraContent: '过时的港口、道路和物流网络。基础设施投资仅占GDP的1.3%。公路运输占85%，但仅23%道路铺设路面。',
+                challengeRegTitle: '监管复杂性与官僚主义',
+                challengeRegContent: '各国监管环境、海关协议多样。繁琐官僚程序和缺乏透明度导致延误和成本增加。腐败仍是问题。',
+                challengeSecurityTitle: '安全风险（货运盗窃、网络威胁）',
+                challengeSecurityContent: '货运盗窃严重，南美洲68%发生在巴西。食品饮料是主要目标。网络威胁日益受关注。',
+                challengePoliticalTitle: '政治与经济不稳定',
+                challengePoliticalContent: '政治变革导致新贸易政策、关税和限制。监管不确定性、货币波动和劳动力中断。',
+                challengeLaborTitle: '劳动力短缺与发展',
+                challengeLaborContent: '熟练劳动力短缺，尤其在可再生能源等行业。工作条件、实际工资和工人保护不足。',
+                challengeCultureTitle: '商业运营中的文化差异',
+                challengeCultureContent: '沟通方式、等级制度、守时和决策过程与西方标准不同。决策过程通常较慢，更注重共识。',
+                opportunitiesTitle: '竞争优势与机遇',
+                opportunityNearshoringTitle: '近岸外包与友岸外包趋势',
+                opportunityNearshoringContent: 'IDB估计可使年出口额增加近780亿美元。汽车、纺织、制药和可再生能源潜力巨大。墨西哥是热点。',
+                opportunityMarketGrowthTitle: '市场增长与消费需求',
+                opportunityMarketGrowthContent: '庞大人口，约一半是中产阶级。电子商务市场增长快，预计到2027年年增长率19%。',
+                opportunityResourcesTitle: '丰富的自然资源',
+                opportunityResourcesContent: '“锂三角”（阿根廷、玻利维亚、智利）对电动汽车供应链至关重要。可再生能源、采矿和汽车行业投资增加。',
+                opportunityLocationTitle: '战略地理位置',
+                opportunityLocationContent: '与北美和欧洲地理邻近。墨西哥是连接北美和拉美其他地区的桥梁。',
+                outlookTitle: '结论与未来展望',
+                supplyChainMatchTitle: '供应链与经济贸易发展的匹配度',
+                supplyChainMatchP1: '拉丁美洲供应链与经济贸易发展存在显著差距，但也展现独特优势。作为主要原材料和农产品出口国，经济高度依赖大宗商品价格。基础设施不足仍是制约因素，导致物流成本高、效率低。数字化转型不均衡。然而，自然资源丰富、消费市场庞大、地理位置优越以及近岸外包趋势是重要机遇。',
+                futureChallengesTitle: '未来五年的关键挑战',
+                futureChallenge1: '政治与经济不确定性',
+                futureChallenge2: '基础设施投资不足（目前仅占GDP的1.3%）',
+                futureChallenge3: '气候变化影响（如巴拿马运河干旱）',
+                futureChallenge4: '数字化鸿沟（数字文化、人才、技术采纳差距）',
+                futureChallenge5: '安全与合规风险（货运盗窃、网络威胁、海关复杂性）',
+                futureTrendsRecsTitle: '未来增长的关键趋势与建议',
+                recInfraTechTitle: '战略性基础设施与技术投资',
+                recInfraTech1: '推动公私合作升级交通网络、港口和数字基础设施。',
+                recInfraTech2: '现代化港口与道路，投资自动化和数字化。',
+                recInfraTech3: '加速数字技术采纳（AI, IoT, 区块链等），尤其在仓储自动化和最后一公里配送。',
+                recIntegrationTradeTitle: '加强区域一体化与贸易便利化',
+                recIntegrationTrade1: '协调海关法规，简化程序，提高效率和透明度。',
+                recIntegrationTrade2: '深化区域内贸易，减少贸易壁垒，整合区域价值链。',
+                recWorkforceTitle: '发展高素质劳动力',
+                recWorkforce1: '投资培训项目，培养熟练物流和技术专业人才。',
+                recWorkforce2: '制定激励措施，吸引和留住人才，改善工作条件。',
+                recSustainabilityTitle: '优先考虑可持续性与韧性',
+                recSustainability1: '建设气候韧性基础设施，制定应急计划。',
+                recSustainability2: '推广绿色物流（电动车、优化路线、可回收包装）。',
+                recSustainability3: '多元化供应商网络，分散风险，增强灵活性。',
+                footerText: '&copy; 2024 拉丁美洲供应链全景分析。根据提供报告生成。',
+                chartTradeTrendExport: '商品出口增长 (%)',
+                chartTradeTrendService: '服务出口增长 (%)',
+                chartTopEconomies: '2024年人均GDP (美元)',
+                chartTopTradePartners: '贸易伙伴份额 (%)',
+                chartExportCategories: '出口商品类别份额 (%)',
+                chartImportCategories: '进口商品类别份额 (%)',
+                chartTransportModes: '货运方式占比 (%)',
+                chartLPI: 'LPI 得分 (2023)',
+                chartTechAdoption: '技术采纳率/意愿 (%)',
+                chartTMSMarketGrowth: 'TMS市场规模 (百万美元)',
+                chartEcommerceGrowth: '电子商务市场年增长率 (%)',
+                chartDEI: 'DEI 得分',
+                chartLabelsRawMaterials: '原材料',
+                chartLabelsCapitalGoods: '资本货物',
+                chartLabelsConsumerGoods: '消费品',
+                chartLabelsIntermediateProducts: '中间产品',
+                chartLabelsOther: '其他',
+                chartLabelsRoadTransport: '公路运输',
+                chartLabelsRailTransport: '铁路运输',
+                chartLabelsAirTransport: '航空运输',
+                chartLabelsWaterTransport: '水路运输',
+                chartLabelsERPSystems: 'ERP系统',
+                chartLabelsTMSSystems: 'TMS系统 (预期)',
+                chartLabelsAIML: 'AI/ML (实际)',
+                chartLabelsPredictiveAnalytics: '预测分析 (意愿)',
+                chartLabelsVehicles: '车辆',
+                chartLabelsElectricalEquipment: '电气设备',
+                chartLabelsMachinery: '机械',
+                chartLabelsOpticalMedical: '光学医疗器械',
+                chartLabelsMineralFuels: '矿物燃料',
+                chartLabelsOilseeds: '油籽',
+                chartLabelsSlagAsh: '矿渣灰',
+                chartLabelsMeat: '肉类',
+                chartLabelsSugar: '糖',
+                chartLabelsFertilizers: '肥料',
+                chartLabelsGrain: '谷物',
+                chartLabelsFoodResidues: '食品工业残渣',
+                chartLabelsAnimalFats: '动植物油脂',
+                chartLabelsCrudeOil: '原油',
+                chartLabelsCoal: '煤炭',
+                chartLabelsGold: '黄金',
+                chartLabelsCoffee: '咖啡',
+                chartLabelsFlowers: '鲜花',
+                chartLabelsNonCrudeOil: '石油(非原油)',
+                chartLabelsCars: '汽车',
+                chartLabelsTelephones: '电话机',
+                chartLabelsMedicines: '药品',
+                chartLabelsAircraft: '飞机',
+                chartLabelsCopper: '铜',
+                chartLabelsFruitsNuts: '水果坚果',
+                chartLabelsFish: '鱼类',
+                chartLabelsInorganicChemicals: '无机化学品',
+                chartLabelsPreciousMetals: '宝石贵金属',
+                chartLabelsCargoVehicles: '载货车',
+                chartLabelsBrazil: '巴西',
+                chartLabelsMexico: '墨西哥',
+                chartLabelsArgentina: '阿根廷',
+                chartLabelsColombia: '哥伦比亚',
+                chartLabelsChile: '智利',
+                chartLabelsPeru: '秘鲁',
+                chartLabelsGuyana: '圭亚那',
+                chartLabelsUruguay: '乌拉圭',
+                chartLabelsPanama: '巴拿马',
+                chartLabelsCostaRica: '哥斯达黎加',
+                chartLabelsDominicanRepublic: '多米尼加共和国',
+                chartLabelsUS: '美国',
+                chartLabelsChina: '中国',
+                chartLabelsNetherlands: '荷兰',
+            },
+            'en': {
+                pageTitle: 'Latin America Supply Chain Panorama',
+                mainTitle: 'Latin America Supply Chain Panorama Analysis',
+                tabButtonOverview: 'Overview',
+                tabButtonTrade: 'Trade Dynamics',
+                tabButtonInfrastructure: 'Infrastructure',
+                tabButtonDigitalization: 'Digital Transformation',
+                tabButtonChallenges: 'Challenges & Opportunities',
+                tabButtonOutlook: 'Future Outlook',
+                overviewTitle: 'Overview',
+                execSummaryTitle: 'Executive Summary',
+                execSummaryP1: 'The Latin American supply chain is undergoing a profound transformation, characterized by evolving trade patterns, continuous infrastructure development, and accelerated adoption of digital technologies. This report analyzes trade relations, logistics infrastructure, digitalization processes, and challenges and opportunities for multinational corporations in the region from 2019 to 2024.',
+                execSummaryP2: 'The study found that Latin America\'s trade performance shows regional disparities, with South America relying on commodity exports, susceptible to price fluctuations, while Mexico\'s manufacturing exports are deeply integrated into North American value chains. The United States and China are the region\'s most important trading partners. Although infrastructure construction has improved, significant gaps in roads, railways, and customs efficiency still constrain logistics efficiency. Digital transformation is accelerating, with technologies such as AI, IoT, and cloud computing widely adopted, especially in e-commerce and warehouse automation, but maturity varies significantly across countries and enterprises.',
+                execSummaryP3: 'For international companies, the region offers significant market growth and nearshoring opportunities, benefiting from its abundant natural resources and geographical advantages. However, they must contend with challenges such as insufficient infrastructure, regulatory complexity, cargo theft, political and economic instability, and labor shortages.',
+                introTitle: 'Introduction',
+                introP1: 'This report aims to provide a comprehensive and in-depth analysis of the supply chain landscape in Latin America. It will examine the intricate interplay between trade dynamics, infrastructure development, and digital transformation in the region from 2019 to 2024. By integrating key data, deep observations, and practical case studies, this report aims to provide actionable insights for businesses and policymakers operating in or considering entering the Latin American market.',
+                introP2: 'Latin America is a vast and economically diverse region. The region\'s economic growth is projected to be moderate, at 2.1% in 2025 and 2.4% in 2026, making it the slowest-growing region globally. This economic context places unique demands on the resilience and efficiency of supply chains.',
+                tradeTitle: 'Trade Dynamics',
+                tradePerformanceTitle: 'Overall Trade Performance and Trends (2019-2024)',
+                tradePerformanceP1: 'Latin America\'s merchandise exports contracted by 1.3% in 2023 but grew by 1.3% year-on-year in Q1 2024. Service exports showed strong growth. In the first half of 2024, total merchandise and services trade grew, with exports up 5% and imports up 1% year-on-year. Service exports grew 11%, outpacing merchandise exports at 4%. This non-uniform trade performance indicates fundamental differences in the economic structures and trade drivers across Latin American sub-regions.',
+                tradePerformanceChartDesc: 'Chart Description: Shows annual growth trends of merchandise and service imports and exports in Latin America. South America\'s reliance on primary commodities makes its trade susceptible to global commodity price fluctuations, while Mexico\'s manufacturing exports are deeply integrated into North American value chains.',
+                topEconomiesPartnersTitle: 'Top 10 Latin American Economies and Key Trading Partners',
+                topEconomiesPartnersP1: 'Based on 2024 GDP per capita, major Latin American economies include Guyana, Uruguay, Panama, etc. The United States and China are Latin America\'s most important trading partners, accounting for 41.71% and 12.97% of total trade, respectively.',
+                topEconomiesTableTitle: 'Table 1: Top 10 Latin American Economies (by GDP per capita) 2024',
+                topEconomiesTableCol1: 'Rank',
+                topEconomiesTableCol2: 'Country',
+                topEconomiesTableCol3: '2024 GDP per capita (USD)',
+                mainCommoditiesTitle: 'Main Import and Export Product Categories',
+                mainCommoditiesP1: 'Raw materials account for the largest share (32.72%) of total merchandise exports from Latin America. In terms of imports, consumer goods (31.38%) and capital goods (30.39%) dominate. This trade structure reflects a typical "commodity exporter" model.',
+                countryTradeQueryTitle: 'Key Country Trade Data Query',
+                countryTradeQueryP1: 'Select a country to view its main import and export product categories and trading partner information (data primarily based on 2023/2024).',
+                countryOptionBrazil: 'Brazil',
+                countryOptionMexico: 'Mexico',
+                countryOptionArgentina: 'Argentina',
+                countryOptionColombia: 'Colombia',
+                countryOptionChile: 'Chile',
+                countryOptionPeru: 'Peru',
+                countryExportChartTitle: 'Main Export Products',
+                countryImportChartTitle: 'Main Import Products',
+                countryTradeInfoDesc: 'The charts above show the percentage of main import and export product categories for <strong>{countryName}</strong> (illustrative data). For detailed data, please refer to the original report.',
+                infrastructureTitle: 'Supply Chain Infrastructure',
+                crossBorderLogisticsTitle: 'Cross-Border Logistics and Trade Facilitation',
+                crossBorderLogisticsP1: 'Cross-border trade facilitation in Latin America faces multiple challenges, including varying customs regulations, lack of transparency, and bureaucracy across countries. Nevertheless, some ports like Balboa in Panama stand out in multimodal transport. Trade facilitation initiatives, such as the WTO\'s Trade Facilitation Agreement and joint border control models, are helping to improve the situation.',
+                crossBorderLogisticsChallenge: 'Challenge: Average truck transit speed is only 16 km/h (global average 60 km/h), with waiting times exceeding 6 hours at some border crossings.',
+                crossBorderLogisticsSolution: 'Solution: Customs digital transformation, single window trade systems, smart monitoring technologies (GPS, RFID).',
+                domesticLogisticsTitle: 'Domestic Logistics Network',
+                domesticLogisticsP1: 'Latin America\'s transport relies primarily on roads (85% of freight), but only 23% of roads are paved. The railway network is underdeveloped. Air cargo has recovered but faces infrastructure limitations. The logistics market is expected to grow, with last-mile delivery facing high customer expectations, traffic congestion, and being addressed through route optimization, micro-fulfillment centers, etc.',
+                keyIndustriesTitle: 'Key Industry Supply Chain Analysis',
+                accordionAutoTitle: 'Automotive Industry',
+                accordionAutoContent: 'Mexico is a leader, with an estimated market size of $303 billion by 2025, supplying about 40% of automotive parts to the US. USMCA encourages regional production. Argentina, Brazil, and Colombia are also key players.',
+                accordionManufTitle: 'Manufacturing/Equipment Industry',
+                accordionManufContent: 'Faces challenges like insufficient infrastructure (only 1.3% of GDP invested), political instability. Intra-regional trade is only 12%. Nearshoring brings opportunities, with Argentina having advantages due to resources and labor.',
+                accordionFMCGTitle: 'Fast-Moving Consumer Goods (FMCG)',
+                accordionFMCGContent: 'Faces slow recovery, changing demand, supply chain disruptions, rising energy and food prices. High food and beverage inflation. Intra-regional trade is underdeveloped (22%), offering growth opportunities for countries like Mexico and Colombia.',
+                lpiAnalysisTitle: 'Logistics Performance Index (LPI) Analysis (2023)',
+                lpiAnalysisP1: 'The World Bank\'s LPI assesses countries\' trade logistics performance across six dimensions: customs efficiency, infrastructure quality, ease of international shipments, logistics competence, tracking and tracing, and timeliness. Brazil performs most prominently in the Latin American region.',
+                lpiTableTitle: 'Table 3: Logistics Performance Index (LPI) for Selected Latin American Countries (2023)',
+                lpiTableCol1: 'Country', lpiTableCol2: 'LPI Rank', lpiTableCol3: 'LPI Score', lpiTableCol4: 'Customs', lpiTableCol5: 'Infrastructure', lpiTableCol6: 'International Shipments', lpiTableCol7: 'Logistics Competence', lpiTableCol8: 'Tracking & Tracing', lpiTableCol9: 'Timeliness',
+                digitalizationTitle: 'Supply Chain Digital Transformation',
+                digitalStatusTitle: 'Digitalization Status',
+                digitalStatusP1: 'Latin America\'s supply chain digital transformation is accelerating, but adoption varies. 70% of teams have deployed ERP. TMS market is expected to grow. IoT and AI enhance visibility and predictive capabilities. Blockchain is used for agricultural supply chain traceability.',
+                ecommerceLogisticsTitle: 'E-commerce Logistics and Digital Payments',
+                ecommerceLogisticsP1: 'Latin America is the fastest-growing e-commerce market globally, projected to grow at 19% annually from 2022 to 2027. Mobile commerce is booming. Digital payment systems like Pix in Brazil simplify transactions. E-commerce growth significantly impacts last-mile delivery and order fulfillment.',
+                deiTitle: 'Digital Evolution Index (DEI) for Latin American Countries',
+                deiP1: 'DEI measures the maturity and speed of a country\'s digital development. Chile, Puerto Rico, and the Bahamas are leading.',
+                deiTableTitle: 'Table 4: Digital Evolution Index (DEI) for Latin American Countries',
+                deiTableCol1: 'Rank', deiTableCol2: 'Country', deiTableCol3: 'DEI Score', deiTableCol4: 'Digital Evolution Speed (%)',
+                challengesOpportunitiesTitle: 'Challenges & Opportunities',
+                mainChallengesTitle: 'Main Supply Chain Challenges',
+                challengeInfraTitle: 'Infrastructure Deficiencies & Bottlenecks',
+                challengeInfraContent: 'Outdated ports, roads, and logistics networks. Infrastructure investment is only 1.3% of GDP. Road transport accounts for 85%, but only 23% of roads are paved.',
+                challengeRegTitle: 'Regulatory Complexity & Bureaucracy',
+                challengeRegContent: 'Diverse regulatory environments and customs agreements across countries. Cumbersome bureaucratic procedures and lack of transparency lead to delays and increased costs. Corruption remains an issue.',
+                challengeSecurityTitle: 'Security Risks (Cargo Theft, Cyber Threats)',
+                challengeSecurityContent: 'Cargo theft is severe; 68% of incidents in South America occur in Brazil. Food and beverages are primary targets. Cyber threats are growing concerns.',
+                challengePoliticalTitle: 'Political & Economic Instability',
+                challengePoliticalContent: 'Political changes lead to new trade policies, tariffs, and restrictions. Regulatory uncertainty, currency fluctuations, and labor disruptions can follow.',
+                challengeLaborTitle: 'Labor Shortages & Development',
+                challengeLaborContent: 'Shortage of skilled labor, especially in fast-growing sectors like renewable energy. Poor working conditions, declining real wages, and insufficient worker protection.',
+                challengeCultureTitle: 'Cultural Differences in Business Operations',
+                challengeCultureContent: 'Communication styles, hierarchy, punctuality, and decision-making processes differ from Western standards. Decision-making is often slower and more consensus-driven.',
+                opportunitiesTitle: 'Competitive Advantages & Opportunities',
+                opportunityNearshoringTitle: 'Nearshoring & Friendshoring Trends',
+                opportunityNearshoringContent: 'IDB estimates could add nearly $78 billion annually to exports. Significant potential in automotive, textile, pharmaceutical, and renewable energy. Mexico is a hotspot.',
+                opportunityMarketGrowthTitle: 'Market Growth & Consumer Demand',
+                opportunityMarketGrowthContent: 'Large population, about half middle class. E-commerce market growing rapidly, projected 19% annual growth until 2027.',
+                opportunityResourcesTitle: 'Abundant Natural Resources',
+                opportunityResourcesContent: '"Lithium Triangle" (Argentina, Bolivia, Chile) crucial for growing EV supply chain. Increased investment in renewable energy, mining, and automotive sectors.',
+                opportunityLocationTitle: 'Strategic Geographical Location',
+                opportunityLocationContent: 'Geographical proximity to North America and Europe. Mexico acts as a bridge between North America and the rest of Latin America.',
+                outlookTitle: 'Conclusion & Future Outlook',
+                supplyChainMatchTitle: 'Supply Chain Alignment with Economic and Trade Development',
+                supplyChainMatchP1: 'Latin America\'s supply chain shows significant gaps in alignment with economic and trade development but also unique strengths. As a major exporter of raw materials and agricultural products, its economy is highly dependent on commodity price fluctuations. Insufficient infrastructure remains a limiting factor, leading to high logistics costs and low efficiency. Digital transformation is uneven. However, abundant natural resources, a large and growing consumer market, advantageous geographical location, and nearshoring trends present significant opportunities.',
+                futureChallengesTitle: 'Key Challenges for the Next Five Years',
+                futureChallenge1: 'Political and economic uncertainty',
+                futureChallenge2: 'Insufficient infrastructure investment (currently only 1.3% of GDP)',
+                futureChallenge3: 'Climate change impacts (e.g., Panama Canal drought)',
+                futureChallenge4: 'Digital divide (gaps in digital culture, talent, technology adoption)',
+                futureChallenge5: 'Security and compliance risks (cargo theft, cyber threats, customs complexity)',
+                futureTrendsRecsTitle: 'Key Trends and Recommendations for Future Growth',
+                recInfraTechTitle: 'Strategic Infrastructure and Technology Investment',
+                recInfraTech1: 'Promote public-private partnerships to upgrade transport networks, ports, and digital infrastructure.',
+                recInfraTech2: 'Modernize ports and roads, invest in automation and digitalization.',
+                recInfraTech3: 'Accelerate adoption of digital technologies (AI, IoT, blockchain, etc.), especially in warehouse automation and last-mile delivery.',
+                recIntegrationTradeTitle: 'Strengthen Regional Integration and Trade Facilitation',
+                recIntegrationTrade1: 'Harmonize customs regulations, simplify procedures, and enhance efficiency and transparency through digitalization.',
+                recIntegrationTrade2: 'Deepen intra-regional trade, reduce trade barriers, and integrate regional value chains.',
+                recWorkforceTitle: 'Develop a High-Quality Workforce',
+                recWorkforce1: 'Invest in training programs to cultivate skilled logistics and technology professionals.',
+                recWorkforce2: 'Implement incentives to attract and retain talent, and improve working conditions.',
+                recSustainabilityTitle: 'Prioritize Sustainability and Resilience',
+                recSustainability1: 'Build climate-resilient infrastructure and develop contingency plans for climate-related disruptions.',
+                recSustainability2: 'Promote green logistics (electric vehicles, optimized routes, recyclable packaging).',
+                recSustainability3: 'Diversify supplier networks to mitigate risks and enhance flexibility against external shocks.',
+                footerText: '&copy; 2024 Latin America Supply Chain Panorama Analysis. Generated based on provided report.',
+                chartTradeTrendExport: 'Merchandise Export Growth (%)',
+                chartTradeTrendService: 'Service Export Growth (%)',
+                chartTopEconomies: '2024 GDP per capita (USD)',
+                chartTopTradePartners: 'Trade Partner Share (%)',
+                chartExportCategories: 'Export Product Category Share (%)',
+                chartImportCategories: 'Import Product Category Share (%)',
+                chartTransportModes: 'Freight Transport Mode Share (%)',
+                chartLPI: 'LPI Score (2023)',
+                chartTechAdoption: 'Technology Adoption/Intent (%)',
+                chartTMSMarketGrowth: 'TMS Market Size (Million USD)',
+                chartEcommerceGrowth: 'E-commerce Market Annual Growth Rate (%)',
+                chartDEI: 'DEI Score',
+                chartLabelsRawMaterials: 'Raw Materials',
+                chartLabelsCapitalGoods: 'Capital Goods',
+                chartLabelsConsumerGoods: 'Consumer Goods',
+                chartLabelsIntermediateProducts: 'Intermediate Products',
+                chartLabelsOther: 'Other',
+                chartLabelsRoadTransport: 'Road Transport',
+                chartLabelsRailTransport: 'Rail Transport',
+                chartLabelsAirTransport: 'Air Transport',
+                chartLabelsWaterTransport: 'Water Transport',
+                chartLabelsERPSystems: 'ERP Systems',
+                chartLabelsTMSSystems: 'TMS Systems (Expected)',
+                chartLabelsAIML: 'AI/ML (Actual)',
+                chartLabelsPredictiveAnalytics: 'Predictive Analytics (Intent)',
+                chartLabelsVehicles: 'Vehicles',
+                chartLabelsElectricalEquipment: 'Electrical Equipment',
+                chartLabelsMachinery: 'Machinery',
+                chartLabelsOpticalMedical: 'Optical Medical Instruments',
+                chartLabelsMineralFuels: 'Mineral Fuels',
+                chartLabelsOilseeds: 'Oilseeds',
+                chartLabelsSlagAsh: 'Slag, Ash',
+                chartLabelsMeat: 'Meat',
+                chartLabelsSugar: 'Sugar',
+                chartLabelsFertilizers: 'Fertilizers',
+                chartLabelsGrain: 'Grain',
+                chartLabelsFoodResidues: 'Food Industry Residues',
+                chartLabelsAnimalFats: 'Animal/Vegetable Fats',
+                chartLabelsCrudeOil: 'Crude Oil',
+                chartLabelsCoal: 'Coal',
+                chartLabelsGold: 'Gold',
+                chartLabelsCoffee: 'Coffee',
+                chartLabelsFlowers: 'Flowers',
+                chartLabelsNonCrudeOil: 'Petroleum (non-crude)',
+                chartLabelsCars: 'Cars',
+                chartLabelsTelephones: 'Telephones',
+                chartLabelsMedicines: 'Medicines',
+                chartLabelsAircraft: 'Aircraft',
+                chartLabelsCopper: 'Copper',
+                chartLabelsFruitsNuts: 'Fruits, Nuts',
+                chartLabelsFish: 'Fish',
+                chartLabelsInorganicChemicals: 'Inorganic Chemicals',
+                chartLabelsPreciousMetals: 'Precious Metals',
+                chartLabelsCargoVehicles: 'Cargo Vehicles',
+                chartLabelsBrazil: 'Brazil',
+                chartLabelsMexico: 'Mexico',
+                chartLabelsArgentina: 'Argentina',
+                chartLabelsColombia: 'Colombia',
+                chartLabelsChile: 'Chile',
+                chartLabelsPeru: 'Peru',
+                chartLabelsGuyana: 'Guyana',
+                chartLabelsUruguay: 'Uruguay',
+                chartLabelsPanama: 'Panama',
+                chartLabelsCostaRica: 'Costa Rica',
+                chartLabelsDominicanRepublic: 'Dominican Republic',
+                chartLabelsUS: 'United States',
+                chartLabelsChina: 'China',
+                chartLabelsNetherlands: 'Netherlands',
+            },
+            'fr': {
+                pageTitle: 'Panorama de la Chaîne d\'Approvisionnement en Amérique Latine',
+                mainTitle: 'Analyse Panoramique de la Chaîne d\'Approvisionnement en Amérique Latine',
+                tabButtonOverview: 'Aperçu',
+                tabButtonTrade: 'Dynamique Commerciale',
+                tabButtonInfrastructure: 'Infrastructure',
+                tabButtonDigitalization: 'Transformation Numérique',
+                tabButtonChallenges: 'Défis et Opportunités',
+                tabButtonOutlook: 'Perspectives Futures',
+                overviewTitle: 'Aperçu',
+                execSummaryTitle: 'Résumé Exécutif',
+                execSummaryP1: 'La chaîne d\'approvisionnement en Amérique latine subit une profonde transformation, caractérisée par l\'évolution des modèles commerciaux, le développement continu des infrastructures et l\'adoption accélérée des technologies numériques. Ce rapport analyse les relations commerciales, l\'infrastructure logistique, les processus de numérisation, ainsi que les défis et opportunités pour les entreprises multinationales dans la région de 2019 à 2024.',
+                execSummaryP2: 'L\'étude a révélé que la performance commerciale de l\'Amérique latine présente des disparités régionales, l\'Amérique du Sud dépendant des exportations de matières premières, sensibles aux fluctuations de prix, tandis que les exportations manufacturières du Mexique sont profondément intégrées dans les chaînes de valeur nord-américaines. Les États-Unis et la Chine sont les partenaires commerciaux les plus importants de la région. Bien que la construction d\'infrastructures se soit améliorée, des lacunes importantes dans les routes, les chemins de fer et l\'efficacité douanière limitent toujours l\'efficacité logistique. La transformation numérique s\'accélère, avec des technologies telles que l\'IA, l\'IoT et le cloud computing largement adoptées, en particulier dans le commerce électronique et l\'automatisation des entrepôts, mais la maturité varie considérablement d\'un pays à l\'autre et d\'une entreprise à l\'autre.',
+                execSummaryP3: 'Pour les entreprises internationales, la région offre une croissance significative du marché et des opportunités de délocalisation (nearshoring), bénéficiant de ses abondantes ressources naturelles et de ses avantages géographiques. Cependant, elles doivent faire face à des défis tels que des infrastructures insuffisantes, une complexité réglementaire, le vol de marchandises, l\'instabilité politique et économique et les pénuries de main-d\'œuvre.',
+                introTitle: 'Introduction',
+                introP1: 'Ce rapport vise à fournir une analyse complète et approfondie du paysage de la chaîne d\'approvisionnement en Amérique latine. Il examinera l\'interaction complexe entre la dynamique commerciale, le développement des infrastructures et la transformation numérique dans la région de 2019 à 2024. En intégrant des données clés, des observations approfondies et des études de cas pratiques, ce rapport vise à fournir des informations exploitables aux entreprises et aux décideurs politiques opérant ou envisageant d\'entrer sur le marché latino-américain.',
+                introP2: 'L\'Amérique latine est une région vaste et économiquement diversifiée. La croissance économique de la région devrait être modérée, à 2,1 % en 2025 et 2,4 % en 2026, ce qui en fait la région à la croissance la plus lente au niveau mondial. Ce contexte économique impose des exigences uniques à la résilience et à l\'efficacité des chaînes d\'approvisionnement.',
+                tradeTitle: 'Dynamique Commerciale',
+                tradePerformanceTitle: 'Performance Commerciale Globale et Tendances (2019-2024)',
+                tradePerformanceP1: 'Les exportations de marchandises de l\'Amérique latine ont diminué de 1,3 % en 2023, mais ont augmenté de 1,3 % en glissement annuel au T1 2024. Les exportations de services ont montré une forte croissance. Au premier semestre 2024, le commerce total de marchandises et de services a augmenté, avec des exportations en hausse de 5 % et des importations en hausse de 1 % en glissement annuel. Les exportations de services ont augmenté de 11 %, dépassant les exportations de marchandises de 4 %. Cette performance commerciale non uniforme indique des différences fondamentales dans les structures économiques et les moteurs commerciaux des sous-régions d\'Amérique latine.',
+                tradePerformanceChartDesc: 'Description du graphique : Montre les tendances de croissance annuelle des importations et exportations de marchandises et de services en Amérique latine. La dépendance de l\'Amérique du Sud vis-à-vis des matières premières rend son commerce sensible aux fluctuations des prix mondiaux des matières premières, tandis que les exportations manufacturières du Mexique sont profondément intégrées dans les chaînes de valeur nord-américaines.',
+                topEconomiesPartnersTitle: 'Les 10 Principales Économies d\'Amérique Latine et Principaux Partenaires Commerciaux',
+                topEconomiesPartnersP1: 'Selon le PIB par habitant de 2024, les principales économies d\'Amérique latine comprennent le Guyana, l\'Uruguay, le Panama, etc. Les États-Unis et la Chine sont les partenaires commerciaux les plus importants de l\'Amérique latine, représentant respectivement 41,71 % et 12,97 % du commerce total.',
+                topEconomiesTableTitle: 'Tableau 1 : Les 10 Principales Économies d\'Amérique Latine (par PIB par habitant) 2024',
+                topEconomiesTableCol1: 'Classement',
+                topEconomiesTableCol2: 'Pays',
+                topEconomiesTableCol3: 'PIB par habitant 2024 (USD)',
+                mainCommoditiesTitle: 'Principales Catégories de Produits Importés et Exportés',
+                mainCommoditiesP1: 'Les matières premières représentent la plus grande part (32,72 %) des exportations totales de marchandises d\'Amérique latine. En termes d\'importations, les biens de consommation (31,38 %) et les biens d\'équipement (30,39 %) dominent. Cette structure commerciale reflète un modèle typique d\'"exportateur de matières premières".',
+                countryTradeQueryTitle: 'Requête de Données Commerciales par Pays Clé',
+                countryTradeQueryP1: 'Sélectionnez un pays pour afficher ses principales catégories de produits importés et exportés et les informations sur ses partenaires commerciaux (données basées principalement sur 2023/2024).',
+                countryOptionBrazil: 'Brésil',
+                countryOptionMexico: 'Mexique',
+                countryOptionArgentina: 'Argentine',
+                countryOptionColombia: 'Colombie',
+                countryOptionChile: 'Chili',
+                countryOptionPeru: 'Pérou',
+                countryExportChartTitle: 'Principaux Produits Exportés',
+                countryImportChartTitle: 'Principaux Produits Importés',
+                countryTradeInfoDesc: 'Les graphiques ci-dessus montrent le pourcentage des principales catégories de produits importés et exportés pour <strong>{countryName}</strong> (données illustratives). Pour des données détaillées, veuillez vous référer au rapport original.',
+                infrastructureTitle: 'Infrastructure de la Chaîne d\'Approvisionnement',
+                crossBorderLogisticsTitle: 'Logistique Transfrontalière et Facilitation du Commerce',
+                crossBorderLogisticsP1: 'La facilitation du commerce transfrontalier en Amérique latine est confrontée à de multiples défis, notamment des réglementations douanières variées, un manque de transparence et la bureaucratie dans les pays. Néanmoins, certains ports comme Balboa au Panama se distinguent par le transport multimodal. Des initiatives de facilitation du commerce, telles que l\'Accord sur la facilitation du commerce de l\'OMC et les modèles de contrôle frontalier conjoints, contribuent à améliorer la situation.',
+                crossBorderLogisticsChallenge: 'Défi : La vitesse moyenne de transit des camions n\'est que de 16 km/h (moyenne mondiale de 60 km/h), avec des temps d\'attente dépassant 6 heures à certains passages frontaliers.',
+                crossBorderLogisticsSolution: 'Solution : Transformation numérique des douanes, systèmes de guichet unique, technologies de surveillance intelligente (GPS, RFID).',
+                domesticLogisticsTitle: 'Réseau Logistique National',
+                domesticLogisticsP1: 'Le transport en Amérique latine repose principalement sur les routes (85 % du fret), mais seulement 23 % des routes sont pavées. Le réseau ferroviaire est sous-développé. Le fret aérien a repris mais fait face à des limitations d\'infrastructure. Le marché de la logistique devrait continuer de croître, la livraison du dernier kilomètre étant confrontée à des attentes élevées des clients, à la congestion du trafic, et étant abordée par l\'optimisation des itinéraires, les centres de micro-exécution, etc.',
+                keyIndustriesTitle: 'Analyse de la Chaîne d\'Approvisionnement des Industries Clés',
+                accordionAutoTitle: 'Industrie Automobile',
+                accordionAutoContent: 'Le Mexique est un leader, avec une taille de marché estimée à 303 milliards de dollars d\'ici 2025, fournissant environ 40 % des pièces automobiles aux États-Unis. L\'USMCA encourage la production régionale. L\'Argentine, le Brésil et la Colombie sont également des acteurs clés.',
+                accordionManufTitle: 'Industrie Manufacturière/Équipement',
+                accordionManufContent: 'Fait face à des défis tels que des infrastructures insuffisantes (seulement 1,3 % du PIB investi), l\'instabilité politique. Le commerce intra-régional n\'est que de 12 %. Le nearshoring apporte des opportunités, l\'Argentine ayant des avantages grâce à ses ressources et sa main-d\'œuvre.',
+                accordionFMCGTitle: 'Biens de Consommation à Rotation Rapide (FMCG)',
+                accordionFMCGContent: 'Fait face à une reprise lente, à l\'évolution de la demande, aux perturbations de la chaîne d\'approvisionnement, à la hausse des prix de l\'énergie et des denrées alimentaires. Forte inflation des produits alimentaires et des boissons. Le commerce intra-régional est sous-développé (22 %), offrant des opportunités de croissance pour des pays comme le Mexique et la Colombie.',
+                lpiAnalysisTitle: 'Analyse de l\'Indice de Performance Logistique (LPI) (2023)',
+                lpiAnalysisP1: 'L\'IPL de la Banque Mondiale évalue la performance logistique commerciale des pays selon six dimensions : l\'efficacité douanière, la qualité des infrastructures, la facilité des expéditions internationales, la compétence logistique, le suivi et la traçabilité, et la ponctualité. Le Brésil se distingue le plus dans la région latino-américaine.',
+                lpiTableTitle: 'Tableau 3 : Indice de Performance Logistique (LPI) pour certains pays d\'Amérique Latine (2023)',
+                lpiTableCol1: 'Pays', lpiTableCol2: 'Classement LPI', lpiTableCol3: 'Score LPI', lpiTableCol4: 'Douanes', lpiTableCol5: 'Infrastructure', lpiTableCol6: 'Transport International', lpiTableCol7: 'Compétence Logistique', lpiTableCol8: 'Suivi et Traçabilité', lpiTableCol9: 'Ponctualité',
+                digitalizationTitle: 'Transformation Numérique de la Chaîne d\'Approvisionnement',
+                digitalStatusTitle: 'État de la Numérisation',
+                digitalStatusP1: 'La transformation numérique de la chaîne d\'approvisionnement en Amérique latine s\'accélère, mais l\'adoption varie. 70 % des équipes ont déployé un ERP. Le marché des TMS devrait croître. L\'IoT et l\'IA améliorent la visibilité et les capacités prédictives. La blockchain est utilisée pour la traçabilité de la chaîne d\'approvisionnement agricole.',
+                ecommerceLogisticsTitle: 'Logistique du Commerce Électronique et Paiements Numériques',
+                ecommerceLogisticsP1: 'L\'Amérique latine est le marché du commerce électronique à la croissance la plus rapide au monde, avec une croissance annuelle projetée de 19 % de 2022 à 2027. Le commerce mobile est en plein essor. Les systèmes de paiement numériques comme Pix au Brésil simplifient les transactions. La croissance du commerce électronique a un impact significatif sur la livraison du dernier kilomètre et l\'exécution des commandes.',
+                deiTitle: 'Indice d\'Évolution Numérique (DEI) pour les Pays d\'Amérique Latine',
+                deiP1: 'Le DEI mesure la maturité et la vitesse du développement numérique d\'un pays. Le Chili, Porto Rico et les Bahamas sont en tête.',
+                deiTableTitle: 'Tableau 4 : Indice d\'Évolution Numérique (DEI) pour les Pays d\'Amérique Latine',
+                deiTableCol1: 'Classement', deiTableCol2: 'Pays', deiTableCol3: 'Score DEI', deiTableCol4: 'Vitesse d\'Évolution Numérique (%)',
+                challengesOpportunitiesTitle: 'Défis et Opportunités',
+                mainChallengesTitle: 'Principaux Défis de la Chaîne d\'Approvisionnement',
+                challengeInfraTitle: 'Déficiences et Goulots d\'Étranglement des Infrastructures',
+                challengeInfraContent: 'Ports, routes et réseaux logistiques obsolètes. L\'investissement dans les infrastructures ne représente que 1,3 % du PIB. Le transport routier représente 85 %, mais seulement 23 % des routes sont pavées.',
+                challengeRegTitle: 'Complexité Réglementaire et Bureaucratie',
+                challengeRegContent: 'Environnements réglementaires et accords douaniers diversifiés selon les pays. Des procédures bureaucratiques lourdes et un manque de transparence entraînent des retards et des coûts accrus. La corruption reste un problème.',
+                challengeSecurityTitle: 'Risques de Sécurité (Vol de Cargaison, Cybermenaces)',
+                challengeSecurityContent: 'Le vol de cargaison est grave ; 68 % des incidents en Amérique du Sud se produisent au Brésil. Les aliments et boissons sont les principales cibles. Les cybermenaces sont des préoccupations croissantes.',
+                challengePoliticalTitle: 'Instabilité Politique et Économique',
+                challengePoliticalContent: 'Les changements politiques entraînent de nouvelles politiques commerciales, des tarifs et des restrictions. L\'incertitude réglementaire, les fluctuations monétaires et les perturbations de la main-d\'œuvre peuvent suivre.',
+                challengeLaborTitle: 'Pénuries de Main-d\'œuvre et Développement',
+                challengeLaborContent: 'Pénurie de main-d\'œuvre qualifiée, en particulier dans les secteurs à forte croissance comme les énergies renouvelables. Mauvaises conditions de travail, salaires réels en baisse et protection insuffisante des travailleurs.',
+                challengeCultureTitle: 'Différences Culturelles dans les Opérations Commerciales',
+                challengeCultureContent: 'Les styles de communication, la hiérarchie, la ponctualité et les processus de prise de décision diffèrent des normes occidentales. La prise de décision est souvent plus lente et davantage axée sur le consensus.',
+                opportunitiesTitle: 'Avantages Concurrentiels et Opportunités',
+                opportunityNearshoringTitle: 'Tendances de Délocalisation et de Relocalisation Amicale',
+                opportunityNearshoringContent: 'La BID estime que cela pourrait ajouter près de 78 milliards de dollars par an aux exportations. Potentiel important dans l\'automobile, le textile, la pharmacie et les énergies renouvelables. Le Mexique est un point chaud.',
+                opportunityMarketGrowthTitle: 'Croissance du Marché et Demande des Consommateurs',
+                opportunityMarketGrowthContent: 'Grande population, environ la moitié de la classe moyenne. Le marché du commerce électronique connaît une croissance rapide, projetée à 19 % par an jusqu\'en 2027.',
+                opportunityResourcesTitle: 'Ressources Naturelles Abondantes',
+                opportunityResourcesContent: 'Le "Triangle du Lithium" (Argentine, Bolivie, Chili) est crucial pour la chaîne d\'approvisionnement croissante des véhicules électriques. Investissements accrus dans les énergies renouvelables, l\'exploitation minière et les secteurs automobile.',
+                opportunityLocationTitle: 'Emplacement Géographique Stratégique',
+                opportunityLocationContent: 'Proximité géographique avec l\'Amérique du Nord et l\'Europe. Le Mexique agit comme un pont entre l\'Amérique du Nord et le reste de l\'Amérique latine.',
+                outlookTitle: 'Conclusion et Perspectives Futures',
+                supplyChainMatchTitle: 'Adéquation de la Chaîne d\'Approvisionnement avec le Développement Économique et Commercial',
+                supplyChainMatchP1: 'La chaîne d\'approvisionnement de l\'Amérique latine présente des lacunes importantes en matière d\'adéquation avec le développement économique et commercial, mais aussi des atouts uniques. En tant que grand exportateur de matières premières et de produits agricoles, son économie est fortement dépendante des fluctuations des prix des matières premières. Des infrastructures insuffisantes restent un facteur limitant, entraînant des coûts logistiques élevés et une faible efficacité. La transformation numérique est inégale. Cependant, les ressources naturelles abondantes, un marché de consommation vaste et croissant, une situation géographique avantageuse et les tendances de délocalisation représentent des opportunités importantes.',
+                futureChallengesTitle: 'Principaux Défis pour les Cinq Prochaines Années',
+                futureChallenge1: 'Incertitude politique et économique',
+                futureChallenge2: 'Investissements insuffisants dans les infrastructures (actuellement seulement 1,3 % du PIB)',
+                futureChallenge3: 'Impacts du changement climatique (par exemple, sécheresse du canal de Panama)',
+                futureChallenge4: 'Fracture numérique (lacunes en matière de culture numérique, de talents, d\'adoption technologique)',
+                futureChallenge5: 'Risques de sécurité et de conformité (vol de marchandises, cybermenaces, complexité douanière)',
+                futureTrendsRecsTitle: 'Principales Tendances et Recommandations pour la Croissance Future',
+                recInfraTechTitle: 'Investissement Stratégique dans les Infrastructures et la Technologie',
+                recInfraTech1: 'Promouvoir les partenariats public-privé pour moderniser les réseaux de transport, les ports et les infrastructures numériques.',
+                recInfraTech2: 'Moderniser les ports et les routes, investir dans l\'automatisation et la numérisation.',
+                recInfraTech3: 'Accélérer l\'adoption des technologies numériques (IA, IoT, blockchain, etc.), en particulier dans l\'automatisation des entrepôts et la livraison du dernier kilomètre.',
+                recIntegrationTradeTitle: 'Renforcer l\'Intégration Régionale et la Facilitation du Commerce',
+                recIntegrationTrade1: 'Harmoniser les réglementations douanières, simplifier les procédures et améliorer l\'efficacité et la transparence grâce à la numérisation.',
+                recIntegrationTrade2: 'Approfondir le commerce intra-régional, réduire les barrières commerciales et intégrer les chaînes de valeur régionales.',
+                recWorkforceTitle: 'Développer une Main-d\'œuvre de Haute Qualité',
+                recWorkforce1: 'Investir dans des programmes de formation pour former des professionnels qualifiés en logistique et en technologie.',
+                recWorkforce2: 'Mettre en œuvre des incitations pour attirer et retenir les talents, et améliorer les conditions de travail.',
+                recSustainabilityTitle: 'Prioriser la Durabilité et la Résilience',
+                recSustainability1: 'Construire des infrastructures résilientes au climat et élaborer des plans d\'urgence pour les perturbations liées au climat.',
+                recSustainability2: 'Promouvoir la logistique verte (véhicules électriques, itinéraires optimisés, emballages recyclables).',
+                recSustainability3: 'Diversifier les réseaux de fournisseurs pour atténuer les risques et améliorer la flexibilité face aux chocs externes.',
+                footerText: '&copy; 2024 Analyse Panoramique de la Chaîne d\'Approvisionnement en Amérique Latine. Généré sur la base du rapport fourni.',
+                chartTradeTrendExport: 'Croissance des Exportations de Marchandises (%)',
+                chartTradeTrendService: 'Croissance des Exportations de Services (%)',
+                chartTopEconomies: 'PIB par habitant 2024 (USD)',
+                chartTopTradePartners: 'Part des Partenaires Commerciaux (%)',
+                chartExportCategories: 'Part des Catégories de Produits Exportés (%)',
+                chartImportCategories: 'Part des Catégories de Produits Importés (%)',
+                chartTransportModes: 'Part des Modes de Transport de Fret (%)',
+                chartLPI: 'Score LPI (2023)',
+                chartTechAdoption: 'Taux d\'Adoption/Intention Technologique (%)',
+                chartTMSMarketGrowth: 'Taille du Marché TMS (Millions USD)',
+                chartEcommerceGrowth: 'Taux de Croissance Annuel du Marché du Commerce Électronique (%)',
+                chartDEI: 'Score DEI',
+                chartLabelsRawMaterials: 'Matières Premières',
+                chartLabelsCapitalGoods: 'Biens d\'Équipement',
+                chartLabelsConsumerGoods: 'Biens de Consommation',
+                chartLabelsIntermediateProducts: 'Produits Intermédiaires',
+                chartLabelsOther: 'Autre',
+                chartLabelsRoadTransport: 'Transport Routier',
+                chartLabelsRailTransport: 'Transport Ferroviaire',
+                chartLabelsAirTransport: 'Transport Aérien',
+                chartLabelsWaterTransport: 'Transport Maritime/Fluvial',
+                chartLabelsERPSystems: 'Systèmes ERP',
+                chartLabelsTMSSystems: 'Systèmes TMS (Prévu)',
+                chartLabelsAIML: 'IA/ML (Actuel)',
+                chartLabelsPredictiveAnalytics: 'Analyse Prédictive (Intention)',
+                chartLabelsVehicles: 'Véhicules',
+                chartLabelsElectricalEquipment: 'Équipement Électrique',
+                chartLabelsMachinery: 'Machinerie',
+                chartLabelsOpticalMedical: 'Instruments Optiques Médicaux',
+                chartLabelsMineralFuels: 'Combustibles Minéraux',
+                chartLabelsOilseeds: 'Graines Oléagineuses',
+                chartLabelsSlagAsh: 'Scories, Cendres',
+                chartLabelsMeat: 'Viande',
+                chartLabelsSugar: 'Sucre',
+                chartLabelsFertilizers: 'Engrais',
+                chartLabelsGrain: 'Céréales',
+                chartLabelsFoodResidues: 'Résidus de l\'Industrie Alimentaire',
+                chartLabelsAnimalFats: 'Graisses Animales/Végétales',
+                chartLabelsCrudeOil: 'Pétrole Brut',
+                chartLabelsCoal: 'Charbon',
+                chartLabelsGold: 'Or',
+                chartLabelsCoffee: 'Café',
+                chartLabelsFlowers: 'Fleurs',
+                chartLabelsNonCrudeOil: 'Pétrole (non brut)',
+                chartLabelsCars: 'Voitures',
+                chartLabelsTelephones: 'Téléphones',
+                chartLabelsMedicines: 'Médicaments',
+                chartLabelsAircraft: 'Avions',
+                chartLabelsCopper: 'Cuivre',
+                chartLabelsFruitsNuts: 'Fruits, Noix',
+                chartLabelsFish: 'Poisson',
+                chartLabelsInorganicChemicals: 'Produits Chimiques Inorganiques',
+                chartLabelsPreciousMetals: 'Métaux Précieux',
+                chartLabelsCargoVehicles: 'Véhicules de Fret',
+                chartLabelsBrazil: 'Brésil',
+                chartLabelsMexico: 'Mexique',
+                chartLabelsArgentina: 'Argentine',
+                chartLabelsColombia: 'Colombie',
+                chartLabelsChile: 'Chili',
+                chartLabelsPeru: 'Pérou',
+                chartLabelsGuyana: 'Guyana',
+                chartLabelsUruguay: 'Uruguay',
+                chartLabelsPanama: 'Panama',
+                chartLabelsCostaRica: 'Costa Rica',
+                chartLabelsDominicanRepublic: 'République Dominicaine',
+                chartLabelsUS: 'États-Unis',
+                chartLabelsChina: 'Chine',
+                chartLabelsNetherlands: 'Pays-Bas',
+            }
+        };
+
+        let currentLanguage = 'zh-CN'; // Default language
+        let chartInstances = {}; // To store chart instances for destruction/re-creation
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            updateContent();
+            // Update active language button style
+            document.querySelectorAll('.lang-button').forEach(button => {
+                button.classList.remove('bg-orange-600', 'text-white');
+                button.classList.add('bg-white', 'text-orange-500');
+            });
+            document.querySelector(`.lang-button[onclick="setLanguage('${lang}')"]`).classList.add('bg-orange-600', 'text-white');
+            document.querySelector(`.lang-button[onclick="setLanguage('${lang}')"]`).classList.remove('bg-white', 'text-orange-500');
+        }
+
+        function updateContent() {
+            const t = translations[currentLanguage];
+
+            document.getElementById('pageTitle').textContent = t.pageTitle;
+            document.getElementById('mainTitle').textContent = t.mainTitle;
+
+            document.getElementById('tabButtonOverview').textContent = t.tabButtonOverview;
+            document.getElementById('tabButtonTrade').textContent = t.tabButtonTrade;
+            document.getElementById('tabButtonInfrastructure').textContent = t.tabButtonInfrastructure;
+            document.getElementById('tabButtonDigitalization').textContent = t.tabButtonDigitalization;
+            document.getElementById('tabButtonChallenges').textContent = t.tabButtonChallenges;
+            document.getElementById('tabButtonOutlook').textContent = t.tabButtonOutlook;
+
+            document.getElementById('overviewTitle').textContent = t.overviewTitle;
+            document.getElementById('execSummaryTitle').textContent = t.execSummaryTitle;
+            document.getElementById('execSummaryP1').textContent = t.execSummaryP1;
+            document.getElementById('execSummaryP2').textContent = t.execSummaryP2;
+            document.getElementById('execSummaryP3').textContent = t.execSummaryP3;
+            document.getElementById('introTitle').textContent = t.introTitle;
+            document.getElementById('introP1').textContent = t.introP1;
+            document.getElementById('introP2').textContent = t.introP2;
+
+            document.getElementById('tradeTitle').textContent = t.tradeTitle;
+            document.getElementById('tradePerformanceTitle').textContent = t.tradePerformanceTitle;
+            document.getElementById('tradePerformanceP1').textContent = t.tradePerformanceP1;
+            document.getElementById('tradePerformanceChartDesc').textContent = t.tradePerformanceChartDesc;
+            document.getElementById('topEconomiesPartnersTitle').textContent = t.topEconomiesPartnersTitle;
+            document.getElementById('topEconomiesPartnersP1').textContent = t.topEconomiesPartnersP1;
+            document.getElementById('topEconomiesTableTitle').textContent = t.topEconomiesTableTitle;
+            document.getElementById('topEconomiesTableCol1').textContent = t.topEconomiesTableCol1;
+            document.getElementById('topEconomiesTableCol2').textContent = t.topEconomiesTableCol2;
+            document.getElementById('topEconomiesTableCol3').textContent = t.topEconomiesTableCol3;
+            document.getElementById('mainCommoditiesTitle').textContent = t.mainCommoditiesTitle;
+            document.getElementById('mainCommoditiesP1').textContent = t.mainCommoditiesP1;
+            document.getElementById('countryTradeQueryTitle').textContent = t.countryTradeQueryTitle;
+            document.getElementById('countryTradeQueryP1').textContent = t.countryTradeQueryP1;
+            document.getElementById('countryOptionBrazil').textContent = t.countryOptionBrazil;
+            document.getElementById('countryOptionMexico').textContent = t.countryOptionMexico;
+            document.getElementById('countryOptionArgentina').textContent = t.countryOptionArgentina;
+            document.getElementById('countryOptionColombia').textContent = t.countryOptionColombia;
+            document.getElementById('countryOptionChile').textContent = t.countryOptionChile;
+            document.getElementById('countryOptionPeru').textContent = t.countryOptionPeru;
+            document.getElementById('countryExportChartTitle').textContent = t.countryExportChartTitle;
+            document.getElementById('countryImportChartTitle').textContent = t.countryImportChartTitle;
+            
+            document.getElementById('infrastructureTitle').textContent = t.infrastructureTitle;
+            document.getElementById('crossBorderLogisticsTitle').textContent = t.crossBorderLogisticsTitle;
+            document.getElementById('crossBorderLogisticsP1').textContent = t.crossBorderLogisticsP1;
+            document.getElementById('crossBorderLogisticsChallenge').innerHTML = `<span class="font-semibold">${t.chartLabelsChallenge}</span> ${t.crossBorderLogisticsChallenge.split(':')[1]}`;
+            document.getElementById('crossBorderLogisticsSolution').innerHTML = `<span class="font-semibold">${t.chartLabelsSolution}</span> ${t.crossBorderLogisticsSolution.split(':')[1]}`;
+            document.getElementById('domesticLogisticsTitle').textContent = t.domesticLogisticsTitle;
+            document.getElementById('domesticLogisticsP1').textContent = t.domesticLogisticsP1;
+            document.getElementById('keyIndustriesTitle').textContent = t.keyIndustriesTitle;
+            document.getElementById('accordionAutoTitle').textContent = t.accordionAutoTitle;
+            document.getElementById('accordionAutoContent').textContent = t.accordionAutoContent;
+            document.getElementById('accordionManufTitle').textContent = t.accordionManufTitle;
+            document.getElementById('accordionManufContent').textContent = t.accordionManufContent;
+            document.getElementById('accordionFMCGTitle').textContent = t.accordionFMCGTitle;
+            document.getElementById('accordionFMCGContent').textContent = t.accordionFMCGContent;
+            document.getElementById('lpiAnalysisTitle').textContent = t.lpiAnalysisTitle;
+            document.getElementById('lpiAnalysisP1').textContent = t.lpiAnalysisP1;
+            document.getElementById('lpiTableTitle').textContent = t.lpiTableTitle;
+            document.getElementById('lpiTableCol1').textContent = t.lpiTableCol1;
+            document.getElementById('lpiTableCol2').textContent = t.lpiTableCol2;
+            document.getElementById('lpiTableCol3').textContent = t.lpiTableCol3;
+            document.getElementById('lpiTableCol4').textContent = t.lpiTableCol4;
+            document.getElementById('lpiTableCol5').textContent = t.lpiTableCol5;
+            document.getElementById('lpiTableCol6').textContent = t.lpiTableCol6;
+            document.getElementById('lpiTableCol7').textContent = t.lpiTableCol7;
+            document.getElementById('lpiTableCol8').textContent = t.lpiTableCol8;
+            document.getElementById('lpiTableCol9').textContent = t.lpiTableCol9;
+
+            document.getElementById('digitalizationTitle').textContent = t.digitalizationTitle;
+            document.getElementById('digitalStatusTitle').textContent = t.digitalStatusTitle;
+            document.getElementById('digitalStatusP1').textContent = t.digitalStatusP1;
+            document.getElementById('ecommerceLogisticsTitle').textContent = t.ecommerceLogisticsTitle;
+            document.getElementById('ecommerceLogisticsP1').textContent = t.ecommerceLogisticsP1;
+            document.getElementById('deiTitle').textContent = t.deiTitle;
+            document.getElementById('deiP1').textContent = t.deiP1;
+            document.getElementById('deiTableTitle').textContent = t.deiTableTitle;
+            document.getElementById('deiTableCol1').textContent = t.deiTableCol1;
+            document.getElementById('deiTableCol2').textContent = t.deiTableCol2;
+            document.getElementById('deiTableCol3').textContent = t.deiTableCol3;
+            document.getElementById('deiTableCol4').textContent = t.deiTableCol4;
+
+            document.getElementById('challengesOpportunitiesTitle').textContent = t.challengesOpportunitiesTitle;
+            document.getElementById('mainChallengesTitle').textContent = t.mainChallengesTitle;
+            document.getElementById('challengeInfraTitle').textContent = t.challengeInfraTitle;
+            document.getElementById('challengeInfraContent').textContent = t.challengeInfraContent;
+            document.getElementById('challengeRegTitle').textContent = t.challengeRegTitle;
+            document.getElementById('challengeRegContent').textContent = t.challengeRegContent;
+            document.getElementById('challengeSecurityTitle').textContent = t.challengeSecurityTitle;
+            document.getElementById('challengeSecurityContent').textContent = t.challengeSecurityContent;
+            document.getElementById('challengePoliticalTitle').textContent = t.challengePoliticalTitle;
+            document.getElementById('challengePoliticalContent').textContent = t.challengePoliticalContent;
+            document.getElementById('challengeLaborTitle').textContent = t.challengeLaborTitle;
+            document.getElementById('challengeLaborContent').textContent = t.challengeLaborContent;
+            document.getElementById('challengeCultureTitle').textContent = t.challengeCultureTitle;
+            document.getElementById('challengeCultureContent').textContent = t.challengeCultureContent;
+            document.getElementById('opportunitiesTitle').textContent = t.opportunitiesTitle;
+            document.getElementById('opportunityNearshoringTitle').textContent = t.opportunityNearshoringTitle;
+            document.getElementById('opportunityNearshoringContent').textContent = t.opportunityNearshoringContent;
+            document.getElementById('opportunityMarketGrowthTitle').textContent = t.opportunityMarketGrowthTitle;
+            document.getElementById('opportunityMarketGrowthContent').textContent = t.opportunityMarketGrowthContent;
+            document.getElementById('opportunityResourcesTitle').textContent = t.opportunityResourcesTitle;
+            document.getElementById('opportunityResourcesContent').textContent = t.opportunityResourcesContent;
+            document.getElementById('opportunityLocationTitle').textContent = t.opportunityLocationTitle;
+            document.getElementById('opportunityLocationContent').textContent = t.opportunityLocationContent;
+
+            document.getElementById('outlookTitle').textContent = t.outlookTitle;
+            document.getElementById('supplyChainMatchTitle').textContent = t.supplyChainMatchTitle;
+            document.getElementById('supplyChainMatchP1').textContent = t.supplyChainMatchP1;
+            document.getElementById('futureChallengesTitle').textContent = t.futureChallengesTitle;
+            document.getElementById('futureChallenge1').textContent = t.futureChallenge1;
+            document.getElementById('futureChallenge2').textContent = t.futureChallenge2;
+            document.getElementById('futureChallenge3').textContent = t.futureChallenge3;
+            document.getElementById('futureChallenge4').textContent = t.futureChallenge4;
+            document.getElementById('futureChallenge5').textContent = t.futureChallenge5;
+            document.getElementById('futureTrendsRecsTitle').textContent = t.futureTrendsRecsTitle;
+            document.getElementById('recInfraTechTitle').textContent = t.recInfraTechTitle;
+            document.getElementById('recInfraTech1').textContent = t.recInfraTech1;
+            document.getElementById('recInfraTech2').textContent = t.recInfraTech2;
+            document.getElementById('recInfraTech3').textContent = t.recInfraTech3;
+            document.getElementById('recIntegrationTradeTitle').textContent = t.recIntegrationTradeTitle;
+            document.getElementById('recIntegrationTrade1').textContent = t.recIntegrationTrade1;
+            document.getElementById('recIntegrationTrade2').textContent = t.recIntegrationTrade2;
+            document.getElementById('recWorkforceTitle').textContent = t.recWorkforceTitle;
+            document.getElementById('recWorkforce1').textContent = t.recWorkforce1;
+            document.getElementById('recWorkforce2').textContent = t.recWorkforce2;
+            document.getElementById('recSustainabilityTitle').textContent = t.recSustainabilityTitle;
+            document.getElementById('recSustainability1').textContent = t.recSustainability1;
+            document.getElementById('recSustainability2').textContent = t.recSustainability2;
+            document.getElementById('recSustainability3').textContent = t.recSustainability3;
+            document.getElementById('footerText').innerHTML = t.footerText;
+
+            populateTables(); // Repopulate tables with new language headers
+            renderCharts(); // Re-render charts with new language labels
+            updateCountryCharts(document.getElementById('countrySelector').value); // Update country specific chart description
+        }
+
+        const tabs = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        function showTab(tabId) {
+            tabContents.forEach(content => {
+                content.style.display = 'none';
+            });
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.id === `tabButton${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`) {
+                    tab.classList.add('active');
+                    tab.style.borderColor = 'white';
+                    tab.style.color = 'white';
+                    tab.style.fontWeight = 'bold';
+                } else {
+                    tab.style.borderColor = 'transparent';
+                    tab.style.color = '#FED7AA';
+                    tab.style.fontWeight = 'normal';
+                }
+            });
+            document.getElementById(tabId).style.display = 'block';
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage('zh-CN'); // Set initial language to Chinese
+            showTab('overview');
+            setupAccordions();
+            setupCountrySelector();
+        });
+        
+        function formatLabel(value, context, maxChars = 16) {
+            let label = context.chart.data.labels[context.dataIndex];
+            if (typeof label !== 'string') {
+                label = String(label);
+            }
+            if (label.length > maxChars) {
+                return label.substring(0, maxChars) + '...';
+            }
+            return label;
+        }
+
+        function renderCharts() {
+            const t = translations[currentLanguage];
+
+            // Destroy existing chart instances before creating new ones
+            for (const chartId in chartInstances) {
+                if (chartInstances[chartId]) {
+                    chartInstances[chartId].destroy();
+                }
+            }
+            chartInstances = {}; // Reset the storage
+
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#374151' } // gray-700
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y;
+                                    if (context.dataset.unit) label += context.dataset.unit;
+                                }
+                                return label;
+                            },
+                            title: function(context) {
+                                return formatLabel(null, context[0], 30); // Longer for tooltip title
+                            }
+                        },
+                        backgroundColor: '#1F2937', // gray-800
+                        titleColor: '#FFFFFF',
+                        bodyColor: '#FFFFFF',
+                        borderColor: '#F59E0B', // amber-500
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#4B5563' }, // gray-600
+                        grid: { color: '#E5E7EB' } // gray-200
+                    },
+                    x: {
+                        ticks: {
+                            color: '#4B5563', // gray-600
+                            callback: function(value, index, values) {
+                                const label = this.getLabelForValue(value);
+                                return label.length > 10 ? label.substring(0,10) + '...' : label;
+                            }
+                        },
+                        grid: { display: false }
+                    }
+                }
+            };
+            
+            const commonBarOptions = { ...commonOptions };
+            commonBarOptions.scales.x.ticks.callback = function(value) {
+                const label = this.getLabelForValue(value);
+                 if (typeof label === 'string' && label.length > 16) {
+                    return label.match(/.{1,16}/g); // Split into lines of 16 chars
+                }
+                return label;
+            };
+
+            // Latam Trade Trend Chart
+            chartInstances.latamTradeTrendChart = new Chart(document.getElementById('latamTradeTrendChart'), {
+                type: 'line',
+                data: {
+                    labels: ['2019', '2020', '2021', '2022', '2023', '2024 H1'],
+                    datasets: [
+                        {
+                            label: t.chartTradeTrendExport,
+                            data: [2, -5, 15, 8, -1.3, 4], // Hypothetical data based on report
+                            borderColor: '#3B82F6', // blue-500
+                            tension: 0.1,
+                            unit: '%'
+                        },
+                        {
+                            label: t.chartTradeTrendService,
+                            data: [3, -10, 12, 15, 10, 11], // Hypothetical data
+                            borderColor: '#10B981', // emerald-500
+                            tension: 0.1,
+                            unit: '%'
+                        }
+                    ]
+                },
+                options: commonOptions
+            });
+
+            // Top Economies Chart (Bar)
+            chartInstances.topEconomiesChart = new Chart(document.getElementById('topEconomiesChart'), {
+                type: 'bar',
+                data: {
+                    labels: [t.chartLabelsGuyana, t.chartLabelsUruguay, t.chartLabelsPanama, t.chartLabelsCostaRica, t.chartLabelsChile, t.chartLabelsMexico, t.chartLabelsArgentina, t.chartLabelsDominicanRepublic, t.chartLabelsBrazil, t.chartLabelsPeru],
+                    datasets: [{
+                        label: t.chartTopEconomies,
+                        data: [28920, 23053, 19369, 17860, 16365, 13972, 12814, 11692, 10296, 8316],
+                        backgroundColor: '#F59E0B', // amber-500
+                        unit: 'USD'
+                    }]
+                },
+                options: commonBarOptions
+            });
+
+            // Top Trade Partners Chart (Pie)
+            chartInstances.topTradePartnersChart = new Chart(document.getElementById('topTradePartnersChart'), {
+                type: 'pie',
+                data: {
+                    labels: [t.chartLabelsUS, t.chartLabelsChina, t.chartLabelsBrazil + '(区内)', t.chartLabelsNetherlands, t.chartLabelsOther],
+                    datasets: [{
+                        label: t.chartTopTradePartners,
+                        data: [41.71, 12.97, 2.50, 2.25, (100-41.71-12.97-2.50-2.25)],
+                        backgroundColor: ['#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#6B7280'], // red, blue, emerald, amber, gray
+                        unit: '%'
+                    }]
+                },
+                options: { ...commonOptions, scales: { x: { display: false }, y: { display: false } } }
+            });
+
+            // Export Categories Chart
+            chartInstances.exportCategoriesChart = new Chart(document.getElementById('exportCategoriesChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: [t.chartLabelsRawMaterials, t.chartLabelsCapitalGoods, t.chartLabelsConsumerGoods, t.chartLabelsIntermediateProducts, t.chartLabelsOther],
+                    datasets: [{
+                        label: t.chartExportCategories,
+                        data: [32.72, 20.93, 19.23, 18.48, (100-32.72-20.93-19.23-18.48)],
+                        backgroundColor: ['#8B5CF6', '#EC4899', '#FCD34D', '#34D399', '#9CA3AF'], // violet, pink, amber, green, gray
+                        unit: '%'
+                    }]
+                },
+                options: { ...commonOptions, scales: { x: { display: false }, y: { display: false } } }
+            });
+
+            // Import Categories Chart
+            chartInstances.importCategoriesChart = new Chart(document.getElementById('importCategoriesChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: [t.chartLabelsConsumerGoods, t.chartLabelsCapitalGoods, t.chartLabelsIntermediateProducts, t.chartLabelsRawMaterials, t.chartLabelsOther],
+                    datasets: [{
+                        label: t.chartImportCategories,
+                        data: [31.38, 30.39, 23.35, 6.96, (100-31.38-30.39-23.35-6.96)],
+                        backgroundColor: ['#0EA5E9', '#D946EF', '#FBBF24', '#22C55E', '#A1A1AA'], // sky, fuchsia, amber, green, zinc
+                        unit: '%'
+                    }]
+                },
+                options: { ...commonOptions, scales: { x: { display: false }, y: { display: false } } }
+            });
+            
+            // Transport Modes Chart
+            chartInstances.transportModesChart = new Chart(document.getElementById('transportModesChart'), {
+                type: 'pie',
+                data: {
+                    labels: [t.chartLabelsRoadTransport, t.chartLabelsRailTransport, t.chartLabelsAirTransport, t.chartLabelsWaterTransport, t.chartLabelsOther],
+                    datasets: [{
+                        label: t.chartTransportModes,
+                        data: [85, 5, 3, 5, 2], // Hypothetical, report says 85% road, limited rail
+                        backgroundColor: ['#F97316', '#A855F7', '#2563EB', '#059669', '#78716C'], // orange, purple, blue, green, stone
+                        unit: '%'
+                    }]
+                },
+                options: { ...commonOptions, scales: { x: { display: false }, y: { display: false } } }
+            });
+
+            // LPI Chart (Top 5 + Mexico)
+            const lpiData = [
+                { country: t.chartLabelsBrazil, score: 3.2 }, { country: t.chartLabelsPanama, score: 3.1 },
+                { country: t.chartLabelsChile, score: 3.0 }, { country: t.chartLabelsPeru, score: 3.0 },
+                { country: t.chartLabelsUruguay, score: 3.0 }, { country: t.chartLabelsMexico, score: 2.9 },
+                { country: t.chartLabelsColombia, score: 2.9}
+            ];
+            chartInstances.lpiChart = new Chart(document.getElementById('lpiChart'), {
+                type: 'bar',
+                data: {
+                    labels: lpiData.map(d => d.country),
+                    datasets: [{
+                        label: t.chartLPI,
+                        data: lpiData.map(d => d.score),
+                        backgroundColor: '#06B6D4', // cyan-500
+                    }]
+                },
+                options: commonBarOptions
+            });
+
+            // Tech Adoption Chart
+            chartInstances.techAdoptionChart = new Chart(document.getElementById('techAdoptionChart'), {
+                type: 'bar',
+                data: {
+                    labels: [t.chartLabelsERPSystems, t.chartLabelsTMSSystems, t.chartLabelsAIML, t.chartLabelsPredictiveAnalytics],
+                    datasets: [{
+                        label: t.chartTechAdoption,
+                        data: [70, 60, 11.9, 71.9], // TMS hypothetical based on growth, AI/ML and predictive from report
+                        backgroundColor: ['#6366F1', '#EC4899', '#F59E0B', '#10B981'], // indigo, pink, amber, emerald
+                        unit: '%'
+                    }]
+                },
+                options: commonBarOptions
+            });
+            
+            // TMS Market Growth Chart
+            chartInstances.tmsMarketGrowthChart = new Chart(document.getElementById('tmsMarketGrowthChart'), {
+                type: 'line',
+                data: {
+                    labels: ['2024', '2025', '2026', '2027', '2028', '2029', '2030'],
+                    datasets: [{
+                        label: t.chartTMSMarketGrowth,
+                        data: [600, 710, 840, 990, 1170, 1380, 1734], // Calculated based on CAGR 18.2% from a base
+                        borderColor: '#8B5CF6', // violet-500
+                        tension: 0.1,
+                        unit: '百万美元'
+                    }]
+                },
+                options: commonOptions
+            });
+
+            // E-commerce Growth Chart
+            chartInstances.ecommerceGrowthChart = new Chart(document.getElementById('ecommerceGrowthChart'), {
+                type: 'line',
+                data: {
+                    labels: ['2022', '2023', '2024', '2025', '2026', '2027'],
+                    datasets: [{
+                        label: t.chartEcommerceGrowth,
+                        data: [19, 19, 19, 19, 19, 19], // Report states 19% annual growth
+                        borderColor: '#EF4444', // red-500
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.1,
+                        unit: '%'
+                    }]
+                },
+                options: commonOptions
+            });
+            
+            // DEI Chart (Top 5 + Brazil, Mexico)
+            const deiData = [
+                { country: t.chartLabelsChile, score: 58.7 }, { country: t.chartLabelsPuertoRico, score: 54.7 },
+                { country: t.chartLabelsBahamas, score: 53.3 }, { country: t.chartLabelsUruguay, score: 53.0 },
+                { country: t.chartLabelsCostaRica, score: 52.6 }, { country: t.chartLabelsMexico, score: 47.6 },
+                { country: t.chartLabelsBrazil, score: 47.6 }
+            ];
+            chartInstances.deiChart = new Chart(document.getElementById('deiChart'), {
+                type: 'bar',
+                data: {
+                    labels: deiData.map(d => d.country),
+                    datasets: [{
+                        label: t.chartDEI,
+                        data: deiData.map(d => d.score),
+                        backgroundColor: '#22C55E', // green-500
+                    }]
+                },
+                options: commonBarOptions
+            });
+        }
+        
+        let countryExportChartInstance, countryImportChartInstance;
+
+        function updateCountryCharts(country) {
+            const t = translations[currentLanguage];
+            const countryData = {
+                brazil: {
+                    exports: { labels: [t.chartLabelsMineralFuels, t.chartLabelsOilseeds, t.chartLabelsSlagAsh, t.chartLabelsMeat, t.chartLabelsSugar], data: [15, 12, 10, 9, 8] }, // Hypothetical %
+                    imports: { labels: [t.chartLabelsMachinery, t.chartLabelsMineralFuels, t.chartLabelsElectricalEquipment, t.chartLabelsVehicles, t.chartLabelsFertilizers], data: [20, 18, 15, 10, 7] }
+                },
+                mexico: {
+                    exports: { labels: [t.chartLabelsVehicles, t.chartLabelsElectricalEquipment, t.chartLabelsMachinery, t.chartLabelsOpticalMedical, t.chartLabelsMineralFuels], data: [25, 20, 15, 10, 8] },
+                    imports: { labels: [t.chartLabelsElectricalEquipment, t.chartLabelsMachinery, t.chartLabelsVehicles, t.chartLabelsPlastics, t.chartLabelsMineralFuels], data: [22, 18, 15, 12, 9] }
+                },
+                argentina: {
+                    exports: { labels: [t.chartLabelsGrain, t.chartLabelsFoodResidues, t.chartLabelsVehicles, t.chartLabelsMineralFuels, t.chartLabelsAnimalFats], data: [18, 15, 12, 10, 9] },
+                    imports: { labels: [t.chartLabelsMachinery, t.chartLabelsVehicles, t.chartLabelsElectricalEquipment, t.chartLabelsChemicals, t.chartLabelsPlastics], data: [25, 20, 15, 10, 8] }
+                },
+                colombia: {
+                    exports: { labels: [t.chartLabelsCrudeOil, t.chartLabelsCoal, t.chartLabelsGold, t.chartLabelsCoffee, t.chartLabelsFlowers], data: [25.4, 16.2, 6.8, 5.9, 4.2] },
+                    imports: { labels: [t.chartLabelsNonCrudeOil, t.chartLabelsCars, t.chartLabelsTelephones, t.chartLabelsMedicines, t.chartLabelsAircraft], data: [8.2, 4.4, 3.7, 3.6, 3.5] }
+                },
+                chile: {
+                    exports: { labels: [t.chartLabelsSlagAsh, t.chartLabelsCopper, t.chartLabelsFruitsNuts, t.chartLabelsFish, t.chartLabelsInorganicChemicals], data: [30, 25, 10, 8, 5] },
+                    imports: { labels: [t.chartLabelsMineralFuels, t.chartLabelsMachinery, t.chartLabelsVehicles, t.chartLabelsElectricalEquipment, t.chartLabelsPlastics], data: [20, 18, 15, 12, 10] }
+                },
+                peru: {
+                    exports: { labels: [t.chartLabelsSlagAsh, t.chartLabelsPreciousMetals, t.chartLabelsFruitsNuts, t.chartLabelsMineralFuels, t.chartLabelsCopper], data: [25, 20, 15, 12, 10] },
+                    imports: { labels: [t.chartLabelsNonCrudeOil, t.chartLabelsCrudeOil, t.chartLabelsCars, t.chartLabelsTelephones, t.chartLabelsCargoVehicles], data: [13.1, 4.2, 3.0, 2.7, 2.4] }
+                }
+            };
+
+            const selected = countryData[country];
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y', // Horizontal bar chart
+                 plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                             label: function(context) {
+                                return `${context.raw}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true, ticks: { callback: value => `${value}%` } },
+                    y: { ticks: { callback: function(value) {
+                                const label = this.getLabelForValue(value);
+                                 if (typeof label === 'string' && label.length > 10) { // Shorter for y-axis
+                                    return label.substring(0,10) + '...';
+                                }
+                                return label;
+                            }  } }
+                }
+            };
+
+            if (countryExportChartInstance) countryExportChartInstance.destroy();
+            countryExportChartInstance = new Chart(document.getElementById('countryExportChart'), {
+                type: 'bar',
+                data: {
+                    labels: selected.exports.labels,
+                    datasets: [{ data: selected.exports.data, backgroundColor: '#34D399' }] // emerald-400
+                },
+                options: chartOptions
+            });
+
+            if (countryImportChartInstance) countryImportChartInstance.destroy();
+            countryImportChartInstance = new Chart(document.getElementById('countryImportChart'), {
+                type: 'bar',
+                data: {
+                    labels: selected.imports.labels,
+                    datasets: [{ data: selected.imports.data, backgroundColor: '#F87171' }] // red-400
+                },
+                options: chartOptions
+            });
+            
+            const countryInfoDiv = document.getElementById('countryTradeInfo');
+            const selectedCountryName = document.getElementById('countrySelector').options[document.getElementById('countrySelector').selectedIndex].text;
+            countryInfoDiv.innerHTML = `<p class="text-sm text-gray-700 mt-2">${t.countryTradeInfoDesc.replace('{countryName}', `<strong>${selectedCountryName}</strong>`)}</p>`;
+        }
+        
+        function setupCountrySelector() {
+            const selector = document.getElementById('countrySelector');
+            selector.addEventListener('change', (event) => {
+                updateCountryCharts(event.target.value);
+            });
+            updateCountryCharts(selector.value); // Initial call
+        }
+
+        function populateTables() {
+            const t = translations[currentLanguage];
+
+            // Top Economies Table
+            const economiesData = [
+                { rank: 1, country: t.chartLabelsGuyana, gdp: '28,920' }, { rank: 2, country: t.chartLabelsUruguay, gdp: '23,053' },
+                { rank: 3, country: t.chartLabelsPanama, gdp: '19,369' }, { rank: 4, country: t.chartLabelsCostaRica, gdp: '17,860' },
+                { rank: 5, country: t.chartLabelsChile, gdp: '16,365' }, { rank: 6, country: t.chartLabelsMexico, gdp: '13,972' },
+                { rank: 7, country: t.chartLabelsArgentina, gdp: '12,814' }, { rank: 8, country: t.chartLabelsDominicanRepublic, gdp: '11,692' },
+                { rank: 9, country: t.chartLabelsBrazil, gdp: '10,296' }, { rank: 10, country: t.chartLabelsPeru, gdp: '8,316' }
+            ];
+            const economiesTableBody = document.getElementById('topEconomiesTable').getElementsByTagName('tbody')[0];
+            economiesTableBody.innerHTML = ''; // Clear existing rows
+            economiesData.forEach(item => {
+                let row = economiesTableBody.insertRow();
+                row.insertCell().textContent = item.rank;
+                row.insertCell().textContent = item.country;
+                row.insertCell().textContent = item.gdp;
+            });
+
+            // LPI Table
+            const lpiTableData = [
+                { country: t.chartLabelsBrazil, rank: 51, score: 3.2, customs: 2.9, infra: 3.2, shipping: 2.9, logistics: 3.3, tracking: 3.2, timeliness: 3.5 },
+                { country: t.chartLabelsPanama, rank: 57, score: 3.1, customs: 3.0, infra: 3.3, shipping: 3.1, logistics: 3.0, tracking: 2.9, timeliness: 3.4 },
+                { country: t.chartLabelsChile, rank: 61, score: 3.0, customs: 3.0, infra: 2.8, shipping: 2.7, logistics: 3.1, tracking: 3.0, timeliness: 3.2 },
+                { country: t.chartLabelsPeru, rank: 61, score: 3.0, customs: 2.6, infra: 2.5, shipping: 3.1, logistics: 2.7, tracking: 3.4, timeliness: 3.4 },
+                { country: t.chartLabelsUruguay, rank: 61, score: 3.0, customs: 2.9, infra: 2.7, shipping: 2.7, logistics: 3.1, tracking: 3.3, timeliness: 3.2 },
+                { country: t.chartLabelsMexico, rank: 66, score: 2.9, customs: 2.5, infra: 2.8, shipping: 2.8, logistics: 3.0, tracking: 3.1, timeliness: 3.5 },
+                { country: t.chartLabelsColombia, rank: 66, score: 2.9, customs: 2.5, infra: 2.9, shipping: 3.0, logistics: 3.1, tracking: 3.1, timeliness: 3.2 },
+                { country: t.chartLabelsArgentina, rank: 73, score: 2.8, customs: 2.7, infra: 2.8, shipping: 2.7, logistics: 2.7, tracking: 2.9, timeliness: 3.1 },
+            ];
+            const lpiTableBody = document.getElementById('lpiTable').getElementsByTagName('tbody')[0];
+            lpiTableBody.innerHTML = ''; // Clear existing rows
+            lpiTableData.forEach(item => {
+                let row = lpiTableBody.insertRow();
+                row.insertCell().textContent = item.country;
+                row.insertCell().textContent = item.rank;
+                row.insertCell().textContent = item.score;
+                row.insertCell().textContent = item.customs;
+                row.insertCell().textContent = item.infra;
+                row.insertCell().textContent = item.shipping;
+                row.insertCell().textContent = item.logistics;
+                row.insertCell().textContent = item.tracking;
+                row.insertCell().textContent = item.timeliness;
+            });
+
+            // DEI Table
+            const deiTableData = [
+                { rank: 1, country: t.chartLabelsChile, score: 58.7, speed: '2.9%' }, { rank: 2, country: t.chartLabelsPuertoRico, score: 54.7, speed: '2.2%' },
+                { rank: 3, country: t.chartLabelsBahamas, score: 53.3, speed: '2.0%' }, { rank: 4, country: t.chartLabelsUruguay, score: 53.0, speed: '3.4%' },
+                { rank: 5, country: t.chartLabelsCostaRica, score: 52.6, speed: '3.3%' }, { rank: 10, country: t.chartLabelsMexico, score: 47.6, speed: '3.3%' },
+                { rank: 11, country: t.chartLabelsBrazil, score: 47.6, speed: '2.0%' }, { rank: 12, country: t.chartLabelsColombia, score: 46.4, speed: '3.2%' },
+            ];
+            const deiTableBody = document.getElementById('deiTable').getElementsByTagName('tbody')[0];
+            deiTableBody.innerHTML = ''; // Clear existing rows
+            deiTableData.forEach(item => {
+                let row = deiTableBody.insertRow();
+                row.insertCell().textContent = item.rank;
+                row.insertCell().textContent = item.country;
+                row.insertCell().textContent = item.score;
+                row.insertCell().textContent = item.speed;
+            });
+        }
+
+        function setupAccordions() {
+            const accordionItems = document.querySelectorAll('.accordion-item');
+            accordionItems.forEach(item => {
+                const header = item.querySelector('.accordion-header');
+                header.addEventListener('click', () => {
+                    const isActive = item.classList.contains('active');
+                    if (!isActive) {
+                        item.classList.add('active');
+                    } else {
+                         item.classList.remove('active');
+                    }
+                });
+            });
+        }
+
+    </script>
+</body>
+</html>

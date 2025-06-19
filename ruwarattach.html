@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Chosen Palette: Calm Analysis -->
+    <!-- Application Structure Plan: A single-page dashboard design with a sticky top navigation for jumping to thematic sections (Overview, Timeline, Arsenal, Impact). The core interaction is a main timeline chart in the Overview section. Clicking a data point on this chart filters a "Detailed Attack" view in the Timeline section. This structure was chosen to manage the report's high information density, allowing users to move from a high-level summary to specific details in a logical, non-linear flow, which is more usable than a simple chronological scroll. -->
+    <!-- Visualization & Content Choices: 
+        - Goal: Show change over time -> Interactive Bar Chart (Chart.js) for major attack intensity. Interaction: Click to filter details. Justification: Provides an immediate visual summary of the conflict's air-war tempo.
+        - Goal: Compare munition mix -> Donut Chart (Chart.js) in the detailed view. Interaction: Displays composition for a selected attack. Justification: Quickly shows the ratio of missiles to drones.
+        - Goal: Organize & Inform -> Interactive Grid (HTML/Tailwind/JS) for the munitions arsenal. Interaction: Click to display details in a static card. Justification: Better than a long table for exploration.
+        - Goal: Compare claims vs. reality -> Side-by-side text cards (HTML/Tailwind). Interaction: Dynamically populated on attack selection. Justification: Directly contrasts the two narratives as highlighted in the report.
+        - Goal: Synthesize impact -> Tabbed content panes (HTML/Tailwind/JS). Interaction: Click tabs for Energy, Military, Civilian. Justification: Organizes the diverse impacts into clear, digestible themes.
+        - Library/Method: Chart.js for all charts on Canvas, supported by vanilla JS for state management and DOM manipulation. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <title>俄乌战争大规模空袭分析 | Analysis of Large-Scale Air Attacks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: #f4f4f5; /* Zinc 100 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+        }
+        .active-nav {
+            color: #0891b2; /* Cyan 600 */
+            border-bottom-color: #0891b2;
+        }
+        .inactive-nav {
+            border-bottom-color: transparent;
+        }
+        .munition-card, .tab-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .munition-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .active-tab {
+            background-color: #0891b2;
+            color: white;
+        }
+    </style>
+</head>
+<body class="text-zinc-800">
+
+  <!-- 插入广告 -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-6t+ed+2i-1n-4w"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-md">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-lg md:text-xl font-bold text-zinc-800">俄乌战争空袭分析</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 text-sm font-medium text-zinc-600 hover:text-cyan-600 border-b-2">概览</a>
+                        <a href="#timeline" class="nav-link px-3 py-2 text-sm font-medium text-zinc-600 hover:text-cyan-600 border-b-2">重大袭击时间线</a>
+                        <a href="#arsenal" class="nav-link px-3 py-2 text-sm font-medium text-zinc-600 hover:text-cyan-600 border-b-2">弹药库</a>
+                        <a href="#impact" class="nav-link px-3 py-2 text-sm font-medium text-zinc-600 hover:text-cyan-600 border-b-2">影响分析</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="bg-zinc-100 border border-zinc-300 rounded-md p-2 text-sm">
+                        <option value="#overview">概览</option>
+                        <option value="#timeline">时间线</option>
+                        <option value="#arsenal">弹药库</option>
+                        <option value="#impact">影响分析</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="overview" class="mb-16 scroll-mt-20">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">俄罗斯大规模空袭概览</h2>
+                <p class="mt-3 max-w-2xl mx-auto text-lg text-zinc-600">本报告将俄罗斯自2022年2月全面入侵以来对乌克兰发动的大规模空袭行动数据进行了可视化呈现，揭示了其战略演变、战术特点及深远影响。</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12 text-center">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <p class="text-4xl font-bold text-cyan-600">9+</p>
+                    <p class="text-sm font-medium text-zinc-500">已分析的主要攻击波次</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <p class="text-4xl font-bold text-red-600">~2300+</p>
+                    <p class="text-sm font-medium text-zinc-500">发射的导弹与无人机 (已统计)</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <p class="text-4xl font-bold text-amber-600">3个</p>
+                    <p class="text-sm font-medium text-zinc-500">主要攻击阶段</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg">
+                <h3 class="text-xl font-bold mb-4 text-center">主要袭击强度时间线 (导弹与无人机数量)</h3>
+                <p class="text-center text-sm text-zinc-500 mb-4">点击图表中的条目可跳转至该次袭击的详细分析。</p>
+                <div class="chart-container">
+                    <canvas id="mainTimelineChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="timeline" class="mb-16 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">重大袭击时间线详情</h2>
+                <p class="mt-3 max-w-2xl mx-auto text-lg text-zinc-600">深入分析历次重大空袭的细节，包括使用的弹药组合、俄方声明与实际造成的破坏对比。</p>
+            </div>
+
+            <div class="mb-8 flex justify-center">
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                    <label for="attackSelector" class="font-medium">选择一次袭击进行分析:</label>
+                    <select id="attackSelector" class="w-full sm:w-72 bg-white border border-zinc-300 rounded-md p-2 shadow-sm focus:ring-cyan-500 focus:border-cyan-500">
+                    </select>
+                </div>
+            </div>
+
+            <div id="attackDetailContainer" class="bg-white p-6 md:p-8 rounded-lg shadow-lg grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-3">
+                    <h3 id="attackDetailTitle" class="text-2xl font-bold mb-2"></h3>
+                    <p id="attackDetailDate" class="text-sm text-zinc-500 mb-4"></p>
+                    <p id="attackDetailSummary" class="text-zinc-700 leading-relaxed mb-6"></p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-zinc-50 p-4 rounded-lg border border-zinc-200">
+                            <h4 class="font-bold mb-2 text-red-700">🇷🇺 俄方声明</h4>
+                            <p id="russianClaims" class="text-sm text-zinc-600"></p>
+                        </div>
+                        <div class="bg-zinc-50 p-4 rounded-lg border border-zinc-200">
+                            <h4 class="font-bold mb-2 text-blue-700">🇺🇦 实际影响与评估</h4>
+                            <p id="ukrainianImpact" class="text-sm text-zinc-600"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 flex flex-col items-center justify-center">
+                    <h4 class="font-bold text-center mb-4">本次袭击弹药构成</h4>
+                    <div class="w-full max-w-xs mx-auto">
+                        <canvas id="munitionsMixChart"></canvas>
+                    </div>
+                    <div id="munitionsList" class="mt-4 text-sm text-zinc-600 w-full text-center"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="arsenal" class="mb-16 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">俄罗斯弹药库浏览器</h2>
+                <p class="mt-3 max-w-2xl mx-auto text-lg text-zinc-600">点击下方的卡片，了解在这些袭击中使用的主要导弹和无人机的关键特性。</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div id="munitionDetailCard" class="md:col-span-2 lg:col-span-1 bg-white p-6 rounded-lg shadow-lg h-full sticky top-24">
+                    <h3 id="munitionName" class="text-xl font-bold">请选择一种弹药</h3>
+                    <p id="munitionType" class="text-sm text-zinc-500 mb-4"></p>
+                    <div id="munitionDetails" class="space-y-3 text-sm">
+                        <p>点击右侧卡片查看详情。</p>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2 lg:col-span-2">
+                    <div id="munitionGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="impact" class="scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">多维度影响分析</h2>
+                <p class="mt-3 max-w-2xl mx-auto text-lg text-zinc-600">俄罗斯的空袭对乌克兰的能源、军事和民生造成了深远且灾难性的影响。</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg">
+                <div class="border-b border-zinc-200">
+                    <nav id="impactTabs" class="-mb-px flex space-x-4 sm:space-x-8 px-4 sm:px-6" aria-label="Tabs">
+                        <button data-tab="energy" class="tab-button active-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm rounded-t-lg">⚡️ 能源网络</button>
+                        <button data-tab="military" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm rounded-t-lg">🛡️ 军事行动</button>
+                        <button data-tab="civilian" class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm rounded-t-lg"> civilians</button>
+                    </nav>
+                </div>
+                <div id="impactContent" class="p-6 md:p-8">
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="bg-white mt-16 border-t border-zinc-200">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-zinc-500">
+            <p>此可视化报告基于公开来源情报分析生成。所有数据均为估计值，旨在说明冲突的规模与演变。</p>
+            <p>Interactive report generated from open-source intelligence analysis. All data is approximate and intended for illustrative purposes.</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const attacksData = [
+        {
+            id: 'oct10_2022',
+            date: '2022年10月10日',
+            title: '大规模协同打击 – 新阶段的开始',
+            munitions: { missiles: 84, drones: 24 },
+            summary: '标志着俄方空袭战略的重大转折，开启了针对乌克兰能源基础设施的系统性打击。此次袭击范围广泛，对基辅及多个地区的电网造成严重冲击。',
+            russianClaims: '对乌克兰的军事指挥、通信和能源系统目标进行了大规模打击，所有指定目标均被击中。',
+            ukrainianImpact: '约30%的能源基础设施受损，超过1300个定居点停电，造成至少23名平民死亡，100多人受伤。',
+        },
+        {
+            id: 'nov15_2022',
+            date: '2022年11月15日',
+            title: '能源基础设施持续遭受重创',
+            munitions: { missiles: 90, drones: 10 },
+            summary: '延续了对能源部门的猛烈攻击，是当时最大规模的导弹齐射之一，目标遍及17个州，并首次波及天然气生产设施。',
+            russianClaims: '打击目标为乌克兰的军事指挥系统及相关能源设施，所有导弹精确命中。',
+            ukrainianImpact: '导致近一半的电力系统瘫痪，超过1000万乌克兰人无电可用，引发严重水电短缺。',
+        },
+        {
+            id: 'dec29_2023',
+            date: '2023年12月29日',
+            title: '战争中规模最大的袭击之一',
+            munitions: { missiles: 122, drones: 36 },
+            summary: '乌克兰官员称这是自战争开始以来最大规模的空袭之一，持续近18小时，目标涵盖全国多个主要城市，造成了惨重的平民伤亡。',
+            russianClaims: '打击了决策中心、军工综合体、机场、武库和燃料基地。',
+            ukrainianImpact: '全国范围内至少58人死亡，160多人受伤。大量民宅、妇产医院、购物中心被毁。俄方此次袭击成本估计超过12亿美元。',
+        },
+        {
+            id: 'jan02_2024',
+            date: '2024年1月2日',
+            title: '大规模新年袭击',
+            munitions: { missiles: 99, drones: 35 },
+            summary: '俄罗斯以一场大规模混合空袭开启了2024年，重点打击基辅和哈尔科夫。此次袭击中首次有报道称使用了朝鲜提供的弹道导弹。',
+            russianClaims: '打击了武器储存设施和国防工业企业。',
+            ukrainianImpact: '造成至少6人死亡，超过119人受伤。乌方声称成功拦截了所有10枚来袭的“匕首”高超音速导弹。',
+        },
+        {
+            id: 'mar22_2024',
+            date: '2024年3月22日',
+            title: '对能源部门的最大规模袭击',
+            munitions: { missiles: 88, drones: 63 },
+            summary: '被乌克兰官员称为对能源部门最具破坏性的袭击。关键设施如第聂伯河水电站遭受重创，哈尔科夫市完全断电，对乌克兰发电能力造成毁灭性打击。',
+            russianClaims: '对能源设施、军工综合体、铁路枢纽和武库进行了大规模打击。',
+            ukrainianImpact: '乌克兰最大的水电站DniproHES运营中断，Zmiivska热电厂被毁。DTEK公司损失约50%的发电能力。',
+        },
+        {
+            id: 'apr11_2024',
+            date: '2024年4月11日',
+            title: '特里皮尔斯卡热电厂被毁',
+            munitions: { missiles: 42, drones: 40 },
+            summary: '俄罗斯的精确打击完全摧毁了基辅地区最强大的电力来源——特里皮尔斯卡热电厂，进一步加剧了乌克兰的电力危机。',
+            russianClaims: '目标为能源基础设施。',
+            ukrainianImpact: '基辅地区的主要发电厂被完全摧毁，进一步削弱了乌克兰的发电和电网稳定能力。',
+        },
+        {
+            id: 'aug26_2024',
+            date: '2024年8月26日',
+            title: '战争中最大规模单次袭击 (乌方说法)',
+            munitions: { missiles: 127, drones: 109 },
+            summary: '据乌克兰国家通讯社报道，这是战争中最大规模的单次混合攻击，再次以能源设施为主要目标，导致全国大范围停电。',
+            russianClaims: '未详细说明，但符合打击能源基础设施的模式。',
+            ukrainianImpact: '约800万户家庭断电。首都基辅自2022年11月以来首次经历计划外停电。',
+        },
+        {
+            id: 'may25_2025',
+            date: '2025年5月25日 (周末)',
+            title: '创纪录的无人机和导弹齐射',
+            munitions: { missiles: 83, drones: 355 },
+            summary: 'CSIS分析指出，在约三天时间内，俄军发射了近千枚导弹和无人机，战术上出现新变化，如使用雷达诱饵和新的无人机攻击模式。',
+            russianClaims: '旨在压倒和耗尽乌克兰防空系统。',
+            ukrainianImpact: '创纪录的无人机和导弹数量，防空系统面临巨大压力。显示俄方无人机生产/采购规模已大幅提升。',
+        },
+        {
+            id: 'jun06_2025',
+            date: '2025年6月6日',
+            title: '报复“蜘蛛网”行动',
+            munitions: { missiles: 34, drones: 407 },
+            summary: '在乌克兰成功对俄空军基地实施“蜘蛛网”行动后，俄罗斯发动大规模报复性打击，目标几乎遍及乌克兰全境。',
+            russianClaims: '报复性打击。',
+            ukrainianImpact: '袭击命中19个地点，包括民用基础设施和能源设施，造成至少3名急救人员死亡，40多人受伤。',
+        }
+    ];
+
+    const munitionsData = {
+        'Kh-101/555': { name: 'Kh-101 / Kh-555', type: '空射巡航导弹', details: '<strong>平台:</strong> Tu-95MS, Tu-160轰炸机<br><strong>射程:</strong> ~2,000-5,500 km<br><strong>特点:</strong> 俄军远程精确打击主力，Kh-101具备隐身特性，据报曾使用诱饵弹。' },
+        'Kalibr': { name: 'Kalibr (3M-14)', type: '海射巡航导弹', details: '<strong>平台:</strong> 黑海舰队舰艇、潜艇<br><strong>射程:</strong> ~2,500 km<br><strong>特点:</strong> 战争初期广泛使用，是俄海军远程对陆攻击的关键武器。' },
+        'Iskander': { name: 'Iskander (9K720)', type: '陆基弹道/巡航导弹', details: '<strong>平台:</strong> 陆基发射车<br><strong>射程:</strong> ~500 km<br><strong>特点:</strong> 高精度，难以拦截，机动性强。M型为弹道导弹，K型为巡航导弹。' },
+        'Kinzhal': { name: 'Kinzhal (Kh-47M2)', type: '空射高超音速导弹', details: '<strong>平台:</strong> MiG-31K, Tu-22M3<br><strong>射程:</strong> ~2,000 km<br><strong>特点:</strong> 飞行速度极快，曾被俄方宣传为无法拦截，但乌方声称已用爱国者系统成功拦截。' },
+        'Kh-22/32': { name: 'Kh-22 / Kh-32', type: '空射反舰导弹', details: '<strong>平台:</strong> Tu-22M3轰炸机<br><strong>射程:</strong> ~600-1,000 km<br><strong>特点:</strong> 弹头威力巨大(近1000公斤)，但对陆攻击时精度较低，曾造成严重平民伤亡。' },
+        'S-300/400': { name: 'S-300 / S-400', type: '地对空导弹(对地模式)', details: '<strong>平台:</strong> 陆基发射车<br><strong>射程:</strong> ~200 km (对地)<br><strong>特点:</strong> 被俄军频繁用于攻击靠近前线的地面目标，成本相对较低但精度也较低。' },
+        'Shahed-136/131': { name: 'Shahed-136/131', type: '游荡弹药 (自杀无人机)', details: '<strong>平台:</strong> 陆基发射架<br><strong>射程:</strong> ~1,000-2,500 km<br><strong>特点:</strong> 成本低廉，航程远，被俄军大规模用于消耗和探测乌克兰防空系统，常以“蜂群”方式出动。' },
+        'Other': { name: '其他导弹', type: '混合类型', details: '<strong>类型:</strong> 包括Kh-31P反辐射导弹, Kh-59战术导弹, KN-23(朝鲜提供)等。<br><strong>特点:</strong> 在特定攻击波次中与其他主要弹药混合使用，以实现多样化的战术目标。' }
+    };
+    
+    const impactData = {
+        energy: {
+            title: '对能源网络的毁灭性打击',
+            points: [
+                '<strong>发电能力锐减:</strong> 到2024年中，乌克兰据报仅剩战前1/3的发电能力，至少9吉瓦的发电容量被摧毁。',
+                '<strong>关键设施被毁:</strong> 多个关键电厂被完全摧毁，包括第聂伯河水电站(受重创)、兹米耶夫斯卡热电厂和特里皮尔斯卡热电厂。',
+                '<strong>系统性危机:</strong> 导致全国性轮流停电，严重影响供水、供暖、通讯、交通和工业生产。',
+                '<strong>巨额经济损失:</strong> 对电力行业的直接损失估计超过114亿美元，给乌克兰的长期重建带来沉重负担。'
+            ]
+        },
+        military: {
+            title: '对军事行动的间接与直接影响',
+            points: [
+                '<strong>消耗防空资源:</strong> 俄军大规模使用廉价的“见证者”无人机，意图耗尽乌克兰宝贵且有限的西方防空导弹库存。',
+                '<strong>扰乱后勤与生产:</strong> 袭击旨在打击军工企业、武器库和交通枢纽，以阻碍乌克兰的武器生产、维修和部队调动。',
+                '<strong>探测防空部署:</strong> 复杂的混合攻击波次被用于探测和绘制乌克兰防空系统的位置和能力，为后续打击创造条件。',
+                '<strong>心理战:</strong> 持续的空袭压力旨在削弱乌克兰军队和后方的抵抗意志。'
+            ]
+        },
+        civilian: {
+            title: '对平民的深重苦难',
+            points: [
+                '<strong>大量平民伤亡:</strong> 大规模空袭已造成数千名平民死伤，许多袭击直接命中居民楼、医院和购物中心。',
+                '<strong>人道主义危机:</strong> 电力、暖气和清洁用水的缺乏严重扰乱了数百万人的日常生活，尤其在冬季造成了严峻的人道主义挑战。',
+                '<strong>广泛财产损失:</strong> 大量民用财产，包括住宅、学校、文化遗产遭到破坏。',
+                '<strong>持久心理创伤:</strong> 持续的空袭警报和不安全感给民众带来了巨大的心理压力和创伤。'
+            ]
+        }
+    };
+
+
+    const attackSelector = document.getElementById('attackSelector');
+    attacksData.forEach(attack => {
+        const option = document.createElement('option');
+        option.value = attack.id;
+        option.textContent = `${attack.date}: ${attack.title}`;
+        attackSelector.appendChild(option);
+    });
+
+    let mainTimelineChart, munitionsMixChart;
+
+    function renderMainTimelineChart() {
+        const ctx = document.getElementById('mainTimelineChart').getContext('2d');
+        const labels = attacksData.map(a => a.date);
+        const totalMunitions = attacksData.map(a => a.munitions.missiles + a.munitions.drones);
+
+        if (mainTimelineChart) {
+            mainTimelineChart.destroy();
+        }
+
+        mainTimelineChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '发射的导弹与无人机总数',
+                    data: totalMunitions,
+                    backgroundColor: 'rgba(8, 145, 178, 0.6)',
+                    borderColor: 'rgba(8, 145, 178, 1)',
+                    borderWidth: 1,
+                    hoverBackgroundColor: 'rgba(8, 145, 178, 0.9)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '数量 (枚/架)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const attackId = attacksData[index].id;
+                        attackSelector.value = attackId;
+                        renderAttackDetails(attackId);
+                        document.getElementById('timeline').scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            }
+        });
+    }
+
+    function renderAttackDetails(attackId) {
+        const attack = attacksData.find(a => a.id === attackId);
+        if (!attack) return;
+
+        document.getElementById('attackDetailTitle').textContent = attack.title;
+        document.getElementById('attackDetailDate').textContent = attack.date;
+        document.getElementById('attackDetailSummary').textContent = attack.summary;
+        document.getElementById('russianClaims').textContent = attack.russianClaims;
+        document.getElementById('ukrainianImpact').textContent = attack.ukrainianImpact;
+
+        renderMunitionsMixChart(attack.munitions);
+    }
+    
+    function renderMunitionsMixChart(munitions) {
+        const ctx = document.getElementById('munitionsMixChart').getContext('2d');
+        if (munitionsMixChart) {
+            munitionsMixChart.destroy();
+        }
+
+        munitionsMixChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['导弹 (Missiles)', '无人机 (Drones)'],
+                datasets: [{
+                    data: [munitions.missiles, munitions.drones],
+                    backgroundColor: ['rgba(220, 38, 38, 0.7)', 'rgba(234, 179, 8, 0.7)'],
+                    borderColor: ['rgba(220, 38, 38, 1)', 'rgba(234, 179, 8, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        document.getElementById('munitionsList').innerHTML = `
+            <p>导弹: ${munitions.missiles} 枚</p>
+            <p>无人机: ${munitions.drones} 架</p>
+            <p><strong>总计: ${munitions.missiles + munitions.drones}</strong></p>
+        `;
+    }
+
+    function renderMunitionGrid() {
+        const grid = document.getElementById('munitionGrid');
+        grid.innerHTML = '';
+        Object.keys(munitionsData).forEach(key => {
+            const munition = munitionsData[key];
+            const card = document.createElement('div');
+            card.className = 'munition-card cursor-pointer bg-white p-4 rounded-lg shadow text-center border-2 border-transparent hover:border-cyan-500';
+            card.innerHTML = `
+                <p class="font-bold text-zinc-800">${munition.name}</p>
+                <p class="text-xs text-zinc-500">${munition.type}</p>
+            `;
+            card.addEventListener('click', () => {
+                renderMunitionDetails(key);
+                document.querySelectorAll('.munition-card').forEach(c => c.classList.remove('border-cyan-500', 'bg-cyan-50'));
+                card.classList.add('border-cyan-500', 'bg-cyan-50');
+            });
+            grid.appendChild(card);
+        });
+    }
+
+    function renderMunitionDetails(munitionKey) {
+        const munition = munitionsData[munitionKey];
+        if (!munition) return;
+
+        document.getElementById('munitionName').textContent = munition.name;
+        document.getElementById('munitionType').textContent = munition.type;
+        document.getElementById('munitionDetails').innerHTML = munition.details;
+    }
+    
+    function renderImpactContent(tab) {
+        const data = impactData[tab];
+        const contentDiv = document.getElementById('impactContent');
+        if (!data) return;
+        
+        let listItems = data.points.map(point => `<li class="mb-2 pl-4 border-l-4 border-cyan-500">${point}</li>`).join('');
+        
+        contentDiv.innerHTML = `
+            <h3 class="text-xl font-bold mb-4">${data.title}</h3>
+            <ul class="text-zinc-700 leading-relaxed">${listItems}</ul>
+        `;
+    }
+
+    attackSelector.addEventListener('change', (e) => {
+        renderAttackDetails(e.target.value);
+    });
+    
+    document.getElementById('impactTabs').addEventListener('click', (e) => {
+        if(e.target.tagName === 'BUTTON') {
+            const tabName = e.target.dataset.tab;
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active-tab');
+                btn.classList.add('hover:bg-zinc-100');
+            });
+            e.target.classList.add('active-tab');
+            e.target.classList.remove('hover:bg-zinc-100');
+            renderImpactContent(tabName);
+        }
+    });
+
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('main section');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => {
+                    link.classList.toggle('active-nav', link.getAttribute('href').substring(1) === entry.target.id);
+                     link.classList.toggle('inactive-nav', link.getAttribute('href').substring(1) !== entry.target.id);
+                });
+            }
+        });
+    }, { rootMargin: "-50% 0px -50% 0px" });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+
+    document.getElementById('mobile-nav').addEventListener('change', function() {
+        window.location.hash = this.value;
+    });
+
+    renderMainTimelineChart();
+    renderAttackDetails(attacksData[0].id);
+    renderMunitionGrid();
+    renderMunitionDetails('Kh-101/555');
+    document.querySelector('.munition-card').classList.add('border-cyan-500', 'bg-cyan-50');
+    renderImpactContent('energy');
+});
+</script>
+</body>
+</html>

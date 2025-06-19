@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anatomy of a Shadow War: Israel vs. Iran</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Tense Calm -->
+    <!-- Application Structure Plan: A thematic, non-linear dashboard-style SPA. The user lands on an 'Overview' of the latest event. A persistent top navigation allows users to explore non-linearly: 'The Strike' (deep dive into the 2025 operation), 'Timeline of Escalation' (interactive history), 'Genesis of Enmity' (historical context), and 'Future Scenarios' (analysis). This structure prioritizes user-led exploration over a rigid, linear report format, making the complex information more digestible and engaging by allowing users to focus on what interests them most. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Key stats from the 2025 strike (casualties). -> Goal: Inform. -> Viz/Method: Large "Key Figure" stat boxes (HTML/CSS). -> Interaction: None. -> Justification: Highlighting critical data points for immediate impact. -> Library/Method: HTML/Tailwind.
+        - Report Info: Chronology of events (2010-2025). -> Goal: Show Change/Organize. -> Viz/Method: Interactive vertical timeline. -> Interaction: Click on an event to expand details. -> Justification: Transforms a static table into an engaging, explorable narrative of escalation. -> Library/Method: JS for interactivity.
+        - Report Info: Drivers of the conflict. -> Goal: Relationships/Compare. -> Viz/Method: Donut Chart. -> Interaction: Hover for tooltips. -> Justification: Visually represents the proportional weight of key conflict drivers. -> Library/Method: Chart.js.
+        - Report Info: Future possibilities. -> Goal: Organize/Inform. -> Viz/Method: Interactive cards. -> Interaction: Click to reveal detailed text. -> Justification: Breaks down complex analysis into manageable, user-triggered segments. -> Library/Method: JS for interactivity.
+        - Report Info: Pre- vs. Post-1979 relations. -> Goal: Compare. -> Viz/Method: Two-column side-by-side layout. -> Interaction: None. -> Justification: Provides a stark visual contrast to emphasize the historical turning point. -> Library/Method: HTML/Tailwind.
+        -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        :root {
+            --bg-light: #f8f9fa;
+            --bg-dark: #1a202c;
+            --text-light: #1f2937;
+            --text-dark: #e2e8f0;
+            --primary-israel: #3b82f6; /* Blue */
+            --primary-iran: #dc2626; /* Red */
+            --accent: #f59e0b; /* Amber */
+            --border-color: #e5e7eb;
+        }
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+        }
+        .lang-zh { display: none; }
+        .nav-active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+        .nav-inactive {
+            color: #4b5563; /* gray-600 */
+            border-bottom-color: transparent;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 1rem;
+            left: -0.6rem;
+            width: 1.2rem;
+            height: 1.2rem;
+            border-radius: 9999px;
+            background-color: white;
+            border: 4px solid var(--accent);
+            z-index: 10;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-neutral-100 text-slate-800">
+
+    <div id="app-container" class="max-w-7xl mx-auto p-4 md:p-8">
+        
+        <header class="border-b-2 border-slate-200 pb-4 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl md:text-4xl font-bold text-slate-900">
+                        <span class="lang-en">Anatomy of a Shadow War: Israel vs. Iran</span>
+                        <span class="lang-zh">影子战争剖析：以色列 vs 伊朗</span>
+                    </h1>
+                    <p class="text-sm text-slate-500 mt-1">
+                        <span class="lang-en">An Interactive Analysis of the Escalating Conflict</span>
+                        <span class="lang-zh">冲突升级的互动式分析</span>
+                    </p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm font-medium">EN</span>
+                    <button id="lang-toggle" class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 bg-gray-400">
+                        <span class="sr-only">Toggle Language</span>
+                        <span aria-hidden="true" class="toggle-knob pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 translate-x-0"></span>
+                    </button>
+                    <span class="text-sm font-medium">中文</span>
+                </div>
+            </div>
+        </header>
+
+        <nav id="main-nav" class="flex flex-wrap justify-center border-b border-slate-200 mb-8">
+            <button data-target="overview" class="nav-button text-sm md:text-base font-semibold px-4 py-3 border-b-2 transition-all duration-200 nav-active">
+                <span class="lang-en">Overview</span><span class="lang-zh">概览</span>
+            </button>
+            <button data-target="the-strike" class="nav-button text-sm md:text-base font-semibold px-4 py-3 border-b-2 transition-all duration-200 nav-inactive">
+                <span class="lang-en">The 2025 Strike</span><span class="lang-zh">2025空袭</span>
+            </button>
+            <button data-target="timeline" class="nav-button text-sm md:text-base font-semibold px-4 py-3 border-b-2 transition-all duration-200 nav-inactive">
+                <span class="lang-en">Timeline</span><span class="lang-zh">升级时间线</span>
+            </button>
+            <button data-target="genesis" class="nav-button text-sm md:text-base font-semibold px-4 py-3 border-b-2 transition-all duration-200 nav-inactive">
+                <span class="lang-en">Genesis of Enmity</span><span class="lang-zh">宿怨起源</span>
+            </button>
+            <button data-target="future" class="nav-button text-sm md:text-base font-semibold px-4 py-3 border-b-2 transition-all duration-200 nav-inactive">
+                <span class="lang-en">Future Scenarios</span><span class="lang-zh">未来走向</span>
+            </button>
+        </nav>
+
+        <main>
+            <!-- Overview Section -->
+            <section id="overview" class="content-section active">
+                <div class="text-center mb-8">
+                     <h2 class="text-2xl font-bold mb-2">
+                        <span class="lang-en">Operation "Rising Lion": A New Chapter in a Long Conflict</span>
+                        <span class="lang-zh">“雄狮崛起”行动：长期冲突的新篇章</span>
+                    </h2>
+                    <p class="max-w-3xl mx-auto text-slate-600">
+                        <span class="lang-en">On June 13, 2025, Israel launched "Operation Rising Lion," a significant airstrike against Iran, marking a critical escalation from a "shadow war" to direct confrontation. This interactive report analyzes the strike, its historical context, and the volatile future of Israel-Iran relations.</span>
+                        <span class="lang-zh">2025年6月13日，以色列发动了代号为“雄狮崛起”的重大空袭行动，标志着两国长期冲突从“影子战争”进入了直接对抗的关键转折点。本互动报告旨在剖析此次空袭、其历史背景，以及以色列与伊朗关系动荡的未来。</span>
+                    </p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                     <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <span class="text-5xl font-bold" style="color: var(--primary-iran);">78</span>
+                        <p class="mt-2 text-slate-700 font-semibold"><span class="lang-en">Killed in Tehran</span><span class="lang-zh">德黑兰死亡人数</span></p>
+                        <p class="text-sm text-slate-500"><span class="lang-en">Including top military commanders</span><span class="lang-zh">包括高级军事指挥官</span></p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <span class="text-5xl font-bold" style="color: var(--primary-iran);">329</span>
+                        <p class="mt-2 text-slate-700 font-semibold"><span class="lang-en">Injured</span><span class="lang-zh">受伤人数</span></p>
+                        <p class="text-sm text-slate-500"><span class="lang-en">Following the airstrikes on the capital</span><span class="lang-zh">在首都空袭之后</span></p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <span class="text-5xl font-bold" style="color: var(--primary-israel);">>100</span>
+                        <p class="mt-2 text-slate-700 font-semibold"><span class="lang-en">Iranian Drones Intercepted</span><span class="lang-zh">伊朗无人机被拦截</span></p>
+                        <p class="text-sm text-slate-500"><span class="lang-en">In Iran's immediate retaliation</span><span class="lang-zh">在伊朗的立即报复中</span></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="font-bold text-xl mb-4 text-center">
+                            <span class="lang-en">Core Drivers of the Conflict</span>
+                            <span class="lang-zh">冲突的核心驱动因素</span>
+                        </h3>
+                        <div class="chart-container">
+                            <canvas id="driversChart"></canvas>
+                        </div>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="font-bold text-xl mb-4">
+                            <span class="lang-en">International Reactions</span>
+                            <span class="lang-zh">国际反应</span>
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-slate-100 text-slate-600 uppercase">
+                                    <tr>
+                                        <th class="p-3"><span class="lang-en">Actor</span><span class="lang-zh">行动方</span></th>
+                                        <th class="p-3"><span class="lang-en">Stance</span><span class="lang-zh">立场</span></th>
+                                        <th class="p-3"><span class="lang-en">Key Action</span><span class="lang-zh">关键行动</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b">
+                                        <td class="p-3 font-medium">United States</td>
+                                        <td class="p-3 text-green-700"><span class="lang-en">Implied Support</span><span class="lang-zh">默许支持</span></td>
+                                        <td class="p-3"><span class="lang-en">Trump praised strikes as "excellent"</span><span class="lang-zh">特朗普称赞空袭“非常出色”</span></td>
+                                    </tr>
+                                    <tr class="border-b">
+                                        <td class="p-3 font-medium">Hamas / Houthis</td>
+                                        <td class="p-3 text-red-700"><span class="lang-en">Condemnation</span><span class="lang-zh">谴责</span></td>
+                                        <td class="p-3"><span class="lang-en">Affirmed Iran's right to self-defense</span><span class="lang-zh">确认伊朗的自卫权</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-3 font-medium">United Nations</td>
+                                        <td class="p-3 text-blue-700"><span class="lang-en">Concern</span><span class="lang-zh">关切</span></td>
+                                        <td class="p-3"><span class="lang-en">Iran requested emergency meeting</span><span class="lang-zh">伊朗要求召开紧急会议</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- The Strike Section -->
+            <section id="the-strike" class="content-section">
+                <div class="text-center mb-8">
+                     <h2 class="text-2xl font-bold mb-2">
+                        <span class="lang-en">Anatomy of Operation "Rising Lion"</span>
+                        <span class="lang-zh">“雄狮崛起”行动剖析</span>
+                    </h2>
+                    <p class="max-w-3xl mx-auto text-slate-600">
+                        <span class="lang-en">Israel's operation was a multi-faceted attack combining air power, unprecedented special operations, and likely cyber warfare to neutralize what it deemed an imminent threat from Iran's nuclear program and military leadership.</span>
+                        <span class="lang-zh">以色列的行动是一次多层面的攻击，结合了空中力量、前所未有的特种作战以及可能的网络战，旨在消除其认定的来自伊朗核计划和军事领导层的迫在眉睫的威胁。</span>
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-center">
+                    <div class="bg-white p-4 rounded-lg shadow-md">
+                        <h4 class="font-bold"><span class="lang-en">Primary Goal</span><span class="lang-zh">首要目标</span></h4>
+                        <p class="text-sm text-slate-600"><span class="lang-en">Cripple nuclear program & military leadership</span><span class="lang-zh">削弱核计划和军事领导层</span></p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-md">
+                        <h4 class="font-bold"><span class="lang-en">Key Targets</span><span class="lang-zh">关键目标</span></h4>
+                        <p class="text-sm text-slate-600"><span class="lang-en">Natanz facility, IRGC HQ, Air Defenses</span><span class="lang-zh">纳坦兹设施、革命卫队总部、防空系统</span></p>
+                    </div>
+                     <div class="bg-white p-4 rounded-lg shadow-md">
+                        <h4 class="font-bold"><span class="lang-en">Assessed Result</span><span class="lang-zh">评估结果</span></h4>
+                        <p class="text-sm text-slate-600"><span class="lang-en">Significant damage to Natanz, leaders killed</span><span class="lang-zh">纳坦兹遭重创，多名领导人被杀</span></p>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="font-bold text-xl mb-4 text-center">
+                        <span class="lang-en">Deployed Capabilities</span>
+                        <span class="lang-zh">部署能力</span>
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-semibold text-lg mb-2" style="color: var(--primary-israel);">
+                                <span class="lang-en">Air Power</span><span class="lang-zh">空中力量</span>
+                            </h4>
+                            <ul class="list-disc list-inside space-y-2 text-slate-700">
+                                <li><span class="font-semibold">F-35I "Adir":</span> <span class="lang-en">Stealth fighters for penetrating air defenses and precision strikes.</span><span class="lang-zh">用于穿透防空网和精确打击的隐形战机。</span></li>
+                                <li><span class="font-semibold">F-15I / F-16I:</span> <span class="lang-en">Support and long-range strike roles.</span><span class="lang-zh">担任支援和远程打击角色。</span></li>
+                                <li><span class="font-semibold">Support Aircraft:</span> <span class="lang-en">Aerial refueling tankers and command planes.</span><span class="lang-zh">空中加油机和指挥机。</span></li>
+                            </ul>
+                        </div>
+                         <div>
+                            <h4 class="font-semibold text-lg mb-2" style="color: var(--primary-israel);">
+                                <span class="lang-en">Intelligence & Special Ops (Mossad)</span><span class="lang-zh">情报与特种作战（摩萨德）</span>
+                            </h4>
+                            <ul class="list-disc list-inside space-y-2 text-slate-700">
+                                <li><span class="font-semibold"><span class="lang-en">In-Country Ops:</span><span class="lang-zh">境内行动：</span></span> <span class="lang-en">Established drone base near Tehran.</span><span class="lang-zh">在德黑兰附近建立无人机基地。</span></li>
+                                <li><span class="font-semibold"><span class="lang-en">Pre-positioned Weapons:</span><span class="lang-zh">预置武器：</span></span> <span class="lang-en">Remotely activated weapons to destroy air defenses.</span><span class="lang-zh">远程激活武器摧毁防空系统。</span></li>
+                                 <li><span class="font-semibold"><span class="lang-en">Synced Attacks:</span><span class="lang-zh">同步攻击：</span></span> <span class="lang-en">Ground and air assets coordinated seamlessly.</span><span class="lang-zh">地面与空中资产无缝协同。</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+            
+            <!-- Timeline Section -->
+            <section id="timeline" class="content-section">
+                <div class="text-center mb-8">
+                     <h2 class="text-2xl font-bold mb-2">
+                        <span class="lang-en">Timeline of Escalation (2010 - 2025)</span>
+                        <span class="lang-zh">升级时间线 (2010 - 2025)</span>
+                    </h2>
+                    <p class="max-w-3xl mx-auto text-slate-600">
+                        <span class="lang-en">The path to direct confrontation was paved over years of covert operations, assassinations, and retaliatory strikes. Click on events to see details.</span>
+                        <span class="lang-zh">通往直接对抗的道路是经过多年秘密行动、暗杀和报复性打击铺就的。点击事件可查看详情。</span>
+                    </p>
+                </div>
+                <div id="timeline-container" class="relative border-l-4 border-slate-300 ml-4 py-4">
+                    <!-- Timeline items will be injected here by JS -->
+                </div>
+            </section>
+
+            <!-- Genesis Section -->
+            <section id="genesis" class="content-section">
+                <div class="text-center mb-8">
+                     <h2 class="text-2xl font-bold mb-2">
+                        <span class="lang-en">Genesis of Enmity: A Tale of Two Eras</span>
+                        <span class="lang-zh">宿怨起源：两个时代的故事</span>
+                    </h2>
+                    <p class="max-w-3xl mx-auto text-slate-600">
+                        <span class="lang-en">Once tacit allies, the 1979 Islamic Revolution in Iran fundamentally ruptured relations with Israel, replacing pragmatic cooperation with deep ideological hostility.</span>
+                        <span class="lang-zh">曾经是默契的盟友，1979年的伊朗伊斯兰革命从根本上断绝了与以色列的关系，用深刻的意识形态敌对取代了务实的合作。</span>
+                    </p>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-lg border-t-4 border-blue-500">
+                        <h3 class="font-bold text-xl mb-4 text-center">
+                            <span class="lang-en">Pre-1979: Tacit Alliance</span>
+                            <span class="lang-zh">1979年前：默契同盟</span>
+                        </h3>
+                        <ul class="list-disc list-inside space-y-2 text-slate-700">
+                            <li><span class="font-semibold"><span class="lang-en">Recognition:</span><span class="lang-zh">承认：</span></span> <span class="lang-en">Iran was the 2nd Muslim-majority nation to recognize Israel.</span><span class="lang-zh">伊朗是第二个承认以色列的穆斯林占多数国家。</span></li>
+                             <li><span class="font-semibold"><span class="lang-en">Economic Ties:</span><span class="lang-zh">经济联系：</span></span> <span class="lang-en">Active trade, direct flights, and a vital oil pipeline partnership.</span><span class="lang-zh">活跃的贸易、直飞航班和至关重要的石油管道合作。</span></li>
+                             <li><span class="font-semibold"><span class="lang-en">Military Cooperation:</span><span class="lang-zh">军事合作：</span></span> <span class="lang-en">Secret joint projects, including missile development.</span><span class="lang-zh">秘密的联合项目，包括导弹研发。</span></li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-lg border-t-4 border-red-600">
+                        <h3 class="font-bold text-xl mb-4 text-center">
+                             <span class="lang-en">Post-1979: Fundamental Rupture</span>
+                            <span class="lang-zh">1979年后：根本性断裂</span>
+                        </h3>
+                        <ul class="list-disc list-inside space-y-2 text-slate-700">
+                            <li><span class="font-semibold"><span class="lang-en">Ideological Shift:</span><span class="lang-zh">意识形态转变：</span></span> <span class="lang-en">Israel declared "enemy of Islam" and "Little Satan".</span><span class="lang-zh">以色列被宣布为“伊斯兰的敌人”和“小撒旦”。</span></li>
+                            <li><span class="font-semibold"><span class="lang-en">Diplomatic Severance:</span><span class="lang-zh">断绝外交：</span></span> <span class="lang-en">All ties cut; Israeli embassy given to the PLO.</span><span class="lang-zh">所有联系中断；以色列大使馆移交巴解组织。</span></li>
+                            <li><span class="font-semibold"><span class="lang-en">Proxy Warfare:</span><span class="lang-zh">代理人战争：</span></span> <span class="lang-en">Creation of Hezbollah and support for anti-Israel groups.</span><span class="lang-zh">建立真主党并支持反以色列团体。</span></li>
+                        </ul>
+                    </div>
+                 </div>
+            </section>
+
+            <!-- Future Section -->
+            <section id="future" class="content-section">
+                <div class="text-center mb-8">
+                     <h2 class="text-2xl font-bold mb-2">
+                        <span class="lang-en">Future Trajectories</span>
+                        <span class="lang-zh">未来走向</span>
+                    </h2>
+                    <p class="max-w-3xl mx-auto text-slate-600">
+                        <span class="lang-en">The conflict is at a precarious crossroads. The future relationship will be shaped by the persistent drivers of conflict, regional power shifts, and the actions of external powers. Click a scenario to explore.</span>
+                        <span class="lang-zh">冲突正处于一个危险的十字路口。未来的关系将由冲突的持久驱动因素、地区力量的转移以及外部大国的行动所塑造。点击一个情景进行探索。</span>
+                    </p>
+                </div>
+                <div id="scenarios-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Scenarios will be injected here by JS -->
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- DATA ---
+            const timelineData = [
+                { year: '2010', title_en: 'Stuxnet Virus', title_zh: '震网病毒', desc_en: 'A joint US-Israeli cyberweapon disrupts Iranian centrifuges at Natanz, marking a new era of cyber warfare.', desc_zh: '美以联合开发的一款网络武器成功破坏了伊朗纳坦兹的离心机，开启了网络战的新纪元。' },
+                { year: '2020', title_en: 'Assassination of Fakhrizadeh', title_zh: '暗杀法赫里扎德', desc_en: 'Iran\'s top military nuclear scientist, Mohsen Fakhrizadeh, is killed outside Tehran by a remote-controlled machine gun.', desc_zh: '伊朗首席军事核科学家穆赫辛·法赫里扎德在德黑兰郊外遭遥控机枪袭击身亡。' },
+                { year: 'Apr 1, 2024', title_en: 'Consulate Strike in Damascus', title_zh: '大马士革领事馆遇袭', desc_en: 'An Israeli airstrike destroys Iran\'s consulate in Damascus, killing senior IRGC commanders, including Gen. Zahedi.', desc_zh: '以色列空袭摧毁了伊朗驻大马士革的领事馆，造成包括扎赫迪将军在内的多名革命卫队高级指挥官死亡。' },
+                { year: 'Apr 14, 2024', title_en: 'Iran\'s First Direct Attack', title_zh: '伊朗首次直接攻击', desc_en: 'In retaliation, Iran launches an unprecedented barrage of over 300 drones and missiles directly at Israel. Most are intercepted.', desc_zh: '作为报复，伊朗史无前例地向以色列境内直接发射了超过300枚无人机和导弹。大部分被拦截。' },
+                { year: 'Oct 1, 2024', title_en: 'Iran\'s Second Direct Attack', title_zh: '伊朗第二次直接攻击', desc_en: 'Following the assassinations of Hamas and Hezbollah leaders, Iran launches a second wave of ~200 missiles at Israel.', desc_zh: '在哈马斯和真主党领导人被暗杀后，伊朗向以色列发动了第二波约200枚导弹的袭击。' },
+                { year: 'Oct 26, 2024', title_en: 'Israel\'s First Open Attack', title_zh: '以色列首次公开攻击', desc_en: 'Israel publicly acknowledges striking targets inside Iran for the first time, hitting air defense and missile program sites.', desc_zh: '以色列首次公开承认打击伊朗境内目标，攻击了其防空系统和导弹计划相关地点。' },
+                { year: 'Jun 13, 2025', title_en: 'Operation "Rising Lion"', title_zh: '“雄狮崛起”行动', desc_en: 'Israel launches a massive preemptive strike on Iran\'s nuclear facilities, IRGC HQs, and military leaders, causing significant damage.', desc_zh: '以色列对伊朗的核设施、革命卫队总部和军事领导人发动大规模先发制人打击，造成重大损失。' }
+            ];
+
+            const scenariosData = [
+                { title_en: 'Tit-for-Tat Escalation', title_zh: '“以牙还牙”式升级', desc_en: 'The most likely path. A dangerous cycle of attack and calibrated retaliation continues, using drones, missiles, proxies, and cyberattacks, with a high risk of miscalculation.', desc_zh: '可能性最高的情景。一个危险的攻击与校准报复的循环持续，使用无人机、导弹、代理人和网络攻击，误判风险极高。'},
+                { title_en: 'Major Regional War', title_zh: '大规模地区战争', desc_en: 'A low-probability but high-impact scenario. A miscalculation or overly aggressive action by either side could spiral into a full-scale conventional war, drawing in regional and global powers.', desc_zh: '低概率但高影响的情景。任何一方的误判或过度激进行为都可能演变成一场全面的常规战争，并卷入地区和全球大国。'},
+                { title_en: 'Sustained "War Between Wars"', title_zh: '持久的“战争之间的战争”', desc_en: 'A state of persistent, contained conflict. Israel continues its campaign of targeted strikes and covert ops to degrade Iranian capabilities, while trying to avoid all-out war.', desc_zh: '一种持续但可控的冲突状态。以色列继续其定点清除和秘密行动，以削弱伊朗的能力，同时努力避免全面战争。'}
+            ];
+
+            // --- UI Elements ---
+            const langToggle = document.getElementById('lang-toggle');
+            const toggleKnob = langToggle.querySelector('.toggle-knob');
+            const navButtons = document.querySelectorAll('.nav-button');
+            const contentSections = document.querySelectorAll('.content-section');
+            const timelineContainer = document.getElementById('timeline-container');
+            const scenariosContainer = document.getElementById('scenarios-container');
+
+            // --- State ---
+            let currentLang = 'en';
+
+            // --- Functions ---
+            function switchLanguage(lang) {
+                currentLang = lang;
+                const toShow = document.querySelectorAll(`.lang-${lang}`);
+                const toHide = document.querySelectorAll(`.lang-${lang === 'en' ? 'zh' : 'en'}`);
+                
+                toShow.forEach(el => el.style.display = 'inline');
+                toHide.forEach(el => el.style.display = 'none');
+                
+                if (lang === 'zh') {
+                    langToggle.classList.remove('bg-gray-400');
+                    langToggle.classList.add('bg-amber-600');
+                    toggleKnob.classList.add('translate-x-5');
+                } else {
+                    langToggle.classList.remove('bg-amber-600');
+                    langToggle.classList.add('bg-gray-400');
+                    toggleKnob.classList.remove('translate-x-5');
+                }
+                updateChart();
+            }
+
+            function switchTab(targetId) {
+                navButtons.forEach(btn => {
+                    if (btn.dataset.target === targetId) {
+                        btn.classList.replace('nav-inactive', 'nav-active');
+                    } else {
+                        btn.classList.replace('nav-active', 'nav-inactive');
+                    }
+                });
+                contentSections.forEach(section => {
+                    section.id === targetId ? section.classList.add('active') : section.classList.remove('active');
+                });
+            }
+
+            function populateTimeline() {
+                let html = '';
+                timelineData.forEach(item => {
+                    html += `
+                        <div class="timeline-item relative pl-8 pb-8 cursor-pointer group">
+                            <h4 class="font-bold text-lg">
+                                <span class="lang-en">${item.title_en}</span>
+                                <span class="lang-zh">${item.title_zh}</span>
+                                <span class="text-sm font-normal text-slate-500 ml-2">${item.year}</span>
+                            </h4>
+                            <div class="timeline-desc text-slate-600 max-h-0 overflow-hidden transition-max-height duration-500 ease-in-out">
+                                <p class="mt-2">
+                                    <span class="lang-en">${item.desc_en}</span>
+                                    <span class="lang-zh">${item.desc_zh}</span>
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                });
+                timelineContainer.innerHTML = html;
+                switchLanguage(currentLang);
+            }
+
+            function populateScenarios() {
+                 let html = '';
+                scenariosData.forEach(item => {
+                    html += `
+                        <div class="scenario-card bg-white p-6 rounded-lg shadow-lg cursor-pointer transition-all duration-300 hover:shadow-xl hover:transform hover:-translate-y-1">
+                            <h4 class="font-bold text-lg mb-2 text-center">
+                                <span class="lang-en">${item.title_en}</span>
+                                <span class="lang-zh">${item.title_zh}</span>
+                            </h4>
+                             <div class="scenario-desc text-slate-600 text-sm max-h-0 overflow-hidden transition-max-height duration-500 ease-in-out">
+                                <p>
+                                    <span class="lang-en">${item.desc_en}</span>
+                                    <span class="lang-zh">${item.desc_zh}</span>
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                });
+                scenariosContainer.innerHTML = html;
+                switchLanguage(currentLang);
+            }
+
+            let driversChartInstance = null;
+            function renderChart() {
+                const ctx = document.getElementById('driversChart').getContext('2d');
+                const chartData = {
+                    labels_en: ['Iran\'s Nuclear Ambitions', 'Regional Hegemony & Proxies', 'Retaliation Cycle'],
+                    labels_zh: ['伊朗的核野心', '地区霸权与代理人', '报复升级循环'],
+                    datasets: [{
+                        data: [50, 30, 20],
+                        backgroundColor: [
+                            'rgba(220, 38, 38, 0.7)',  // Red-700
+                            'rgba(29, 78, 216, 0.7)', // Blue-700
+                            'rgba(245, 158, 11, 0.7)' // Amber-500
+                        ],
+                        borderColor: [
+                            'rgba(220, 38, 38, 1)',
+                            'rgba(29, 78, 216, 1)',
+                            'rgba(245, 158, 11, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
+
+                driversChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: currentLang === 'en' ? chartData.labels_en : chartData.labels_zh,
+                        datasets: chartData.datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        family: "'Inter', 'Noto Sans SC', sans-serif"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function updateChart() {
+                if(driversChartInstance) {
+                    const labels = currentLang === 'en' 
+                        ? ['Iran\'s Nuclear Ambitions', 'Regional Hegemony & Proxies', 'Retaliation Cycle']
+                        : ['伊朗的核野心', '地区霸权与代理人', '报复升级循环'];
+                    driversChartInstance.data.labels = labels;
+                    driversChartInstance.update();
+                }
+            }
+
+
+            // --- Event Listeners ---
+            langToggle.addEventListener('click', () => {
+                switchLanguage(currentLang === 'en' ? 'zh' : 'en');
+            });
+
+            navButtons.forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.target));
+            });
+
+            timelineContainer.addEventListener('click', function(e) {
+                const item = e.target.closest('.timeline-item');
+                if (item) {
+                    const desc = item.querySelector('.timeline-desc');
+                    if (desc.style.maxHeight && desc.style.maxHeight !== '0px') {
+                        desc.style.maxHeight = '0px';
+                    } else {
+                        desc.style.maxHeight = desc.scrollHeight + 'px';
+                    }
+                }
+            });
+
+            scenariosContainer.addEventListener('click', function(e) {
+                const card = e.target.closest('.scenario-card');
+                if (card) {
+                    const desc = card.querySelector('.scenario-desc');
+                     if (desc.style.maxHeight && desc.style.maxHeight !== '0px') {
+                        desc.style.maxHeight = '0px';
+                    } else {
+                        desc.style.maxHeight = desc.scrollHeight + 'px';
+                    }
+                }
+            });
+
+
+            // --- Initialisation ---
+            switchLanguage('en');
+            populateTimeline();
+            populateScenarios();
+            renderChart();
+        });
+    </script>
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>  
+</body>
+</html>

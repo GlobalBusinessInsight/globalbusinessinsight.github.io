@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"  crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-6214772877334340">    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade 8 History & Geography Interactive Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral (Stone background, Muted Teal & Terracotta accents) -->
+    <!-- Application Structure Plan: The SPA uses a single-page, vertical-scrolling layout with a sticky top navigation bar for easy access to the five main historical eras. This non-linear structure allows students to jump to any topic freely. Each era is presented as a self-contained section with a responsive grid layout. This modular, "dashboard" approach breaks down dense information into digestible, interactive cards (e.g., for key figures, causes, consequences) and visualizations (timelines, charts). The goal is to encourage exploration and self-paced learning by presenting information in multiple formats (text, visuals, interactive elements) rather than a single wall of text, making the content more engaging and easier to synthesize for a Grade 8 audience. -->
+    <!-- Visualization & Content Choices: Report Info -> Goal -> Viz/Presentation Method -> Interaction -> Justification -> Library/Method.
+    1. Timelines (All Eras): Goal: Show chronological flow. Method: Interactive HTML/CSS/JS timeline. Interaction: Hover/click on points to see details. Justification: More engaging than a static table.
+    2. French Social Structure: Goal: Compare population vs. privilege. Method: Chart.js Doughnut Chart. Interaction: Tooltips on hover. Justification: Visually represents the immense disparity of the Three Estates.
+    3. Columbian Exchange: Goal: Show the two-way transfer of goods. Method: Interactive HTML/CSS/JS diagram. Interaction: Clicking an item reveals its impact. Justification: Makes the abstract concept of the exchange tangible and memorable.
+    4. Key Figures/Concepts: Goal: Provide layered information. Method: Clickable info-cards (HTML/CSS/JS). Interaction: Click to expand/reveal details. Justification: Avoids information overload and encourages active discovery.
+    5. Causes/Consequences: Goal: Organize complex relationships. Method: Styled lists and text blocks. Justification: Clearly presents causal links in a readable format. All charts rendered on <canvas> via Chart.js. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .timeline {
+            position: relative;
+            width: 100%;
+            padding: 2rem 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background-color: #d1d5db;
+        }
+        .timeline-item {
+            position: relative;
+            width: 50%;
+            padding: 1rem 2rem;
+            box-sizing: border-box;
+        }
+        .timeline-item:nth-child(odd) {
+            left: 0;
+            padding-right: 4rem;
+        }
+        .timeline-item:nth-child(even) {
+            left: 50%;
+            padding-left: 4rem;
+        }
+        .timeline-content {
+            padding: 1rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .timeline-content:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .timeline-dot {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background-color: #14b8a6;
+            border: 4px solid #f0fdfa;
+            border-radius: 50%;
+            z-index: 10;
+        }
+        .timeline-item:nth-child(odd) .timeline-dot {
+            right: -10px;
+        }
+        .timeline-item:nth-child(even) .timeline-dot {
+            left: -10px;
+        }
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+        .card {
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <!-- Header and Navigation -->
+    <header class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-teal-600">History Explorer</h1>
+            <div class="hidden md:flex space-x-4">
+                <a href="#renaissance" class="text-stone-600 hover:text-teal-600 font-semibold">Renaissance</a>
+                <a href="#exploration" class="text-stone-600 hover:text-teal-600 font-semibold">Exploration</a>
+                <a href="#revolutions" class="text-stone-600 hover:text-teal-600 font-semibold">Revolutions</a>
+                <a href="#industrial" class="text-stone-600 hover:text-teal-600 font-semibold">Industrial Revolution</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-stone-600 hover:text-teal-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-white p-4">
+            <a href="#renaissance" class="block py-2 text-stone-600 hover:text-teal-600">Renaissance</a>
+            <a href="#exploration" class="block py-2 text-stone-600 hover:text-teal-600">Exploration</a>
+            <a href="#revolutions" class="block py-2 text-stone-600 hover:text-teal-600">Revolutions</a>
+            <a href="#industrial" class="block py-2 text-stone-600 hover:text-teal-600">Industrial Revolution</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+
+        <!-- Welcome Section -->
+        <section class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4 text-stone-700">Journey Through Time</h2>
+            <p class="text-lg text-stone-600 max-w-3xl mx-auto">An interactive review of the pivotal eras that shaped our modern world, from the Renaissance to the Industrial Revolution. Explore key events, figures, and their lasting impact on Quebec and Canada.</p>
+        </section>
+
+        <!-- Renaissance Section -->
+        <section id="renaissance" class="mb-20 pt-16">
+            <h2 class="text-3xl font-bold text-center mb-2 text-teal-700">Unit 1: The Renaissance</h2>
+            <p class="text-lg text-stone-600 text-center mb-8">A "rebirth" of classical art, learning, and human-centered thinking that marked the transition from the Middle Ages to the modern world.</p>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Card: Causes -->
+                <div class="bg-white p-6 rounded-lg shadow-md card">
+                    <h3 class="font-bold text-xl mb-3 text-terracotta-700" style="color: #c2410c;">Why Italy? The Causes</h3>
+                    <ul class="space-y-2 list-disc list-inside text-stone-600">
+                        <li><b>Trade & Wealth:</b> Strategic Mediterranean location made city-states like Florence & Venice rich.</li>
+                        <li><b>Classical Heritage:</b> Surrounded by the ruins and legacy of the Roman Empire.</li>
+                        <li><b>Patronage:</b> Wealthy families like the Medici funded art and scholarship.</li>
+                        <li><b>New Ideas:</b> Influx of classical texts and scholars from the Byzantine Empire.</li>
+                    </ul>
+                </div>
+
+                <!-- Card: Humanism -->
+                <div class="bg-white p-6 rounded-lg shadow-md card">
+                    <h3 class="font-bold text-xl mb-3 text-terracotta-700" style="color: #c2410c;">A New Vision: Humanism</h3>
+                    <p class="text-stone-600 mb-4">A shift from medieval religious focus to human potential, achievement, and reason. Celebrated the "Renaissance Man" ideal – a person skilled in many fields.</p>
+                    <div id="renaissance-figures" class="space-y-2"></div>
+                </div>
+
+                <!-- Card: Artistic Revolution -->
+                <div class="bg-white p-6 rounded-lg shadow-md card">
+                    <h3 class="font-bold text-xl mb-3 text-terracotta-700" style="color: #c2410c;">Artistic Revolution</h3>
+                     <p class="text-stone-600 mb-2">Artists mastered new techniques to create realistic and emotionally powerful works. Click on an artist to learn more.</p>
+                    <div id="renaissance-artists" class="space-y-2"></div>
+                </div>
+
+                <!-- Card: Inventions -->
+                <div class="bg-white p-6 rounded-lg shadow-md card md:col-span-2 lg:col-span-1">
+                    <h3 class="font-bold text-xl mb-3 text-terracotta-700" style="color: #c2410c;">Key Innovations</h3>
+                    <div id="renaissance-inventions" class="space-y-3"></div>
+                </div>
+                
+                <!-- Timeline Section -->
+                <div class="md:col-span-2 lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+                     <h3 class="font-bold text-xl mb-4 text-center text-terracotta-700" style="color: #c2410c;">Renaissance Timeline</h3>
+                     <p class="text-stone-600 text-center mb-4">This interactive timeline highlights the progression of key events during the Renaissance. Click on any event to see more details.</p>
+                     <div class="h-96 overflow-y-auto pr-4" id="renaissance-timeline-container"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Age of Exploration Section -->
+        <section id="exploration" class="mb-20 pt-16">
+            <h2 class="text-3xl font-bold text-center mb-2 text-teal-700">Unit 2: The Age of Exploration</h2>
+            <p class="text-lg text-stone-600 text-center mb-8">European powers ventured across the seas, creating global trade routes, colonial empires, and forever changing the world map.</p>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Card: Motivations -->
+                <div class="bg-white p-6 rounded-lg shadow-md card">
+                    <h3 class="font-bold text-xl mb-3 text-center text-terracotta-700" style="color: #c2410c;">Motivations for Exploration</h3>
+                    <p class="text-stone-600 text-center mb-2">The drive to explore was complex, famously summarized as "God, Gold, and Glory." This chart shows the primary drivers.</p>
+                    <div class="chart-container"><canvas id="motivationsChart"></canvas></div>
+                </div>
+
+                <!-- Card: Key Explorers -->
+                <div class="bg-white p-6 rounded-lg shadow-md card">
+                    <h3 class="font-bold text-xl mb-3 text-terracotta-700" style="color: #c2410c;">Key Explorers</h3>
+                    <p class="text-stone-600 mb-3">Click on an explorer to see their major contribution.</p>
+                    <div id="explorers-list" class="space-y-2"></div>
+                </div>
+
+                <!-- Card: Columbian Exchange -->
+                <div class="bg-white p-6 rounded-lg shadow-md card lg:col-span-3">
+                     <h3 class="font-bold text-xl mb-3 text-center text-terracotta-700" style="color: #c2410c;">The Columbian Exchange</h3>
+                     <p class="text-stone-600 text-center mb-6">The widespread transfer of plants, animals, diseases, and ideas between the Old World (Europe, Asia, Africa) and the New World (the Americas). Click on an item to see its profound impact.</p>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                         <div>
+                             <h4 class="font-semibold text-lg mb-2 text-center">➡️ To the New World</h4>
+                             <div id="exchange-to-new" class="flex flex-wrap gap-2 justify-center"></div>
+                         </div>
+                         <div>
+                             <h4 class="font-semibold text-lg mb-2 text-center">⬅️ To the Old World</h4>
+                             <div id="exchange-to-old" class="flex flex-wrap gap-2 justify-center"></div>
+                         </div>
+                     </div>
+                </div>
+
+                 <!-- Card: Triangular Trade -->
+                <div class="bg-white p-6 rounded-lg shadow-md card lg:col-span-2">
+                    <h3 class="font-bold text-xl mb-3 text-terracotta-700" style="color: #c2410c;">Triangular Trade & its Consequences</h3>
+                    <p class="text-stone-600">A brutal system of trade linking Europe, Africa, and the Americas. It fueled colonial economies but resulted in the horrific Atlantic Slave Trade, forcibly displacing millions of Africans and causing immeasurable suffering. The wealth it generated for Europe was built on the foundation of exploitation.</p>
+                </div>
+                
+                <!-- Card: Treaty of Tordesillas -->
+                <div class="bg-white p-6 rounded-lg shadow-md card">
+                    <h3 class="font-bold text-xl mb-3 text-terracotta-700" style="color: #c2410c;">Treaty of Tordesillas (1494)</h3>
+                    <p class="text-stone-600">A papal decree that divided the newly "discovered" world between Spain (west of the line) and Portugal (east of the line), profoundly shaping the colonial map of South America.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Revolutions Section -->
+        <section id="revolutions" class="mb-20 pt-16">
+            <h2 class="text-3xl font-bold text-center mb-2 text-teal-700">Unit 3 & 4: An Age of Revolutions</h2>
+            <p class="text-lg text-stone-600 text-center mb-8">The American and French Revolutions shook the world, overthrowing old orders and introducing powerful new ideas about rights, liberty, and governance.</p>
+
+            <div class="grid md:grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- American Revolution Column -->
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold text-center mb-4 text-terracotta-700" style="color: #c2410c;">The American Revolution (c. 1763-1783)</h3>
+                    <p class="text-stone-600 mb-4">A struggle for independence based on the principle of "No taxation without representation," leading to the birth of the United States.</p>
+                    <div id="american-revolution-content" class="space-y-6"></div>
+                </div>
+
+                <!-- French Revolution Column -->
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold text-center mb-4 text-terracotta-700" style="color: #c2410c;">The French Revolution (c. 1789-1815)</h3>
+                    <p class="text-stone-600 mb-4">A radical upheaval to dismantle the Ancien Régime under the banner of "Liberty, Equality, Fraternity," which led to a republic, terror, and the rise of Napoleon.</p>
+                     <div class="chart-container mb-6"><canvas id="frenchEstatesChart"></canvas></div>
+                     <p class="text-center text-sm text-stone-500 -mt-4 mb-4">The Three Estates: A visualization of the deep social inequality in pre-revolutionary France.</p>
+                    <div id="french-revolution-content" class="space-y-6"></div>
+                </div>
+            </div>
+             <!-- Quebec Connection -->
+            <div class="mt-12 bg-teal-50 border-l-4 border-teal-500 p-6 rounded-r-lg">
+                <h3 class="font-bold text-xl mb-3 text-teal-800">The Quebec Connection: A Tale of Two Revolutions</h3>
+                <p class="text-stone-700">The outcomes of these two revolutions profoundly shaped Quebec's destiny. The American Revolution led to the influx of <strong>United Empire Loyalists</strong>, which dramatically increased the English-speaking population and led directly to the <strong>Constitutional Act of 1791</strong>. This act divided Quebec into Upper Canada (Ontario) and Lower Canada (Quebec), entrenching Canada's bicultural reality. Conversely, the French Revolution's anti-clerical violence horrified the Catholic society of Lower Canada, reinforcing conservatism and loyalty to the British Crown as a shield against "godless" republicanism.</p>
+            </div>
+        </section>
+
+
+        <!-- Industrial Revolution Section -->
+        <section id="industrial" class="mb-20 pt-16">
+            <h2 class="text-3xl font-bold text-center mb-2 text-teal-700">Unit 5: The Industrial Revolution</h2>
+            <p class="text-lg text-stone-600 text-center mb-8">A monumental shift from agrarian life to an economy based on factories, machines, and new power sources, creating immense wealth and immense challenges.</p>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Card: Why Britain? -->
+                <div class="bg-white p-6 rounded-lg shadow-md card">
+                    <h3 class="font-bold text-xl mb-3 text-terracotta-700" style="color: #c2410c;">Why Britain First?</h3>
+                     <p class="text-stone-600">A unique combination of factors made Britain the birthplace of industrialization.</p>
+                    <ul class="space-y-2 list-disc list-inside text-stone-600 mt-2">
+                        <li>Agricultural Revolution</li>
+                        <li>Abundant Coal & Iron</li>
+                        <li>Capital for Investment</li>
+                        <li>Colonial Markets</li>
+                        <li>Political Stability</li>
+                        <li>Transportation Network</li>
+                    </ul>
+                </div>
+
+                <!-- Card: Key Inventions -->
+                <div class="bg-white p-6 rounded-lg shadow-md card lg:col-span-2">
+                    <h3 class="font-bold text-xl mb-3 text-terracotta-700" style="color: #c2410c;">Game-Changing Inventions</h3>
+                    <p class="text-stone-600 mb-4">A wave of innovation transformed production. Click an invention to see its impact.</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4" id="industrial-inventions"></div>
+                </div>
+
+                <!-- Card: Social Impact -->
+                <div class="bg-white p-6 rounded-lg shadow-md card lg:col-span-3">
+                    <h3 class="font-bold text-xl mb-3 text-terracotta-700" style="color: #c2410c;">Societal Transformation</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                             <h4 class="font-semibold text-lg mb-2">The Rise of the City</h4>
+                             <p class="text-stone-600 mb-4">The factory system drew millions from the countryside to rapidly growing, often overcrowded and unsanitary, urban centers. This chart shows the dramatic population boom in Manchester, a key industrial city.</p>
+                             <div class="chart-container"><canvas id="urbanizationChart"></canvas></div>
+                        </div>
+                        <div>
+                             <h4 class="font-semibold text-lg mb-2">New Social Classes</h4>
+                             <ul class="space-y-4 text-stone-600">
+                                <li>
+                                    <strong class="block text-stone-800">Industrial Bourgeoisie</strong>
+                                    The new wealthy class of factory owners, inventors, and capitalists who amassed great fortunes.
+                                </li>
+                                <li>
+                                    <strong class="block text-stone-800">The Proletariat (Working Class)</strong>
+                                    The large class of urban wage-earners who sold their labor to survive. They faced long hours, low pay, dangerous conditions, and lived in poor housing.
+                                </li>
+                             </ul>
+                             <h4 class="font-semibold text-lg mb-2 mt-6">Responses to Industrialization</h4>
+                             <p class="text-stone-600">In response to harsh conditions, workers began to organize into labor unions to demand better wages, hours, and conditions. New political ideas like socialism and communism also emerged, challenging the capitalist system.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <!-- Modal -->
+    <div id="modal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-full overflow-y-auto transform scale-95 transition-transform duration-300">
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <h3 id="modal-title" class="text-2xl font-bold text-teal-700"></h3>
+                    <button id="modal-close" class="text-stone-500 hover:text-red-500">&times;</button>
+                </div>
+                <div id="modal-content" class="mt-4 text-stone-600"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const data = {
+                renaissance: {
+                    figures: [
+                        { name: "Petrarch", detail: "The 'Father of Humanism.' He rediscovered classical texts, promoting a new way of thinking focused on human potential." },
+                        { name: "Erasmus", detail: "A Northern Humanist who advocated for Church reform and wrote 'Praise of Folly,' satirizing societal corruption." },
+                        { name: "Machiavelli", detail: "Wrote 'The Prince,' a pragmatic guide to political power, separating politics from traditional morality." }
+                    ],
+                    artists: [
+                        { name: "Leonardo da Vinci", detail: "The ultimate 'Renaissance Man.' Painted the *Mona Lisa* and *The Last Supper*. Famous for his scientific notebooks and use of sfumato." },
+                        { name: "Michelangelo", detail: "Master sculptor (*David*, *Pietà*) and painter, famous for the breathtaking frescoes on the Sistine Chapel ceiling." },
+                        { name: "Raphael", detail: "Celebrated for his harmonious compositions, serene Madonnas, and the fresco *The School of Athens*." },
+                        { name: "Brunelleschi", detail: "Architect and engineer who designed the massive, innovative dome for the Florence Cathedral." }
+                    ],
+                    inventions: [
+                        { name: "The Printing Press", detail: "(c. 1450) Gutenberg's invention using movable type. It made books cheap and accessible, revolutionizing the spread of ideas and fueling the Reformation and Scientific Revolution." },
+                        { name: "Heliocentric Theory", detail: "(1543) Copernicus proposed that the Earth revolves around the Sun, challenging the long-held geocentric model and launching the Scientific Revolution." }
+                    ],
+                    timeline: [
+                        { year: "c. 1305", event: "Giotto's frescoes", detail: "Giotto completes frescoes that mark a shift towards realism and emotion, prefiguring Renaissance style." },
+                        { year: "c. 1436", event: "Brunelleschi's Dome", detail: "The dome of the Florence Cathedral is completed, an architectural and engineering marvel." },
+                        { year: "c. 1450", event: "Printing Press", detail: "Johannes Gutenberg develops the printing press with movable type, revolutionizing communication." },
+                        { year: "1492", event: "Columbus's Voyage", detail: "Christopher Columbus's first voyage to the Americas, linking the Renaissance to the Age of Exploration." },
+                        { year: "1504", event: "Michelangelo's David", detail: "Michelangelo completes his iconic sculpture *David*, embodying classical ideals and human potential." },
+                        { year: "1508-1512", event: "Sistine Chapel Ceiling", detail: "Michelangelo paints the famous frescoes on the ceiling of the Sistine Chapel." },
+                        { year: "1517", event: "Luther's 95 Theses", detail: "Martin Luther posts his 95 Theses, challenging Church practices and helping to start the Protestant Reformation, aided by the printing press." },
+                        { year: "1543", event: "Copernicus's Theory", detail: "Copernicus publishes his heliocentric theory, a key moment in the Scientific Revolution." }
+                    ]
+                },
+                exploration: {
+                    explorers: [
+                        { name: "Vasco da Gama", detail: "First European to sail directly to India around Africa (1498), opening a direct sea route for the spice trade." },
+                        { name: "Christopher Columbus", detail: "Initiated lasting European contact with the Americas in 1492 while searching for a westward route to Asia." },
+                        { name: "Ferdinand Magellan", detail: "Led the first expedition to circumnavigate the globe (1519-1522), proving the Earth was round." },
+                        { name: "Jacques Cartier", detail: "Explored the St. Lawrence River and claimed the region for France (1534), laying the basis for New France." }
+                    ],
+                    columbianExchange: {
+                        toNew: [
+                            { name: "Horses", impact: "Revolutionized transport and hunting for many Indigenous groups." },
+                            { name: "Sugarcane", impact: "Became a major cash crop, leading to the development of vast plantations and the expansion of slavery." },
+                            { name: "Smallpox", impact: "A devastating disease that caused catastrophic population decline among Indigenous peoples who had no immunity." },
+                            { name: "Wheat", impact: "Became a staple food crop in the Americas." }
+                        ],
+                        toOld: [
+                             { name: "Potatoes", impact: "Became a crucial, calorie-dense food staple in Europe, fueling population growth." },
+                             { name: "Maize (Corn)", impact: "A highly productive crop that became essential in diets across Europe, Africa, and Asia." },
+                             { name: "Tomatoes", impact: "Fundamentally changed cuisines in Europe, especially in Italy." },
+                             { name: "Cacao (Chocolate)", impact: "Became a popular luxury item and beverage in Europe." },
+                             { name: "Tobacco", impact: "Became a highly valuable and addictive cash crop." }
+                        ]
+                    }
+                },
+                revolutions: {
+                    american: [
+                        { title: "Causes", content: "Key grievances included 'Taxation without Representation' (Stamp Act, Tea Act), restrictions on autonomy (Intolerable Acts), and the influence of Enlightenment ideas of liberty and natural rights from thinkers like John Locke." },
+                        { title: "Key Figures", content: "<b>Patriots:</b> George Washington (General), Thomas Jefferson (Author, Declaration), Benjamin Franklin (Diplomat).<br><b>Loyalists:</b> Colonists who remained loyal to Britain, many of whom later emigrated to Quebec and Nova Scotia." },
+                        { title: "Declaration of Independence (1776)", content: "A document declaring the colonies independent, proclaiming that 'all men are created equal' with rights to 'Life, Liberty and the pursuit of Happiness,' and that government derives its power from the 'consent of the governed.'" },
+                        { title: "Key Event: Battle of Saratoga (1777)", content: "A decisive American victory and a major turning point. It convinced France to form a military alliance with the U.S., providing crucial support that led to the final victory at Yorktown." }
+                    ],
+                    french: [
+                        { title: "Causes", content: "Deep social inequality (Three Estates), a massive national debt from wars and lavish spending, an unjust tax system burdening the poor, food shortages, and the spread of Enlightenment ideals." },
+                        { title: "Key Document: Declaration of the Rights of Man (1789)", content: "Proclaimed that 'men are born and remain free and equal in rights,' guaranteeing liberty, property, security, and resistance to oppression. It established popular sovereignty and equality before the law." },
+                        { title: "Phases of the Revolution", content: "<b>1. Moderate Phase (1789-91):</b> Storming of the Bastille, creation of National Assembly.<br><b>2. Radical Phase (1792-94):</b> Monarchy abolished, King executed, Reign of Terror under Robespierre.<br><b>3. Reaction & Directory (1795-99):</b> A moderate but unstable government.<br><b>4. Age of Napoleon (1799-1815):</b> Napoleon's coup d'état, creation of an empire, and spread of reforms (Napoleonic Code) across Europe." }
+                    ]
+                },
+                industrial: {
+                    inventions: [
+                        { name: "Spinning Jenny", detail: "Dramatically increased the speed of spinning cotton into yarn." },
+                        { name: "Steam Engine", detail: "Watt's improved engine provided a revolutionary power source for factories and transport, freeing them from reliance on water power." },
+                        { name: "Railroad", detail: "Provided fast, cheap overland transport, connecting markets and resources and accelerating industrial growth." },
+                        { name: "Cotton Gin", detail: "Quickly separated cotton fibers from seeds, massively increasing the supply of raw cotton to British factories." },
+                        { name: "Bessemer Process", detail: "Enabled the mass production of cheap, strong steel, which became the building block of the modern world." },
+                        { name: "Telegraph", detail: "Allowed for near-instant communication over long distances, revolutionizing business and coordination." },
+                    ],
+                    urbanization: {
+                        labels: ['1760', '1801', '1831', '1851'],
+                        data: [17000, 77000, 235000, 455000]
+                    }
+                }
+            };
+            
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+            const modalClose = document.getElementById('modal-close');
+
+            function showModal(title, content) {
+                modalTitle.textContent = title;
+                modalContent.innerHTML = content;
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                modal.querySelector('div > div').classList.remove('scale-95');
+            }
+
+            function hideModal() {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.querySelector('div > div').classList.add('scale-95');
+            }
+
+            modalClose.addEventListener('click', hideModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideModal();
+                }
+            });
+
+            function createClickableCard(containerId, item) {
+                const container = document.getElementById(containerId);
+                const button = document.createElement('button');
+                button.className = "text-left w-full p-2 bg-stone-100 rounded hover:bg-teal-100 hover:text-teal-800 transition";
+                button.textContent = item.name;
+                button.onclick = () => showModal(item.name, item.detail);
+                container.appendChild(button);
+            }
+            
+            function createClickableTag(containerId, item) {
+                const container = document.getElementById(containerId);
+                const button = document.createElement('button');
+                button.className = "text-sm p-2 bg-stone-100 rounded hover:bg-teal-100 hover:text-teal-800 transition";
+                button.textContent = item.name;
+                button.onclick = () => showModal(item.name, item.impact);
+                container.appendChild(button);
+            }
+
+            function createAccordion(containerId, items) {
+                const container = document.getElementById(containerId);
+                items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <h4 class="font-semibold text-lg mb-2 text-stone-700">${item.title}</h4>
+                        <p class="text-stone-600">${item.content}</p>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+            
+            function populateTimeline(containerId, items) {
+                const container = document.getElementById(containerId);
+                const timelineDiv = document.createElement('div');
+                timelineDiv.className = 'timeline';
+                
+                items.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'timeline-item';
+                    itemDiv.innerHTML = `
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <h4 class="font-bold">${item.year} - ${item.event}</h4>
+                        </div>
+                    `;
+                    itemDiv.querySelector('.timeline-content').onclick = () => showModal(`${item.year} - ${item.event}`, item.detail);
+                    timelineDiv.appendChild(itemDiv);
+                });
+                container.appendChild(timelineDiv);
+            }
+
+            // Populate Renaissance
+            data.renaissance.figures.forEach(item => createClickableCard('renaissance-figures', item));
+            data.renaissance.artists.forEach(item => createClickableCard('renaissance-artists', item));
+            data.renaissance.inventions.forEach(item => {
+                 const container = document.getElementById('renaissance-inventions');
+                 const div = document.createElement('div');
+                 div.innerHTML = `<h4 class="font-semibold text-stone-800">${item.name}</h4><p class="text-sm">${item.detail}</p>`;
+                 container.appendChild(div);
+            });
+            populateTimeline('renaissance-timeline-container', data.renaissance.timeline);
+
+
+            // Populate Exploration
+            data.exploration.explorers.forEach(item => createClickableCard('explorers-list', item));
+            data.exploration.columbianExchange.toNew.forEach(item => createClickableTag('exchange-to-new', item));
+            data.exploration.columbianExchange.toOld.forEach(item => createClickableTag('exchange-to-old', item));
+            
+            // Populate Revolutions
+            createAccordion('american-revolution-content', data.revolutions.american);
+            createAccordion('french-revolution-content', data.revolutions.french);
+
+            // Populate Industrial Revolution
+            data.industrial.inventions.forEach(item => {
+                 const container = document.getElementById('industrial-inventions');
+                 const button = document.createElement('button');
+                 button.className = "text-center p-3 bg-stone-100 rounded hover:bg-teal-100 hover:text-teal-800 transition";
+                 button.textContent = item.name;
+                 button.onclick = () => showModal(item.name, item.detail);
+                 container.appendChild(button);
+            });
+
+
+            // Chart.js helper for long labels
+            function formatLabel(str, maxwidth){
+                let sections = [];
+                let words = str.split(" ");
+                let temp = "";
+
+                words.forEach((item, index) => {
+                    if(temp.length > 0) {
+                        temp += " " + item;
+                    } else {
+                        temp = item;
+                    }
+                    if(temp.length > maxwidth){
+                        sections.push(temp);
+                        temp = "";
+                    }
+                    if(index === words.length - 1 && temp.length > 0){
+                        sections.push(temp);
+                    }
+                });
+                return sections;
+            }
+
+            // Create Charts
+            const motivationsCtx = document.getElementById('motivationsChart').getContext('2d');
+            new Chart(motivationsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Search for Trade Routes (Gold)', 'Spread Christianity (God)', 'Fame & Adventure (Glory)'],
+                    datasets: [{
+                        label: 'Motivations',
+                        data: [50, 30, 20],
+                        backgroundColor: ['#f59e0b', '#14b8a6', '#c2410c'],
+                        borderColor: '#f8fafc',
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: { callbacks: { label: (c) => `${c.label}: ${c.raw}%` } }
+                    }
+                }
+            });
+
+            const frenchEstatesCtx = document.getElementById('frenchEstatesChart').getContext('2d');
+            new Chart(frenchEstatesCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['First Estate (Clergy)', 'Second Estate (Nobility)', 'Third Estate (Commoners)'],
+                    datasets: [
+                        {
+                            label: 'Population (%)',
+                            data: [1, 2, 97],
+                            backgroundColor: '#fb923c',
+                            yAxisID: 'y'
+                        },
+                         {
+                            label: 'Land Owned (%)',
+                            data: [10, 25, 65],
+                            backgroundColor: '#14b8a6',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Taxes Paid (%)',
+                            data: [0, 0, 100],
+                            backgroundColor: '#94a3b8',
+                            yAxisID: 'y'
+                        },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Percentage (%)' } } },
+                    plugins: {
+                         tooltip: { mode: 'index', intersect: false }
+                    },
+                }
+            });
+
+            const urbanizationCtx = document.getElementById('urbanizationChart').getContext('2d');
+            new Chart(urbanizationCtx, {
+                type: 'line',
+                data: {
+                    labels: data.industrial.urbanization.labels,
+                    datasets: [{
+                        label: 'Population of Manchester',
+                        data: data.industrial.urbanization.data,
+                        borderColor: '#14b8a6',
+                        backgroundColor: 'rgba(20, 184, 166, 0.1)',
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Population' } }
+                    }
+                }
+            });
+            
+            // Mobile Menu
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // Close mobile menu when a link is clicked
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>

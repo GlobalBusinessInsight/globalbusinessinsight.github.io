@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《东方红》小号交互式五线谱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif, 'Microsoft YaHei', 'SimSun';
+            background-color: #f0f4f8;
+        }
+        .music-container {
+            max-width: 900px; /* Wider for staff notation */
+            margin: 0 auto;
+        }
+        .info-box {
+            background-color: #e0f2fe;
+            border-left: 4px solid #0ea5e9;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            color: #0c4a6e;
+        }
+        .controls {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .control-button {
+            background-color: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin-right: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .control-button:hover {
+            background-color: #2563eb;
+        }
+        .control-button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* Staff Notation Styles */
+        .staff-system {
+            margin-bottom: 30px;
+            padding: 10px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow-x: auto; /* Allow horizontal scrolling for long systems if needed */
+            display: flex; /* Align clef/time signature and measures */
+            align-items: flex-end; /* Align items to the bottom of the staff lines */
+            position: relative; /* For staff lines */
+            height: 10em; /* Approximate height for staff + some margin */
+        }
+
+        .staff-lines-container {
+            position: absolute;
+            top: 3em; /* Adjust to center the staff lines visually */
+            left: 0;
+            right: 0;
+            height: 4em; /* E4 to F5 is 5 lines, 4 spaces. Each space/line 0.5em. */
+            pointer-events: none; /* So it doesn't interfere with note clicks */
+        }
+
+        .staff-line {
+            background-color: #737373; /* neutral-500 */
+            height: 1.5px; /* Thinner lines */
+            position: absolute;
+            width: 100%;
+        }
+        .staff-line-1 { top: 0em; } /* F5 */
+        .staff-line-2 { top: 1em; } /* D5 */
+        .staff-line-3 { top: 2em; } /* B4 */
+        .staff-line-4 { top: 3em; } /* G4 */
+        .staff-line-5 { top: 4em; } /* E4 */
+
+        .staff-initials {
+            display: flex;
+            align-items: flex-end; /* Align clef/time sig with bottom staff line */
+            margin-right: 10px;
+            height: 100%; /* Match staff-system height */
+            padding-bottom: 3em; /* Align with E4 line visually */
+        }
+
+        .clef {
+            font-size: 5em; /* Large Treble Clef */
+            line-height: 1;
+            margin-right: 5px;
+            color: #333;
+            position: relative;
+            top: -0.1em; /* Fine-tune vertical alignment */
+        }
+
+        .time-signature {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 1.8em; /* Readable time signature */
+            font-weight: bold;
+            line-height: 0.9;
+            color: #333;
+        }
+        .time-signature span { display: block; }
+
+        .measure {
+            display: flex;
+            align-items: flex-end; /* Align notes to the bottom */
+            padding: 0 5px;
+            border-left: 1px solid #a1a1aa; /* light gray barline */
+            position: relative; /* For notes */
+            height: 100%; /* Match staff-system height */
+        }
+        .measure:first-child {
+            border-left: none;
+        }
+
+        .note-element {
+            position: relative;
+            display: flex;
+            flex-direction: column; /* Stack head and stem */
+            align-items: center;
+            margin: 0 3px; /* Spacing between notes */
+            cursor: pointer;
+            width: 1.5em; /* Width for note */
+            height: 100%; /* Fill measure height for positioning */
+        }
+
+        .note-head {
+            width: 0.9em;
+            height: 0.9em;
+            background-color: black;
+            border-radius: 50%;
+            position: absolute; /* Positioned by JS */
+            transition: background-color 0.2s;
+        }
+        .note-head.playing {
+            background-color: #f59e0b; /* amber-500 */
+        }
+        .note-head.half {
+            background-color: white;
+            border: 2px solid black;
+            box-sizing: border-box;
+        }
+
+
+        .stem {
+            width: 2px;
+            background-color: black;
+            position: absolute;
+            /* Stem direction and length will be tricky, simplified for now */
+        }
+
+        .ledger-line {
+            width: 1.5em; /* Wider than note head */
+            height: 1.5px;
+            background-color: #333;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .final-barline {
+            display: flex;
+            align-items: center;
+            height: 4em; /* Height of staff lines */
+            margin-left: 5px;
+        }
+        .final-barline-thin {
+            width: 1.5px;
+            height: 100%;
+            background-color: #333;
+            margin-right: 2px;
+        }
+        .final-barline-thick {
+            width: 5px;
+            height: 100%;
+            background-color: #333;
+        }
+
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 p-4 md:p-8">
+    <div class="music-container bg-white shadow-xl rounded-lg p-6 md:p-10">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-red-600">《东方红》</h1>
+            <p class="text-xl text-slate-700">小号交互式五线谱 (无歌词)</p>
+        </header>
+
+        <div class="info-box">
+            <h2 class="text-lg font-semibold mb-2">乐曲简介与演奏提示</h2>
+            <p>《东方红》是一首经典的中国革命歌曲。此为C调演奏谱的五线谱版本。</p>
+            <ul class="list-disc list-inside mt-2">
+                <li><strong>乐器：</strong> 小号 (按C调乐谱演奏)</li>
+                <li><strong>调号 (Concert Pitch)：</strong> C大调</li>
+                <li><strong>拍号：</strong> 2/4</li>
+                <li><strong>速度：</strong> 中速，庄严而辉煌</li>
+                <li><strong>交互：</strong> 点击音符可播放其音高。</li>
+                <li><strong>提示：</strong> 五线谱为简化显示，主要用于音高和节奏的交互。</li>
+            </ul>
+        </div>
+
+        <div class="controls">
+            <button id="playAllButton" class="control-button">顺序播放全曲</button>
+            <button id="stopButton" class="control-button" disabled>停止播放</button>
+            <label for="tempoSlider" class="ml-4 mr-2">速度:</label>
+            <input type="range" id="tempoSlider" min="0.5" max="2" value="1" step="0.1" class="align-middle">
+            <span id="tempoValue" class="ml-2">1.0x</span>
+        </div>
+
+        <main id="staffNotationContainer">
+            </main>
+
+        <footer class="text-center mt-10 pt-6 border-t border-slate-300">
+            <p class="text-sm text-slate-500">&copy; 2024 交互式五线谱</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- Tone.js Synthesizer Setup ---
+        let synth;
+        let isToneStarted = false;
+        let currentPlaybackSequence = null;
+
+        async function initializeTone() {
+            if (!isToneStarted) {
+                await Tone.start();
+                synth = new Tone.Synth({
+                    oscillator: { type: "triangle" }, // Trumpet-like, or "sawtooth"
+                    envelope: {
+                        attack: 0.02,
+                        decay: 0.1,
+                        sustain: 0.3,
+                        release: 0.2,
+                    }
+                }).toDestination();
+                isToneStarted = true;
+                console.log("Tone.js started and synth initialized.");
+            }
+        }
+
+        // --- Note Mapping (Pitch to Staff Position & Frequency) ---
+        // Vertical position from the top of the note's measure container (10em high)
+        // Staff lines are at 3em (F5), 4em (D5), 5em (B4), 6em (G4), 7em (E4) from top of staff-system
+        // Note head center should align with these. Note head is ~1em.
+        const pitchToStaffInfo = {
+            // pitch: { name: 'ScientificPitch', staffY: 'Y offset for note-head top in em', ledgerLines: [yOffset1, yOffset2...]}
+            'G3': { name: 'G3', staffY: 8.5, ledgerLines: [8, 9] }, // Approx 2 ledger lines below E4
+            'A3': { name: 'A3', staffY: 8.0, ledgerLines: [8] },   // Approx 1.5 ledger lines below E4
+            'B3': { name: 'B3', staffY: 7.5, ledgerLines: [8] },   // Approx 1 ledger line below E4
+            'C4': { name: 'C4', staffY: 7.0, ledgerLines: [7.5] }, // Middle C, 1 ledger line below E4
+            'D4': { name: 'D4', staffY: 6.5, ledgerLines: [] },    // Space below E4
+            'E4': { name: 'E4', staffY: 6.0, ledgerLines: [] },    // Bottom line
+            'F4': { name: 'F4', staffY: 5.5, ledgerLines: [] },
+            'G4': { name: 'G4', staffY: 5.0, ledgerLines: [] },
+            'A4': { name: 'A4', staffY: 4.5, ledgerLines: [] },
+            'B4': { name: 'B4', staffY: 4.0, ledgerLines: [] },    // Middle line
+            'C5': { name: 'C5', staffY: 3.5, ledgerLines: [] },
+            'D5': { name: 'D5', staffY: 3.0, ledgerLines: [] },
+            'E5': { name: 'E5', staffY: 2.5, ledgerLines: [] },
+            'F5': { name: 'F5', staffY: 2.0, ledgerLines: [] },    // Top line
+            'G5': { name: 'G5', staffY: 1.5, ledgerLines: [2.0] }     // Ledger line above F5
+        };
+        // staffY refers to the top of the note-head element relative to its .note-element container.
+        // The .note-element container is aligned to flex-end of .measure.
+        // The staff lines are drawn from top: 3em to 7em within .staff-system.
+        // So, for E4 (bottom line at 7em), note head top should be around 7 - 0.5 (half note head) = 6.5em.
+        // Let's redefine staffY as top position for note-head from top of staff-system (where staff lines are also absolutely positioned)
+        // Staff lines: F5(top)@3em, D5@4em, B4@5em, G4@6em, E4(bottom)@7em
+         const pitchToDisplayData = {
+            'G3': { name: 'G3', top: 8.5 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [8, 9] }, // 0.45 is half note head height
+            'A3': { name: 'A3', top: 8.0 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [8] },
+            'B3': { name: 'B3', top: 7.5 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [8] },
+            'C4': { name: 'C4', top: 7.0 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [7.5] },
+            'D4': { name: 'D4', top: 6.5 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [] },
+            'E4': { name: 'E4', top: 6.0 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [] },
+            'F4': { name: 'F4', top: 5.5 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [] },
+            'G4': { name: 'G4', top: 5.0 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [] },
+            'A4': { name: 'A4', top: 4.5 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [] }, // Stem direction changes around B4
+            'B4': { name: 'B4', top: 4.0 - 0.45, stemDir: 'down', stemHeight: 2.5, ledger: [] },
+            'C5': { name: 'C5', top: 3.5 - 0.45, stemDir: 'down', stemHeight: 2.5, ledger: [] },
+            'D5': { name: 'D5', top: 3.0 - 0.45, stemDir: 'down', stemHeight: 2.5, ledger: [] },
+            'E5': { name: 'E5', top: 2.5 - 0.45, stemDir: 'down', stemHeight: 2.5, ledger: [] },
+            'F5': { name: 'F5', top: 2.0 - 0.45, stemDir: 'down', stemHeight: 2.5, ledger: [] },
+            'G5': { name: 'G5', top: 1.5 - 0.45, stemDir: 'down', stemHeight: 2.5, ledger: [2.0] },
+        };
+
+
+        const noteDurationsToneJs = { 'q': '4n', 'h': '2n', 'e': '8n' };
+        const baseNoteDurationSeconds = { 'q': 0.5, 'h': 1.0, 'e': 0.25 }; // For 120 BPM
+
+        // --- Song Data (Staff Notation) ---
+        const songData = [
+            // Phrase 1
+            [{ pitch: 'G4', duration: 'q' }, { pitch: 'G4', duration: 'q' }],      // M1
+            [{ pitch: 'A4', duration: 'q' }, { pitch: 'C5', duration: 'q' }],      // M2
+            [{ pitch: 'G4', duration: 'h' }],                                      // M3
+            // Phrase 2
+            [{ pitch: 'C5', duration: 'q' }, { pitch: 'C5', duration: 'q' }],      // M4
+            [{ pitch: 'A4', duration: 'q' }, { pitch: 'G4', duration: 'q' }],      // M5
+            [{ pitch: 'E4', duration: 'e' }, { pitch: 'G4', duration: 'e' }, { pitch: 'C5', duration: 'q' }], // M6
+            [{ pitch: 'A4', duration: 'h' }],                                      // M7
+            // Phrase 3
+            [{ pitch: 'D4', duration: 'q' }, { pitch: 'D4', duration: 'q' }],      // M8
+            [{ pitch: 'E4', duration: 'q' }, { pitch: 'G4', duration: 'q' }],      // M9
+            [{ pitch: 'D4', duration: 'h' }],                                      // M10
+            // Phrase 4
+            [{ pitch: 'C5', duration: 'q' }, { pitch: 'A4', duration: 'q' }],      // M11
+            [{ pitch: 'G4', duration: 'q' }, { pitch: 'E4', duration: 'q' }],      // M12
+            [{ pitch: 'D4', duration: 'e' }, { pitch: 'C4', duration: 'e' }, { pitch: 'A3', duration: 'q' }], // M13
+            [{ pitch: 'G3', duration: 'h' }, { type: 'finalBarline' }]             // M14
+        ];
+
+        // --- UI Rendering ---
+        const staffContainer = document.getElementById('staffNotationContainer');
+        const measuresPerSystem = 4; // Adjust as needed for layout
+
+        function renderStaffNotation() {
+            staffContainer.innerHTML = '';
+            let measureCount = 0;
+            let currentSystem;
+
+            songData.forEach((measureData, measureIndex) => {
+                if (measureCount % measuresPerSystem === 0) {
+                    currentSystem = document.createElement('div');
+                    currentSystem.className = 'staff-system';
+                    
+                    // Add staff lines to system
+                    const linesContainer = document.createElement('div');
+                    linesContainer.className = 'staff-lines-container';
+                    for (let i = 1; i <= 5; i++) {
+                        const staffLineDiv = document.createElement('div');
+                        staffLineDiv.className = `staff-line staff-line-${i}`;
+                        linesContainer.appendChild(staffLineDiv);
+                    }
+                    currentSystem.appendChild(linesContainer);
+
+                    // Add Clef and Time Signature for the first system only
+                    if (measureCount === 0) {
+                        const initialsDiv = document.createElement('div');
+                        initialsDiv.className = 'staff-initials';
+                        const clefSpan = document.createElement('span');
+                        clefSpan.className = 'clef';
+                        clefSpan.innerHTML = '&#x1D11E;'; // Treble Clef Unicode
+                        initialsDiv.appendChild(clefSpan);
+
+                        const timeSigDiv = document.createElement('div');
+                        timeSigDiv.className = 'time-signature';
+                        timeSigDiv.innerHTML = '<span>2</span><span>4</span>';
+                        initialsDiv.appendChild(timeSigDiv);
+                        currentSystem.appendChild(initialsDiv);
+                    }
+                    staffContainer.appendChild(currentSystem);
+                }
+
+                const measureDiv = document.createElement('div');
+                measureDiv.className = 'measure';
+                measureDiv.dataset.measureNumber = measureIndex;
+
+                measureData.forEach(item => {
+                    if (item.type === 'finalBarline') {
+                        const barlineDiv = document.createElement('div');
+                        barlineDiv.className = 'final-barline';
+                        barlineDiv.innerHTML = '<div class="final-barline-thin"></div><div class="final-barline-thick"></div>';
+                        measureDiv.appendChild(barlineDiv); // Append to measure, or system? Better at end of system.
+                                                            // For now, let's put it in the measure.
+                    } else if (item.pitch && item.duration) {
+                        const noteElementDiv = document.createElement('div');
+                        noteElementDiv.className = 'note-element';
+                        noteElementDiv.dataset.pitch = item.pitch;
+                        noteElementDiv.dataset.duration = item.duration;
+
+                        const displayInfo = pitchToDisplayData[item.pitch];
+                        if (!displayInfo) {
+                            console.warn(`No display info for pitch: ${item.pitch}`);
+                            return;
+                        }
+
+                        const noteHeadDiv = document.createElement('div');
+                        noteHeadDiv.className = 'note-head';
+                        if (item.duration === 'h') {
+                            noteHeadDiv.classList.add('half');
+                        }
+                        noteHeadDiv.style.top = `${displayInfo.top}em`;
+                        
+                        // Stem
+                        const stemDiv = document.createElement('div');
+                        stemDiv.className = 'stem';
+                        stemDiv.style.height = `${displayInfo.stemHeight}em`;
+                        if (displayInfo.stemDir === 'up') {
+                            stemDiv.style.left = `calc(50% + 0.35em)`; // Right side of note head
+                            stemDiv.style.bottom = `calc(100% - ${displayInfo.top + 0.45}em - ${displayInfo.stemHeight}em)`; // From bottom of note head up
+                            stemDiv.style.top = `${displayInfo.top + 0.45 - displayInfo.stemHeight}em`;
+
+                        } else { // 'down'
+                            stemDiv.style.left = `calc(50% - 0.45em)`; // Left side of note head
+                            stemDiv.style.top = `${displayInfo.top + 0.45}em`; // From top of note head down
+                        }
+                        noteElementDiv.appendChild(stemDiv);
+
+
+                        // Ledger Lines
+                        displayInfo.ledger.forEach(ledgerY => {
+                            const ledgerDiv = document.createElement('div');
+                            ledgerDiv.className = 'ledger-line';
+                            ledgerDiv.style.top = `${ledgerY - 0.0375}em`; // Adjust for line thickness
+                            noteElementDiv.appendChild(ledgerDiv);
+                        });
+                        
+                        noteElementDiv.appendChild(noteHeadDiv); // Add head last for z-index if needed
+
+                        noteElementDiv.addEventListener('click', async function() {
+                            await initializeTone();
+                            if (!synth) return;
+                            const pitchName = this.dataset.pitch;
+                            const durationName = this.dataset.duration;
+                            if (pitchName && durationName && pitchToDisplayData[pitchName]) {
+                                synth.triggerAttackRelease(pitchToDisplayData[pitchName].name, noteDurationsToneJs[durationName]);
+                                noteHeadDiv.classList.add('playing');
+                                setTimeout(() => noteHeadDiv.classList.remove('playing'), Tone.Time(noteDurationsToneJs[durationName]).toMilliseconds());
+                            }
+                        });
+                        measureDiv.appendChild(noteElementDiv);
+                    }
+                });
+                currentSystem.appendChild(measureDiv);
+                measureCount++;
+            });
+        }
+
+
+        // --- Playback Controls ---
+        const playAllButton = document.getElementById('playAllButton');
+        const stopButton = document.getElementById('stopButton');
+        const tempoSlider = document.getElementById('tempoSlider');
+        const tempoValueSpan = document.getElementById('tempoValue');
+
+        tempoSlider.addEventListener('input', function() {
+            tempoValueSpan.textContent = parseFloat(this.value).toFixed(1) + 'x';
+        });
+        
+        async function playAll() {
+            await initializeTone();
+            if (!synth) return;
+
+            playAllButton.disabled = true;
+            stopButton.disabled = false;
+
+            const sequence = [];
+            let currentTime = 0;
+            const tempoMultiplier = parseFloat(tempoSlider.value);
+
+            songData.forEach((measureData, measureIdx) => {
+                measureData.forEach(item => {
+                    if (item.pitch && item.duration) {
+                        const pitchName = pitchToDisplayData[item.pitch]?.name;
+                        const toneDuration = noteDurationsToneJs[item.duration];
+                        const actualDurationSeconds = baseNoteDurationSeconds[item.duration] / tempoMultiplier;
+                        
+                        if (pitchName && toneDuration) {
+                            sequence.push({
+                                time: currentTime,
+                                pitch: pitchName,
+                                duration: toneDuration,
+                                elementQuery: `.measure[data-measure-number="${measureIdx}"] .note-element[data-pitch="${item.pitch}"] .note-head` // For highlighting
+                            });
+                        }
+                        currentTime += actualDurationSeconds;
+                    }
+                });
+            });
+
+            currentPlaybackSequence = new Tone.Part((time, value) => {
+                synth.triggerAttackRelease(value.pitch, value.duration, time);
+                // Highlight - querySelector might get the first if multiple identical notes exist
+                const noteHeadEl = document.querySelector(value.elementQuery); 
+                if (noteHeadEl) {
+                    // Debounce highlighting if notes are fast
+                    if (!noteHeadEl.classList.contains('playing')) {
+                        noteHeadEl.classList.add('playing');
+                        setTimeout(() => {
+                            noteHeadEl.classList.remove('playing');
+                        }, Tone.Time(value.duration).toMilliseconds() * 0.9); // Remove slightly before next note
+                    }
+                }
+            }, sequence).start(0);
+
+            Tone.Transport.on('stop', () => {
+                playAllButton.disabled = false;
+                stopButton.disabled = true;
+                document.querySelectorAll('.note-head.playing').forEach(el => el.classList.remove('playing'));
+            });
+            Tone.Transport.start();
+            
+            // Schedule stop
+            Tone.Transport.scheduleOnce(() => {
+                if (Tone.Transport.state === "started") {
+                     stopPlayback();
+                }
+            }, currentTime + 0.2); // Stop a bit after the last note
+        }
+
+        function stopPlayback() {
+            if (currentPlaybackSequence) {
+                currentPlaybackSequence.stop(0); // Stop the part
+                currentPlaybackSequence.dispose();
+                currentPlaybackSequence = null;
+            }
+            Tone.Transport.stop(); // Stop the transport
+            Tone.Transport.cancel(); // Cancel scheduled events
+            playAllButton.disabled = false;
+            stopButton.disabled = true;
+            document.querySelectorAll('.note-head.playing').forEach(el => el.classList.remove('playing'));
+        }
+
+        playAllButton.addEventListener('click', playAll);
+        stopButton.addEventListener('click', stopPlayback);
+        
+        // --- Initial Render ---
+        renderStaffNotation();
+        document.body.addEventListener('click', initializeTone, { once: true });
+
+    </script>
+</body>
+</html>

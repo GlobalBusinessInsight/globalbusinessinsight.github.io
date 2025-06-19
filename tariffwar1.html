@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度剖析：中美关税战全景透视-1 (特朗普第一个任期)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Neutral Diplomacy -->
+    <!-- Application Structure Plan: A single-page, vertically scrolling narrative application focused on the Trump administration's tariff war (2018-2021). The structure is thematic, starting with a hero section, an interactive timeline of the escalation, a breakdown of core conflicts, a new dedicated section for analyzing the "Phase One" deal, data-driven charts on economic impact, profiles of the key negotiators, and a concluding section on the lasting consequences. This structure facilitates a focused, historical analysis. Interactivity (clickable timeline, expandable cards) is used to manage information density and engage the user. -->
+    <!-- Visualization & Content Choices: 
+        1. Timeline (Change/Process): An HTML/CSS/JS vertical timeline of key events from 2018-2021. Justification: Provides a clear, interactive historical narrative of the conflict's progression.
+        2. Core Conflicts (Organize/Inform): Expandable HTML cards detailing the underlying issues (IP, MIC2025, etc.). Justification: Breaks down complex, persistent issues into digestible segments.
+        3. Phase One Deal (Analysis/Organize): A new dedicated section with expandable cards detailing the deal's terms, fulfillment, and shortcomings. Justification: Addresses a major, complex part of the narrative that was previously missing.
+        4. Economic Impact (Compare): A Chart.js bar chart for GDP impact and a Chart.js pie chart for trade diversion, now with more detailed textual context. Justification: Visually quantifies the economic consequences discussed in the source material.
+        5. Negotiators (Inform): HTML profile cards for the two primary negotiators of the era, Lighthizer and Liu He, with expanded descriptions. Justification: Focuses on the key actors as identified in the report.
+        6. Lasting Impacts (Inform/Organize): Thematic cards summarizing the war's long-term effects. Justification: Provides a clear summary of the war's legacy.
+        Library/Method: Chart.js for all charts, custom JS for all interactions and content rendering. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: #FDFBF7;
+            color: #333333;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .active-nav {
+            color: #B85C5C;
+            border-bottom: 2px solid #B85C5C;
+        }
+        .nav-item {
+            cursor: pointer;
+            padding-bottom: 4px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .content-card {
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+        }
+        .card-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .timeline-item-content {
+             max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-[#FDFBF7] text-[#333333]">
+
+    <header class="sticky top-0 bg-[#FDFBF7]/80 backdrop-blur-md z-50 shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl md:text-2xl font-bold text-[#B85C5C]" data-key="header_title">中美关税战透视 (特朗普时期)</h1>
+                <div class="flex items-center space-x-4">
+                    <nav class="hidden md:flex space-x-6 text-sm font-medium text-gray-600">
+                        <a href="#timeline" class="nav-item">时间线</a>
+                        <a href="#conflicts" class="nav-item">核心矛盾</a>
+                        <a href="#phaseone" class="nav-item">第一阶段协议</a>
+                        <a href="#impact" class="nav-item">经济影响</a>
+                        <a href="#negotiators" class="nav-item">关键人物</a>
+                        <a href="#outlook" class="nav-item">持久影响</a>
+                    </nav>
+                    <button id="lang-toggle" class="px-3 py-1.5 text-sm font-semibold border-2 border-[#5A7D9A] rounded-full text-[#5A7D9A] hover:bg-[#5A7D9A] hover:text-white transition-colors duration-300">
+                        EN
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <section id="hero" class="text-center mb-16">
+            <h2 class="text-3xl md:text-5xl font-extrabold mb-4" data-key="hero_title">一场重塑全球格局的博弈</h2>
+            <p class="max-w-3xl mx-auto text-base md:text-lg text-gray-600" data-key="hero_subtitle">
+                由特朗普政府发起的此轮中美关税战，不仅是一场贸易争端，更是两国在技术、经济乃至全球影响力层面的深层战略竞争。本应用将通过互动式分析，带您深入了解这场博弈的全过程、核心矛盾与深远影响。
+            </p>
+        </section>
+
+        <section id="timeline" class="mb-20 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center mb-2" data-key="timeline_title">关税战时间线 (2018-2021)</h3>
+            <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto" data-key="timeline_intro">关税战始于2018年初，经历了多次快速升级、激烈谈判与最终达成的阶段性协议。点击下方关键节点，探索其演变历程。</p>
+            <div id="timeline-container" class="relative border-l-2 border-[#5A7D9A]/30 ml-6 md:ml-0">
+            </div>
+        </section>
+
+        <section id="conflicts" class="mb-20 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center mb-2" data-key="conflicts_title">核心矛盾</h3>
+             <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto" data-key="conflicts_intro">关税战背后，是两国在一系列核心问题上长期积累的矛盾。这些摩擦点不仅涉及贸易，更关乎国家发展战略与技术主导权。</p>
+            <div class="grid md:grid-cols-2 gap-6" id="conflicts-container">
+            </div>
+        </section>
+
+        <section id="phaseone" class="mb-20 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center mb-2" data-key="phaseone_title">第一阶段协议：缓兵之计还是转折点？</h3>
+            <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto" data-key="phaseone_intro">2020年1月签署的《第一阶段协议》曾被视为重大缓和。然而，对其内容、执行情况及局限性的评估，揭示了其复杂性——它更像是一个“休战协议”，未能解决根本性的结构矛盾。</p>
+            <div class="grid md:grid-cols-3 gap-6" id="phaseone-container">
+            </div>
+        </section>
+
+        <section id="impact" class="mb-20 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center mb-2" data-key="impact_title">经济影响：数据透视</h3>
+            <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto" data-key="impact_intro">关税战的冲击波远超双边贸易领域，对两国经济及全球供应链均产生了深刻影响。通过图表交互，直观感受其经济后果。</p>
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div class="bg-white/50 p-6 rounded-xl shadow-lg">
+                    <h4 class="text-lg font-semibold text-center mb-4" data-key="impact_chart1_title">对中美两国经济增长的预测影响</h4>
+                    <div class="chart-container">
+                        <canvas id="gdpImpactChart"></canvas>
+                    </div>
+                     <p class="text-xs text-gray-500 mt-4 text-center" data-key="impact_chart1_desc">数据显示了不同机构对关税战导致的两国GDP年增长率下降的预测。关税在很大程度上由美国进口商和消费者承担，导致物价上涨和通胀压力，并增加了商业不确定性，影响了企业投资。</p>
+                </div>
+                <div class="bg-white/50 p-6 rounded-xl shadow-lg">
+                    <h4 class="text-lg font-semibold text-center mb-4" data-key="impact_chart2_title">美国进口来源地变化 (商品贸易)</h4>
+                     <div class="chart-container">
+                        <canvas id="importSourceChart"></canvas>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4 text-center" data-key="impact_chart2_desc">图表展示了关税战以来，美国商品进口来源份额的变化，直观反映了全球供应链的“去风险化”与重构趋势。企业为规避风险，加速供应链向越南、墨西哥等国多元化。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="negotiators" class="mb-20 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center mb-2" data-key="negotiators_title">博弈的操盘手</h3>
+            <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto" data-key="negotiators_intro">谈判桌上的核心人物，其背景、价值观与政策主张，在很大程度上影响了谈判的进程与结果。</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto" id="negotiators-container">
+            </div>
+        </section>
+
+        <section id="outlook" class="scroll-mt-20">
+             <h3 class="text-2xl md:text-3xl font-bold text-center mb-2" data-key="outlook_title">持久的影响</h3>
+            <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto" data-key="outlook_intro">特朗普时期的关税战并非孤立事件，它开启了中美关系的新范式，其影响至今仍在持续，并塑造了后续的竞争格局。</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6" id="outlook-container">
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-gray-800 text-white mt-20 py-8">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm" data-key="footer_text">本应用内容基于公开报告分析生成，仅供研究与学习参考。</p>
+        </div>
+    </footer>
+
+<script>
+const contentData = {
+    zh: {
+        header_title: "中美关税战透视 (特朗普时期)",
+        hero_title: "一场重塑全球格局的博弈",
+        hero_subtitle: "由特朗普政府发起的此轮中美关税战，不仅是一场贸易争端，更是两国在技术、经济乃至全球影响力层面的深层战略竞争。本应用将通过互动式分析，带您深入了解这场博弈的全过程、核心矛盾与深远影响。",
+        nav_timeline: "时间线",
+        nav_conflicts: "核心矛盾",
+        nav_phaseone: "第一阶段协议",
+        nav_impact: "经济影响",
+        nav_negotiators: "关键人物",
+        nav_outlook: "持久影响",
+        timeline_title: "关税战时间线 (2018-2021)",
+        timeline_intro: "关税战始于2018年初，经历了多次快速升级、激烈谈判与最终达成的阶段性协议。点击下方关键节点，探索其演变历程。",
+        timeline_items: [
+            { date: "2018年3月-4月", title: "序幕：钢铝关税与初期反制", description: "3月，美国宣布对全球钢铝产品征收25%和10%关税。4月，中国迅速反制，对价值约30亿美元的128项美国商品（如猪肉、水果）加征15-25%关税，贸易战正式拉开序幕。" },
+            { date: "2018年7月-9月", title: "升级：301调查与全面开打", description: "美国依据“301调查”结果，于7月和8月分两轮对共计500亿美元的中国商品加征25%关税。9月，战火再次升级，美国对另外2000亿美元中国商品加征10%关税。中国均采取了对等的报复措施。" },
+            { date: "2019年5月-6月", title: "波折：谈判破裂与税率再提高", description: "5月，因谈判陷入僵局，美国将对2000亿美元中国商品的关税从10%提高到25%。6月，在G20大阪峰会期间，两国元首会晤，同意重启经贸磋商，暂时避免了关税的进一步升级。" },
+            { date: "2020年1月", title: "缓和：签署第一阶段协议", description: "经过多轮艰苦谈判，双方签署“第一阶段”经贸协议，实现阶段性“休战”。美国暂停部分原计划加征的关税，并将1200亿美元中国商品的关税税率从15%降至7.5%。" },
+            { date: "2020年-2021年", title: "延续：协议执行与政策继承", description: "协议开始执行，但采购目标等承诺的完成情况充满挑战。特朗普政府任期结束，但其施加的大部分关税被拜登政府继承，标志着关税战的影响进入长期化阶段。" },
+        ],
+        conflicts_title: "核心矛盾",
+        conflicts_intro: "关税战背后，是两国在一系列核心问题上长期积累的矛盾。这些摩擦点不仅涉及贸易，更关乎国家发展战略与技术主导权。",
+        conflict_items: [
+            { icon: "💡", title: "知识产权与技术转让", description: "美方长期指责中国未能有效保护美国知识产权，并通过设置市场准入壁垒、审批许可等方式，迫使在华经营的外国企业转让关键技术。这不仅是法律经济争议，更是维护国家创新能力和科技竞争力的博弈，甚至成为全球力量博弈的政治经济杠杆。" },
+            { icon: "🏭", title: "“中国制造2025”与产业政策", description: "美国将“中国制造2025”视为对其技术领先地位的重大挑战，认为中国政府通过大规模补贴、国家指导基金等非市场手段支持本国企业，试图主导未来关键产业。遏制该计划成为美国在贸易战中的一个重要潜台词和战略目标。" },
+            { icon: "⚖️", title: "贸易失衡与市场准入", description: "长期存在的中美贸易逆差是贸易摩擦的直接导火索。美方认为中国市场存在诸多准入壁垒，而中方认为逆差是全球产业分工、储蓄投资结构以及美元国际地位等多种因素综合作用的结果。这一问题是谈判的焦点，但根源复杂。" },
+            { icon: "🛡️", title: "国家安全考量", description: "贸易和技术问题越来越多地与国家安全交织。美国担忧华为等中企参与其5G建设带来安全风险，频繁使用“实体清单”等工具。中国则反对此类技术霸权行为。这种以国家安全为名的相互限制，推动了双方在关键技术领域的“脱钩”或“去风险化”趋势。" }
+        ],
+        phaseone_title: "第一阶段协议：缓兵之计还是转折点？",
+        phaseone_intro: "2020年1月签署的《第一阶段协议》曾被视为重大缓和。然而，对其内容、执行情况及局限性的评估，揭示了其复杂性——它更像是一个“休战协议”，未能解决根本性的结构矛盾。",
+        phaseone_items: [
+            { icon: "🛒", title: "巨额采购承诺", description: "核心内容是中国承诺在2020-2021年，在2017年基础上额外购买不少于2000亿美元的美国商品和服务，涵盖农产品、制成品、能源和服务等。旨在短期内削减美国贸易逆差。" },
+            { icon: "📉", title: "履行情况不佳", description: "根据彼得森国际经济研究所(PIIE)的数据，截至2021年底，中国对协议涵盖商品的采购总额仅达到承诺目标的约60-62%。全球疫情、供应链中断和实际市场需求等因素均造成了影响。" },
+            { icon: "⚙️", title: "未解的结构性问题", description: "协议回避了许多更棘手的结构性矛盾，如中国对国有企业的巨额补贴、产业政策（“中国制造2025”核心内容）、数据流动限制等问题，这些原计划留待“第二阶段”谈判解决，但该谈判至今未能启动。" }
+        ],
+        impact_title: "经济影响：数据透视",
+        impact_intro: "关税战的冲击波远超双边贸易领域，对两国经济及全球供应链均产生了深刻影响。通过图表交互，直观感受其经济后果。",
+        impact_chart1_title: "对中美两国经济增长的预测影响",
+        impact_chart1_desc: "数据显示了不同机构对关税战导致的两国GDP年增长率下降的预测。关税在很大程度上由美国进口商和消费者承担，导致物价上涨和通胀压力，并增加了商业不确定性，影响了企业投资。",
+        impact_chart2_title: "美国进口来源地变化 (商品贸易)",
+        impact_chart2_desc: "图表展示了关税战以来，美国商品进口来源份额的变化，直观反映了全球供应链的“去风险化”与重构趋势。企业为规避风险，加速供应链向越南、墨西哥等国多元化。",
+        negotiators_title: "博弈的操盘手",
+        negotiators_intro: "谈判桌上的核心人物，其背景、价值观与政策主张，在很大程度上影响了谈判的进程与结果。",
+        negotiator_items: [
+            { name: "罗伯特·莱特希泽", role: "美方代表", description: "对华强硬派贸易律师，主张使用关税作为核心杠杆，以施压换取“平衡的经济关系”与“战略性脱钩”。他认为给予中国永久正常贸易关系地位是历史性错误，其强硬和对抗性的谈判风格主导了此轮贸易战的基调。" },
+            { name: "刘鹤", role: "中方代表", description: "中国重要经济决策者，被视为务实的经济改革派。在谈判中致力于缓和冲突，同时坚决维护中国核心利益，展现了专业性和坚定立场。他的参与被视为中国寻求稳定解决方案的信号，但谈判底线清晰。" }
+        ],
+        outlook_title: "持久的影响",
+        outlook_intro: "特朗普时期的关税战并非孤立事件，它开启了中美关系的新范式，其影响至今仍在持续，并塑造了后续的竞争格局。",
+        outlook_items: [
+            { icon: "🔗", title: "技术“脱钩”加速", description: "关税战加速了中美在半导体、AI等关键技术领域的“脱钩”进程，双方都更加强调技术自主。" },
+            { icon: "🌍", title: "供应链重构", description: "企业为规避风险，加速供应链多元化，推动了“中国+1”战略，使越南、墨西哥等国受益。" },
+            { icon: "🏛️", title: "多边体系削弱", description: "单边主义行为严重冲击了以WTO为核心的多边贸易体制，其争端解决机制陷入瘫痪。" },
+            { icon: "🛡️", title: "安全优先范式", description: "国家安全考量在经济决策中的权重显著提升，开启了“去风险化”而非纯粹全球化的新时代。" }
+        ],
+        footer_text: "本应用内容基于公开报告分析生成，仅供研究与学习参考。"
+    },
+    en: {
+        header_title: "U.S.-China Tariff War - 1 (Trump 1st Era)",
+        hero_title: "A Rivalry Reshaping the Global Order",
+        hero_subtitle: "The U.S.-China tariff war, initiated by the Trump administration, was more than a trade dispute; it's a profound strategic competition over technology, economy, and global influence. This interactive analysis delves into its process, core conflicts, and far-reaching impacts.",
+        nav_timeline: "Timeline",
+        nav_conflicts: "Core Conflicts",
+        nav_phaseone: "Phase One Deal",
+        nav_impact: "Economic Impact",
+        nav_negotiators: "Key Players",
+        nav_outlook: "Lasting Impacts",
+        timeline_title: "Tariff War Timeline (2018-2021)",
+        timeline_intro: "Starting in early 2018, the tariff war saw rapid escalations, intense negotiations, and a eventual phased agreement. Click on the key nodes below to explore its evolution.",
+        timeline_items: [
+            { date: "Mar-Apr 2018", title: "Prologue: Steel Tariffs & Initial Retaliation", description: "In March, the U.S. imposed 25% and 10% tariffs on global steel and aluminum imports. In April, China swiftly retaliated with 15-25% tariffs on 128 U.S. products (like pork and fruit) worth ~$3 billion, officially kicking off the trade war." },
+            { date: "Jul-Sep 2018", title: "Escalation: Section 301 & Full-Scale Conflict", description: "Based on its 'Section 301' investigation, the U.S. imposed 25% tariffs on a total of $50 billion of Chinese goods in two rounds (July & August). In September, the conflict escalated as the U.S. added a 10% tariff on another $200 billion of goods. China took reciprocal measures at each step." },
+            { date: "May-Jun 2019", title: "Setback: Talks Stall & Tariffs Hiked", description: "In May, after negotiations stalled, the U.S. hiked the tariff rate on the $200 billion list of Chinese goods from 10% to 25%. In June, following a meeting at the G20 Osaka Summit, both leaders agreed to resume trade talks, temporarily averting further escalation." },
+            { date: "Jan 2020", title: "De-escalation: Phase One Deal Signed", description: "After multiple grueling rounds of talks, the two sides signed the 'Phase One' trade deal, reaching a temporary truce. The U.S. suspended some planned tariffs and reduced the rate from 15% to 7.5% on ~$1200 billion of Chinese goods." },
+            { date: "2020-2021", title: "Continuation: Deal Implementation & Policy Inheritance", description: "The deal's implementation began, but meeting commitments like purchase targets proved challenging. The Trump administration ended, but most of its tariffs were inherited by the Biden administration, signaling the long-term nature of the tariff war's impact." },
+        ],
+        conflicts_title: "Core Conflicts",
+        conflicts_intro: "Behind the tariff war lie long-standing conflicts on a series of core issues. These frictions involve not just trade, but also national development strategies and the race for technological dominance.",
+        conflict_items: [
+            { icon: "💡", title: "IP & Tech Transfer", description: "The U.S. has long accused China of inadequate IP protection and forcing foreign firms to transfer key technologies via market-access barriers. This is not just a legal-economic dispute but a battle over national innovation capacity and a geopolitical lever." },
+            { icon: "🏭", title: "Made in China 2025 & Industrial Policy", description: "The U.S. viewed 'Made in China 2025' as a major challenge, believing China uses non-market tools like massive subsidies to dominate future key industries. Containing this plan became an important underlying strategic goal of the trade war." },
+            { icon: "⚖️", title: "Trade Imbalance & Market Access", description: "The long-standing U.S. trade deficit was a direct trigger. The U.S. cited market barriers, while China attributed the deficit to complex factors like global division of labor and the US dollar's status. This issue was a focus of talks but has deep, complex roots." },
+            { icon: "🛡️", title: "National Security Concerns", description: "Trade and tech became increasingly intertwined with national security. The U.S. feared security risks from firms like Huawei in 5G networks, frequently using its 'Entity List'. China decried this as 'technological hegemony'. This dynamic drove the push for 'de-risking' in key tech areas." }
+        ],
+        phaseone_title: "The Phase One Deal: A Truce or a Turning Point?",
+        phaseone_intro: "The 'Phase One' deal, signed in January 2020, was seen as a major de-escalation. However, an assessment of its content, execution, and limitations reveals its complexity—it was more of a 'truce' that failed to resolve fundamental structural conflicts.",
+        phaseone_items: [
+            { icon: "🛒", title: "Massive Purchase Commitments", description: "The centerpiece was China's commitment to buy at least $200 billion more in U.S. goods and services during 2020-2021 over 2017 levels, covering agriculture, manufacturing, energy, and services." },
+            { icon: "📉", title: "Poor Fulfillment Record", description: "According to the Peterson Institute for International Economics (PIIE), by the end of 2021, China's total purchases had only reached about 60-62% of the target. The global pandemic, supply chain disruptions, and actual market demand all played a role." },
+            { icon: "⚙️", title: "Unresolved Structural Issues", description: "The deal largely sidestepped tougher structural issues, such as China's massive subsidies for state-owned enterprises, the core of its industrial policies ('Made in China 2025'), and data flow restrictions. These were deferred to a 'Phase Two' that never began." }
+        ],
+        impact_title: "Economic Impact: A Data Perspective",
+        impact_intro: "The shockwaves of the tariff war extend far beyond bilateral trade, profoundly affecting both economies and global supply chains. Interact with the charts to visualize the economic consequences.",
+        impact_chart1_title: "Projected Impact on US & China GDP Growth",
+        impact_chart1_desc: "Data shows various institutions' forecasts on the reduction in annual GDP growth for both countries. The costs of tariffs were largely borne by U.S. importers and consumers, leading to price hikes, inflationary pressure, and increased business uncertainty that affected investment.",
+        impact_chart2_title: "Shift in U.S. Import Sources (Goods Trade)",
+        impact_chart2_desc: "The chart illustrates the changing shares of U.S. goods import sources since the tariff war began, reflecting 'de-risking' and supply chain reconfiguration. Companies accelerated diversification to countries like Vietnam and Mexico to mitigate risks.",
+        negotiators_title: "The Key Players",
+        negotiators_intro: "The backgrounds, values, and policy stances of the key figures at the negotiating table have significantly shaped the process and outcomes of the talks.",
+        negotiator_items: [
+            { name: "Robert Lighthizer", role: "U.S. Representative", description: "A trade lawyer and longtime China hawk, he championed using tariffs as a core lever to force a 'balanced economic relationship' and 'strategic decoupling.' He believed granting China PNTR status was a historic mistake, and his tough, confrontational style defined the tone of the trade war." },
+            { name: "Liu He", role: "Chinese Representative", description: "A key economic policymaker in China, seen as a pragmatic reformer. He aimed to de-escalate conflicts while firmly defending China's core interests, showing professionalism and resolve. His involvement signaled China's desire for a stable solution, but with clear red lines." }
+        ],
+        outlook_title: "Lasting Impacts",
+        outlook_intro: "The Trump-era tariff war was not an isolated event. It initiated a new paradigm in U.S.-China relations, with lasting effects that continue to shape the competitive landscape today.",
+        outlook_items: [
+            { icon: "🔗", title: "Accelerated Tech 'Decoupling'", description: "The tariff war sped up the 'decoupling' process in key technologies like semiconductors and AI, with both sides emphasizing technological self-sufficiency." },
+            { icon: "🌍", title: "Supply Chain Realignment", description: "To mitigate risks, companies accelerated supply chain diversification, boosting the 'China+1' strategy and benefiting countries like Vietnam and Mexico." },
+            { icon: "🏛️", title: "Weakened Multilateral System", description: "Unilateral actions severely impacted the WTO-centered multilateral trading system, paralyzing its dispute settlement mechanism." },
+            { icon: "🛡️", title: "Security-First Paradigm", description: "The priority of national security in economic decisions was elevated, ushering in a new era of 'de-risking' over pure globalization." }
+        ],
+        footer_text: "The content of this application is generated based on public report analysis and is for research and educational purposes only."
+    }
+};
+
+let currentLang = 'zh';
+let gdpChart, importChart;
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Corrected execution order
+    setupEventListeners();
+    initCharts();
+    renderContent(currentLang);
+    setupIntersectionObserver();
+});
+
+function setupEventListeners() {
+    document.getElementById('lang-toggle').addEventListener('click', () => {
+        currentLang = currentLang === 'zh' ? 'en' : 'zh';
+        document.querySelector('html').lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+        document.getElementById('lang-toggle').textContent = currentLang === 'zh' ? 'EN' : '中文';
+        renderContent(currentLang);
+    });
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = e.target.getAttribute('href');
+            document.querySelector(targetId).scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+}
+
+function renderContent(lang) {
+    const data = contentData[lang];
+    document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.getAttribute('data-key');
+        if (data[key]) {
+            el.innerHTML = data[key];
+        }
+    });
+    
+    document.querySelector('.nav-item[href="#timeline"]').innerText = data.nav_timeline;
+    document.querySelector('.nav-item[href="#conflicts"]').innerText = data.nav_conflicts;
+    document.querySelector('.nav-item[href="#phaseone"]').innerText = data.nav_phaseone;
+    document.querySelector('.nav-item[href="#impact"]').innerText = data.nav_impact;
+    document.querySelector('.nav-item[href="#negotiators"]').innerText = data.nav_negotiators;
+    document.querySelector('.nav-item[href="#outlook"]').innerText = data.nav_outlook;
+
+    renderTimeline(data.timeline_items);
+    renderConflicts(data.conflict_items);
+    renderPhaseOne(data.phaseone_items);
+    renderNegotiators(data.negotiator_items);
+    renderOutlook(data.outlook_items);
+    updateCharts(lang);
+}
+
+function renderTimeline(items) {
+    const container = document.getElementById('timeline-container');
+    container.innerHTML = items.map((item, index) => `
+        <div class="timeline-item mb-8 flex items-start">
+            <div class="absolute -left-3.5 mt-1.5 h-6 w-6 rounded-full bg-[#B85C5C] border-4 border-[#FDFBF7]"></div>
+            <div class="ml-8 md:ml-12 w-full">
+                <div class="timeline-item-header cursor-pointer flex justify-between items-center">
+                    <div>
+                        <time class="block text-sm font-semibold text-[#5A7D9A]">${item.date}</time>
+                        <h4 class="text-lg font-bold">${item.title}</h4>
+                    </div>
+                     <span class="text-2xl text-gray-400 transform transition-transform duration-300">+</span>
+                </div>
+                <div class="timeline-item-content">
+                    <p class="mt-2 text-gray-600 pr-4 pt-2">${item.description}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    addAccordionLogic('.timeline-item-header', '.timeline-item-content');
+}
+
+function renderConflicts(items) {
+    const container = document.getElementById('conflicts-container');
+    container.innerHTML = items.map(item => `
+        <div class="content-card bg-white/50 rounded-xl shadow-lg p-6">
+            <div class="flex items-start md:items-center justify-between">
+                <div class="flex items-start md:items-center">
+                    <span class="text-3xl mr-4 mt-1 md:mt-0">${item.icon}</span>
+                    <h4 class="text-xl font-bold">${item.title}</h4>
+                </div>
+                <span class="text-3xl text-gray-400 transform transition-transform duration-300 ml-4">+</span>
+            </div>
+            <div class="card-content">
+                <p class="mt-4 text-gray-600 pt-4 border-t border-gray-200">${item.description}</p>
+            </div>
+        </div>
+    `).join('');
+    addAccordionLogic('.content-card', '.card-content');
+}
+
+function renderPhaseOne(items) {
+    const container = document.getElementById('phaseone-container');
+    container.innerHTML = items.map(item => `
+        <div class="content-card bg-white/50 rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <span class="text-3xl mr-4">${item.icon}</span>
+                    <h4 class="text-lg font-bold">${item.title}</h4>
+                </div>
+                <span class="text-3xl text-gray-400 transform transition-transform duration-300">+</span>
+            </div>
+            <div class="card-content">
+                <p class="mt-4 text-gray-600 pt-4 border-t border-gray-200">${item.description}</p>
+            </div>
+        </div>
+    `).join('');
+    addAccordionLogic('.content-card', '.card-content');
+}
+
+
+function renderNegotiators(items) {
+    const container = document.getElementById('negotiators-container');
+    container.innerHTML = items.map(item => `
+        <div class="text-center p-6 bg-white/50 rounded-xl shadow-lg h-full">
+            <div class="w-24 h-24 rounded-full mx-auto bg-gray-300 mb-4 flex items-center justify-center text-4xl text-gray-500">
+                👤
+            </div>
+            <h4 class="text-xl font-bold">${item.name}</h4>
+            <p class="text-[#5A7D9A] font-semibold mb-2">${item.role}</p>
+            <p class="text-gray-600 text-sm">${item.description}</p>
+        </div>
+    `).join('');
+}
+
+function renderOutlook(items) {
+    const container = document.getElementById('outlook-container');
+    container.innerHTML = items.map(item => `
+        <div class="bg-white/50 p-6 rounded-xl shadow-lg flex flex-col items-center text-center h-full">
+            <span class="text-4xl mb-4">${item.icon}</span>
+            <h4 class="text-lg font-bold mb-2">${item.title}</h4>
+            <p class="text-sm text-gray-600">${item.description}</p>
+        </div>
+    `).join('');
+}
+
+
+function addAccordionLogic(headerSelector, contentSelector) {
+    document.querySelectorAll(headerSelector).forEach(header => {
+        header.addEventListener('click', () => {
+            const content = header.parentElement.querySelector(contentSelector) || header.nextElementSibling;
+            const icon = header.querySelector('span:last-child');
+            
+            if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+                content.style.maxHeight = '0px';
+                if(icon) icon.style.transform = 'rotate(0deg)';
+            } else {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                if(icon) icon.style.transform = 'rotate(45deg)';
+
+                setTimeout(() => {
+                    if (content.style.maxHeight !== '0px') {
+                         content.style.maxHeight = content.scrollHeight + 'px';
+                    }
+                }, 510);
+            }
+        });
+    });
+}
+
+function initCharts() {
+    const gdpCtx = document.getElementById('gdpImpactChart').getContext('2d');
+    gdpChart = new Chart(gdpCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'US GDP Impact',
+                data: [-0.3, -0.7],
+                backgroundColor: '#5A7D9A',
+                borderColor: '#4e6c86',
+                borderWidth: 1
+            }, {
+                label: 'China GDP Impact',
+                data: [-0.5, -1.2], 
+                backgroundColor: '#B85C5C',
+                borderColor: '#a35151',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    title: { display: true, text: '% GDP Growth Reduction' }
+                },
+                x: {
+                    title: { display: true, text: 'Forecasting Institution' }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y + '%';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const importCtx = document.getElementById('importSourceChart').getContext('2d');
+    importChart = new Chart(importCtx, {
+        type: 'pie',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'US Import Share %',
+                data: [18.1, 14.2, 2.7, 65], 
+                backgroundColor: ['#B85C5C', '#5A7D9A', '#88B04B', '#cccccc'],
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                label += context.parsed + '% (2019)';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateCharts(lang) {
+    if (lang === 'zh') {
+        gdpChart.data.labels = ['IMF', '高盛'];
+        gdpChart.data.datasets[0].label = '对美国GDP的影响';
+        gdpChart.data.datasets[1].label = '对中国GDP的影响';
+        gdpChart.options.scales.y.title.text = 'GDP增长率下降百分比 (%)';
+        gdpChart.options.scales.x.title.text = '预测机构';
+        
+        importChart.data.labels = ['中国', '墨西哥', '越南', '其他国家'];
+        importChart.data.datasets[0].label = '美国进口份额 % (2019)';
+    } else {
+        gdpChart.data.labels = ['IMF', 'Goldman Sachs'];
+        gdpChart.data.datasets[0].label = 'US GDP Impact';
+        gdpChart.data.datasets[1].label = 'China GDP Impact';
+        gdpChart.options.scales.y.title.text = '% GDP Growth Reduction';
+        gdpChart.options.scales.x.title.text = 'Forecasting Institution';
+
+        importChart.data.labels = ['China', 'Mexico', 'Vietnam', 'Rest of World'];
+        importChart.data.datasets[0].label = 'US Import Share % (2019)';
+    }
+    gdpChart.update();
+    importChart.update();
+}
+
+function setupIntersectionObserver() {
+    const sections = document.querySelectorAll('main section');
+    const navItems = document.querySelectorAll('.nav-item');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navItems.forEach(nav => {
+                    nav.classList.remove('active-nav');
+                    if (nav.getAttribute('href') === `#${entry.target.id}`) {
+                        nav.classList.add('active-nav');
+                    }
+                });
+            }
+        });
+    }, { rootMargin: "-30% 0px -70% 0px" });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+}
+
+</script>
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>

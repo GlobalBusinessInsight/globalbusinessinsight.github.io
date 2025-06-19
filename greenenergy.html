@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绿新能源 - 新能源重卡基础设施和运营服务的领导者</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Visualization & Content Choices: 
+        - Report Info: Key operational numbers (735 trucks, 28 stations, 60+ land plots). -> Goal: Inform/Impact. -> Viz: Large animated number counters. -> Interaction: Numbers animate on scroll. -> Justification: More engaging than static text, immediately conveys scale. -> Library/Method: Vanilla JS.
+        - Report Info: Three core business areas (Transport, Energy, Leasing). -> Goal: Organize/Inform. -> Viz: An interactive 3-node diagram. -> Interaction: Clicking a node reveals its detailed description. -> Justification: Condenses large text blocks into a manageable, user-driven format, highlighting the integrated nature of the business. -> Library/Method: HTML/CSS/JS.
+        - Report Info: Company growth. -> Goal: Show Change. -> Viz: A Bar Chart showing asset growth. -> Interaction: Tooltips on hover. -> Justification: Visually represents growth trajectory, more powerful than just stating numbers. -> Library/Method: Chart.js (Canvas).
+        - Report Info: Five competitive advantages. -> Goal: Organize/Inform. -> Viz: A series of interactive cards with icons. -> Interaction: Clicking a card (accordion style) expands to show details. -> Justification: Breaks down a long list into digestible, scannable pieces, encouraging focused reading. -> Library/Method: HTML/CSS/JS.
+        - Report Info: Transport Routes/Network Info. -> Goal: Inform. -> Viz: Cleanly formatted text lists. -> Justification: Direct and clear presentation for specific factual data. -> Library/Method: HTML/CSS.
+    -->
+    <style>
+        body { font-family: 'Noto Sans SC', sans-serif; scroll-behavior: smooth; }
+        .bg-pattern { background-image: linear-gradient(rgba(240, 249, 244, 0.8), rgba(240, 249, 244, 0.8)), url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2310b981' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+        .nav-link { transition: color 0.3s ease, border-bottom-color 0.3s ease; }
+        .active-link { color: #10b981; border-bottom-color: #10b981; }
+        .inactive-link { color: #374151; border-bottom-color: transparent; }
+        .advantage-card { transition: all 0.3s ease-in-out; }
+        .advantage-card.active { border-color: #10b981; background-color: #ecfdf5; }
+        .advantage-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out; }
+        .advantage-card.active .advantage-content { max-height: 500px; padding-top: 1rem; padding-bottom: 1rem; }
+        .pillar { transition: all 0.3s ease; }
+        .pillar.active { background-color: #10b981; color: white; transform: scale(1.05); }
+        .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 320px; max-height: 450px; }  @media (min-width: 768px) { .chart-container { height: 400px; } }
+    </style>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"  crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-6214772877334340">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <header id="navbar" class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-emerald-600">绿新能源</span>
+                    <span class="text-xs font-light text-slate-500 ml-2 hidden sm:block">GREEN NEW ENERGY</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#home" class="nav-link px-3 py-2 text-sm font-medium border-b-2">首页</a>
+                        <a href="#metrics" class="nav-link px-3 py-2 text-sm font-medium border-b-2">核心数据</a>
+                        <a href="#model" class="nav-link px-3 py-2 text-sm font-medium border-b-2">商业模式</a>
+                        <a href="#advantages" class="nav-link px-3 py-2 text-sm font-medium border-b-2">竞争优势</a>
+                        <a href="#future" class="nav-link px-3 py-2 text-sm font-medium border-b-2">未来展望</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="relative pt-16 pb-20 md:pt-24 md:pb-28 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
+                    <span class="block">我们是<span class="text-emerald-600">新能源重卡基础设施和运营服务</span>的领导者</span>
+                </h1>
+                <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-slate-600">
+                    我们致力于构建完整的新能源重卡基础设施与运营服务生态，积极响应国家“双碳”目标，推动中国交通运输产业的绿色转型。
+                </p>
+                <div class="mt-8 flex justify-center">
+                    <a href="#model" class="inline-block bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-emerald-700 transition-transform transform hover:scale-105">
+                        了解我们的业务
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="metrics" class="py-16 sm:py-24 bg-pattern">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">高速发展，规模彰显实力</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-lg text-slate-600">自2022年9月成立以来，我们已在新能源运输领域取得了令人瞩目的成就。</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                    <div class="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-emerald-100">
+                        <span class="text-5xl font-extrabold text-emerald-600" data-target="735">0</span>
+                        <p class="mt-2 text-lg font-medium text-slate-700">新能源重卡车队 (辆)</p>
+                        <p class="mt-1 text-sm text-slate-500">均为高效环保的纯电牵引车</p>
+                    </div>
+                    <div class="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-emerald-100">
+                        <span class="text-5xl font-extrabold text-emerald-600" data-target="28">0</span>
+                        <p class="mt-2 text-lg font-medium text-slate-700">自建充换电站 (座)</p>
+                        <p class="mt-1 text-sm text-slate-500">覆盖关键物流节点，保障补能效率</p>
+                    </div>
+                    <div class="bg-white/70 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-emerald-100">
+                        <span class="text-5xl font-extrabold text-emerald-600" data-target="60">0</span>
+                        <p class="mt-2 text-lg font-medium text-slate-700">战略储备充电网络 </p>
+                        <p class="mt-1 text-sm text-slate-500">为未来网络加密与服务深化奠定基础</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="model" class="py-16 sm:py-24 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">“车桩一体”的创新商业模式</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-lg text-slate-600">我们独创“车队运营+补能网络+经营租赁”联动模式，三大核心业务板块协同发展，构筑强大生态闭环。请点击下方模块查看详情。</p>
+                </div>
+                <div class="lg:grid lg:grid-cols-3 lg:gap-8 items-start">
+                    <div class="flex flex-col items-center space-y-4 lg:space-y-0 lg:flex-row lg:space-x-8 lg:col-span-3 mb-8">
+                        <div id="pillar-transport" class="pillar cursor-pointer w-full lg:w-1/3 p-6 text-center rounded-xl border-2 border-slate-200 bg-slate-100 active" data-content="transport">
+                            <div class="text-3xl mb-2">🚚</div>
+                            <h3 class="text-xl font-semibold">新能源运输服务</h3>
+                        </div>
+                        <div id="pillar-energy" class="pillar cursor-pointer w-full lg:w-1/3 p-6 text-center rounded-xl border-2 border-slate-200 bg-slate-100" data-content="energy">
+                            <div class="text-3xl mb-2">⚡️</div>
+                            <h3 class="text-xl font-semibold">补能网络服务</h3>
+                        </div>
+                        <div id="pillar-lease" class="pillar cursor-pointer w-full lg:w-1/3 p-6 text-center rounded-xl border-2 border-slate-200 bg-slate-100" data-content="lease">
+                            <div class="text-3xl mb-2">📄</div>
+                            <h3 class="text-xl font-semibold">经营性租赁服务</h3>
+                        </div>
+                    </div>
+
+                    <div id="model-content-area" class="lg:col-span-3 bg-slate-50 p-8 rounded-2xl border border-slate-200 min-h-[20rem]">
+                        <div id="content-transport" class="content-panel">
+                            <h4 class="text-2xl font-bold text-emerald-700 mb-4">高效、专业的绿色物流解决方案</h4>
+                            <ul class="space-y-3 text-slate-600">
+                                <li class="flex items-start"><span class="text-emerald-500 mr-3 mt-1">✓</span><span>运营<strong class="font-semibold text-slate-800">735辆</strong>新能源牵引车，提供全方位运输服务。</span></li>
+                                <li class="flex items-start"><span class="text-emerald-500 mr-3 mt-1">✓</span><span><strong class="font-semibold text-slate-800">主要运输线路：</strong>覆盖长治、晋城、临汾至邯郸、邢台、石家庄等核心工业区，并开通长治至日照港、黄骅港等重要干线。</span></li>
+                                <li class="flex items-start"><span class="text-emerald-500 mr-3 mt-1">✓</span><span>与区域内主要大型工业企业建立<strong class="font-semibold text-slate-800">长期稳定的物流合作</strong>关系，保障业务持续性。</span></li>
+                            </ul>
+                        </div>
+                        <div id="content-energy" class="content-panel hidden">
+                           <h4 class="text-2xl font-bold text-emerald-700 mb-4">广泛、可靠的能源补给网络</h4>
+                            <ul class="space-y-3 text-slate-600">
+                                <li class="flex items-start"><span class="text-emerald-500 mr-3 mt-1">✓</span><span>已建成<strong class="font-semibold text-slate-800">28座</strong>充电站，主要分布于山西、河北、河南等关键物流节点。</span></li>
+                                <li class="flex items-start"><span class="text-emerald-500 mr-3 mt-1">✓</span><span><strong class="font-semibold text-slate-800">在建干线网络：</strong>正沿长治-日照、长治-黄骅港干线铺设补能设施，持续完善骨干运输网络。</span></li>
+                                <li class="flex items-start"><span class="text-emerald-500 mr-3 mt-1">✓</span><span>以<strong class="font-semibold text-slate-800">自建自营大功率充电桩</strong>为主，确保为车队提供高效、可靠的补能服务。</span></li>
+                            </ul>
+                        </div>
+                        <div id="content-lease" class="content-panel hidden">
+                            <h4 class="text-2xl font-bold text-emerald-700 mb-4">灵活、普惠的车辆租赁方案</h4>
+                            <ul class="space-y-3 text-slate-600">
+                                <li class="flex items-start"><span class="text-emerald-500 mr-3 mt-1">✓</span><span>向个体司机或第三方车队提供新能源重卡<strong class="font-semibold text-slate-800">经营性租赁</strong>服务，降低入行门槛。</span></li>
+                                <li class="flex items-start"><span class="text-emerald-500 mr-3 mt-1">✓</span><span>利用<strong class="font-semibold text-slate-800">规模化采购优势</strong>，提供具有市场竞争力的租赁价格。</span></li>
+                                <li class="flex items-start"><span class="text-emerald-500 mr-3 mt-1">✓</span><span>提供补能、保险、维修保养等<strong class="font-semibold text-slate-800">全方位运营支持</strong>，让司机用车无忧。</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-16">
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold tracking-tight">资产增长可视化</h3>
+                        <p class="mt-2 max-w-2xl mx-auto text-md text-slate-600">我们的核心资产规模在短时间内实现了跨越式增长。</p>
+                    </div>
+                    <div class="chart-container bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="advantages" class="py-16 sm:py-24 bg-pattern">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">我们的核心竞争优势</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-lg text-slate-600">独特的商业模式和前瞻性的战略布局，使我们在市场中脱颖而出。</p>
+                </div>
+                <div class="max-w-4xl mx-auto space-y-4">
+                    <div class="advantage-card cursor-pointer border-2 border-slate-200 rounded-lg bg-white overflow-hidden">
+                        <div class="p-6 flex justify-between items-center">
+                            <div class="flex items-center">
+                                <span class="text-3xl mr-4">💡</span>
+                                <h4 class="text-xl font-semibold">模式创新</h4>
+                            </div>
+                            <span class="text-2xl text-slate-400 transform transition-transform duration-300">+</span>
+                        </div>
+                        <div class="advantage-content px-6 text-slate-600">
+                            <p>独创“车队运营+补能网络+经营租赁”联动模式，实现高效的“车桩一体化”运营，形成强大的业务协同效应和生态闭环，有效提升资产利用率和盈利能力。</p>
+                        </div>
+                    </div>
+                     <div class="advantage-card cursor-pointer border-2 border-slate-200 rounded-lg bg-white overflow-hidden">
+                        <div class="p-6 flex justify-between items-center">
+                            <div class="flex items-center">
+                                <span class="text-3xl mr-4">🌐</span>
+                                <h4 class="text-xl font-semibold">网络布局</h4>
+                            </div>
+                            <span class="text-2xl text-slate-400 transform transition-transform duration-300">+</span>
+                        </div>
+                        <div class="advantage-content px-6 text-slate-600">
+                            <p>快速扩展的补能网络已覆盖关键物流区域，并储备了60余块优质地块，为未来网络密度的提升和地域广度的拓展提供了坚实保障，构筑了难以复制的先发优势。</p>
+                        </div>
+                    </div>
+                     <div class="advantage-card cursor-pointer border-2 border-slate-200 rounded-lg bg-white overflow-hidden">
+                        <div class="p-6 flex justify-between items-center">
+                            <div class="flex items-center">
+                                <span class="text-3xl mr-4">💰</span>
+                                <h4 class="text-xl font-semibold">规模与成本</h4>
+                            </div>
+                            <span class="text-2xl text-slate-400 transform transition-transform duration-300">+</span>
+                        </div>
+                        <div class="advantage-content px-6 text-slate-600">
+                            <p>大规模车队与补能设施的集约化运营带来了显著的采购及服务成本优势。我们能够向上游供应商争取更优价格，并向客户提供更具竞争力的服务方案。</p>
+                        </div>
+                    </div>
+                     <div class="advantage-card cursor-pointer border-2 border-slate-200 rounded-lg bg-white overflow-hidden">
+                        <div class="p-6 flex justify-between items-center">
+                            <div class="flex items-center">
+                                <span class="text-3xl mr-4">🇨🇳</span>
+                                <h4 class="text-xl font-semibold">政策领航</h4>
+                            </div>
+                            <span class="text-2xl text-slate-400 transform transition-transform duration-300">+</span>
+                        </div>
+                        <div class="advantage-content px-6 text-slate-600">
+                            <p>紧抓国家“双碳”目标及新能源汽车推广的重大政策机遇。作为区域新能源运输的先行者和标杆企业，我们能够充分享受政策红利，并引领行业发展方向。</p>
+                        </div>
+                    </div>
+                     <div class="advantage-card cursor-pointer border-2 border-slate-200 rounded-lg bg-white overflow-hidden">
+                        <div class="p-6 flex justify-between items-center">
+                            <div class="flex items-center">
+                                <span class="text-3xl mr-4">💻</span>
+                                <h4 class="text-xl font-semibold">数字驱动</h4>
+                            </div>
+                            <span class="text-2xl text-slate-400 transform transition-transform duration-300">+</span>
+                        </div>
+                        <div class="advantage-content px-6 text-slate-600">
+                            <p>我们积极构建和应用自主研发的数字化运营平台，实现对车辆、充电桩、订单的智能化管理和调度，持续提升车队管理效率、优化补能服务、增强客户体验。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="py-16 sm:py-24 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">共筑绿色物流未来</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">我们不止步于现有成就，将持续深耕市场，创新引领，致力于成为技术领先、服务卓越的新能源重卡基础设施和运营服务领导者。</p>
+                <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h4 class="text-lg font-semibold mb-2">🚀 持续深耕，拓展网络</h4>
+                        <p class="text-slate-600">依托储备地块，持续拓展和加密补能网络，支持更大规模新能源车队高效运营，打造便捷可靠的补能服务体系。</p>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h4 class="text-lg font-semibold mb-2">🌍 推动行业转型</h4>
+                        <p class="text-slate-600">通过经营租赁等创新模式加速新能源重卡的市场普及，为更多从业者赋能，共同助力国家“双碳”目标实现。</p>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h4 class="text-lg font-semibold mb-2">🏆 创新引领，成就卓越</h4>
+                        <p class="text-slate-600">聚焦核心运输干线和物流枢纽，致力于成为技术领先、服务卓越的新能源重卡基础设施和运营服务领导者。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300">
+        <div class="container mx-auto py-8 px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-lg font-semibold">绿新能源科技（山西）有限公司</p>
+            <p class="text-sm">Green New Energy Technology (Shanxi) Co., Ltd.</p>
+            <p class="text-xs mt-4 text-slate-400">&copy; 2024 绿新能源. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const companyData = {
+                fleetSize: 735,
+                stations: 28,
+                landPlots: 60
+            };
+
+            function animateCounters() {
+                const counters = document.querySelectorAll('[data-target]');
+                const speed = 200;
+
+                counters.forEach(counter => {
+                    const target = +counter.getAttribute('data-target');
+                    
+                    const updateCount = () => {
+                        const count = +counter.innerText;
+                        const inc = target / speed;
+
+                        if (count < target) {
+                            counter.innerText = Math.ceil(count + inc);
+                            setTimeout(updateCount, 15);
+                        } else {
+                            counter.innerText = target;
+                        }
+                    };
+                    updateCount();
+                });
+            }
+
+            const pillars = document.querySelectorAll('.pillar');
+            const contentPanels = document.querySelectorAll('.content-panel');
+            pillars.forEach(pillar => {
+                pillar.addEventListener('click', () => {
+                    pillars.forEach(p => p.classList.remove('active'));
+                    pillar.classList.add('active');
+                    
+                    const contentId = pillar.dataset.content;
+                    contentPanels.forEach(panel => {
+                        if (panel.id === `content-${contentId}`) {
+                            panel.classList.remove('hidden');
+                        } else {
+                            panel.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            const advantageCards = document.querySelectorAll('.advantage-card');
+            advantageCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const wasActive = card.classList.contains('active');
+                    advantageCards.forEach(c => c.classList.remove('active'));
+                    if (!wasActive) {
+                        card.classList.add('active');
+                    }
+                });
+            });
+
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            function updateActiveLink() {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                 if (!current && pageYOffset < 200) {
+                    current = 'home';
+                }
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active-link');
+                    link.classList.add('inactive-link');
+                    const href = link.getAttribute('href').substring(1);
+                    if (href === current) {
+                        link.classList.add('active-link');
+                        link.classList.remove('inactive-link');
+                    }
+                });
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && entry.target.id === 'metrics') {
+                        animateCounters();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            observer.observe(document.querySelector('#metrics'));
+            
+            window.addEventListener('scroll', updateActiveLink);
+            updateActiveLink();
+
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['新能源重卡车队 (辆)', '自建充换电站 (座)'],
+                    datasets: [{
+                        label: '当前规模',
+                        data: [companyData.fleetSize, companyData.stations],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.6)',
+                            'rgba(245, 158, 11, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(245, 158, 11, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#1f2937',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 4
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(203, 213, 225, 0.5)'
+                            },
+                            ticks: {
+                                color: '#475569'
+                            }
+                        },
+                        x: {
+                             grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#475569',
+                                font: {
+                                    size: 14,
+                                    weight: '500'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

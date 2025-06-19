@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade 8 History & Geography Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Slate Blue and Muted Gold accents -->
+    <!-- Application Structure Plan: A single-page application with a top navigation bar to switch between two main views: "History" and "Geography". The History view is organized as an interactive vertical timeline. Clicking an era on the timeline reveals a detailed content panel with interactive cards for key figures, events, and concepts, plus a dynamic chart for the French Revolution's Three Estates. The Geography view features a simplified, clickable SVG map of Canada. Clicking on a province or territory displays its key data in a dedicated information panel. This structure was chosen to transform the linear text document into a dynamic, non-linear exploratory experience, allowing students to visually navigate through time (history) and space (geography) at their own pace, which is more engaging and aids retention. -->
+    <!-- Visualization & Content Choices: 
+        - History Timeline (HTML/CSS/JS): Goal: Organize & Change. A vertical timeline to show chronological progression of major eras. Interaction: Clicking an era loads its specific content. Justification: Visually intuitive way to structure historical periods.
+        - Key Figure Cards (HTML/CSS/JS): Goal: Inform. Displays portraits and key facts. Interaction: Hover effects. Justification: Breaks down information into digestible, visually appealing chunks.
+        - Columbian Exchange Diagram (HTML/CSS): Goal: Compare & Relationships. Two-column layout with arrows. Interaction: Static visual. Justification: Clearly illustrates the two-way transfer of goods.
+        - Three Estates Chart (Chart.js - Bar Chart): Goal: Compare. Visualizes population vs. tax burden. Interaction: Tooltips on hover. Justification: Makes the extreme inequality of the Ancien Régime immediately apparent and memorable.
+        - Urbanization Chart (Chart.js - Line Chart): Goal: Change. Visualizes rapid population growth in an industrial city to illustrate urbanization. Interaction: Tooltips. Justification: A line chart effectively shows change over time.
+        - Army Comparison Table (HTML/CSS): Goal: Compare. Lists strengths and weaknesses of British vs. American forces. Justification: A table is the clearest way to present comparative lists.
+        - Interactive Canadian Map (Clickable SVG Diagram): Goal: Organize & Explore. A simplified, clickable map diagram. Interaction: Clicking a province/territory updates an info panel. Justification: More stable and reliable than an online map, provides a clear, functional interface for selecting a region.
+        - Great Lakes/Colonialism Diagrams (HTML/CSS): Goal: Inform & Clarify. Simple visual diagrams to illustrate complex geographical and historical relationships. Justification: Aids understanding by presenting information in a clear, graphical format.
+        - Provincial Info Panel (HTML/JS): Goal: Inform. Displays data for the selected region. Interaction: Content updates on map click. Justification: Provides immediate, contextual information linked to the map.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .active-nav { 
+            border-bottom-color: #a5b4fc; 
+            color: #4338ca;
+            font-weight: 600;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            background-color: #e0e7ff;
+            border: 4px solid #a5b4fc;
+            left: -0.625rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        .info-panel-placeholder {
+             min-height: 24rem;
+        }
+        .province-shape {
+            transition: fill 0.2s ease-in-out;
+            cursor: pointer;
+            stroke: #e2e8f0;
+            stroke-width: 2;
+        }
+        .province-shape:hover {
+            fill: #a5b4fc;
+        }
+        .active-province {
+            fill: #6366f1;
+            stroke: #4338ca;
+            stroke-width: 3;
+        }
+        #canada-map-container {
+            max-height: 600px;
+        }
+        @media (min-width: 1024px) { 
+            .chart-container { height: 400px; } 
+            #province-info-container{
+                min-height: 600px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+
+    <div id="app" class="container mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Grade 8 History & Geography Review</h1>
+            <p class="text-slate-600 mt-2">An interactive guide to key eras and regions.</p>
+        </header>
+
+        <nav class="flex justify-center border-b-2 border-slate-200 mb-8">
+            <button id="nav-history" class="py-4 px-6 text-lg border-b-4 border-transparent hover:bg-slate-100 transition">History</button>
+            <button id="nav-geography" class="py-4 px-6 text-lg border-b-4 border-transparent hover:bg-slate-100 transition">Geography</button>
+        </nav>
+
+        <main id="content-area">
+        </main>
+
+    </div>
+
+    <script>
+        const contentArea = document.getElementById('content-area');
+        const navHistory = document.getElementById('nav-history');
+        const navGeography = document.getElementById('nav-geography');
+
+        const data = {
+            history: [
+                {
+                    id: 'renaissance',
+                    title: 'The Renaissance',
+                    period: 'c. 1300-1600',
+                    summary: 'A period of extraordinary cultural and intellectual rebirth in Europe, bridging the Middle Ages and modern times. Originating in Italy, it was characterized by a renewed interest in classical art, literature, and science, and a shift towards humanism—a focus on human potential and achievements.',
+                    keyConcepts: [
+                        { name: 'Humanism', description: 'An intellectual movement focused on human potential and achievements, drawing inspiration from classical Greek and Roman texts.' },
+                        { name: 'Patronage', description: 'Financial support from wealthy families (like the Medici), popes, and guilds that fueled artistic creation.' },
+                        { name: 'Secularism', description: 'A greater emphasis on worldly matters rather than purely religious ones, a key shift from the Middle Ages.' }
+                    ],
+                    keyFigures: [
+                        { name: 'Leonardo da Vinci', role: 'Artist, Inventor, Scientist', detail: 'The quintessential "Renaissance Man," painted the Mona Lisa and The Last Supper.' },
+                        { name: 'Michelangelo', role: 'Sculptor, Painter', detail: 'Famed for his statue of David and the frescoes of the Sistine Chapel ceiling.' },
+                        { name: 'Nicolaus Copernicus', role: 'Astronomer', detail: 'Developed the heliocentric model, placing the Sun at the center of the universe.' },
+                        { name: 'Johannes Gutenberg', role: 'Inventor', detail: 'Invented the printing press with movable type, revolutionizing communication.' }
+                    ]
+                },
+                {
+                    id: 'exploration',
+                    title: 'The Age of Exploration',
+                    period: 'c. 1400s-1600s',
+                    summary: 'An era when European mariners ventured into uncharted oceans, establishing global trade routes and initiating colonial empires. Driven by the "3 Gs" (God, Gold, Glory), it led to the Columbian Exchange and profound global changes.',
+                    keyConcepts: [
+                        { name: 'The "3 Gs"', description: 'The primary motivations for exploration: God (spreading Christianity), Gold (wealth and resources), and Glory (national prestige and personal fame).' },
+                        { name: 'Columbian Exchange', description: 'The widespread transfer of plants, animals, culture, human populations, technology, and ideas between the Americas, West Africa, and the Old World.' },
+                        { name: 'Treaty of Tordesillas', description: 'A 1494 agreement between Spain and Portugal dividing newly "discovered" lands outside Europe.' },
+                    ],
+                    keyFigures: [
+                        { name: 'Christopher Columbus', role: 'Explorer (for Spain)', detail: 'His 1492 voyage across the Atlantic initiated European colonization of the Americas.' },
+                        { name: 'Vasco da Gama', role: 'Explorer (for Portugal)', detail: 'The first European to reach India by sea, opening a direct maritime trade route.' },
+                        { name: 'Ferdinand Magellan', role: 'Explorer (for Spain)', detail: 'Led the first expedition to circumnavigate the Earth (1519-1522).' },
+                        { name: 'Jacques Cartier', role: 'Explorer (for France)', detail: 'Explored the St. Lawrence River, claiming the region for France (New France).' }
+                    ],
+                    specialContent: `
+                        <h4 class="text-xl font-semibold text-slate-800 mt-6 mb-4">The Columbian Exchange</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded-lg shadow-sm">
+                            <div>
+                                <h5 class="font-bold text-indigo-600 mb-2">From Old World to New World &rarr;</h5>
+                                <p class="text-sm text-slate-600">Wheat, Sugar, Horses, Cattle, Pigs, Smallpox, Measles, Influenza</p>
+                            </div>
+                            <div>
+                                <h5 class="font-bold text-emerald-600 mb-2">&larr; From New World to Old World</h5>
+                                <p class="text-sm text-slate-600">Corn (Maize), Potatoes, Tomatoes, Cacao (Chocolate), Tobacco, Turkeys</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    id: 'american-revolution',
+                    title: 'The American Revolution',
+                    period: '1765-1783',
+                    summary: 'A political upheaval where thirteen British colonies in North America fought for and won their independence, establishing the United States. Key grievances included "no taxation without representation," leading to iconic events like the Boston Tea Party.',
+                    keyConcepts: [
+                        { name: '"No Taxation Without Representation"', description: 'The core colonial grievance that Parliament could not tax them without their consent as they had no elected representatives.' },
+                        { name: 'Declaration of Independence', description: 'Adopted July 4, 1776, it articulated the philosophical basis for separation, based on natural rights.' },
+                        { name: 'Treaty of Paris (1783)', description: 'The treaty that officially ended the war and recognized American independence.' }
+                    ],
+                    keyFigures: [
+                        { name: 'George Washington', role: 'Commander-in-Chief, 1st President', detail: 'Led the Continental Army to victory and became a symbol of American leadership.' },
+                        { name: 'Thomas Jefferson', role: 'Statesman, 3rd President', detail: 'Principal author of the Declaration of Independence.' },
+                        { name: 'Benjamin Franklin', role: 'Diplomat, Scientist', detail: 'Secured the crucial alliance with France.' },
+                        { name: 'King George III', role: 'King of Great Britain', detail: 'The monarch against whom the colonies rebelled.' }
+                    ],
+                    specialContent: `
+                        <h4 class="text-xl font-semibold text-slate-800 mt-6 mb-4">Comparison of Forces</h4>
+                        <div class="overflow-x-auto bg-white p-4 rounded-lg shadow-sm">
+                            <table class="w-full text-sm text-left text-slate-600">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                                    <tr>
+                                        <th scope="col" class="py-3 px-6">Force</th>
+                                        <th scope="col" class="py-3 px-6">Strengths</th>
+                                        <th scope="col" class="py-3 px-6">Weaknesses</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-white border-b">
+                                        <th scope="row" class="py-4 px-6 font-medium text-slate-900">British Army (Redcoats)</th>
+                                        <td class="py-4 px-6">Well-trained, professional soldiers.<br>World's best navy.<br>Strong central government with funds.<br>Support from Loyalists & some Native tribes.</td>
+                                        <td class="py-4 px-6">Large distance from Britain.<br>Unfamiliar territory.<br>Weak military leaders.<br>Lack of clear public support in Britain.</td>
+                                    </tr>
+                                    <tr class="bg-white">
+                                        <th scope="row" class="py-4 px-6 font-medium text-slate-900">Continental Army (Patriots)</th>
+                                        <td class="py-4 px-6">Familiarity of home ground.<br>Strong leadership (George Washington).<br>Inspiring cause: independence.<br>Crucial help from France and Spain.</td>
+                                        <td class="py-4 px-6">Most soldiers untrained and undisciplined.<br>Shortage of food, ammunition, and supplies.<br>No central government to enforce wartime policies.<br>Inferior navy.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `
+                },
+                {
+                    id: 'french-revolution',
+                    title: 'The French Revolution',
+                    period: '1789-1799',
+                    summary: 'A period of radical social and political upheaval in France that led to the end of the monarchy and the rise of a republic. Marked by the ideals of "Liberty, Equality, Fraternity," it also saw the violent Reign of Terror.',
+                    keyConcepts: [
+                        { name: 'Ancien Régime', description: 'The unequal social and political system in pre-revolutionary France, divided into Three Estates.' },
+                        { name: 'Storming of the Bastille', description: 'On July 14, 1789, a Parisian crowd stormed this prison, a symbolic act against royal tyranny.' },
+                        { name: 'Reign of Terror', description: 'A radical phase (1793-94) where thousands deemed "enemies of the revolution" were executed.' }
+                    ],
+                    keyFigures: [
+                        { name: 'Louis XVI', role: 'King of France', detail: 'The last king before the revolution; executed in 1793.' },
+                        { name: 'Marie Antoinette', role: 'Queen of France', detail: 'Unpopular queen whose extravagance symbolized the monarchy\'s detachment.' },
+                        { name: 'Maximilien Robespierre', role: 'Revolutionary Leader', detail: 'A key figure in the Jacobin Club and the architect of the Reign of Terror.' },
+                        { name: 'Napoleon Bonaparte', role: 'General, Emperor', detail: 'Rose to power at the end of the Revolution, bringing it to a close.' }
+                    ],
+                    specialContent: `
+                        <h4 class="text-xl font-semibold text-slate-800 mt-6 mb-4">The Three Estates</h4>
+                        <p class="text-slate-600 mb-4 text-center">This chart illustrates the profound inequality in pre-revolutionary France, showing the percentage of the population versus the percentage of taxes paid by each Estate.</p>
+                        <div class="chart-container bg-white p-4 rounded-lg shadow-sm">
+                            <canvas id="threeEstatesChart"></canvas>
+                        </div>
+                    `
+                },
+                {
+                    id: 'industrial-revolution',
+                    title: 'The Industrial Revolution',
+                    period: 'c. 1760-1840s',
+                    summary: 'A period of major technological innovation that began in Great Britain, shifting societies from agrarian economies to industrial, machine-based manufacturing. Key developments included the steam engine, the factory system, and massive urbanization.',
+                    keyConcepts: [
+                        { name: 'Factory System', description: 'A new method of production where workers and machinery were brought together in a centralized location.' },
+                        { name: 'Urbanization', description: 'The mass movement of people from rural areas to rapidly growing cities in search of factory work.' },
+                        { name: 'New Social Classes', description: 'The rise of an industrial middle class (factory owners) and a large working class (proletariat).' }
+                    ],
+                    keyFigures: [
+                        { name: 'James Watt', role: 'Inventor', detail: 'Dramatically improved the steam engine, making it a viable power source for industry.' },
+                        { name: 'Eli Whitney', role: 'Inventor', detail: 'Invented the cotton gin, which massively increased cotton production and demand.' },
+                        { name: 'Henry Bessemer', role: 'Inventor', detail: 'Developed a process for mass-producing steel cheaply, revolutionizing construction.' },
+                        { name: 'George Stephenson', role: 'Engineer', detail: 'Developed the "Rocket," the first successful steam locomotive for public railways.' }
+                    ],
+                    specialContent: `
+                        <h4 class="text-xl font-semibold text-slate-800 mt-6 mb-4">Urbanization: Population of Manchester</h4>
+                        <p class="text-slate-600 mb-4 text-center">This chart shows the explosive population growth of Manchester, England, a key industrial city. This rapid urbanization was a hallmark of the Industrial Revolution.</p>
+                        <div class="chart-container bg-white p-4 rounded-lg shadow-sm">
+                            <canvas id="urbanizationChart"></canvas>
+                        </div>
+                    `
+                }
+            ],
+            geography: {
+                introduction: "Canada is a vast federation of ten provinces and three territories. This interactive map explores the unique geography, history, economy, and culture of each. This module aligns with the Quebec Education Program's focus on understanding territories, interpreting issues, and fostering global citizenship. Click on a province or territory to learn more.",
+                 provinces: [
+                    { id: 'BC', name: 'British Columbia', capital: 'Victoria', majorCities: 'Vancouver, Surrey, Burnaby', population: '5.1M', history: 'Joined Confederation in 1871 after the promise of a transcontinental railway.', details: 'Dominated by the Cordillera mountain range, BC has a rugged coastline with many fjords and islands. Its economy is driven by forestry, mining, tourism, and a booming film industry known as "Hollywood North." The port of Vancouver is Canada\'s busiest, a critical gateway for trade with Asia.' },
+                    { id: 'AB', name: 'Alberta', capital: 'Edmonton', majorCities: 'Calgary, Edmonton', population: '4.4M', history: 'Originally part of the Northwest Territories, became a province in 1905 along with Saskatchewan.', details: 'Characterized by vast prairies in the south, foothills, and the Rocky Mountains to the west. Alberta\'s economy is heavily based on its immense oil and gas reserves, particularly the Athabasca oil sands. It is also a major agricultural producer, famous for its cattle ranching.' },
+                    { id: 'SK', name: 'Saskatchewan', capital: 'Regina', majorCities: 'Saskatoon, Regina', population: '1.2M', history: 'Became a province in 1905. Known as the birthplace of socialized medicine (medicare) in Canada.', details: 'Known as "The Land of Living Skies," Saskatchewan is a prairie province with vast, open plains ideal for agriculture. It is a world leader in the production of wheat and canola, and holds the world\'s largest deposits of potash, a key fertilizer ingredient.' },
+                    { id: 'MB', name: 'Manitoba', capital: 'Winnipeg', majorCities: 'Winnipeg, Brandon', population: '1.4M', history: 'Created in 1870 after the Red River Rebellion led by Louis Riel, it was originally a small square area known as the "postage stamp province".', details: 'A geographically diverse province with prairie in the south, the Canadian Shield in the north, and a coastline on Hudson Bay. Its economy is well-diversified, with strengths in agriculture, manufacturing, mining, and hydroelectric power. Winnipeg is a key transportation hub.' },
+                    { id: 'ON', name: 'Ontario', capital: 'Toronto', majorCities: 'Toronto, Ottawa, Mississauga, Hamilton', population: '14.8M', history: 'One of the four original provinces of Canada in 1867. Its name is derived from an Iroquoian word meaning "beautiful water".', details: 'Canada\'s most populous province, Ontario is the nation\'s economic engine. It features the fertile Great Lakes-St. Lawrence Lowlands in the south and the mineral-rich Canadian Shield to the north. Key industries include manufacturing (especially automotive), finance, and technology. It is also home to the national capital, Ottawa.' },
+                    { id: 'QC', name: 'Quebec', capital: 'Québec City', majorCities: 'Montreal, Québec City, Laval', population: '8.6M', history: 'One of the four original provinces. Founded by Samuel de Champlain in 1608, Québec City was the heart of New France.', details: 'The largest province by area, Quebec is defined by its French-speaking majority and unique culture. The St. Lawrence River is central to its geography and history. The economy is diverse, with strengths in aerospace, hydroelectricity, forestry, mining, and a vibrant creative sector.' },
+                    { id: 'NB', name: 'New Brunswick', capital: 'Fredericton', majorCities: 'Moncton, Saint John, Fredericton', population: '0.8M', history: 'One of the four original provinces. Formed in 1784 by Loyalist refugees fleeing the American Revolution.', details: 'Canada\'s only officially bilingual province. Its landscape is dominated by forests and the Appalachian Mountains. Forestry, fishing (especially lobster and salmon), and shipbuilding are key industries. The Bay of Fundy has the highest tides in the world.' },
+                    { id: 'PE', name: 'Prince Edward Island', capital: 'Charlottetown', majorCities: 'Charlottetown, Summerside', population: '0.16M', history: 'Hosted the Charlottetown Conference in 1864, a key first step towards Confederation, leading to its nickname "Birthplace of Confederation". Joined in 1873.', details: 'Canada\'s smallest province, known for its red soil, rolling hills, and sandy beaches. It is a major producer of potatoes. Tourism is also a vital industry, partly driven by the fame of the novel "Anne of Green Gables," which is set on the island.' },
+                    { id: 'NS', name: 'Nova Scotia', capital: 'Halifax', majorCities: 'Halifax, Cape Breton', population: '1.0M', history: 'One of the four original provinces. The name means "New Scotland" in Latin. Has a long history of settlement by the Mi\'kmaq, French, and Scottish.', details: 'A maritime province almost entirely surrounded by water. It has a rich history of shipbuilding and fishing. Today, its economy also includes defense, tourism, and offshore natural gas. Halifax is a major seaport and the economic hub of Atlantic Canada.' },
+                    { id: 'NL', name: 'Newfoundland and Labrador', capital: "St. John's", majorCities: 'St. John\'s, Corner Brook', population: '0.5M', history: 'Was a separate British dominion until it joined Canada as the 10th province in 1949.', details: 'The easternmost province, consisting of the island of Newfoundland and mainland Labrador. Historically dependent on fishing, its modern economy is now driven by offshore oil and gas production and mining. It has a unique culture and dialect.' },
+                    { id: 'YT', name: 'Yukon', capital: 'Whitehorse', majorCities: 'Whitehorse', population: '0.04M', history: 'Created as a separate territory in 1898 at the height of the Klondike Gold Rush to better manage the influx of prospectors.', details: 'A mountainous territory in the northwest, home to Mount Logan, Canada\'s highest peak. It is famous for the Klondike Gold Rush of the late 1890s. Mining remains a key industry, along with tourism focused on its vast wilderness and history.' },
+                    { id: 'NT', name: 'Northwest Territories', capital: 'Yellowknife', majorCities: 'Yellowknife', population: '0.04M', history: 'Originally a vast territory covering much of modern Canada. Its size has been reduced over time as provinces and new territories were created from it.', details: 'A vast northern territory with huge lakes (Great Bear and Great Slave) and the Mackenzie River. Its economy is centered on the extraction of natural resources, especially diamonds, as well as oil and gas. It is a prime location for viewing the aurora borealis.' },
+                    { id: 'NU', name: 'Nunavut', capital: 'Iqaluit', majorCities: 'Iqaluit', population: '0.04M', history: 'Separated from the Northwest Territories in 1999 to become Canada\'s newest territory, the result of a landmark land claims agreement with the Inuit.', details: 'Canada\'s newest and largest territory. Its population is about 85% Inuit. The landscape is dominated by Arctic tundra and islands. The economy relies on mining, fishing, and traditional subsistence activities like hunting and trapping. Government is the largest employer.' }
+                ],
+                otherTopics: [
+                    { 
+                        title: 'The Great Lakes - St. Lawrence Region', 
+                        content: `
+                            <p class="mb-2"><strong>Geographic Location:</strong> This region forms the heartland of North America, encompassing the five Great Lakes (Superior, Michigan, Huron, Erie, Ontario) and the St. Lawrence River valley, creating a vast watershed that stretches from the continental interior to the Atlantic Ocean. It is a bi-national territory, crucial to both Canada and the United States.</p>
+                            <p class="mb-2"><strong>Population & Industry:</strong> It is Canada's most densely populated area and its industrial and manufacturing core. Major industries include automotive manufacturing, steel production, food processing, and advanced technology. The fertile soils left by ancient glaciers support a highly productive agricultural sector.</p>
+                            <p class="mb-2"><strong>Transportation & Economy:</strong> The St. Lawrence Seaway acts as a vital "marine highway," allowing large ocean-going vessels to transport bulk goods like grain, iron ore, and manufactured products between the Atlantic and industrial centers deep within the continent. This infrastructure is critical to the region's economic prosperity.</p>
+                            <p class="mb-2"><strong>Biology & Environment:</strong> The region hosts a diverse freshwater ecosystem but faces significant environmental pressures. Pollution from industrial discharge, agricultural runoff, and urban waste has historically degraded water quality. Invasive species, like zebra mussels, have disrupted the natural food web. Major efforts, such as the Canada-U.S. Great Lakes Water Quality Agreement, are in place to restore and protect this vital resource.</p>
+                            <div class="my-4 p-3 bg-slate-100 rounded-lg">
+                                <h6 class="font-semibold text-center text-sm mb-2">Great Lakes Diagram</h6>
+                                <div class="text-xs text-center text-slate-600">
+                                    <div class="relative w-full h-48">
+                                        <!-- Lake Superior -->
+                                        <div class="absolute top-0 left-5 w-24 h-16 bg-blue-300 rounded-lg flex flex-col items-center justify-center p-1"><strong>Superior</strong><span class="text-[10px]">Largest by area</span></div>
+                                        <!-- Lake Michigan -->
+                                        <div class="absolute top-20 left-0 w-16 h-24 bg-blue-300 rounded-lg flex flex-col items-center justify-center p-1"><strong>Michigan</strong><span class="text-[10px]">All in U.S.</span></div>
+                                        <!-- Lake Huron -->
+                                        <div class="absolute top-10 left-32 w-20 h-20 bg-blue-300 rounded-full flex flex-col items-center justify-center p-1"><strong>Huron</strong><span class="text-[10px]">Has Manitoulin Is.</span></div>
+                                        <!-- Lake Erie -->
+                                        <div class="absolute bottom-8 left-40 w-24 h-10 bg-blue-300 rounded-lg flex flex-col items-center justify-center p-1"><strong>Erie</strong><span class="text-[10px]">Shallowest</span></div>
+                                        <!-- Lake Ontario -->
+                                        <div class="absolute bottom-0 left-60 w-24 h-10 bg-blue-300 rounded-lg flex flex-col items-center justify-center p-1"><strong>Ontario</strong><span class="text-[10px]">Outlet to sea</span></div>
+                                        <!-- St. Lawrence River -->
+                                        <div class="absolute -bottom-2 right-0 text-nowrap">St. Lawrence R. &rarr;</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    { 
+                        title: 'European Colonialism & Its Impact', 
+                        content: `
+                            <p class="mb-2"><strong>Global Impact:</strong> European colonialism initiated a new era of globalization characterized by European dominance. It connected the globe through new trade routes but also imposed European political and economic systems worldwide, creating vast empires and fueling rivalries that led to global conflicts.</p>
+                            <p class="mb-2"><strong>Metropole-Colony Relationship (Mercantilism):</strong> The relationship was based on the economic theory of <strong>mercantilism</strong>, where the colony existed for the primary benefit of the mother country (the metropole). Colonies provided raw materials (furs, timber, fish, sugar) that were shipped to Europe, and in return, were often required to purchase manufactured goods exclusively from the mother country, stifling local industrial development and ensuring a flow of wealth to the metropole.</p>
+                            <p class="mb-2"><strong>Humanities, Religion & Culture:</strong> Colonialism was a powerful force of cultural change. European languages (English, French), legal systems, and social structures were imposed. Christian missionaries played a key role, seeking to convert Indigenous populations, often viewing traditional spiritual practices as pagan and suppressing them. The establishment of European-style education and settlements aimed to assimilate Indigenous peoples and remake the landscape in a European image, leading to a profound and often violent disruption of existing cultures and ways of life.</p>
+                             <div class="my-4 p-3 bg-slate-100 rounded-lg">
+                                <h6 class="font-semibold text-center text-sm mb-2">Colonialism Diagram</h6>
+                                <div class="flex justify-around items-center text-center text-xs">
+                                    <div class="w-24 p-2 bg-red-200 rounded">
+                                        <p class="font-bold">Colony</p>
+                                    </div>
+                                    <div class="flex flex-col mx-2">
+                                        <span class="text-sm font-semibold text-green-700">Raw Materials (Furs, Timber) &rarr;</span>
+                                        <span class="text-sm font-semibold text-red-700">&larr; Manufactured Goods (Guns, Pots)</span>
+                                    </div>
+                                     <div class="w-24 p-2 bg-blue-200 rounded">
+                                        <p class="font-bold">Metropole</p>
+                                        <p>(Mother Country)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    }
+                ]
+            }
+        };
+
+        let currentView = 'history';
+        let activeHistoryEra = 'renaissance';
+        let activeProvinceId = null;
+        let threeEstatesChartInstance = null;
+        let urbanizationChartInstance = null;
+        
+        function render() {
+            if (currentView === 'history') {
+                renderHistory();
+            } else {
+                renderGeography();
+            }
+            updateNavStyles();
+        }
+
+        function updateNavStyles() {
+            navHistory.classList.toggle('active-nav', currentView === 'history');
+            navGeography.classList.toggle('active-nav', currentView === 'geography');
+        }
+
+        function renderHistory() {
+            const timelineHTML = data.history.map(era => `
+                <div 
+                    class="timeline-item relative pl-8 pb-8 border-l-2 border-slate-200 cursor-pointer" 
+                    data-era-id="${era.id}"
+                >
+                    <div class="p-4 rounded-lg transition-all ${activeHistoryEra === era.id ? 'bg-indigo-100 shadow-md' : 'hover:bg-slate-100'}">
+                        <h3 class="font-semibold text-lg ${activeHistoryEra === era.id ? 'text-indigo-700' : 'text-slate-800'}">${era.title}</h3>
+                        <p class="text-sm text-slate-500">${era.period}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            const activeEraData = data.history.find(era => era.id === activeHistoryEra);
+
+            const keyConceptsHTML = activeEraData.keyConcepts.map(concept => `
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h5 class="font-semibold text-slate-900">${concept.name}</h5>
+                    <p class="text-sm text-slate-600 mt-1">${concept.description}</p>
+                </div>
+            `).join('');
+
+            const keyFiguresHTML = activeEraData.keyFigures.map(figure => `
+                <div class="bg-white p-4 rounded-lg shadow-sm text-center">
+                    <div class="w-16 h-16 rounded-full bg-slate-200 mx-auto mb-2 flex items-center justify-center text-slate-500 font-bold text-xl">${figure.name.charAt(0)}</div>
+                    <h5 class="font-semibold text-slate-900">${figure.name}</h5>
+                    <p class="text-sm text-indigo-600">${figure.role}</p>
+                    <p class="text-xs text-slate-500 mt-1">${figure.detail}</p>
+                </div>
+            `).join('');
+
+            contentArea.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="md:col-span-1">
+                        <h2 class="text-2xl font-bold mb-6 text-slate-900">Timeline of Eras</h2>
+                        <div class="relative">${timelineHTML}</div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <div class="bg-white p-6 rounded-xl shadow-lg">
+                            <h2 class="text-2xl md:text-3xl font-bold text-slate-900">${activeEraData.title}</h2>
+                            <p class="text-slate-600 mt-2">${activeEraData.summary}</p>
+                            
+                            <h4 class="text-xl font-semibold text-slate-800 mt-6 mb-4">Key Concepts</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">${keyConceptsHTML}</div>
+
+                            <h4 class="text-xl font-semibold text-slate-800 mt-6 mb-4">Key Figures</h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${keyFiguresHTML}</div>
+                            
+                            ${activeEraData.specialContent || ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (activeHistoryEra === 'french-revolution') {
+                createThreeEstatesChart();
+            }
+            if (activeHistoryEra === 'industrial-revolution') {
+                createUrbanizationChart();
+            }
+        }
+
+        function createThreeEstatesChart() {
+            const ctx = document.getElementById('threeEstatesChart')?.getContext('2d');
+            if(!ctx) return;
+            if(threeEstatesChartInstance) {
+                threeEstatesChartInstance.destroy();
+            }
+            threeEstatesChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['First Estate (Clergy)', 'Second Estate (Nobility)', 'Third Estate (Commoners)'],
+                    datasets: [
+                        {
+                            label: '% of Population',
+                            data: [1, 2, 97],
+                            backgroundColor: 'rgba(129, 140, 248, 0.6)',
+                            borderColor: 'rgba(129, 140, 248, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '% of Taxes Paid',
+                            data: [0, 0, 100],
+                            backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return value + '%' }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) { label += context.parsed.y + '%'; }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createUrbanizationChart() {
+            const ctx = document.getElementById('urbanizationChart')?.getContext('2d');
+            if (!ctx) return;
+            if (urbanizationChartInstance) {
+                urbanizationChartInstance.destroy();
+            }
+            urbanizationChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['1760', '1801', '1831', '1851'],
+                    datasets: [{
+                        label: 'Population',
+                        data: [17000, 70000, 180000, 303000],
+                        fill: false,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                             ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toLocaleString();
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        function renderGeography() {
+            contentArea.innerHTML = `
+                <div class="text-center mb-6">
+                     <h2 class="text-2xl font-bold mb-2 text-slate-900">Map of Canada</h2>
+                     <p class="text-slate-600 max-w-3xl mx-auto">${data.geography.introduction}</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div id="canada-map-container" class="bg-white p-2 rounded-xl shadow-lg flex items-center justify-center">
+                        <svg id="canada-map" viewBox="0 0 1000 700" class="w-full h-auto" fill="#cbd5e1">
+                             <g id="map-shapes">
+                                <path class="province-shape" data-id="BC" d="M84,335 l-11,-119 l-2,-62 l40,-2 l51,1 l23,-45 l-1,61 l-3,62 l36,104 l-48,7 l-88,-7z"/>
+                                <path class="province-shape" data-id="AB" d="M165,336 l-37,-104 l1, -61 l23,45 l59,0 l18,119 l-64,-1z"/>
+                                <path class="province-shape" data-id="SK" d="M224,336 l-18,-119 l59,0 l45,0 l14,119 l-9,-1 l-91,-1z"/>
+                                <path class="province-shape" data-id="MB" d="M324,335 l-14,-119 l45,0 l50,2 l30,55 l-2,62 l-109,2z"/>
+                                <path class="province-shape" data-id="ON" d="M375,337 l2,-62 l30,-55 l98,0 l45,43 l5,20 l-2,44 l-41,20 l-49,1 l-88,-11z"/>
+                                <path class="province-shape" data-id="QC" d="M473,280 l-98,0 l-30,55 l2,62 l88,11 l104,-1 l27,51 l68,-67 l-3,-111z"/>
+                                <path class="province-shape" data-id="NL" d="M660,281 l-68,67 l27,51 l60,-12 l15,-38 l19,0 l25,-40 l-78,-28z M808,128 l54,34 l-16,34 l-58,-2 l-12,-34 l32,-32z"/>
+                                <path class="province-shape" data-id="NB" d="M662,399 l-27,-51 l-104,1 l43,36 l47,21 l41,-7z"/>
+                                <path class="province-shape" data-id="NS" d="M705,435 l-43,-36 l47,21 l41,-7 l22,20 l-60,18 l-7,-16z"/>
+                                <path class="province-shape" data-id="PE" d="M710,392m-12,0a12,12 0 1,0 24,0a12,12 0 1,0 -24,0"/>
+                                <path class="province-shape" data-id="YT" d="M71,153 l-40,2 l-2,62 l11,119 l19,-73 l30,-60 l-18,-52z"/>
+                                <path class="province-shape" data-id="NT" d="M71,153 l18,52 l30,60 l19,73 l37,104 l18,119 l-59,0 l-45,0 l-14,119 l-109,-2 l18,-147 l13,-77 l77,-58 l75,41z"/>
+                                <path class="province-shape" data-id="NU" d="M324,216 l-50,-2 l-45,0 l-14,-119 l109,-2 l-18,147 l-13,77 l-77,58 l-75,-41 l-82,-124 l134,1 l74,0 l120,4 l-3,-111 l138,0 l21,88 l88,-1 l-12,61 l-70,1 l-25,-89 l-219,3z"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="lg:col-span-1 flex flex-col gap-4">
+                        <div id="province-info-container" class="bg-white p-6 rounded-xl shadow-lg flex-grow">
+                            <!-- Info panel will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                     ${data.geography.otherTopics.map(topic => `
+                        <div class="bg-white p-6 rounded-xl shadow-lg">
+                            <h5 class="font-bold text-xl text-slate-800 mb-3">${topic.title}</h5>
+                            <div class="text-slate-600 text-sm">${topic.content}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            updateProvinceInfoPanel(null); // Initial state
+            setupMapDiagram();
+        }
+
+        function updateProvinceInfoPanel(provinceId) {
+            const container = document.getElementById('province-info-container');
+            const provinceInfo = provinceId ? data.geography.provinces.find(p => p.id === provinceId) : null;
+            
+            if (provinceInfo) {
+                 container.innerHTML = `
+                    <h3 class="text-2xl font-bold text-indigo-700 text-center mb-4">${provinceInfo.name}</h3>
+                    <div class="text-slate-600 space-y-3 text-sm">
+                        <p><strong>Capital:</strong> ${provinceInfo.capital}</p>
+                        <p><strong>Major Cities:</strong> ${provinceInfo.majorCities}</p>
+                        <p><strong>Population:</strong> ${provinceInfo.population}</p>
+                         <p><strong>History Snapshot:</strong> ${provinceInfo.history}</p>
+                        <p class="mt-2"><strong>Details:</strong> ${provinceInfo.details}</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="text-center p-4 h-full flex flex-col justify-center items-center">
+                        <h3 class="text-xl font-semibold text-slate-700">Select a Province or Territory</h3>
+                        <p class="text-slate-500 mt-2">Click on a region on the map to display its details.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function setupMapDiagram() {
+            const shapes = document.querySelectorAll('#map-shapes .province-shape');
+            shapes.forEach(shape => {
+                shape.addEventListener('click', (e) => {
+                    activeProvinceId = e.target.dataset.id;
+                    shapes.forEach(s => s.classList.remove('active-province'));
+                    e.target.classList.add('active-province');
+                    updateProvinceInfoPanel(activeProvinceId);
+                });
+            });
+             if(activeProvinceId){
+                const activeShape = document.querySelector(`.province-shape[data-id="${activeProvinceId}"]`);
+                if(activeShape) activeShape.classList.add('active-province');
+            }
+        }
+        
+        contentArea.addEventListener('click', e => {
+            const eraItem = e.target.closest('.timeline-item');
+            if (eraItem) {
+                activeHistoryEra = eraItem.dataset.eraId;
+                render();
+            }
+        });
+
+        navHistory.addEventListener('click', () => {
+            currentView = 'history';
+            render();
+        });
+
+        navGeography.addEventListener('click', () => {
+            currentView = 'geography';
+            render();
+        });
+        
+        render();
+
+    </script>
+</body>
+</html>

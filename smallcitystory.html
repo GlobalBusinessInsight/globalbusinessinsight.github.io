@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《小城故事》小号交互式五线谱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif, 'Microsoft YaHei', 'SimSun';
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        .music-container {
+            max-width: 900px; /* Wider for staff notation */
+            margin: 0 auto;
+        }
+        .info-box {
+            background-color: #fff1f2; /* rose-50 for a softer feel */
+            border-left: 4px solid #f43f5e; /* rose-500 */
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            color: #881337; /* rose-900 */
+        }
+        .controls {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .control-button {
+            background-color: #f43f5e; /* rose-500 */
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            margin-right: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .control-button:hover {
+            background-color: #e11d48; /* rose-600 */
+        }
+        .control-button:disabled {
+            background-color: #fda4af; /* rose-300 */
+            cursor: not-allowed;
+        }
+
+        /* Staff Notation Styles */
+        .staff-system {
+            margin-bottom: 30px;
+            padding: 10px;
+            background-color: #f8fafc; /* slate-50 */
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow-x: auto; 
+            display: flex; 
+            align-items: flex-end; 
+            position: relative; 
+            height: 10em; 
+        }
+
+        .staff-lines-container {
+            position: absolute;
+            top: 3em; 
+            left: 0;
+            right: 0;
+            height: 4em; 
+            pointer-events: none; 
+        }
+
+        .staff-line {
+            background-color: #737373; /* neutral-500 */
+            height: 1.5px; 
+            position: absolute;
+            width: 100%;
+        }
+        .staff-line-1 { top: 0em; } /* F5 line */
+        .staff-line-2 { top: 1em; } /* D5 line */
+        .staff-line-3 { top: 2em; } /* B4 line */
+        .staff-line-4 { top: 3em; } /* G4 line */
+        .staff-line-5 { top: 4em; } /* E4 line */
+
+        .staff-initials {
+            display: flex;
+            align-items: flex-end; 
+            margin-right: 10px;
+            height: 100%; 
+            padding-bottom: 3em; /* Visually align with E4 line */
+        }
+
+        .clef {
+            font-size: 5em; 
+            line-height: 1;
+            margin-right: 5px;
+            color: #333;
+            position: relative;
+            top: -0.1em; 
+        }
+
+        .time-signature {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 1.8em; 
+            font-weight: bold;
+            line-height: 0.9;
+            color: #333;
+        }
+        .time-signature span { display: block; }
+
+        .measure {
+            display: flex;
+            align-items: flex-end; 
+            padding: 0 5px;
+            border-left: 1px solid #a1a1aa; /* Barline color */
+            position: relative; 
+            height: 100%; 
+        }
+        .measure:first-child {
+            border-left: none;
+        }
+
+        .note-element {
+            position: relative;
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
+            margin: 0 3px; 
+            cursor: pointer;
+            width: 1.5em; 
+            height: 100%; 
+        }
+
+        .note-head {
+            width: 0.9em;
+            height: 0.9em;
+            background-color: black;
+            border-radius: 50%;
+            position: absolute; 
+            transition: background-color 0.2s;
+        }
+        .note-head.playing {
+            background-color: #f59e0b; /* amber-500 */
+        }
+        .note-head.half { /* For half notes */
+            background-color: white;
+            border: 2px solid black;
+            box-sizing: border-box;
+        }
+         .note-head.whole { /* For whole notes */
+            background-color: white;
+            border: 2px solid black;
+            box-sizing: border-box;
+            width: 1.2em; /* Slightly wider for whole note appearance */
+            height: 0.8em; /* More oval */
+            border-radius: 40%;
+        }
+
+
+        .stem {
+            width: 2px;
+            background-color: black;
+            position: absolute;
+        }
+
+        .ledger-line {
+            width: 1.5em; 
+            height: 1.5px;
+            background-color: #333;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .final-barline {
+            display: flex;
+            align-items: center;
+            height: 4em; /* Staff height */
+            margin-left: 5px;
+        }
+        .final-barline-thin {
+            width: 1.5px;
+            height: 100%;
+            background-color: #333;
+            margin-right: 2px;
+        }
+        .final-barline-thick {
+            width: 5px;
+            height: 100%;
+            background-color: #333;
+        }
+
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 p-4 md:p-8">
+    <div class="music-container bg-white shadow-xl rounded-lg p-6 md:p-10">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-rose-500">《小城故事》</h1>
+            <p class="text-xl text-slate-700">小号交互式五线谱 (无歌词)</p>
+        </header>
+
+        <div class="info-box">
+            <h2 class="text-lg font-semibold mb-2">乐曲简介与演奏提示</h2>
+            <p>《小城故事》是一首广受欢迎的华语歌曲，由庄奴作词，汤尼（翁清溪）作曲，邓丽君演唱并使其家喻户晓。歌曲描绘了小镇的宁静与美好。此为C调演奏谱的五线谱版本。</p>
+            <ul class="list-disc list-inside mt-2">
+                <li><strong>乐器：</strong> 小号 (按C调乐谱演奏)</li>
+                <li><strong>调号 (Concert Pitch)：</strong> C大调</li>
+                <li><strong>拍号：</strong> 4/4</li>
+                <li><strong>速度：</strong> Moderato (中速)，甜美流畅</li>
+                <li><strong>交互：</strong> 点击音符可播放其音高。</li>
+                <li><strong>提示：</strong> 五线谱为简化显示。演奏时请注意乐曲的抒情性和节奏的平稳。</li>
+            </ul>
+        </div>
+
+        <div class="controls">
+            <button id="playAllButton" class="control-button">顺序播放全曲</button>
+            <button id="stopButton" class="control-button" disabled>停止播放</button>
+            <label for="tempoSlider" class="ml-4 mr-2">速度:</label>
+            <input type="range" id="tempoSlider" min="0.5" max="1.5" value="1.0" step="0.1" class="align-middle">
+            <span id="tempoValue" class="ml-2">1.0x</span>
+        </div>
+
+        <main id="staffNotationContainer">
+            </main>
+
+        <footer class="text-center mt-10 pt-6 border-t border-slate-300">
+            <p class="text-sm text-slate-500">&copy; 2024 交互式五线谱</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- Tone.js Synthesizer Setup ---
+        let synth;
+        let isToneStarted = false;
+        let currentPlaybackSequence = null;
+
+        async function initializeTone() {
+            if (!isToneStarted) {
+                await Tone.start();
+                synth = new Tone.Synth({
+                    oscillator: { type: "sine" }, // Gentle sound
+                    envelope: {
+                        attack: 0.05, 
+                        decay: 0.1,
+                        sustain: 0.4, 
+                        release: 0.3,
+                    }
+                }).toDestination();
+                isToneStarted = true;
+                console.log("Tone.js started and synth initialized.");
+            }
+        }
+        
+        // --- Note Display Data (positions, stems, ledgers) ---
+        const pitchToDisplayData = {
+            'G3': { name: 'G3', top: 8.5 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [8, 9] }, 
+            'A3': { name: 'A3', top: 8.0 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [8] },
+            'B3': { name: 'B3', top: 7.5 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [8] },
+            'C4': { name: 'C4', top: 7.0 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [7.5] },
+            'D4': { name: 'D4', top: 6.5 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [] },
+            'E4': { name: 'E4', top: 6.0 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [] },
+            'F4': { name: 'F4', top: 5.5 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [] },
+            'G4': { name: 'G4', top: 5.0 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [] },
+            'A4': { name: 'A4', top: 4.5 - 0.45, stemDir: 'up', stemHeight: 2.5, ledger: [] }, 
+            'B4': { name: 'B4', top: 4.0 - 0.45, stemDir: 'down', stemHeight: 2.5, ledger: [] },
+            'C5': { name: 'C5', top: 3.5 - 0.45, stemDir: 'down', stemHeight: 2.5, ledger: [] },
+            'D5': { name: 'D5', top: 3.0 - 0.45, stemDir: 'down', stemHeight: 2.5, ledger: [] },
+            'E5': { name: 'E5', top: 2.5 - 0.45, stemDir: 'down', stemHeight: 2.5, ledger: [] },
+            'F5': { name: 'F5', top: 2.0 - 0.45, stemDir: 'down', stemHeight: 2.5, ledger: [] },
+            'G5': { name: 'G5', top: 1.5 - 0.45, stemDir: 'down', stemHeight: 2.5, ledger: [2.0] },
+        };
+
+        // --- Note Durations for Tone.js and Timing ---
+        const noteDurationsToneJs = { 'q': '4n', 'h': '2n', 'e': '8n', 'w': '1n' };
+        // Base duration in seconds for a quarter note. Approx 88 BPM. 60 / 88 = ~0.68s
+        const baseBeatDurationSeconds = 0.6818; 
+        const baseNoteDurationSeconds = {
+             'q': baseBeatDurationSeconds,
+             'h': baseBeatDurationSeconds * 2,
+             'e': baseBeatDurationSeconds / 2,
+             'w': baseBeatDurationSeconds * 4
+        };
+
+        // --- Song Data: "小城故事" (Small Town Story) - First Verse (A section) ---
+        // In C Major, 4/4 time
+        const songData = [
+            // "小城故事多"
+            [{ pitch: 'G4', duration: 'q' }, { pitch: 'G4', duration: 'q' }, { pitch: 'E4', duration: 'q' }, { pitch: 'D4', duration: 'q' }],      // M1
+            // "充满喜和乐"
+            [{ pitch: 'C4', duration: 'h' }, { pitch: 'G4', duration: 'q' }, { pitch: 'A4', duration: 'q' }],                                      // M2
+            [{ pitch: 'C5', duration: 'q' }, { pitch: 'B4', duration: 'q' }, { pitch: 'G4', duration: 'h' }],                                      // M3
+            // "若是你到小城来"
+            [{ pitch: 'C5', duration: 'q' }, { pitch: 'C5', duration: 'q' }, { pitch: 'D5', duration: 'q' }, { pitch: 'E5', duration: 'q' }],      // M4
+            [{ pitch: 'D5', duration: 'q' }, { pitch: 'C5', duration: 'q' }, { pitch: 'A4', duration: 'q' }, { pitch: 'G4', duration: 'q' }],      // M5
+            // "收获特别多"
+            [{ pitch: 'C5', duration: 'q' }, { pitch: 'B4', duration: 'q' }, { pitch: 'G4', duration: 'q' }, { pitch: 'E4', duration: 'q' }],      // M6
+            [{ pitch: 'D4', duration: 'q' }, { pitch: 'C4', duration: 'q' }, { pitch: 'C4', duration: 'h' }, { type: 'finalBarline' }]             // M7 (Ending the section)
+        ];
+
+        // --- UI Rendering ---
+        const staffContainer = document.getElementById('staffNotationContainer');
+        const measuresPerSystem = 4; 
+
+        function renderStaffNotation() {
+            staffContainer.innerHTML = '';
+            let measureCount = 0;
+            let currentSystem;
+
+            songData.forEach((measureData, measureIndex) => {
+                if (measureCount % measuresPerSystem === 0) {
+                    currentSystem = document.createElement('div');
+                    currentSystem.className = 'staff-system';
+                    
+                    const linesContainer = document.createElement('div');
+                    linesContainer.className = 'staff-lines-container';
+                    for (let i = 1; i <= 5; i++) {
+                        const staffLineDiv = document.createElement('div');
+                        staffLineDiv.className = `staff-line staff-line-${i}`;
+                        linesContainer.appendChild(staffLineDiv);
+                    }
+                    currentSystem.appendChild(linesContainer);
+
+                    if (measureCount === 0) {
+                        const initialsDiv = document.createElement('div');
+                        initialsDiv.className = 'staff-initials';
+                        const clefSpan = document.createElement('span');
+                        clefSpan.className = 'clef';
+                        clefSpan.innerHTML = '&#x1D11E;'; 
+                        initialsDiv.appendChild(clefSpan);
+
+                        const timeSigDiv = document.createElement('div');
+                        timeSigDiv.className = 'time-signature';
+                        timeSigDiv.innerHTML = '<span>4</span><span>4</span>';
+                        initialsDiv.appendChild(timeSigDiv);
+                        currentSystem.appendChild(initialsDiv);
+                    }
+                    staffContainer.appendChild(currentSystem);
+                }
+
+                const measureDiv = document.createElement('div');
+                measureDiv.className = 'measure';
+                measureDiv.dataset.measureNumber = measureIndex;
+
+                measureData.forEach(item => {
+                    if (item.type === 'finalBarline') {
+                        const barlineDiv = document.createElement('div');
+                        barlineDiv.className = 'final-barline';
+                        barlineDiv.innerHTML = '<div class="final-barline-thin"></div><div class="final-barline-thick"></div>';
+                        measureDiv.appendChild(barlineDiv);
+                    } else if (item.pitch && item.duration) {
+                        const noteElementDiv = document.createElement('div');
+                        noteElementDiv.className = 'note-element';
+                        noteElementDiv.dataset.pitch = item.pitch;
+                        noteElementDiv.dataset.duration = item.duration;
+
+                        const displayInfo = pitchToDisplayData[item.pitch];
+                        if (!displayInfo) {
+                            console.warn(`No display info for pitch: ${item.pitch}`);
+                            return;
+                        }
+
+                        const noteHeadDiv = document.createElement('div');
+                        noteHeadDiv.className = 'note-head';
+                        if (item.duration === 'h') noteHeadDiv.classList.add('half');
+                        if (item.duration === 'w') noteHeadDiv.classList.add('whole');
+                        
+                        noteHeadDiv.style.top = `${displayInfo.top}em`;
+                        
+                        const stemDiv = document.createElement('div');
+                        if (item.duration !== 'w') { 
+                            stemDiv.className = 'stem';
+                            stemDiv.style.height = `${displayInfo.stemHeight}em`;
+                            if (displayInfo.stemDir === 'up') {
+                                stemDiv.style.left = `calc(50% + 0.35em)`; 
+                                stemDiv.style.top = `${displayInfo.top + 0.45 - displayInfo.stemHeight}em`;
+                            } else { 
+                                stemDiv.style.left = `calc(50% - 0.45em)`; 
+                                stemDiv.style.top = `${displayInfo.top + 0.45}em`; 
+                            }
+                            noteElementDiv.appendChild(stemDiv);
+                        }
+
+                        displayInfo.ledger.forEach(ledgerY => {
+                            const ledgerDiv = document.createElement('div');
+                            ledgerDiv.className = 'ledger-line';
+                            ledgerDiv.style.top = `${ledgerY - 0.0375}em`; 
+                            noteElementDiv.appendChild(ledgerDiv);
+                        });
+                        
+                        noteElementDiv.appendChild(noteHeadDiv);
+
+                        noteElementDiv.addEventListener('click', async function() {
+                            await initializeTone();
+                            if (!synth) return;
+                            const pitchName = this.dataset.pitch;
+                            const durationName = this.dataset.duration;
+                            if (pitchName && durationName && pitchToDisplayData[pitchName]) {
+                                synth.triggerAttackRelease(pitchToDisplayData[pitchName].name, noteDurationsToneJs[durationName]);
+                                noteHeadDiv.classList.add('playing');
+                                setTimeout(() => noteHeadDiv.classList.remove('playing'), Tone.Time(noteDurationsToneJs[durationName]).toMilliseconds());
+                            }
+                        });
+                        measureDiv.appendChild(noteElementDiv);
+                    }
+                });
+                currentSystem.appendChild(measureDiv);
+                measureCount++;
+            });
+        }
+
+
+        // --- Playback Controls ---
+        const playAllButton = document.getElementById('playAllButton');
+        const stopButton = document.getElementById('stopButton');
+        const tempoSlider = document.getElementById('tempoSlider');
+        const tempoValueSpan = document.getElementById('tempoValue');
+
+        tempoSlider.addEventListener('input', function() {
+            tempoValueSpan.textContent = parseFloat(this.value).toFixed(1) + 'x';
+        });
+        
+        async function playAll() {
+            await initializeTone();
+            if (!synth) return;
+
+            playAllButton.disabled = true;
+            stopButton.disabled = false;
+
+            const sequence = [];
+            let currentTime = 0;
+            const tempoMultiplier = parseFloat(tempoSlider.value);
+
+            const currentBaseNoteDurations = {
+                 'q': baseBeatDurationSeconds / tempoMultiplier,
+                 'h': (baseBeatDurationSeconds * 2) / tempoMultiplier,
+                 'e': (baseBeatDurationSeconds / 2) / tempoMultiplier,
+                 'w': (baseBeatDurationSeconds * 4) / tempoMultiplier
+            };
+
+            songData.forEach((measureData, measureIdx) => {
+                measureData.forEach(item => {
+                    if (item.pitch && item.duration) {
+                        const pitchName = pitchToDisplayData[item.pitch]?.name;
+                        const toneDuration = noteDurationsToneJs[item.duration]; 
+                        const actualDurationSeconds = currentBaseNoteDurations[item.duration];
+                        
+                        if (pitchName && toneDuration) {
+                            sequence.push({
+                                time: currentTime,
+                                pitch: pitchName,
+                                duration: toneDuration, 
+                                elementQuery: `.measure[data-measure-number="${measureIdx}"] .note-element[data-pitch="${item.pitch}"][data-duration="${item.duration}"] .note-head`
+                            });
+                        }
+                        currentTime += actualDurationSeconds;
+                    }
+                });
+            });
+
+            currentPlaybackSequence = new Tone.Part((time, value) => {
+                synth.triggerAttackRelease(value.pitch, value.duration, time);
+                const noteHeadEl = document.querySelector(value.elementQuery); 
+                if (noteHeadEl) {
+                    if (!noteHeadEl.classList.contains('playing')) {
+                        noteHeadEl.classList.add('playing');
+                        const highlightDurationMs = Tone.Time(value.duration).toMilliseconds() / tempoMultiplier;
+                        setTimeout(() => {
+                            noteHeadEl.classList.remove('playing');
+                        }, highlightDurationMs * 0.95); 
+                    }
+                }
+            }, sequence).start(0);
+
+            Tone.Transport.on('stop', () => {
+                playAllButton.disabled = false;
+                stopButton.disabled = true;
+                document.querySelectorAll('.note-head.playing').forEach(el => el.classList.remove('playing'));
+            });
+            Tone.Transport.start();
+            
+            Tone.Transport.scheduleOnce(() => {
+                if (Tone.Transport.state === "started") {
+                     stopPlayback();
+                }
+            }, currentTime + 0.2); 
+        }
+
+        function stopPlayback() {
+            if (currentPlaybackSequence) {
+                currentPlaybackSequence.stop(0); 
+                currentPlaybackSequence.dispose();
+                currentPlaybackSequence = null;
+            }
+            Tone.Transport.stop(); 
+            Tone.Transport.cancel(); 
+            playAllButton.disabled = false;
+            stopButton.disabled = true;
+            document.querySelectorAll('.note-head.playing').forEach(el => el.classList.remove('playing'));
+        }
+
+        playAllButton.addEventListener('click', playAll);
+        stopButton.addEventListener('click', stopPlayback);
+        
+        // --- Initial Render & Setup ---
+        renderStaffNotation();
+        document.body.addEventListener('click', initializeTone, { once: true });
+        tempoValueSpan.textContent = parseFloat(tempoSlider.value).toFixed(1) + 'x';
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"  crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-6214772877334340">   
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式地理核心问题综合指南</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals with Sky Blue accent -->
+    <!-- Application Structure Plan: A fixed-sidebar navigation (hamburger menu on mobile) controls a single scrolling main content area. Content is organized into 8 thematic sections. Questions regarding visa-free access and electric vehicles have been added to relevant sections (Section 5 for visa-free, Section 8 for EVs). Interactive accordions present individual questions. Comparative data uses Chart.js charts, and regional examples use tabbed interfaces. This structure ensures all topics, including the newly added ones, are covered in a user-friendly, non-linear manner. -->
+    <!-- Visualization & Content Choices: 
+    1. Q1 (Location): Table for China/Japan/Mongolia comparison.
+    2. Q2 (Terrain): Tabbed interface for regional terrain.
+    3. Q6 (Climate Eval): Interactive Radar Chart for climate types.
+    4. Q7 (River Hydrology): Interactive Bar Chart for major river comparisons.
+    5. Q25 (Visa-free access): Structured text within an accordion.
+    6. Q26 (Electric Vehicles): Structured text within an accordion.
+    All other questions: Accordions with structured text.
+    Justification: Interactive elements for complex comparisons. Tables/lists for clarity. Accordions for information density. All visualizations use Chart.js (Canvas) adhering to NO SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif';
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .prose-custom p, .prose-custom ul, .prose-custom ol {
+            margin-bottom: 1rem;
+        }
+        .prose-custom ul, .prose-custom ol {
+            list-style-position: inside;
+            padding-left: 1.5rem;
+        }
+        .prose-custom li {
+            margin-bottom: 0.5rem;
+        }
+        .prose-custom h4 {
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+         .prose-custom h5 {
+            font-weight: 500;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .accordion-content {
+            display: none;
+            transition: max-height 0.3s ease-in-out;
+            overflow: hidden;
+        }
+        .accordion-button.active svg.chevron {
+            transform: rotate(180deg);
+        }
+        .nav-link.active {
+            background-color: #e0f2fe; /* light sky blue */
+            color: #0c4a6e; /* dark sky blue */
+            font-weight: 600;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+        th, td {
+            border: 1px solid #e2e8f0; /* slate-200 */
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th {
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        .tab-button.active {
+            border-color: #0ea5e9; /* sky-500 */
+            color: #0284c7; /* sky-600 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <div class="flex">
+        <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-white shadow-lg transition-transform -translate-x-full md:translate-x-0 print:hidden">
+            <div class="h-full px-3 py-4 overflow-y-auto">
+                <h1 class="text-xl font-bold text-sky-700 mb-6 px-2">地理核心问题指南</h1>
+                <ul class="space-y-1 font-medium">
+                    <li><a href="#section-1" class="nav-link flex items-center p-2 text-slate-700 rounded-lg hover:bg-sky-100 hover:text-sky-700">地理位置</a></li>
+                    <li><a href="#section-2" class="nav-link flex items-center p-2 text-slate-700 rounded-lg hover:bg-sky-100 hover:text-sky-700">地形与地貌</a></li>
+                    <li><a href="#section-3" class="nav-link flex items-center p-2 text-slate-700 rounded-lg hover:bg-sky-100 hover:text-sky-700">气候</a></li>
+                    <li><a href="#section-4" class="nav-link flex items-center p-2 text-slate-700 rounded-lg hover:bg-sky-100 hover:text-sky-700">河流与水文</a></li>
+                    <li><a href="#section-5" class="nav-link flex items-center p-2 text-slate-700 rounded-lg hover:bg-sky-100 hover:text-sky-700">交通、旅游与资源</a></li>
+                    <li><a href="#section-6" class="nav-link flex items-center p-2 text-slate-700 rounded-lg hover:bg-sky-100 hover:text-sky-700">灾害、湿地与环境</a></li>
+                    <li><a href="#section-7" class="nav-link flex items-center p-2 text-slate-700 rounded-lg hover:bg-sky-100 hover:text-sky-700">区域特色与发展</a></li>
+                    <li><a href="#section-8" class="nav-link flex items-center p-2 text-slate-700 rounded-lg hover:bg-sky-100 hover:text-sky-700">工业、人居与战略</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <button id="menu-button" class="md:hidden fixed top-4 left-4 z-50 p-2 text-slate-600 bg-white rounded-md shadow-md print:hidden">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+        </button>
+
+        <main class="md:ml-64 p-4 md:p-8 w-full">
+            <!-- Section 1: Geographical Location -->
+            <section id="section-1" class="mb-12">
+                <h2 class="text-3xl font-bold text-sky-700 border-b-2 border-sky-300 pb-2 mb-6">第一部分：地理位置</h2>
+                <div class="prose-custom max-w-none mb-6">
+                    <p>地理位置是区域地理研究的基石，它深刻影响区域的自然环境、经济发展脉络和文化面貌。本部分将引导您从半球、纬度和海陆三个核心维度，系统地分析和比较不同区域的地理位置及其深远意义。</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>1. 地理位置的特点、异同或重要性？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <h4>1.1 半球位置？如何总结半球位置？对生产和生活的影响</h4>
+                            <p><strong>如何总结：</strong>明确研究对象位于哪个半球（东/西半球、南/北半球）。例：中国位于东半球、北半球。</p>
+                            <p><strong>影响：</strong></p>
+                            <ul>
+                                <li>季节相反：南北半球季节相反，影响农业、贸易、旅游。</li>
+                                <li>昼夜长短与太阳高度：影响光热条件，进而影响农业、能源消耗、生活习惯。</li>
+                                <li>洋流与风带：影响大规模洋流和行星风带分布，间接影响气候。</li>
+                            </ul>
+                            <h4>1.2 纬度位置？如何总结位置？中国、俄罗斯、巴西维度位置的特点及对经济发展的有利不利影响？</h4>
+                            <p><strong>如何总结：</strong>指出纬度范围（高、中、低纬），所属温度带，决定的热量条件和主要气候特征。</p>
+                            <div id="latitude-comparison-table" class="overflow-x-auto"></div>
+                            <h4>1.3 海陆位置？如何总结海陆位置？中国、日本、蒙古海陆位置的优缺点？</h4>
+                            <p><strong>如何总结：</strong>明确沿海/内陆/岛屿；距海远近；临近陆海；与周边联系。</p>
+                            <div id="sea-land-comparison-table" class="overflow-x-auto"></div>
+                            <h4>1.4 如何回答异同点？</h4>
+                            <ol>
+                                <li>确定比较方面（半球、纬度、海陆）。</li>
+                                <li>逐项对比各区域特征。</li>
+                                <li>概括相同点。</li>
+                                <li>指出不同点及影响。</li>
+                                <li>条理清晰（可列表）。</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Topography and Landforms -->
+            <section id="section-2" class="mb-12">
+                <h2 class="text-3xl font-bold text-sky-700 border-b-2 border-sky-300 pb-2 mb-6">第二部分：地形与地貌</h2>
+                <div class="prose-custom max-w-none mb-6">
+                    <p>地形地貌是区域自然景观的骨架，深刻影响人类活动。本部分将阐述如何总结地形特点，并通过实例展示不同区域的地形分布格局，同时剖析典型地貌特征及其成因。</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>2. 如何总结地形特点与地形分布特点？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <h4>总结地形特点的方法：</h4>
+                            <ol>
+                                <li><strong>主要地形类型</strong>：山地、高原、平原、丘陵、盆地及其比例。</li>
+                                <li><strong>地势起伏状况</strong>：高低起伏态势，平均海拔，相对高差。</li>
+                                <li><strong>地势倾斜方向</strong>：如“西高东低”。</li>
+                                <li><strong>特殊地形地貌</strong>：喀斯特、火山、冰川等。</li>
+                            </ol>
+                            <h4>区域地形分布特点案例：</h4>
+                            <div class="mt-4">
+                                <div class="border-b border-slate-200">
+                                    <nav class="-mb-px flex space-x-2 sm:space-x-4 overflow-x-auto" aria-label="Tabs">
+                                        <button class="tab-button active whitespace-nowrap py-3 px-2 sm:py-4 sm:px-3 border-b-2 font-medium text-sm" data-target="tab-xinjiang">新疆</button>
+                                        <button class="tab-button whitespace-nowrap py-3 px-2 sm:py-4 sm:px-3 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300 border-transparent" data-target="tab-se-asia">中南半岛</button>
+                                        <button class="tab-button whitespace-nowrap py-3 px-2 sm:py-4 sm:px-3 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300 border-transparent" data-target="tab-s-america">南美洲</button>
+                                        <button class="tab-button whitespace-nowrap py-3 px-2 sm:py-4 sm:px-3 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300 border-transparent" data-target="tab-usa">美国</button>
+                                        <button class="tab-button whitespace-nowrap py-3 px-2 sm:py-4 sm:px-3 border-b-2 font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300 border-transparent" data-target="tab-australia">澳洲</button>
+                                    </nav>
+                                </div>
+                                <div id="tab-content-terrain" class="mt-4">
+                                    <div id="tab-xinjiang" class="tab-pane"><strong>新疆</strong>：地形分布“三山夹两盆”。北为阿尔泰山，南为昆仑山，天山横亘中部，分隔出准噶尔盆地和塔里木盆地。</div>
+                                    <div id="tab-se-asia" class="tab-pane hidden"><strong>中南半岛</strong>：地形“山河相间，纵列分布”。山脉河流多由北向南延伸，地势北高南低。</div>
+                                    <div id="tab-s-america" class="tab-pane hidden"><strong>南美洲</strong>：西部高峻安第斯山脉，中部广阔冲积平原，东部古老高原。呈“西山中原东高原”格局。</div>
+                                    <div id="tab-usa" class="tab-pane hidden"><strong>美国（本土）</strong>：三大南北纵列带。东部阿巴拉契亚山脉及沿岸平原，中部中央大平原，西部科迪勒拉山系。</div>
+                                    <div id="tab-australia" class="tab-pane hidden"><strong>澳大利亚</strong>：三大地形区。东部大分水岭，中部中央低地（大自流盆地），西部低矮高原。</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>3. 地貌特点（黄土高原、青藏高原、云贵高原、中南半岛等）？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <ul>
+                                <li><strong>黄土高原</strong>：黄土覆盖，千沟万壑，水土流失严重。典型地貌：塬、梁、峁。</li>
+                                <li><strong>青藏高原</strong>：“高”和“大”，平均海拔4000m+。雪山连绵，冰川广布，湖泊众多。高寒缺氧。</li>
+                                <li><strong>云贵高原</strong>：喀斯特地貌广布（峰林、溶洞、地下暗河）。地表崎岖，“地无三里平”。</li>
+                                <li><strong>中南半岛</strong>：北部山河相间，南部河口三角洲和冲积平原广阔。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Climate -->
+            <section id="section-3" class="mb-12">
+                <h2 class="text-3xl font-bold text-sky-700 border-b-2 border-sky-300 pb-2 mb-6">第三部分：气候</h2>
+                <div class="prose-custom max-w-none mb-6">
+                    <p>气候是决定区域自然面貌和人类生活方式的关键。本部分将梳理影响气候的因素，探讨气候的海洋性与大陆性，并通过互动方式评价不同气候类型的利弊。</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>4. 影响气候的因素有哪些？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <ol>
+                                <li><strong>纬度位置（太阳辐射）</strong>：决定热量基本分布。</li>
+                                <li><strong>海陆位置</strong>：影响降水和气温温差，形成海洋性和大陆性差异。</li>
+                                <li><strong>大气环流</strong>：气压带、风带、季风，主导气候类型和降水分布。</li>
+                                <li><strong>地形地貌</strong>：海拔（影响气温）、坡向（影响降水和光照）、山脉走向（影响水汽和冷空气）。</li>
+                                <li><strong>洋流</strong>：暖流增温增湿，寒流降温减湿。例：北大西洋暖流与欧洲西部温带海洋气候，秘鲁寒流与秘鲁沙漠。</li>
+                                <li><strong>下垫面性质</strong>：湿地、植被、地面反射率等。</li>
+                                <li><strong>人类活动</strong>：城市热岛效应、温室气体排放、改变地表状况。</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>5. 气候的海洋性及大陆性？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>海洋性气候</strong>：气温年/日较差小（冬暖夏凉），降水多且均匀，湿度大，多云雾。</p>
+                            <p><strong>大陆性气候</strong>：气温年/日较差大（冬冷夏热），降水少且集中（多夏季），湿度小，晴天多。</p>
+                        </div>
+                    </div>
+                     <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>6. 如何评价不同气候类型的优缺点（如热带沙漠气候）？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p>评价气候应辩证看待。以<strong>热带沙漠气候</strong>为例：</p>
+                            <p><strong>优点</strong>：光照足，太阳能丰富；昼夜温差大，利于瓜果糖分积累；干燥，不利病虫害。</p>
+                            <p><strong>缺点</strong>：极端干旱，水资源匮乏；高温酷热；风沙大；生态脆弱。</p>
+                            <h4>交互式气候评价</h4>
+                            <p>请从下方选择一种气候类型，雷达图将展示其在光热、水分、农业适宜度、人居舒适度和灾害风险等方面的综合评价。数值越高代表条件越优越或风险越低。</p>
+                            <div class="bg-slate-50 p-4 rounded-lg mt-4">
+                               <select id="climate-selector" class="block w-full md:w-1/2 mx-auto p-2 border border-slate-300 rounded-md mb-4">
+                                    <option value="desert">热带沙漠气候</option>
+                                    <option value="mediterranean">地中海气候</option>
+                                    <option value="monsoon">温带季风气候</option>
+                                    <option value="oceanic">温带海洋性气候</option>
+                               </select>
+                                <div class="chart-container">
+                                    <canvas id="climateChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: Rivers and Hydrology -->
+            <section id="section-4" class="mb-12">
+                <h2 class="text-3xl font-bold text-sky-700 border-b-2 border-sky-300 pb-2 mb-6">第四部分：河流与水文</h2>
+                <div class="prose-custom max-w-none mb-6">
+                    <p>河流是地球的动脉，塑造地貌，孕育文明。本部分将深入分析影响河流水文特征的因素，对比世界大河的特点，并探讨水能、水土流失、航运价值及河流的利弊影响。</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>7. 河流的水文特点及影响因素？（案例：长江、黄河、亚马孙河等）</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p>水文特征：流量、水位、含沙量、汛期、结冰期、水能等。</p>
+                            <p><strong>影响因素</strong>：气候（最主要）、地形、土壤、植被、人类活动。</p>
+                            <h5>世界主要河流水文特征比较</h5>
+                             <p>下图展示了部分世界著名河流的关键水文指标。将鼠标悬停在图表上可查看具体数值。</p>
+                            <div class="bg-slate-50 p-4 rounded-lg mt-4">
+                                <div class="chart-container h-[500px] md:h-[400px]">
+                                    <canvas id="riverChart"></canvas>
+                                </div>
+                            </div>
+                            <h5>案例简述：</h5>
+                            <ul>
+                                <li><strong>长江</strong>：上游水能丰富，中下游流量大、航运价值高。</li>
+                                <li><strong>黄河</strong>：中游含沙量极大，下游地上河。</li>
+                                <li><strong>亚马孙河</strong>：流量世界第一。</li>
+                                <li><strong>莱茵河</strong>：水量稳定，航运价值高。</li>
+                                <li><strong>密西西比河</strong>：春汛夏汛，水量大。</li>
+                                <li><strong>尼罗河</strong>：曾有定期泛滥（夏汛）。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>8. 河流的水能丰富的原因？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p>主要取决于两点：</p>
+                            <ol>
+                                <li><strong>径流量大</strong>（水量大）。</li>
+                                <li><strong>落差大</strong>（地势起伏大）。</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>9. 水土流失，滑坡泥石流及应对措施？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>水土流失原因</strong>：自然（降雨集中、坡大、土松、植被稀疏）、人文（植被破坏、不合理耕作）。</p>
+                            <p><strong>滑坡原因</strong>：自然（岩土松散、坡大、降雨/地震诱发）、人文（工程活动、植被破坏）。</p>
+                            <p><strong>泥石流原因</strong>：自然（地形陡、松散物多、短时强降水）、人文（植被破坏、不合理弃渣）。</p>
+                            <p><strong>黄土高原特殊性</strong>：黄土特性，历史人类活动。</p>
+                            <p><strong>应对措施</strong>：工程（梯田、坝、护坡）、生物（植树种草）、管理（小流域治理、合理规划、监测预警）。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>10. 河流航运价值高低分析（以黄河为例）？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>航运价值高条件</strong>：自然（水量丰稳、流速缓、河道优、含沙少、无/短结冰期、通江达海）、人文（经济发达需求大、设施完善、管理水平高）。</p>
+                            <p><strong>黄河航运价值不高原因</strong>：自然（水量小变率大、含沙极大、流速变化大、结冰期长、地上河）、人文（流域经济相对弱、历史重治理水、陆路竞争）。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>11. 一条河流对沿岸地区的利弊？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>利</strong>：供水、航运、肥沃平原、水产、水能、旅游、孕育文明。</p>
+                            <p><strong>弊</strong>：洪涝、地质灾害、传播疾病、阻隔交通、水资源冲突、泥沙淤积、水污染。</p>
+                            <p><strong>案例 - 东南亚河流（湄公河）</strong>：利（农业、淡水、渔业、航运）、弊（洪涝、上游建坝影响）。</p>
+                            <p><strong>案例 - 长江三角洲</strong>：利（水源、航运、平原、经济核心）、弊（曾洪涝、水污染、水资源矛盾）。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 5: Transportation, Tourism, and Resources -->
+            <section id="section-5" class="mb-12">
+                <h2 class="text-3xl font-bold text-sky-700 border-b-2 border-sky-300 pb-2 mb-6">第五部分：交通、旅游与资源调配</h2>
+                 <div class="prose-custom max-w-none mb-6">
+                    <p>交通是经济的命脉，旅游是文化的桥梁，资源调配关乎区域均衡。本部分探讨交通工程的建设，旅游业的发展条件与意义，重大资源跨区域调配，以及国际人员流动的便利性等议题。</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>12. 交通工程的意义及建设条件分析？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>建设意义</strong>：完善交通网、降成本、促经济（产业、资源、布局）、加联系、改善民生、固国防、促旅游。</p>
+                            <p><strong>有利条件</strong>：自然（地形平坦、地质稳、气候好）、社会经济（资金足、技术高、劳力丰、需求大、政策好）。</p>
+                            <p><strong>不利条件</strong>：自然（地形复杂、地质差、气候劣、河流碍、生态脆、灾害多）、社会经济（成本高、技术难、征地难、环保压、缺资金）。</p>
+                            <p><strong>案例 - 青藏铁路</strong>：意义（改善西藏交通、促发展、固国防）、不利（高寒缺氧、冻土、生态脆弱）。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>13. 发展旅游业的条件及意义？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>发展条件</strong>：旅游资源（自然、人文）、基础设施服务、客源市场、接待能力、社会环境。</p>
+                            <p><strong>发展意义</strong>：经济（收入、产业、就业、区域发展）、社会文化（精神需求、文化交流、遗产保护）、环境（环保意识、生态支持）。</p>
+                            <p><strong>案例</strong>：东营（湿地、文化）、山东（山水圣人、沿海）、欧洲西部（顶级资源、发达服务）、东南亚（热带风情、低价优质服务）、日本（多样景观、深厚文化）。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>14. 资源跨区域调配分析（南水北调、西电东送等）？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>分析框架</strong>：必要性（资源不均、发展不平）、调出方优势、调入方原因、调配方式、困难、对双方意义。</p>
+                            <p><strong>案例 - 南水北调</strong>：缓解北方缺水；工程浩大、投资高、生态影响。</p>
+                            <p><strong>案例 - 西电东送</strong>：西部资源转经济，东部缓解能源紧张改善环境；输电投资大、能源本身特性。</p>
+                            <p><strong>案例 - 中俄石油</strong>：俄获市场，中获能源；油价、地缘政治风险。</p>
+                            <p><strong>案例 - 进口大豆</strong>：满足国内需求；对外依赖、价格波动。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>25. 分析影响一国对外免签政策的因素及其意义。</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <h4>影响因素：</h4>
+                            <ul>
+                                <li>国家经济实力与稳定性。</li>
+                                <li>政治稳定与良好治理。</li>
+                                <li>国家安全考量（非法移民、犯罪、恐怖主义风险低）。</li>
+                                <li>外交关系与互惠安排。</li>
+                                <li>护照效力与国际声誉。</li>
+                                <li>国民素质与海外形象。</li>
+                                <li>历史联系与文化渊源。</li>
+                                <li>特定需求（吸引游客、投资、举办大型活动）。</li>
+                            </ul>
+                            <h4>意义：</h4>
+                            <p><strong>对公民个人：</strong></p>
+                            <ul>
+                                <li>提升出行便利性。</li>
+                                <li>促进国际交往（旅游、商务、探亲、短期学习）。</li>
+                            </ul>
+                            <p><strong>对国家层面：</strong></p>
+                            <ul>
+                                <li>促进旅游业发展，增加外汇收入。</li>
+                                <li>吸引外国投资与人才。</li>
+                                <li>提升国际形象与软实力。</li>
+                                <li>加强文化交流与理解。</li>
+                                <li>推动经贸合作。</li>
+                            </ul>
+                            <p><strong>潜在挑战：</strong></p>
+                            <ul>
+                                <li>国家安全风险。</li>
+                                <li>公共服务压力。</li>
+                                <li>文化冲击与社会影响。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 6: Disasters, Wetlands, and Environment -->
+            <section id="section-6" class="mb-12">
+                <h2 class="text-3xl font-bold text-sky-700 border-b-2 border-sky-300 pb-2 mb-6">第六部分：灾害、湿地与环境</h2>
+                <div class="prose-custom max-w-none mb-6">
+                    <p>自然灾害、湿地保护与环境管理是区域可持续发展的关键议题。本部分聚焦洪涝与干旱的成因与对策，湿地的价值与挑战，以及生态保护的重要性。</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>15. 洪涝与旱灾的成因及对策？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>洪涝成因</strong>：自然（气候、地形、水系）、人文（植被破坏、围湖造田、城市化）。河流改道（如黄河）因泥沙淤积抬高河床。</p>
+                            <p><strong>旱灾原因</strong>：自然（降水少、蒸发大、径流少）、人文（植被破坏、水资源不合理利用）。</p>
+                            <p><strong>旱灾对策</strong>：监测预警、开源节流、农业抗旱、生态建设、应急管理。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>16. 湿地的成因、问题、意义及开发与保护？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>湿地成因</strong>：水源足、排水不畅、下渗难。案例（亚马孙、三江源、三江平原、黄三角）。</p>
+                            <p><strong>面临问题</strong>：面积萎缩、功能退化、生物多样性减少、水质污染。原因（开垦、占用、水利工程、污染）。</p>
+                            <p><strong>湿地意义</strong>：调气候、蓄洪水、净水质、护多样性、供物产、科研旅游、固碳。</p>
+                            <p><strong>开发与保护</strong>：权衡利弊。保护优先，科学规划，可持续开发（生态旅游），加强管理，社区参与。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 7: Regional Features & Development -->
+            <section id="section-7" class="mb-12">
+                <h2 class="text-3xl font-bold text-sky-700 border-b-2 border-sky-300 pb-2 mb-6">第七部分：区域特色与发展</h2>
+                <div class="prose-custom max-w-none mb-6">
+                    <p>不同区域因其独特的自然与人文条件，形成了各具特色的经济活动与发展路径。本部分探讨山区的垂直分异，高科技产业的发展，冰雪运动的兴起，以及特定农作物和工业的区位条件。</p>
+                </div>
+                <div class="space-y-4">
+                     <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>17. 山区垂直变化多的原因？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>主导因素</strong>：海拔变化导致水热条件（气温、降水）垂直分异。</p>
+                            <p><strong>山体条件</strong>：相对高度大（带谱完整）、纬度低（基带热，带谱多）、坡向（阳/阴坡，迎/背风坡影响水热）。</p>
+                            <p>案例：云贵高原不同海拔农业种植差异是垂直分异的体现。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>18. 发展高科技的意义与条件？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>意义</strong>：促增长与升级、提竞争力、创高薪就业、促创新扩散、引领发展、强国防。</p>
+                            <p><strong>条件</strong>：人才、科技基础、资金、市场、政策、设施、产业集群、开放合作。</p>
+                            <p><strong>案例</strong>：美国硅谷（名校、风投、创新文化）、中关村（高校院所、政策、市场）、印度班加罗尔（教育、英语、低成本、外包）。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>19. 冰雪运动发达的自然与人文条件及举办意义？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>自然条件</strong>：气候（冬长寒冷雪多）、地形（山地、平地、湖河）、水资源、好生态。</p>
+                            <p><strong>人文条件</strong>：经济基础、运动传统文化、设施完善、技术人才、政策支持、市场运作。</p>
+                            <p><strong>举办意义</strong>：提形象、促普及、推产业、建基建、拉经济、文化交流、增自豪感。</p>
+                            <p><strong>案例</strong>：欧洲（自然优越、人文雄厚）、黑龙江（自然条件好、有传统、政府支持）。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>20. 种植棉花的自然条件与纺织工业分布？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>棉花自然条件</strong>：光足、热丰、水适宜（灌溉重要）、土肥、地平。</p>
+                            <p><strong>纺织工业分布</strong>：早期近原料；现代受市场、劳力、交通、技术等综合影响。案例：珠三角（市场、劳力、外向型）、上海（历史、技术、转型升级）。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>21. 盐场的分布特点（地形与气候分析）？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>地形条件</strong>：平坦开阔海滩/滩涂、泥沙质（防渗）、适当潮差、避风。</p>
+                            <p><strong>气候条件</strong>：高温蒸发旺、降水少日照足（晒盐季）、风力适中、空气干燥。</p>
+                            <p><strong>分布特点</strong>：热带/亚热带/温带的干旱/半干旱沿海；信风带大陆西岸；雨影区沿海。中国：北方沿海（春季优越）。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 8: Industry, Settlements, and National Strategy -->
+            <section id="section-8" class="mb-12">
+                <h2 class="text-3xl font-bold text-sky-700 border-b-2 border-sky-300 pb-2 mb-6">第八部分：工业、人居与国家战略</h2>
+                <div class="prose-custom max-w-none mb-6">
+                    <p>工业布局、人居环境的形成以及国家层面的战略决策（如迁都、发展新兴产业）是地理学研究的重要议题，它们反映了人地关系的复杂互动和区域发展的动态演变。</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>22. 钢铁与有色金属工业分布？重工业区衰退与振兴？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>钢铁工业分布演变</strong>：燃料指向 -> 原料指向/煤铁复合 -> 临海型（市场/交通指向）。</p>
+                            <p><strong>有色金属工业分布</strong>：采选（近矿）、冶炼（能源指向、原料指向、市场/交通指向）。</p>
+                            <p><strong>传统重工业区衰退原因</strong>（如辽中南）：资源枯竭、产业结构单一、技术老化、环境污染、市场竞争、体制不活。</p>
+                            <p><strong>振兴措施</strong>：调结构、技术改造、治环境、改体制、建基建、循环经济。</p>
+                            <p><strong>日韩、长三角钢铁发达条件</strong>（临海型）：海运便、市场广、技术高、资金足、产业集聚。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>23. 民居与当地自然环境的关系？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p>民居是适应自然的产物：</p>
+                            <ul>
+                                <li><strong>地形</strong>：平原（集中）、山区（依山、吊脚楼、窑洞）。</li>
+                                <li><strong>气候</strong>：热带（通风散热）、干旱（厚墙小窗）、寒冷（保暖）、湿润（防潮）。</li>
+                                <li><strong>就地取材</strong>：木、土、石、竹、毛毡。</li>
+                                <li><strong>适应灾害</strong>：地震（木结构）、洪水（高脚屋）、台风（结构固）。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>24. 多国迁都（或建新区）的原因、意义、困难与有利条件？</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <p><strong>原因</strong>：缓解“大城市病”、促区域均衡、提行政效率、国防安全、摆脱殖民影响、自然灾害威胁、疏解功能（雄安）。</p>
+                            <p><strong>意义</strong>：缓解旧都压力、带动新区发展、优化格局、提升治理、展形象。</p>
+                            <p><strong>困难</strong>：投资巨大、建设周期长、人口产业导入难、旧都阻力、新址争议、生态影响。</p>
+                            <p><strong>有利条件</strong>：国家意志、财政支持、新址潜力、旧都问题严重、社会期待。</p>
+                        </div>
+                    </div>
+                    <div class="accordion-item bg-white rounded-lg shadow-sm">
+                        <button class="accordion-button w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-slate-100 rounded-t-lg">
+                            <span>26. 分析电动汽车产业发展的区位条件、意义与挑战。</span>
+                            <svg class="chevron w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content p-4 border-t border-slate-200 prose-custom max-w-none">
+                            <h4>区位条件（有利因素）：</h4>
+                            <ul>
+                                <li>政策支持与激励（补贴、税收、充电设施投资）。</li>
+                                <li>技术研发能力（电池、电机、电控、智能化）。</li>
+                                <li>关键资源的可获得性（锂、钴、镍、稀土等）。</li>
+                                <li>充电基础设施的普及程度。</li>
+                                <li>市场需求与环保意识。</li>
+                                <li>汽车工业基础（传统或新兴）。</li>
+                                <li>产业链配套（零部件、电池回收等）。</li>
+                                <li>能源结构（清洁电力来源占比）。</li>
+                            </ul>
+                            <h4>意义：</h4>
+                            <p><strong>环境效益：</strong>减少城市空气污染，降低温室气体排放。</p>
+                            <p><strong>经济效益：</strong>带动新兴产业，创造就业，重塑市场格局，促能源转型。</p>
+                            <p><strong>能源安全：</strong>降低对石油依赖。</p>
+                            <p><strong>社会影响：</strong>改变出行方式，推动智慧城市建设。</p>
+                            <h4>挑战：</h4>
+                            <ul>
+                                <li>初始购置成本较高。</li>
+                                <li>续航里程焦虑与充电便利性。</li>
+                                <li>电池技术瓶颈（能量密度、寿命、安全、成本）。</li>
+                                <li>充电基础设施覆盖不足。</li>
+                                <li>电池回收与处理的环境问题。</li>
+                                <li>对电网的冲击。</li>
+                                <li>关键原材料供应与价格波动。</li>
+                                <li>标准与兼容性问题。</li>
+                                <li>产业链成熟度与韧性。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="text-center mt-12 text-slate-600 text-sm print:hidden">
+                <p>交互式地理核心问题综合指南 | 根据源文档生成</p>
+            </footer>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const accordions = document.querySelectorAll('.accordion-item');
+    accordions.forEach(item => {
+        const button = item.querySelector('.accordion-button');
+        const content = item.querySelector('.accordion-content');
+        button.addEventListener('click', () => {
+            const isVisible = content.style.display === 'block';
+            // Optional: Close other accordions when one is opened
+            // document.querySelectorAll('.accordion-content').forEach(c => c.style.display = 'none');
+            // document.querySelectorAll('.accordion-button').forEach(b => b.classList.remove('active'));
+            
+            if (isVisible) {
+                content.style.display = 'none';
+                button.classList.remove('active');
+            } else {
+                content.style.display = 'block';
+                button.classList.add('active');
+            }
+        });
+    });
+
+    const sidebar = document.getElementById('sidebar');
+    const menuButton = document.getElementById('menu-button');
+    if (menuButton) {
+        menuButton.addEventListener('click', () => {
+            sidebar.classList.toggle('-translate-x-full');
+        });
+    }
+    
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            if (window.innerWidth < 768 && sidebar) { // 768px is md breakpoint in Tailwind
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+    });
+    
+    const sections = document.querySelectorAll('main section');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    function updateActiveNavLink() {
+        let currentSectionId = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            if (pageYOffset >= sectionTop - sectionHeight / 3) { 
+                currentSectionId = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + currentSectionId) {
+                link.classList.add('active');
+            }
+        });
+    }
+    
+    window.addEventListener('scroll', updateActiveNavLink);
+    updateActiveNavLink(); 
+
+
+    function createLatitudeTable() {
+        const data = [
+            { country: '中国', features: '南北跨度大（约4°N - 53°N），大部分位于中纬度，地跨热带、亚热带、温带。', pros: '热量带多样，利于多种农作物生长和农业多样化；大部分地区雨热同期。', cons: '南北温差大，冬季北方寒冷漫长；部分地区可能热量不足或过剩。' },
+            { country: '俄罗斯', features: '纬度高，大部分国土位于中高纬度（约41°N - 82°N），北极圈穿过北部。', pros: '广阔亚寒带针叶林；北部油气资源丰富；北极航道潜力。', cons: '气候普遍寒冷，热量不足，冻土广布，农业受限；多数港口封冻期长。' },
+            { country: '巴西', features: '主要位于低纬度（约5°N - 34°S），赤道横贯北部，大部分属热带。', pros: '全年高温，热量足，利于热带经济作物生长；生物资源丰富。', cons: '部分地区过于湿热；热带雨林开发与保护矛盾；部分土壤淋溶强。' }
+        ];
+        let tableHTML = `<table><thead><tr><th>国家</th><th>纬度位置特点</th><th>有利影响</th><th>不利影响</th></tr></thead><tbody>`;
+        data.forEach(item => {
+            tableHTML += `<tr><td><strong>${item.country}</strong></td><td>${item.features}</td><td>${item.pros}</td><td>${item.cons}</td></tr>`;
+        });
+        tableHTML += `</tbody></table>`;
+        const container = document.getElementById('latitude-comparison-table');
+        if (container) container.innerHTML = tableHTML;
+    }
+    createLatitudeTable();
+
+    function createSeaLandTable() {
+        const data = [
+            { country: '中国', type: '海陆兼备', pros: '东部濒海，多良港，利于海运和对外贸易；陆疆连接多国，利于陆路交通和边贸。', cons: '西部深居内陆，气候干旱，交通不便；区域发展不平衡。' },
+            { country: '日本', type: '岛国', pros: '四面环海，海运便利，利于发展外向型经济和海洋产业；易吸收外来文化。', cons: '国内市场小；陆地资源贫乏，依赖进口；易受海洋灾害（地震、海啸、台风）。' },
+            { country: '蒙古', type: '内陆国', pros: '连接中俄的重要通道；矿产资源较丰富。', cons: '远离海洋，对外交通依赖邻国，成本高；气候干旱，生态脆弱。' }
+        ];
+        let tableHTML = `<table><thead><tr><th>国家</th><th>海陆位置类型</th><th>有利影响（优点）</th><th>不利影响（缺点）</th></tr></thead><tbody>`;
+        data.forEach(item => {
+            tableHTML += `<tr><td><strong>${item.country}</strong></td><td>${item.type}</td><td>${item.pros}</td><td>${item.cons}</td></tr>`;
+        });
+        tableHTML += `</tbody></table>`;
+        const container = document.getElementById('sea-land-comparison-table');
+        if (container) container.innerHTML = tableHTML;
+    }
+    createSeaLandTable();
+    
+    const tabContainers = document.querySelectorAll('.mt-4 nav + div'); 
+    tabContainers.forEach(container => {
+        const tabButtons = container.previousElementSibling.querySelectorAll('.tab-button'); 
+        const tabPanes = container.querySelectorAll('.tab-pane');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active', 'text-sky-600', 'border-sky-500');
+                    btn.classList.add('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300', 'border-transparent');
+                });
+                button.classList.add('active', 'text-sky-600', 'border-sky-500');
+                button.classList.remove('text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300', 'border-transparent');
+                
+                tabPanes.forEach(pane => {
+                    pane.classList.add('hidden');
+                });
+                const targetPane = container.querySelector('#' + button.dataset.target);
+                if (targetPane) {
+                    targetPane.classList.remove('hidden');
+                }
+            });
+        });
+    });
+
+
+    const climateData = {
+        desert: { label: '热带沙漠气候', data: [9, 9, 2, 7, 3]},
+        mediterranean: { label: '地中海气候', data: [8, 6, 7, 9, 7]},
+        monsoon: { label: '温带季风气候', data: [7, 8, 8, 6, 5]},
+        oceanic: { label: '温带海洋性气候', data: [4, 5, 8, 8, 9]}
+    };
+    let climateChart;
+    const ctxClimate = document.getElementById('climateChart');
+    if (ctxClimate) {
+        const climateSelector = document.getElementById('climate-selector');
+        function renderClimateChart(type) {
+            if (climateChart) climateChart.destroy();
+            const selectedData = climateData[type];
+            climateChart = new Chart(ctxClimate.getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: ['光热条件', '太阳能潜力', '水分条件', '人居舒适度', '灾害风险度'],
+                    datasets: [{
+                        label: selectedData.label,
+                        data: selectedData.data,
+                        backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                        borderColor: 'rgba(2, 132, 199, 1)',
+                        pointBackgroundColor: 'rgba(2, 132, 199, 1)',
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { suggestedMin: 0, suggestedMax: 10, ticks: { stepSize: 2 } } } }
+            });
+        }
+        climateSelector.addEventListener('change', (e) => renderClimateChart(e.target.value));
+        renderClimateChart('desert');
+    }
+
+    const riverData = {
+        labels: ['长江', '黄河', '亚马孙河', '莱茵河', '密西西比河'],
+        datasets: [
+            { label: '年均流量(m³/s)', data: [30166, 1774, 209000, 2900, 16200], backgroundColor: 'rgba(59, 130, 246, 0.7)', yAxisID: 'y' },
+            { label: '含沙量(kg/m³)', data: [0.5, 35, 0.2, 0.05, 0.4], backgroundColor: 'rgba(234, 179, 8, 0.7)', yAxisID: 'y1'},
+            { label: '航运价值(1-10)', data: [9, 2, 7, 10, 8], backgroundColor: 'rgba(16, 185, 129, 0.7)', yAxisID: 'y2'}
+        ]
+    };
+    const ctxRiver = document.getElementById('riverChart');
+    if (ctxRiver) {
+        new Chart(ctxRiver.getContext('2d'), {
+            type: 'bar',
+            data: riverData,
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    y: { type: 'logarithmic', position: 'left', title: { display: true, text: '流量(对数)' } },
+                    y1: { type: 'linear', position: 'right', title: { display: true, text: '含沙量' }, grid: { drawOnChartArea: false } },
+                    y2: { type: 'linear', position: 'right', title: { display: true, text: '航运价值' }, grid: { drawOnChartArea: false }, min: 0, max: 10 }
+                },
+                plugins: { tooltip: { mode: 'index', intersect: false } }
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Chosen Palette: Desert Sand, Deep Brown, Olive Green Accent -->
+    <!-- Application Structure Plan: A single-page application modeled on the 'Russo-Ukrainian War Panoramic Scan', but focused entirely on the Iran-Iraq War (1980-1988). The structure includes a top navigation bar linking to eight distinct sections. This design allows for a comprehensive yet organized presentation of a complex historical conflict. Key interactions include a clickable horizontal/vertical timeline, tabbed content panes within battle analyses, and an interactive schematic map showing the front's evolution. -->
+    <!-- Visualization & Content Choices: 
+        - Goal: Show chronological flow -> A responsive horizontal/vertical timeline for key events from 1979-1988. Interaction: Click events to expand details below. Justification: Provides a clear, chronological overview of the war's major phases.
+        - Goal: Show territorial changes -> An interactive schematic map with a timeline slider showing the shift from Iraq's initial invasion to the stalemate. Justification: Visualizes the war's ground dynamics.
+        - Goal: Analyze key battles -> Standardized cards for battles like Khorramshahr, Operation Fath-ol-Mobin, and the "War of the Cities," including charts for estimated casualties. Justification: Breaks down complex military operations.
+        - Goal: Detail force evolution -> Tabbed section with charts showing shifts in ground and air power, and analysis of asymmetric tactics like chemical weapons and human wave attacks. Justification: Illustrates the changing nature of the conflict.
+        - Library/Method: Chart.js for all canvas-based charts, Vanilla JS for all DOM manipulation and interactive logic. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <title>两伊战争全景扫描 - 交互式分析报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #fdfaf6; /* A warm, sandy off-white */
+        }
+        .nav-link.active {
+            color: #44403c; /* stone-700 */
+            border-bottom-color: #a16207; /* yellow-700 */
+        }
+        .tab-button.active {
+            border-color: #a16207; /* yellow-700 */
+            background-color: #fefce8; /* yellow-50 */
+            color: #854d0e; /* yellow-800 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+        @media (min-width: 768px) {
+             .chart-container {
+                height: 350px;
+            }
+        }
+        /* Custom slider styles */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #57534e; cursor: pointer; margin-top: -8px; }
+        input[type=range]::-moz-range-thumb { height: 20px; width: 20px; border-radius: 50%; background: #57534e; cursor: pointer; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #d6d3d1; border-radius: 5px; }
+        input[type=range]::-moz-range-track { width: 100%; height: 4px; cursor: pointer; background: #d6d3d1; border-radius: 5px; }
+
+        /* Schematic Map Styles */
+        #schematic-map { position: relative; width: 100%; padding-top: 75%; background-color: #e7e5e4; border: 1px solid #a8a29e; }
+        .map-region { position: absolute; border: 1px solid rgba(0,0,0,0.2); transition: background-color 0.5s ease; }
+        #region-north { top: 0; left: 10%; width: 80%; height: 30%; clip-path: polygon(20% 0, 80% 0, 100% 100%, 0% 100%); } /* Zagros Mountains */
+        #region-center { top: 30%; left: 0; width: 100%; height: 40%; } /* Central Front */
+        #region-south { top: 70%; left: 0; width: 70%; height: 30%; clip-path: polygon(0 0, 100% 0, 80% 100%, 0% 100%); } /* Khuzestan/Basra */
+        
+        .bg-control-irq { background-color: rgba(132, 102, 79, 0.7); } /* A sandy brown */
+        .bg-control-irn { background-color: rgba(67, 82, 67, 0.7); } /* An olive green */
+        .bg-control-contested { background-color: rgba(161, 98, 7, 0.7); } /* A darker yellow/gold */
+
+        .map-label { position: absolute; color: white; font-weight: bold; font-size: 1rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); pointer-events: none; opacity: 0.9; }
+        #label-baghdad { top: 50%; left: 20%; transform: translate(-50%, -50%); }
+        #label-tehran { top: 20%; left: 75%; transform: translate(-50%, -50%); }
+        #label-basra { top: 85%; left: 15%; transform: translate(-50%, -50%); }
+        #label-khorramshahr { top: 85%; left: 45%; transform: translate(-50%, -50%); }
+        #label-faw { top: 95%; left: 30%; transform: translate(-50%, -50%); }
+
+        /* Horizontal Timeline Styles */
+        .timeline-wrapper { overflow-x: auto; padding: 20px 0; }
+        .timeline-track { position: relative; display: flex; align-items: center; min-width: 1000px; height: 100px; }
+        .timeline-line { position: absolute; top: 50%; left: 0; right: 0; height: 4px; background-color: #d6d3d1; transform: translateY(-50%); }
+        .timeline-node { position: relative; flex: 1; text-align: center; cursor: pointer; }
+        .timeline-dot { position: relative; z-index: 1; display: inline-block; width: 16px; height: 16px; background-color: #d6d3d1; border: 3px solid #fdfaf6; border-radius: 50%; transition: background-color 0.3s, transform 0.3s; }
+        .timeline-label { position: absolute; width: 150px; bottom: 30px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 500; color: #57534e; }
+        .timeline-node.active .timeline-dot { background-color: #a16207; transform: scale(1.25); }
+        .timeline-node.active .timeline-label { font-weight: 700; color: #44403c; }
+        #timeline-content-panel { transition: opacity 0.5s; }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <header class="bg-white/95 backdrop-blur-sm sticky top-0 z-50 shadow-md">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl font-bold text-stone-900">两伊战争全景扫描</h1>
+                <nav class="hidden lg:flex items-center space-x-2 xl:space-x-4 text-sm">
+                    <a href="#timeline" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-stone-600">战争进程</a>
+                    <a href="#battles" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-stone-600">关键战役</a>
+                    <a href="#territory" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-stone-600">战线变化</a>
+                    <a href="#figures" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-stone-600">核心人物</a>
+                    <a href="#forces" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-stone-600">战力演进</a>
+                    <a href="#opinion" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-stone-600">国内舆论</a>
+                    <a href="#world" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-stone-600">国际社会</a>
+                    <a href="#future" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-stone-600">战后影响</a>
+                </nav>
+                <div class="lg:hidden">
+                    <select id="mobile-nav" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-700 focus:ring-yellow-700 sm:text-sm">
+                        <option value="#timeline">战争进程</option>
+                        <option value="#battles">关键战役</option>
+                        <option value="#territory">战线变化</option>
+                        <option value="#figures">核心人物</option>
+                        <option value="#forces">战力演进</option>
+                        <option value="#opinion">国内舆论</option>
+                        <option value="#world">国际社会</option>
+                        <option value="#future">战后影响</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        
+        <!-- 1. 战争进程 -->
+        <section id="timeline" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-6 text-center">1. 战争进程：关键节点时间轴</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="md:hidden">
+                    <p class="text-sm text-center text-stone-500">在移动设备上，时间轴将以纵向模式显示，请点击查看详情。</p>
+                    <div id="vertical-timeline" class="mt-4"></div>
+                </div>
+                <div class="hidden md:block">
+                     <p class="text-sm text-center text-stone-500 mb-2">点击下方时间轴上的节点，查看该阶段的关键事件。</p>
+                    <div class="timeline-wrapper">
+                        <div id="horizontal-timeline" class="timeline-track">
+                            <div class="timeline-line"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="timeline-content-panel" class="mt-6 p-6 bg-stone-50 rounded-lg border border-stone-200 min-h-[150px]">
+                    <h3 id="timeline-title" class="text-xl font-bold text-stone-800 mb-2"></h3>
+                    <p id="timeline-content" class="text-stone-600"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 关键战役 -->
+        <section id="battles" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">2. 关键战役分析</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8" id="battles-grid"></div>
+        </section>
+
+        <!-- 3. 战线变化 -->
+        <section id="territory" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">3. 战线变化模拟图</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="max-w-4xl mx-auto">
+                    <div id="schematic-map" class="rounded-md overflow-hidden">
+                        <div id="region-north" class="map-region"></div>
+                        <div id="region-center" class="map-region"></div>
+                        <div id="region-south" class="map-region"></div>
+                        <!-- Labels for key locations -->
+                        <span id="label-baghdad" class="map-label">巴格达</span>
+                        <span id="label-tehran" class="map-label">德黑兰</span>
+                        <span id="label-basra" class="map-label">巴士拉</span>
+                        <span id="label-khorramshahr" class="map-label">霍拉姆沙赫尔</span>
+                        <span id="label-faw" class="map-label">法奥半岛</span>
+                        <div class="absolute bottom-2 right-2 text-xs text-stone-700 bg-white/70 p-2 rounded">
+                            <h4 class="font-bold">图例</h4>
+                            <div class="flex items-center mt-1"><div class="w-4 h-4 mr-2 bg-control-irq"></div>伊拉克控制</div>
+                            <div class="flex items-center mt-1"><div class="w-4 h-4 mr-2 bg-control-irn"></div>伊朗控制</div>
+                            <div class="flex items-center mt-1"><div class="w-4 h-4 mr-2 bg-control-contested"></div>争夺中</div>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex items-center gap-4">
+                        <label for="timeline-slider" class="flex-shrink-0 font-semibold text-stone-700">拖动滑块查看年度变化:</label>
+                        <input type="range" id="timeline-slider" min="0" max="8" value="0" class="w-full">
+                    </div>
+                    <div id="map-caption" class="text-center mt-4 font-semibold text-stone-800 text-lg"></div>
+                    <p id="map-description" class="text-center text-sm text-stone-600 mt-1"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. 核心人物 -->
+        <section id="figures" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">4. 核心人物分析</h2>
+             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-center">🇮🇶 萨达姆·侯赛因</h3>
+                    <p class="text-stone-600">伊拉克总统。利用伊朗伊斯兰革命后的动荡，试图通过一场速决战解决边界争端、削弱霍梅尼政权并确立伊拉克在海湾地区的霸主地位。战争期间，他以强硬的民族主义形象领导国家，但其战略误判导致战争陷入泥潭。战后，巨额的战争债务成为其入侵科威特的重要动因。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-center">�🇷 鲁霍拉·霍梅尼</h3>
+                     <p class="text-stone-600">伊朗最高领袖。面对伊拉克的入侵，他将战争定义为“强加的战争”和保卫伊斯兰革命的“圣战”。他以强大的宗教感召力动员了数百万民众（特别是“巴斯基”民兵），并通过“不战不和”的策略将战争长期化，旨在“惩罚侵略者”并输出革命。最终在巨大的人员和经济压力下，他将接受停火比作“饮下毒酒”。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. 战力演进 -->
+        <section id="forces" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">5. 多维度战力演进分析</h2>
+            <div class="bg-white rounded-lg shadow-lg">
+                <div class="border-b border-stone-200">
+                    <nav class="flex flex-wrap -mb-px p-4" id="forces-tabs">
+                         <button data-tab="ground" class="tab-button text-sm font-semibold whitespace-nowrap py-3 px-4 border-b-2 mr-2 mb-2 active">地面力量</button>
+                         <button data-tab="air" class="tab-button text-sm font-semibold whitespace-nowrap py-3 px-4 border-b-2 mr-2 mb-2">空中力量</button>
+                         <button data-tab="asymmetric" class="tab-button text-sm font-semibold whitespace-nowrap py-3 px-4 border-b-2 mr-2 mb-2">非对称战</button>
+                    </nav>
+                </div>
+                <div id="forces-content" class="p-6"></div>
+            </div>
+        </section>
+
+        <!-- 6. 国内舆论 -->
+        <section id="opinion" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">6. 双方国内舆论</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-center">🇮🇶 伊拉克</h3>
+                    <p class="text-stone-600">在复兴党的一党专政下，媒体被严格控制。战争初期，官方宣传机器将战争描绘成一场对抗“波斯扩张主义”、保卫阿拉伯民族东大门的“卡迪西亚-萨达姆”之战，获得了部分民众支持。但随着战争旷日持久、伤亡惨重，厌战情绪在私下蔓延，但任何公开的反对声音都会遭到严酷镇压。</p>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-center">🇮🇷 伊朗</h3>
+                    <p class="text-stone-600">在革命后的宗教狂热和爱国主义双重驱动下，社会被高度动员起来。官方媒体将战争定义为一场抵抗“异教徒入侵”和“世界霸权主义代理人”的“神圣防御”。通过宣传殉道精神，成功动员了包括大量青少年在内的“巴斯基”民兵投入“人海战术”。尽管战争后期经济困难加剧，但强大的意识形态宣传有效地维持了社会凝聚力和对战争的支持。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. 国际社会 -->
+        <section id="world" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">7. 国际社会态度与行动</h2>
+            <div class="space-y-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold text-amber-800 mb-3">主要支持伊拉克阵营</h3>
+                    <p class="text-sm text-stone-600">出于对伊朗伊斯兰革命输出的恐惧和维持石油供应稳定的考虑，多数大国和海湾国家选择支持伊拉克。</p>
+                    <ul class="list-disc pl-5 text-sm space-y-1 mt-2">
+                        <li><strong>苏联：</strong>伊拉克最主要的武器供应国，提供了大量坦克（T-55, T-62, T-72）、飞机（米格系列）和导弹。</li>
+                        <li><strong>法国：</strong>提供了“幻影”F1战斗机、“飞鱼”反舰导弹和“超级军旗”攻击机，这些武器在“油轮战”中发挥了关键作用。</li>
+                        <li><strong>美国：</strong>初期中立，后期明显倾向伊拉克，提供了数十亿美元的贷款和农业信贷，并分享卫星情报。为保护科威特油轮，美军直接介入“油轮战”。</li>
+                        <li><strong>海湾阿拉伯国家：</strong>沙特、科威特等国向伊拉克提供了数百亿美元的巨额财政援助，视其为抵御伊朗的第一道防线。</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold text-green-800 mb-3">主要支持伊朗阵营</h3>
+                    <p class="text-sm text-stone-600">伊朗在国际上相对孤立，支持者寥寥无几，且多为非公开或出于地缘政治竞争目的。</p>
+                    <ul class="list-disc pl-5 text-sm space-y-1 mt-2">
+                        <li><strong>叙利亚 & 利比亚：</strong>出于与伊拉克的教派和地区竞争关系，向伊朗提供了一定的政治和后勤支持。</li>
+                        <li><strong>朝鲜：</strong>向伊朗出售了“飞毛腿”导弹等武器，以换取硬通货。</li>
+                        <li><strong>以色列（秘密）：</strong>在“伊朗门事件”中，通过美国秘密向伊朗出售了“陶”式反坦克导弹和“霍克”防空导弹备件，意图削弱伊拉克。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. 战后影响 -->
+        <section id="future" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold mb-8 text-center">8. 战后影响与遗产</h2>
+            <div class="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto text-stone-600 space-y-6">
+                <p>两伊战争以惨烈的平局告终，双方在付出近百万生命和上万亿美元的经济损失后，边界线基本恢复战前状态。然而，这场战争对两国乃至整个中东地区都产生了深远而持久的影响。</p>
+                <div>
+                    <h4 class="font-semibold text-lg text-stone-800 mb-2">对伊拉克的影响</h4>
+                    <ul class="list-disc pl-5 text-sm space-y-2">
+                        <li><strong>经济崩溃与巨额债务：</strong>战争使伊拉克背负了超过800亿美元的巨额外债，其中大部分来自海湾国家。经济濒临崩溃，成为其两年后入侵科威特以图赖账和掠夺财富的核心动因。</li>
+                        <li><strong>军事上的虚假强大：</strong>尽管拥有当时世界第四大规模的军队，但其战斗力在面对多国部队时被证明不堪一击。萨达姆的地区霸权野心也因战争而膨胀。</li>
+                    </ul>
+                </div>
+                 <div>
+                    <h4 class="font-semibold text-lg text-stone-800 mb-2">对伊朗的影响</h4>
+                     <ul class="list-disc pl-5 text-sm space-y-2">
+                        <li><strong>政权巩固：</strong>外部入侵反而巩固了新生的伊斯兰共和国政权，强化了其内部凝聚力和“革命输出”的决心。伊斯兰革命卫队（IRGC）通过战争迅速壮大，成为国内最重要的政治和军事力量。</li>
+                        <li><strong>军事工业的自力更生：</strong>长期的国际武器禁运迫使伊朗走上了武器“自给自足”的道路，特别是在弹道导弹和无人机技术方面打下了基础，深刻影响了其日后的国防战略和地区政策。</li>
+                    </ul>
+                </div>
+                 <div>
+                    <h4 class="font-semibold text-lg text-stone-800 mb-2">对地区与世界的影响</h4>
+                     <ul class="list-disc pl-5 text-sm space-y-2">
+                        <li><strong>海湾地区安全格局：</strong>战争促使海湾阿拉伯国家成立了“海湾合作委员会”（GCC），并进一步加深了与美国的军事安全捆绑。</li>
+                        <li><strong>化学武器的使用：</strong>伊拉克在战争中大规模使用化学武器（如芥子气和塔崩毒气），突破了国际法的底线，但当时并未遭到国际社会的有力制裁，为后续的冲突埋下了危险的先例。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Section 1: Timeline Logic
+    const timelineData = [
+        { year: '1979-1980', title: '战前危机', content: '伊朗伊斯兰革命成功，霍梅尼上台，输出革命思想。伊拉克总统萨达姆废除《阿尔及尔协议》，声称对阿拉伯河拥有全部主权。' },
+        { year: '1980', title: '伊拉克入侵', content: '9月22日，伊拉克发动闪电战，从北、中、南三路全面入侵伊朗，旨在速战速决。战争初期，伊军占领了霍拉姆沙赫尔等大片伊朗领土。' },
+        { year: '1981', title: '战线僵持', content: '伊朗稳住阵脚，开始反击。战争从伊拉克的闪击战演变为漫长的阵地战和消耗战。' },
+        { year: '1982', title: '伊朗大反攻', content: '伊朗发动“胜利行动”和“圣城行动”，成功收复大部分失地，包括战略港口霍拉姆沙赫尔。战局逆转，伊朗开始攻入伊拉克境内。' },
+        { year: '1983-1985', title: '人海战术与堑壕战', content: '伊朗凭借“巴斯基”民兵发动大规模“人海战术”，试图突破伊拉克防线，双方在边境地区展开了类似一战的残酷堑壕战，伤亡惨重。' },
+        { year: '1986', title: '法奥半岛之战', content: '伊朗发动“曙光8号”行动，成功攻占伊拉克唯一的出海口法奥半岛，震惊世界。伊拉克则开始大规模使用化学武器。' },
+        { year: '1987', title: '油轮战与袭城战升级', content: '双方互相攻击对方的油轮和石油设施，即“油轮战”，导致美国等国军事介入护航。同时，“袭城战”升级，双方用“飞毛腿”等导弹互相攻击对方首都等大城市。' },
+        { year: '1988', title: '战争结束', content: '伊拉克在国际支持下发动反攻，收复法奥半岛。同年7月，伊朗民航客机被美军击落。内外交困下，霍梅尼最终接受联合国598号决议，双方于8月20日正式停火。' },
+    ];
+    
+    const hTimeline = document.getElementById('horizontal-timeline');
+    const vTimeline = document.getElementById('vertical-timeline');
+    const timelineTitle = document.getElementById('timeline-title');
+    const timelineContent = document.getElementById('timeline-content');
+
+    function updateTimelineContent(index) {
+        const item = timelineData[index];
+        timelineTitle.textContent = `${item.year} - ${item.title}`;
+        timelineContent.textContent = item.content;
+        document.querySelectorAll('.timeline-node, .v-timeline-item').forEach((node, i) => node.classList.toggle('active', i === index));
+    }
+
+    timelineData.forEach((item, index) => {
+        const hNode = document.createElement('div');
+        hNode.className = 'timeline-node';
+        hNode.innerHTML = `<span class="timeline-dot"></span><span class="timeline-label">${item.year}</span>`;
+        hNode.addEventListener('click', () => updateTimelineContent(index));
+        if(hTimeline) hTimeline.appendChild(hNode);
+
+        const vNode = document.createElement('div');
+        vNode.className = 'v-timeline-item relative mb-8 cursor-pointer border-l-2 border-stone-300 pl-8 ml-[-1px]';
+        vNode.innerHTML = `<div class="absolute left-[-7px] top-1 w-3 h-3 rounded-full bg-stone-300 border-2 border-white"></div><div class="font-bold text-yellow-800">${item.year}</div><h4 class="font-semibold text-stone-800">${item.title}</h4>`;
+        vNode.addEventListener('click', () => {
+             updateTimelineContent(index);
+             document.getElementById('timeline-content-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        if(vTimeline) vTimeline.appendChild(vNode);
+    });
+    updateTimelineContent(0);
+
+    // Section 2: Battle Analyses Logic
+    const battleAnalyses = [
+        { id: 'khorramshahr', name: '霍拉姆沙赫尔之战', obj: '伊拉克战争初期的核心目标之一，旨在夺取这个伊朗最大的港口城市。', imp: '伊拉克惨胜占领，但伊朗的顽强巷战极大延缓了其攻势，为伊朗重组防线赢得时间。此战成为双方民族主义宣传的焦点。', loss: { irq: 7000, irn: 12000 } },
+        { id: 'fath', name: '“胜利”行动', obj: '1982年伊朗发动的首次大规模反攻，旨在切断深入伊朗境内的伊拉克军队。', imp: '伊朗取得决定性胜利，俘虏上万伊拉克士兵，是战争的重大转折点，标志着伊朗开始掌握战略主动权。', loss: { irq: 20000, irn: 10000 } },
+        { id: 'faw', name: '第一次法奥半岛之战', obj: '伊朗“曙光8号”行动，旨在攻占伊拉克唯一出海口法奥半岛，切断其海上生命线。', imp: '伊朗取得惊人战术胜利，严重打击了伊拉克士气。伊拉克在此战后开始更频繁地使用化学武器。', loss: { irq: 15000, irn: 25000 } },
+        { id: 'cities', name: '袭城战', obj: '双方通过导弹和空袭攻击对方主要城市，旨在摧毁对方经济潜力和民心士气。', imp: '造成大量平民伤亡，但未能从根本上动摇任何一方的战争意志。反而加剧了双方的仇恨。', loss: { irq: 5000, irn: 15000, label: '平民伤亡' } },
+        { id: 'tanker', name: '油轮战', obj: '双方攻击在波斯湾航行的对方及中立国油轮，企图切断对方的石油出口和经济命脉。', imp: '导致国际油价波动，并最终引来美国等西方国家海军的军事介入和护航，使战争国际化。', loss: { irq: 100, irn: 100, label: '船员伤亡' } },
+        { id: 'tawakalna', name: '第二次法奥半岛之战', obj: '1988年伊拉克发动的反攻，旨在收复被伊朗占领两年的法奥半岛。', imp: '伊拉克凭借精心策划和化学武器优势迅速获胜，成为压垮伊朗继续战争意志的最后一根稻草之一。', loss: { irq: 2000, irn: 10000 } }
+    ];
+    const battlesGrid = document.getElementById('battles-grid');
+    battleAnalyses.forEach(battle => {
+        const battleCard = document.createElement('div');
+        battleCard.className = 'bg-white rounded-lg shadow-lg overflow-hidden flex flex-col';
+        battleCard.innerHTML = `<div class="p-6 flex-grow"><h3 class="text-xl font-bold mb-2">${battle.name}</h3><div class="mb-4"><button data-id="${battle.id}" data-type="obj" class="tab-button text-xs font-medium py-1 px-3 rounded-full border-2 active">目标</button><button data-id="${battle.id}" data-type="imp" class="tab-button text-xs font-medium py-1 px-3 rounded-full border-2">影响</button></div><p id="content-${battle.id}" class="text-stone-600 text-sm h-20">${battle.obj}</p><div class="mt-4"><h5 class="font-semibold text-center text-sm mb-2">估计伤亡人数</h5><div class="chart-container" style="height: 200px;"><canvas id="chart-${battle.id}"></canvas></div></div></div>`;
+        battlesGrid.appendChild(battleCard);
+        new Chart(document.getElementById(`chart-${battle.id}`), {
+            type: 'bar',
+            data: { labels: [battle.loss.label || '军事人员伤亡'], datasets: [{ label: '伊拉克', data: [battle.loss.irq], backgroundColor: 'rgba(132, 102, 79, 0.7)' }, { label: '伊朗', data: [battle.loss.irn], backgroundColor: 'rgba(67, 82, 67, 0.7)' }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: true, position: 'bottom' } } }
+        });
+    });
+    battlesGrid.addEventListener('click', e => {
+        if (e.target.classList.contains('tab-button')) {
+            const { id, type } = e.target.dataset;
+            document.getElementById(`content-${id}`).textContent = battleAnalyses.find(b => b.id === id)[type];
+            e.target.parentElement.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+        }
+    });
+
+    // Section 3: Territory Map Logic
+    const mapSlider = document.getElementById('timeline-slider');
+    const mapCaption = document.getElementById('map-caption');
+    const mapDescription = document.getElementById('map-description');
+    const regions = { north: document.getElementById('region-north'), center: document.getElementById('region-center'), south: document.getElementById('region-south') };
+    const mapStates = [
+        { q: '1980年底', desc: '伊拉克发动突袭，占领伊朗南部胡齐斯坦省大片地区，包括重要港口霍拉姆沙赫尔。', control: { north: 'contested', center: 'contested', south: 'irq' } },
+        { q: '1981', desc: '伊朗稳住阵脚，双方在前线陷入僵持和消耗战。', control: { north: 'contested', center: 'contested', south: 'irq' } },
+        { q: '1982', desc: '伊朗发动大规模反攻，收复包括霍拉姆沙赫尔在内的大部分失地，并将战线反推至伊拉克边境。', control: { north: 'contested', center: 'contested', south: 'irn' } },
+        { q: '1983', desc: '伊朗试图攻入伊拉克境内，但在巴士拉附近遭遇伊军坚固防线，战事胶着。', control: { north: 'contested', center: 'irn', south: 'contested' } },
+        { q: '1984', desc: '战争演变为残酷的堑壕战，双方在边境线上拉锯，伤亡巨大但战线变化不大。', control: { north: 'contested', center: 'contested', south: 'contested' } },
+        { q: '1985', desc: '伊朗继续发动攻势，但伊拉克凭借装备优势和防御工事成功抵御。', control: { north: 'contested', center: 'contested', south: 'contested' } },
+        { q: '1986', desc: '伊朗成功攻占伊拉克南部的法奥半岛，切断其主要出海口。', control: { north: 'contested', center: 'contested', south: 'irn' } },
+        { q: '1987', desc: '伊拉克试图反攻法奥但未成功。战线大部分地区仍处于僵持状态。', control: { north: 'contested', center: 'contested', south: 'irn' } },
+        { q: '1988', desc: '伊拉克发动大规模反攻，成功收复法奥半岛，并将伊朗军队逐出其领土，双方最终接受停火。', control: { north: 'contested', center: 'contested', south: 'irq' } },
+    ];
+    function updateMap(index) {
+        const data = mapStates[index];
+        if (!data) return;
+        mapCaption.textContent = data.q;
+        mapDescription.textContent = data.desc;
+        for (const regionName in data.control) {
+            if (regions[regionName]) {
+                regions[regionName].className = 'map-region bg-control-' + data.control[regionName];
+            }
+        }
+    }
+    mapSlider.addEventListener('input', (e) => updateMap(parseInt(e.target.value, 10)));
+    updateMap(0);
+
+    // Section 5: Force Evolution Logic
+    const forcesTabs = document.getElementById('forces-tabs');
+    const forcesContent = document.getElementById('forces-content');
+    const forcesData = {
+        ground: `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div><h4 class="font-bold text-center mb-2">估计兵力规模演进 (万人)</h4><div class="chart-container"><canvas id="forceSizeChart"></canvas></div></div>
+                <div><h4 class="font-bold text-center mb-2">估计主战坦克数量演进</h4><div class="chart-container"><canvas id="tanksChart"></canvas></div></div>
+                <div class="md:col-span-2"><h4 class="font-bold text-center mb-2">地面力量总结</h4><div class="text-sm text-stone-600 space-y-2"><p><strong>🇮🇶 伊拉克:</strong> 依靠苏联和法国的武器供应，在坦克、火炮等重装备上始终保持数量和质量优势。其共和国卫队是精锐力量。</p><p><strong>🇮🇷 伊朗:</strong> 因武器禁运，重装备补充困难。主要依靠庞大的人口基数进行动员，其革命卫队和“巴斯基”民兵成为地面作战的主力，但装备较差。</p></div></div>
+            </div>`,
+        air: `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div><h4 class="font-bold text-center mb-2">估计作战飞机数量演进</h4><div class="chart-container"><canvas id="airPowerChart"></canvas></div></div>
+                <div><h4 class="font-bold text-center mb-2">空中力量总结</h4><div class="text-sm text-stone-600 space-y-2">
+                    <p><strong>🇮🇶 伊拉克:</strong> 拥有苏联的米格系列和法国的幻影F1战斗机，在战争中后期取得了制空权优势。其空军在“油轮战”中表现活跃。</p>
+                    <p><strong>🇮🇷 伊朗:</strong> 继承了巴列维王朝的美制F-14、F-4、F-5战斗机，性能先进但因禁运导致备件和弹药枯竭，战斗力持续下滑。F-14的“不死鸟”导弹在战争初期曾取得辉煌战绩。</p>
+                </div></div>
+            </div>`,
+        asymmetric: `
+            <div><h4 class="font-bold text-center mb-2">非对称战术与战略武器</h4><div class="text-sm text-stone-600 space-y-3 mt-4">
+                <p><strong>🇮🇷 伊朗“人海战术”:</strong> 为弥补装备劣势，伊朗伊斯兰革命卫队和“巴斯基”民兵以巨大的人员牺牲为代价，发动波浪式冲锋，试图用人力突破伊拉克的现代化防线。这种战术在战争初期取得一定成效，但后期伤亡极为惨重。</p>
+                <p><strong>🇮🇶 伊拉克化学武器:</strong> 伊拉克在战争中后期大规模、系统性地使用了芥子气、塔崩和沙林等化学武器，对伊朗的步兵攻势造成了巨大杀伤，并犯下了严重的战争罪行，但当时并未受到国际社会的有效制裁。</p>
+                <p><strong>导弹“袭城战”:</strong> 双方都使用了从苏联和朝鲜等国获得的“飞毛腿”弹道导弹，对对方的首都（巴格达和德黑兰）等大城市进行无差别攻击，旨在制造恐慌和削弱对方的战争意志。</p>
+            </div></div>`
+    };
+    function renderForcesContent(tab) {
+        forcesContent.innerHTML = forcesData[tab];
+        if (tab === 'ground') {
+            const yearLabels = ['1980', '1982', '1984', '1986', '1988'];
+            new Chart(document.getElementById('forceSizeChart'), { type: 'line', data: { labels: yearLabels, datasets: [{ label: '伊拉克', data: [20, 40, 60, 80, 100], borderColor: 'rgba(132, 102, 79, 0.7)' }, { label: '伊朗', data: [15, 50, 100, 150, 120], borderColor: 'rgba(67, 82, 67, 0.7)' }] }, options: { responsive: true, maintainAspectRatio: false } });
+            new Chart(document.getElementById('tanksChart'), { type: 'line', data: { labels: yearLabels, datasets: [{ label: '伊拉克', data: [2700, 3000, 4000, 4500, 5000], borderColor: 'rgba(132, 102, 79, 0.7)' }, { label: '伊朗', data: [1700, 1500, 1200, 1000, 1000], borderColor: 'rgba(67, 82, 67, 0.7)' }] }, options: { responsive: true, maintainAspectRatio: false } });
+        } else if (tab === 'air') {
+            const yearLabels = ['1980', '1982', '1984', '1986', '1988'];
+            new Chart(document.getElementById('airPowerChart'), { type: 'line', data: { labels: yearLabels, datasets: [{ label: '伊拉克', data: [330, 400, 500, 600, 700], borderColor: 'rgba(132, 102, 79, 0.7)' }, { label: '伊朗', data: [450, 350, 200, 100, 60], borderColor: 'rgba(67, 82, 67, 0.7)' }] }, options: { responsive: true, maintainAspectRatio: false } });
+        }
+    }
+    forcesTabs.addEventListener('click', e => {
+        if (e.target.tagName === 'BUTTON') {
+            const tab = e.target.dataset.tab;
+            forcesTabs.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            renderForcesContent(tab);
+        }
+    });
+    renderForcesContent('ground');
+
+    // Navigation scroll spy
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('main > section');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const sectionId = entry.target.id;
+                navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${sectionId}`));
+                document.getElementById('mobile-nav').value = `#${sectionId}`;
+            }
+        });
+    }, { rootMargin: "-40% 0px -60% 0px" });
+    sections.forEach(section => observer.observe(section));
+    document.getElementById('mobile-nav').addEventListener('change', function() {
+        document.querySelector(this.value).scrollIntoView({ behavior: 'smooth' });
+    });
+});
+</script>
+         <!-- Ad Section -->
+        <section id="ad-break" class="my-12">
+            <div class="max-w-3xl mx-auto p-4 bg-slate-100 rounded-lg text-center" style="min-width: 260px;">
+                 <p class="text-xs text-slate-400 mb-2">广告</p>
+                 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+                 crossorigin="anonymous"></script>
+                 <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-format="fluid"
+                 data-ad-layout-key="-fy+4+18-27-l"
+                 data-ad-client="ca-pub-6214772877334340"
+                 data-ad-slot="1537824208"></ins>
+                 <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+                 </script>
+            </div>
+        </section>
+</body>
+</html>

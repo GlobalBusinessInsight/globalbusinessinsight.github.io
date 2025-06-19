@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-key="pageTitle">印度航空AI171航班事故分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Calm Neutrals -->
+    <!-- Application Structure Plan: The application is designed as a single-page interactive dashboard. This structure allows users to get a quick overview and then dive deeper into specific areas of interest without navigating away. The flow is logical: starting with a high-level summary (At a Glance), followed by a detailed timeline of the accident (Flight Path), context about the aircraft and its history (The Aircraft), a core interactive analysis of potential causes (Causal Analysis), and finally background information (Operational Context). This thematic grouping is more intuitive for exploration than the linear structure of the original report. Key interactions include language switching, smooth-scroll navigation, and clickable/hoverable charts and info cards to reveal details on demand, enhancing user engagement and understanding. -->
+    <!-- Visualization & Content Choices: 
+    - Key Facts: Goal: Inform. Method: Styled HTML cards. Interaction: Static. Justification: Provides immediate, scannable key metrics.
+    - Flight Timeline: Goal: Show Change. Method: HTML/CSS diagram. Interaction: Hover effects. Justification: Visually represents the rapid sequence of events more effectively than text alone.
+    - Altitude/Speed Chart: Goal: Show Change. Method: Chart.js Line Chart. Interaction: Hover tooltips. Justification: Clearly visualizes the aircraft's critical flight parameter failure over the short flight duration.
+    - Causal Factors Chart: Goal: Compare. Method: Chart.js Horizontal Bar Chart. Interaction: Hover tooltips. Justification: Allows for quick, visual comparison of the likelihood of different failure scenarios, which is more impactful than reading text descriptions.
+    - Passenger Nationalities: Goal: Inform. Method: Chart.js Doughnut Chart. Interaction: Hover tooltips. Justification: Provides a clear proportional breakdown of the victims.
+    - Aircraft Issues: Goal: Organize. Method: HTML/JS Accordion. Interaction: Click to expand/collapse. Justification: Breaks down complex text into digestible, user-controlled sections to prevent information overload.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        .bg-custom-beige { background-color: #F5F5DC; }
+        .bg-custom-header { background-color: #FFFFFF; }
+        .text-custom-deep-blue { color: #003366; }
+        .text-custom-gray { color: #4A4A4A; }
+        .border-custom-accent { border-color: #4A90E2; }
+        .bg-custom-accent { background-color: #4A90E2; }
+        .bg-custom-accent-light { background-color: #E9F2FC; }
+        .nav-link.active {
+            background-color: #4A90E2;
+            color: white;
+        }
+        .lang-btn.active {
+            background-color: #003366;
+            color: white;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #4A90E2;
+            border: 2px solid white;
+        }
+        .timeline-line {
+            position: absolute;
+            left: -15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #E0E0E0;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="bg-custom-beige text-custom-gray">
+
+    <!-- Header and Navigation -->
+    <header class="bg-custom-header shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-custom-deep-blue" data-key="mainTitle"></h1>
+            <div class="flex items-center space-x-2">
+                <div class="hidden md:flex space-x-1 bg-gray-200 p-1 rounded-lg">
+                    <a href="#overview" class="nav-link px-3 py-1 rounded-md text-sm font-medium" data-key="navOverview"></a>
+                    <a href="#flightpath" class="nav-link px-3 py-1 rounded-md text-sm font-medium" data-key="navFlightPath"></a>
+                    <a href="#aircraft" class="nav-link px-3 py-1 rounded-md text-sm font-medium" data-key="navAircraft"></a>
+                    <a href="#analysis" class="nav-link px-3 py-1 rounded-md text-sm font-medium" data-key="navAnalysis"></a>
+                    <a href="#context" class="nav-link px-3 py-1 rounded-md text-sm font-medium" data-key="navContext"></a>
+                </div>
+                <div class="flex items-center bg-gray-200 p-1 rounded-lg">
+                    <button id="lang-zh" class="lang-btn px-2 py-1 text-sm rounded-md">中文</button>
+                    <button id="lang-en" class="lang-btn px-2 py-1 text-sm rounded-md">EN</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <!-- Section 1: At a Glance -->
+        <section id="overview" class="mb-12">
+            <h2 class="text-3xl font-bold text-custom-deep-blue mb-2" data-key="overviewTitle"></h2>
+            <p class="mb-6" data-key="overviewIntro"></p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <p class="text-sm font-semibold" data-key="cardFlight"></p>
+                    <p class="text-2xl font-bold text-custom-deep-blue">AI171</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <p class="text-sm font-semibold" data-key="cardAircraftType"></p>
+                    <p class="text-2xl font-bold text-custom-deep-blue">B787-8</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <p class="text-sm font-semibold" data-key="cardRoute"></p>
+                    <p class="text-2xl font-bold text-custom-deep-blue">AMD &#✈ LGW</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <p class="text-sm font-semibold" data-key="cardFatalities"></p>
+                    <p class="text-2xl font-bold text-red-600">241 / 242</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Flight Path and Timeline -->
+        <section id="flightpath" class="mb-12">
+            <h2 class="text-3xl font-bold text-custom-deep-blue mb-2" data-key="flightPathTitle"></h2>
+            <p class="mb-6" data-key="flightPathIntro"></p>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="font-bold text-xl mb-4" data-key="timelineTitle"></h3>
+                    <div class="relative pl-4">
+                        <div class="timeline-line"></div>
+                        <div class="timeline-item relative mb-6">
+                            <p class="font-bold">08:08:44 UTC</p>
+                            <p data-key="timelineTakeoff"></p>
+                        </div>
+                        <div class="timeline-item relative mb-6">
+                            <p class="font-bold">08:08:46 UTC (+2s)</p>
+                            <p data-key="timelineMaxAlt"></p>
+                        </div>
+                         <div class="timeline-item relative mb-6">
+                            <p class="font-bold">~08:08:48 UTC (+4s)</p>
+                            <p data-key="timelineMayday"></p>
+                        </div>
+                        <div class="timeline-item relative mb-6">
+                            <p class="font-bold">08:08:51 UTC (+7s)</p>
+                            <p data-key="timelineLastSignal"></p>
+                        </div>
+                        <div class="timeline-item relative">
+                            <p class="font-bold">> 08:08:51 UTC</p>
+                            <p data-key="timelineImpact"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                     <h3 class="font-bold text-xl mb-4" data-key="flightDataTitle"></h3>
+                    <div class="chart-container">
+                        <canvas id="flightDataChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: The Aircraft -->
+        <section id="aircraft" class="mb-12">
+            <h2 class="text-3xl font-bold text-custom-deep-blue mb-2" data-key="aircraftTitle"></h2>
+            <p class="mb-6" data-key="aircraftIntro"></p>
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold" data-key="aircraftReg"></h4>
+                    <p>VT-ANB</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold" data-key="aircraftEngines"></h4>
+                    <p>2x General Electric GEnx-1B</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold" data-key="aircraftAge"></h4>
+                    <p data-key="aircraftAgeVal"></p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="font-bold text-xl mb-4" data-key="fleetIssuesTitle"></h3>
+                <div id="accordion-container">
+                    <!-- Accordion items will be generated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Causal Analysis -->
+        <section id="analysis" class="mb-12">
+            <h2 class="text-3xl font-bold text-custom-deep-blue mb-2" data-key="analysisTitle"></h2>
+            <p class="mb-6" data-key="analysisIntro"></p>
+            <div class="grid md:grid-cols-5 gap-8">
+                <div class="md:col-span-2 bg-white p-6 rounded-lg shadow">
+                    <h3 class="font-bold text-xl mb-4" data-key="likelihoodTitle"></h3>
+                    <div class="chart-container" style="height: 450px;">
+                        <canvas id="causesChart"></canvas>
+                    </div>
+                </div>
+                <div class="md:col-span-3">
+                    <div id="analysis-text-container" class="space-y-4">
+                        <!-- Analysis text will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Operational Context -->
+        <section id="context" class="mb-12">
+            <h2 class="text-3xl font-bold text-custom-deep-blue mb-2" data-key="contextTitle"></h2>
+            <p class="mb-6" data-key="contextIntro"></p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="font-bold text-xl mb-4" data-key="crewInfoTitle"></h3>
+                    <p><strong data-key="captain"></strong> Sumeet Sabharwal: 8,200 hours</p>
+                    <p><strong data-key="firstOfficer"></strong> Clive Kundar: 1,100 hours</p>
+                    <p class="mt-4 italic" data-key="crewInfoNote"></p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="font-bold text-xl mb-4" data-key="passengerTitle"></h3>
+                     <div class="chart-container" style="height: 250px;">
+                        <canvas id="passengerChart"></canvas>
+                    </div>
+                </div>
+                 <div class="md:col-span-2 bg-white p-6 rounded-lg shadow">
+                    <h3 class="font-bold text-xl mb-4" data-key="airlineTitle"></h3>
+                    <p data-key="airlineText"></p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="text-center p-4 text-sm text-gray-500">
+        <p data-key="footerDisclaimer"></p>
+    </footer>
+
+<script>
+const appData = {
+    zh: {
+        pageTitle: "印度航空AI171航班事故分析",
+        mainTitle: "AI171事故调查报告",
+        navOverview: "概览",
+        navFlightPath: "飞行轨迹",
+        navAircraft: "涉事飞机",
+        navAnalysis: "原因分析",
+        navContext: "背景信息",
+        overviewTitle: "事故概览",
+        overviewIntro: "2025年6月12日，印度航空公司AI171航班，一架波音787-8梦想飞机，从印度艾哈迈达巴德起飞后不久坠毁。这是波音787机型自投入使用以来的首次致命事故。",
+        cardFlight: "航班号",
+        cardAircraftType: "机型",
+        cardRoute: "航线",
+        cardFatalities: "遇难/总人数",
+        flightPathTitle: "最后时刻",
+        flightPathIntro: "飞行数据显示，飞机在升空后几秒钟内便遭遇了灾难性紧急情况，几乎没有时间进行修正。",
+        timelineTitle: "关键事件时间线",
+        timelineTakeoff: "从艾哈迈达巴德23号跑道起飞。",
+        timelineMaxAlt: "达到625英尺的最大气压高度。",
+        timelineMayday: "机组发出Mayday求救信号。",
+        timelineLastSignal: "Flightradar24收到最后信号。",
+        timelineImpact: "撞击医学院宿舍，距离跑道1.4公里。",
+        flightDataTitle: "飞行数据 (高度与地速)",
+        aircraftTitle: "涉事飞机: VT-ANB",
+        aircraftIntro: "涉事飞机是一架服役超过11年的波音787-8。虽然787机队整体安全记录良好，但该机型也面临过一些技术问题的审查。",
+        aircraftReg: "注册号",
+        aircraftEngines: "发动机",
+        aircraftAge: "机龄 (事发时)",
+        aircraftAgeVal: "约11.5年",
+        fleetIssuesTitle: "787机队相关问题",
+        accordion: {
+            battery: { title: "锂离子电池事件 (2013)", content: "因电池过热风险，整个787机队曾被暂时停飞，后续对电池系统进行了重大修改。" },
+            seats: { title: "驾驶舱座椅检查 (2024-2025)", content: "因一起座椅意外移动导致飞机急降的事件，FAA下令对驾驶舱座椅开关进行检查。" },
+            whistleblower: { title: "举报人指控", content: "多名波音工程师和前经理提出对787生产质量的担忧，包括机身连接缝隙、部件不合格等问题。" },
+            engine: { title: "GEnx-1B发动机问题", content: "针对该型号发动机曾发布适航指令，以解决潜在的燃油泄漏和风扇叶片结冰问题，这些问题可能导致发动机空中停车。" },
+        },
+        analysisTitle: "潜在原因分析",
+        analysisIntro: "初步分析指向几个关键领域。最终结论需等待官方调查。以下图表和文字基于现有信息评估了各种可能性。点击下方类别查看详情。",
+        likelihoodTitle: "可能性评估",
+        analysisCategories: {
+            power: { 
+                title: "灾难性动力丧失", 
+                content: "<strong>支持证据：</strong>冲压空气涡轮(RAT)展开，这是双发停车或主电力系统失效的明确信号。幸存者听到“巨响”。\n<strong>可能原因：</strong>共模故障（如燃油污染、严重鸟击）、非包容性发动机故障或灾难性电气故障。\n<strong>评估：</strong>这是最主要的怀疑方向之一。RAT的展开是极具说服力的证据。"
+            },
+            aero: { 
+                title: "气动失速/飞控问题", 
+                content: "<strong>支持证据：</strong>视频显示飞机以大仰角姿态飞行但未能爬升，这是失速的典型特征。有观察称襟翼可能未在起飞位置。\n<strong>可能原因：</strong>起飞形态错误（未放襟翼）、飞控系统故障导致无法控制姿态，或因动力丧失导致速度过低而失速。\n<strong>评估：</strong>飞机最终很可能处于失速状态。关键是确定是什么导致了失速——是动力问题还是独立的飞控/形态问题。"
+            },
+            human: {
+                title: "人为因素",
+                content: "<strong>支持证据：</strong>潜在的起飞形态错误。机组在极短时间内面临极端复杂的紧急情况。\n<strong>可能原因：</strong>机组在处理突发连锁故障时操作失误，或因极端压力导致情景意识丧失。机组失能的可能性较低但不能排除。\n<strong>评估：</strong>在任何事故中都必须考虑人为因素，尤其是在这种快速发展的危机中。CVR录音将是关键。"
+            },
+            structure: {
+                title: "机体/制造问题",
+                content: "<strong>支持证据：</strong>先前存在的关于787制造质量的举报人指控。\n<strong>可能原因：</strong>潜在的制造缺陷在起飞应力下突然导致关键结构或操纵系统失效。\n<strong>评估：</strong>作为起飞阶段突发事故的根本原因可能性较低，但不能完全排除。这通常是导致长期疲劳问题的原因。"
+            },
+            maintenance: {
+                title: "维护与外部因素",
+                content: "<strong>支持证据：</strong>无直接证据，但属于标准调查范围。\n<strong>可能原因：</strong>维护不当导致系统潜在故障；燃油污染；影响双发的严重鸟击。\n<strong>评估：</strong>需要审查详细的维护记录和机场操作。鸟击虽然罕见但并非不可能。"
+            },
+        },
+        contextTitle: "运营与背景信息",
+        contextIntro: "了解机组、航空公司和起飞机场的情况为事故分析提供了重要的背景信息。",
+        crewInfoTitle: "机组信息",
+        captain: "机长:",
+        firstOfficer: "副驾驶:",
+        crewInfoNote: "虽然机长经验丰富，但如此危急且迅速的低空紧急情况对任何机组都是极端考验。",
+        passengerTitle: "乘客国籍分布",
+        airlineTitle: "关于印度航空",
+        airlineText: "在塔塔集团接管后，印度航空正进行全面的转型和现代化。此次事故对其品牌重塑是一个沉重打击。尽管其安全评级有所提升，但这起事故将引发对其运营和维护实践的严格审查。",
+        footerDisclaimer: "本页面内容基于初步调查报告生成，仅供参考。所有信息以官方发布的最终调查报告为准。",
+        charts: {
+            flightData: {
+                altitude: '高度 (英尺)',
+                groundSpeed: '地速 (节)',
+                time: '起飞后秒数'
+            },
+            causes: {
+                likelihood: '可能性',
+                labels: {
+                    power: "动力丧失",
+                    aero: "气动/飞控",
+                    human: "人为因素",
+                    structure: "机体/制造",
+                    maintenance: "维护/外部"
+                },
+                levels: { high: '高', moderate: '中', low: '低', tbd: '待定' }
+            },
+            passengers: {
+                title: '乘客国籍',
+                labels: {
+                    india: '印度',
+                    uk: '英国',
+                    portugal: '葡萄牙',
+                    canada: '加拿大'
+                }
+            }
+        }
+    },
+    en: {
+        pageTitle: "Analysis of Air India Flight AI171 Accident",
+        mainTitle: "AI171 Accident Investigation",
+        navOverview: "Overview",
+        navFlightPath: "Flight Path",
+        navAircraft: "Aircraft",
+        navAnalysis: "Analysis",
+        navContext: "Context",
+        overviewTitle: "Accident at a Glance",
+        overviewIntro: "On June 12, 2025, Air India Flight AI171, a Boeing 787-8 Dreamliner, crashed shortly after takeoff from Ahmedabad, India. This event marks the first fatal accident for the Boeing 787 type since its entry into service.",
+        cardFlight: "Flight",
+        cardAircraftType: "Aircraft",
+        cardRoute: "Route",
+        cardFatalities: "Fatalities / POB",
+        flightPathTitle: "Final Moments",
+        flightPathIntro: "Flight data indicates the aircraft experienced a catastrophic emergency within seconds of becoming airborne, leaving almost no time for corrective action.",
+        timelineTitle: "Key Event Timeline",
+        timelineTakeoff: "Takeoff from Runway 23 at Ahmedabad.",
+        timelineMaxAlt: "Reached maximum barometric altitude of 625 ft.",
+        timelineMayday: "Crew transmitted a Mayday call.",
+        timelineLastSignal: "Last signal received by Flightradar24.",
+        timelineImpact: "Impact with medical college hostel, 1.4km from runway.",
+        flightDataTitle: "Flight Data (Altitude & Ground Speed)",
+        aircraftTitle: "The Aircraft: VT-ANB",
+        aircraftIntro: "The aircraft involved was a Boeing 787-8 with over 11 years of service. While the 787 fleet has a good overall safety record, the type has faced scrutiny over several technical issues.",
+        aircraftReg: "Registration",
+        aircraftEngines: "Engines",
+        aircraftAge: "Age (at time of incident)",
+        aircraftAgeVal: "~11.5 years",
+        fleetIssuesTitle: "Relevant 787 Fleet Issues",
+        accordion: {
+            battery: { title: "Lithium-Ion Battery Events (2013)", content: "The entire 787 fleet was temporarily grounded due to risks of battery thermal runaway, leading to significant battery system redesign." },
+            seats: { title: "Cockpit Seat Inspections (2024-2025)", content: "The FAA ordered inspections of cockpit seat switches following an incident where an inadvertent seat movement caused a sudden dive." },
+            whistleblower: { title: "Whistleblower Allegations", content: "Concerns were raised by Boeing engineers and a former manager about 787 production quality, including fuselage gaps and substandard parts." },
+            engine: { title: "GEnx-1B Engine Issues", content: "Airworthiness Directives have been issued for this engine type to address potential fuel leaks and fan blade icing issues that could lead to in-flight shutdowns." },
+        },
+        analysisTitle: "Potential Causal Analysis",
+        analysisIntro: "Preliminary analysis points to several key areas. The final conclusion awaits the official investigation. The chart and text below assess the various possibilities based on available information. Click the categories below to see details.",
+        likelihoodTitle: "Likelihood Assessment",
+        analysisCategories: {
+            power: {
+                title: "Catastrophic Loss of Power",
+                content: "<strong>Supporting Evidence:</strong> Deployment of the Ram Air Turbine (RAT), a clear sign of dual-engine or main electrical system failure. Survivor reported a 'loud bang'.\n<strong>Possible Causes:</strong> Common-mode failure (e.g., fuel contamination, severe bird strike), uncontained engine failure, or a catastrophic electrical failure.\n<strong>Assessment:</strong> This is a leading theory. The RAT deployment is extremely compelling evidence."
+            },
+            aero: {
+                title: "Aerodynamic Stall / Control Issue",
+                content: "<strong>Supporting Evidence:</strong> Video shows a high nose-up attitude without climb, a classic sign of a stall. Observations suggest flaps may not have been in takeoff configuration.\n<strong>Possible Causes:</strong> Incorrect takeoff configuration (flaps up), flight control system malfunction leading to an uncontrollable attitude, or a stall induced by a loss of airspeed from power loss.\n<strong>Assessment:</strong> The aircraft was very likely in a stalled state. The key is to determine what initiated it—a power issue or an independent control/configuration problem."
+            },
+            human: {
+                title: "Human Factors",
+                content: "<strong>Supporting Evidence:</strong> Potential incorrect takeoff configuration. The crew faced an extremely complex emergency in a very short time.\n<strong>Possible Causes:</strong> Crew error in managing a cascading failure, or a loss of situational awareness due to the extreme stress. Incapacitation is a less likely but possible factor.\n<strong>Assessment:</strong> Human factors must be considered in any accident, especially a rapidly evolving crisis. The CVR will be critical."
+            },
+            structure: {
+                title: "Structural / Manufacturing Issue",
+                content: "<strong>Supporting Evidence:</strong> Pre-existing whistleblower allegations regarding 787 build quality.\n<strong>Possible Causes:</strong> A latent manufacturing defect that led to a critical failure of a structure or control system under takeoff stress.\n<strong>Assessment:</strong> Less likely as a root cause for a sudden event during takeoff, but cannot be ruled out. This is more often a cause of long-term fatigue issues."
+            },
+            maintenance: {
+                title: "Maintenance & External Factors",
+                content: "<strong>Supporting Evidence:</strong> None directly, but a standard area of investigation.\n<strong>Possible Causes:</strong> Improper maintenance leading to a latent system failure; fuel contamination; a severe bird strike affecting both engines.\n<strong>Assessment:</strong> Requires a detailed review of maintenance logs and airport operations. A bird strike is rare but possible."
+            },
+        },
+        contextTitle: "Operational & Background Context",
+        contextIntro: "Understanding the crew, airline, and departure airport provides crucial context for the accident analysis.",
+        crewInfoTitle: "Crew Information",
+        captain: "Captain:",
+        firstOfficer: "First Officer:",
+        crewInfoNote: "While the captain was experienced, a critical low-altitude emergency of this speed and nature is an extreme test for any crew.",
+        passengerTitle: "Passenger Nationalities",
+        airlineTitle: "About Air India",
+        airlineText: "Air India is undergoing a major transformation and modernization program under Tata Group ownership. This accident is a significant blow to its rebranding efforts. While its safety ratings had improved, the incident will trigger intense scrutiny of its operations and maintenance practices.",
+        footerDisclaimer: "This page is based on a preliminary investigative report and is for informational purposes only. All information is subject to the final official investigation report.",
+        charts: {
+            flightData: {
+                altitude: 'Altitude (ft)',
+                groundSpeed: 'Ground Speed (kts)',
+                time: 'Seconds After Takeoff'
+            },
+            causes: {
+                likelihood: 'Likelihood',
+                labels: {
+                    power: "Loss of Power",
+                    aero: "Aerodynamic/Control",
+                    human: "Human Factors",
+                    structure: "Structure/Manufacturing",
+                    maintenance: "Maintenance/External"
+                },
+                levels: { high: 'High', moderate: 'Moderate', low: 'Low', tbd: 'TBD' }
+            },
+            passengers: {
+                title: 'Passenger Nationalities',
+                labels: {
+                    india: 'Indian',
+                    uk: 'British',
+                    portugal: 'Portuguese',
+                    canada: 'Canadian'
+                }
+            }
+        }
+    }
+};
+
+let currentLang = 'zh';
+let flightDataChart, causesChart, passengerChart;
+
+function updateTextContent() {
+    document.querySelectorAll('[data-key]').forEach(el => {
+        const key = el.dataset.key;
+        if (appData[currentLang][key]) {
+            el.innerHTML = appData[currentLang][key];
+        }
+    });
+
+    // Update accordion
+    const accordionContainer = document.getElementById('accordion-container');
+    accordionContainer.innerHTML = '';
+    const accordionData = appData[currentLang].accordion;
+    Object.keys(accordionData).forEach(key => {
+        const item = accordionData[key];
+        const accordionItem = document.createElement('div');
+        accordionItem.className = 'border-b';
+        accordionItem.innerHTML = `
+            <button class="w-full text-left p-4 font-semibold hover:bg-custom-accent-light focus:outline-none flex justify-between items-center">
+                <span>${item.title}</span>
+                <span>+</span>
+            </button>
+            <div class="p-4 hidden bg-gray-50">
+                <p>${item.content}</p>
+            </div>
+        `;
+        accordionContainer.appendChild(accordionItem);
+    });
+    addAccordionListeners();
+    
+    // Update analysis text
+    const analysisContainer = document.getElementById('analysis-text-container');
+    analysisContainer.innerHTML = '';
+    const analysisData = appData[currentLang].analysisCategories;
+    Object.keys(analysisData).forEach(key => {
+        const item = analysisData[key];
+        const analysisItem = document.createElement('div');
+        analysisItem.id = `analysis-${key}`;
+        analysisItem.className = 'bg-white p-6 rounded-lg shadow-md';
+        analysisItem.innerHTML = `
+            <h4 class="font-bold text-lg text-custom-deep-blue mb-2">${item.title}</h4>
+            <p class="whitespace-pre-line">${item.content}</p>
+        `;
+        analysisContainer.appendChild(analysisItem);
+    });
+}
+
+function addAccordionListeners() {
+    const accordionButtons = document.querySelectorAll('#accordion-container button');
+    accordionButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('span:last-child');
+            const isVisible = !content.classList.contains('hidden');
+            
+            // Close all others
+            document.querySelectorAll('#accordion-container .p-4').forEach(c => {
+                if (c !== content) {
+                    c.classList.add('hidden');
+                    c.previousElementSibling.querySelector('span:last-child').textContent = '+';
+                }
+            });
+
+            // Toggle current
+            content.classList.toggle('hidden');
+            icon.textContent = isVisible ? '+' : '-';
+        });
+    });
+}
+
+function createCharts() {
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    const chartLang = appData[currentLang].charts;
+
+    // Destroy existing charts if they exist
+    if (flightDataChart) flightDataChart.destroy();
+    if (causesChart) causesChart.destroy();
+    if (passengerChart) passengerChart.destroy();
+
+    // Flight Data Chart
+    const flightCtx = document.getElementById('flightDataChart').getContext('2d');
+    flightDataChart = new Chart(flightCtx, {
+        type: 'line',
+        data: {
+            labels: ['0', '2', '4', '6', '7'],
+            datasets: [{
+                label: chartLang.flightData.altitude,
+                data: [0, 625, 500, 300, 200],
+                borderColor: '#4A90E2',
+                backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                yAxisID: 'y',
+                tension: 0.1,
+                fill: true,
+            }, {
+                label: chartLang.flightData.groundSpeed,
+                data: [130, 175, 160, 145, 135],
+                borderColor: '#F5A623',
+                yAxisID: 'y1',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { title: { display: true, text: chartLang.flightData.time } },
+                y: { type: 'linear', display: true, position: 'left', title: { display: true, text: chartLang.flightData.altitude } },
+                y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: chartLang.flightData.groundSpeed } }
+            }
+        }
+    });
+
+    // Causes Chart
+    const causesCtx = document.getElementById('causesChart').getContext('2d');
+    const causeLabels = chartLang.causes.labels;
+    const causeLevels = chartLang.causes.levels;
+    causesChart = new Chart(causesCtx, {
+        type: 'bar',
+        data: {
+            labels: [causeLabels.power, causeLabels.aero, causeLabels.human, causeLabels.structure, causeLabels.maintenance],
+            datasets: [{
+                label: chartLang.causes.likelihood,
+                data: [4, 3.5, 3, 2, 2.5], // High, High, Moderate, Low, Moderate
+                backgroundColor: ['#D0021B', '#F5A623', '#F8E71C', '#7ED321', '#B8E986'],
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let value = context.raw;
+                            let level = '';
+                            if (value >= 3.5) level = causeLevels.high;
+                            else if (value >= 2.5) level = causeLevels.moderate;
+                            else level = causeLevels.low;
+                            return `${chartLang.causes.likelihood}: ${level}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    display: false,
+                    max: 4.5
+                },
+                y: {
+                    ticks: {
+                        autoSkip: false,
+                        callback: function(value, index, values) {
+                            const label = this.getLabelForValue(value);
+                            return label.length > 15 ? label.match(/.{1,15}/g) : label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Passenger Chart
+    const passengerCtx = document.getElementById('passengerChart').getContext('2d');
+    const passengerLabels = chartLang.passengers.labels;
+    passengerChart = new Chart(passengerCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [passengerLabels.india, passengerLabels.uk, passengerLabels.portugal, passengerLabels.canada],
+            datasets: [{
+                label: chartLang.passengers.title,
+                data: [169, 53, 7, 1],
+                backgroundColor: ['#F5A623', '#003366', '#7ED321', '#D0021B'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+}
+
+function updateActiveNav() {
+    const sections = document.querySelectorAll('main section');
+    const navLinks = document.querySelectorAll('.nav-link');
+    
+    let currentSectionId = '';
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (pageYOffset >= sectionTop - 80) { // 80px offset for sticky header
+            currentSectionId = section.getAttribute('id');
+        }
+    });
+    
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${currentSectionId}`) {
+            link.classList.add('active');
+        }
+    });
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('lang-zh').addEventListener('click', () => {
+        currentLang = 'zh';
+        document.documentElement.lang = 'zh';
+        document.getElementById('lang-zh').classList.add('active');
+        document.getElementById('lang-en').classList.remove('active');
+        updateTextContent();
+        createCharts();
+    });
+
+    document.getElementById('lang-en').addEventListener('click', () => {
+        currentLang = 'en';
+        document.documentElement.lang = 'en';
+        document.getElementById('lang-en').classList.add('active');
+        document.getElementById('lang-zh').classList.remove('active');
+        updateTextContent();
+        createCharts();
+    });
+
+    // Initial load
+    document.getElementById('lang-zh').click();
+    updateActiveNav();
+    window.addEventListener('scroll', updateActiveNav);
+});
+
+</script>
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>

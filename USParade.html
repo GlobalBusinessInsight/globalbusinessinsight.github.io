@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<!-- 
+Chosen Palette: Warm Neutrals with Indigo Accent
+Application Structure Plan: A tab-based SPA design was chosen to manage the report's distinct facets: the factual overview, the parade's composition, and the highly polarized reactions. This structure prevents overwhelming the user with a long scroll and allows them to navigate directly to their area of interest. The flow starts with a high-level summary (概览), moves to granular details (阅兵解析), and culminates in the critical analysis of the societal and global fallout (舆论焦点 & 国际视角). This is more intuitive than a linear report format for exploring a complex, multi-faceted event.
+Visualization & Content Choices: 
+- Report Info: Key stats (cost, personnel). Goal: Inform. Method: Styled info cards. Justification: Provides immediate, high-impact data points.
+- Report Info: Parade composition. Goal: Organize/Explain. Method: HTML/CSS timeline and video embed. Justification: Visually structures the event's flow and provides live context.
+- Report Info: Domestic reactions (polarized). Goal: Compare. Method: Chart.js Doughnut Chart and video embed. Interaction: Clearly visualizes the sharp pro/con divide with visual evidence. Justification: A chart and video combined offer the most effective way to show a stark split. Library: Chart.js.
+- Report Info: International reactions. Goal: Organize. Method: 3-column layout with Unicode icons. Justification: Allows for easy comparison of different global stances.
+CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. 
+-->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式报告：2025美国阅兵分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 640px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .tab-btn {
+            transition: all 0.3s ease-in-out;
+        }
+        .tab-btn.active {
+            color: #ffffff;
+            background-color: #4338ca; /* bg-indigo-700 */
+            border-color: #4338ca;
+        }
+        .tab-btn:not(.active) {
+            color: #374151; /* text-gray-700 */
+            background-color: #f3f4f6; /* bg-gray-100 */
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 2.5rem;
+            border-left: 2px solid #d1d5db; /* border-gray-300 */
+        }
+        .timeline-item::before {
+            content: attr(data-icon);
+            position: absolute;
+            left: -1rem;
+            transform: translateX(-50%);
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #4f46e5; /* bg-indigo-600 */
+            color: white;
+            font-size: 1rem;
+        }
+        .aspect-w-16 { position: relative; padding-bottom: 56.25%; }
+        .aspect-h-9 { /* not needed when using padding-bottom */ }
+        .aspect-w-16 > iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <main class="container mx-auto max-w-5xl p-4 sm:p-6 md:p-8">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-800">分析报告：特朗普总统主持的美国陆军250周年阅兵</h1>
+            <p class="mt-2 text-md text-gray-600">2025年6月14日 | 华盛顿特区</p>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+
+            <!-- Tab Navigation -->
+            <div class="mb-6 border-b border-gray-200">
+                <nav class="flex flex-wrap -mb-px" aria-label="Tabs">
+                    <button class="tab-btn active text-sm sm:text-base font-medium text-center border-b-2 border-transparent px-3 py-3 sm:px-4" data-tab="overview">阅兵概览</button>
+                    <button class="tab-btn text-sm sm:text-base font-medium text-center border-b-2 border-transparent px-3 py-3 sm:px-4" data-tab="details">阅兵解析</button>
+                    <button class="tab-btn text-sm sm:text-base font-medium text-center border-b-2 border-transparent px-3 py-3 sm:px-4" data-tab="reaction">舆论焦点</button>
+                    <button class="tab-btn text-sm sm:text-base font-medium text-center border-b-2 border-transparent px-3 py-3 sm:px-4" data-tab="global">国际视角</button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tab-content-container">
+
+                <!-- Tab 1: Overview -->
+                <div id="overview" class="tab-content active">
+                    <div class="p-2">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">事件核心：个人愿景与国家纪念的交织</h2>
+                        <p class="text-gray-600 mb-6 leading-relaxed">
+                            本部分提供了阅兵的宏观视角，解析其背后的双重驱动力。官方上，这是为了庆祝美国陆军250周年的历史性时刻；然而，事件更深刻地烙上了特朗普总统的个人印记——他渴望在美国复制法国巴士底日阅兵的盛况。这里将展示阅兵的关键数据，并阐明其强烈的政治象征意义。
+                        </p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center mb-8">
+                            <div class="bg-indigo-50 p-4 rounded-lg">
+                                <p class="text-3xl font-bold text-indigo-700">~$45M</p>
+                                <p class="text-sm text-indigo-600">预估成本</p>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <p class="text-3xl font-bold text-green-700">~6,600</p>
+                                <p class="text-sm text-green-600">参阅士兵</p>
+                            </div>
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <p class="text-3xl font-bold text-blue-700">150+</p>
+                                <p class="text-sm text-blue-600">参阅军车</p>
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-semibold mb-3">关键促成因素</h3>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600">
+                            <li><strong>总统的坚持与推动：</strong> 本次活动的核心驱动力源于总统本人，旨在展示军事实力并重振国家精神。</li>
+                            <li><strong>强烈的政治象征：</strong> 活动被赋予浓厚政治色彩，旨在巩固爱国主义基本盘，并与总统生日绑定，强化个人与国家力量的联系。</li>
+                            <li><strong>清晰的地缘政治信号：</strong> 向全球传递美国军事优势依然稳固，且领导人愿意公开展示力量的明确信息。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Details -->
+                <div id="details" class="tab-content">
+                    <div class="p-2">
+                         <h2 class="text-2xl font-bold text-gray-800 mb-4">解构盛典：历史与现代的融合</h2>
+                        <p class="text-gray-600 mb-8 leading-relaxed">
+                            本部分将深入阅兵的具体构成和流程。通过一个交互式的时间轴，您可以清晰地看到阅兵是如何精心编排，将美国陆军从独立战争至今的历史与现代化的作战力量融为一体的。从历史方队到重型装备，再到空中梯队，每一个环节都旨在展现军队的传承与实力。
+                        </p>
+
+                        <div class="timeline space-y-8 mb-10">
+                            <div class="timeline-item relative" data-icon="📜">
+                                <h3 class="text-lg font-semibold text-indigo-700">历史与现代结合的方队</h3>
+                                <p class="text-gray-600 mt-1">阅兵按时间顺序，由身着各时期军服的士兵方队引领，其后是该部队番号的现代继承单位，以此展现历史传承。</p>
+                            </div>
+                             <div class="timeline-item relative" data-icon="🚚">
+                                <h3 class="text-lg font-semibold text-indigo-700">重型装备展示</h3>
+                                <p class="text-gray-600 mt-1">超过150辆军车参加，包括M1艾布拉姆斯主战坦克和布拉德利战车，展示了陆军的地面作战核心力量。</p>
+                            </div>
+                            <div class="timeline-item relative" data-icon="✈️">
+                                <h3 class="text-lg font-semibold text-indigo-700">空中力量展示</h3>
+                                <p class="text-gray-600 mt-1">约50架军机组成的空中梯队飞越上空，包括二战时期的P-51野马和现代的AH-64阿帕奇直升机，与地面方队主题相呼应。</p>
+                            </div>
+                             <div class="timeline-item relative" data-icon="🎤">
+                                <h3 class="text-lg font-semibold text-indigo-700">总统的中心角色</h3>
+                                <p class="text-gray-600 mt-1">特朗普总统全程检阅部队，并亲自主持250名新兵的入伍宣誓仪式，最后发表简短有力的讲话。</p>
+                            </div>
+                            <div class="timeline-item relative" data-icon="🎆">
+                                <h3 class="text-lg font-semibold text-indigo-700">标志性表演收尾</h3>
+                                <p class="text-gray-600 mt-1">活动以“金骑士”跳伞表演和盛大烟花秀结束，穿插的音乐表演为活动增添了浓厚的特朗普式集会氛围。</p>
+                            </div>
+                        </div>
+
+                        <h3 class="text-xl font-semibold mb-4 text-center">阅兵现场直击</h3>
+                        <div class="aspect-w-16 aspect-h-9 max-w-2xl mx-auto rounded-lg overflow-hidden shadow-lg">
+                            <iframe src="https://www.youtube.com/embed/3-Unp5XoyXg" title="Parade Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Reaction -->
+                <div id="reaction" class="tab-content">
+                    <div class="p-2">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">舆论的战场：严重两极分化的社会反应</h2>
+                        <p class="text-gray-600 mb-6 leading-relaxed">
+                            本次阅兵在美国国内引发了剧烈的舆论风暴。本部分通过一个数据可视化图表和观点对比，直观地展示了社会内部的深刻分歧。一方面是支持者眼中理所应当的爱国盛典，另一方面则是反对者口中耗资巨大、将国家公器政治化的“威权秀”。
+                        </p>
+                        
+                        <div class="chart-container mb-8">
+                            <canvas id="reactionChart"></canvas>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                                <h3 class="font-bold text-lg text-blue-800 mb-2">支持方观点 👍</h3>
+                                <ul class="list-disc list-inside space-y-2 text-blue-900">
+                                    <li>对军队迟来的、应有的致敬。</li>
+                                    <li>爱国主义的有力表达，振奋人心。</li>
+                                    <li>赞扬总统敢于展示美国力量的魄力。</li>
+                                    <li>社交媒体充满“让美国再次强大”的帖子。</li>
+                                </ul>
+                            </div>
+                            <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                                <h3 class="font-bold text-lg text-red-800 mb-2">反对方观点 👎</h3>
+                                <ul class="list-disc list-inside space-y-2 text-red-900 mb-4">
+                                    <li>抨击高达4500万美元的巨额成本。</li>
+                                    <li>担忧重型坦克损毁城市街道。</li>
+                                    <li>指责总统将阅兵个人化、政治化。</li>
+                                    <li>爆发“不要国王”抗议，批评其“威权”倾向。</li>
+                                    <li>认为炫耀武力与美国民主传统背道而驰。</li>
+                                </ul>
+                                <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-md">
+                                    <iframe src="https://www.youtube.com/embed/3JiAyG2prBM" title="Protest Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Global -->
+                <div id="global" class="tab-content">
+                    <div class="p-2">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">世界的目光：谨慎、批评与沉默</h2>
+                        <p class="text-gray-600 mb-8 leading-relaxed">
+                            国际社会对此次阅兵的反应复杂多样，反映了当前全球地缘政治的格局。本部分将分类展示主要国际行为体的不同态度：盟友的谨慎与担忧，竞争对手的尖锐批评，以及多数国家的沉默观望。
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-gray-100 p-4 rounded-lg">
+                                <h3 class="text-xl font-semibold mb-3 flex items-center"><span class="text-2xl mr-2">🤝</span> 盟友</h3>
+                                <p class="text-gray-600">官方反应普遍<strong class="text-gray-800">谨慎且低调</strong>，多采用中性外交辞令。私下里，许多盟国媒体和分析人士表达了对美国政策<strong class="text-gray-800">不可预测性</strong>的担忧。</p>
+                            </div>
+                            <div class="bg-gray-100 p-4 rounded-lg">
+                                <h3 class="text-xl font-semibold mb-3 flex items-center"><span class="text-2xl mr-2">⚔️</span> 竞争对手</h3>
+                                <p class="text-gray-600">俄罗斯和中国的官方媒体以此为契机，进行<strong class="text-gray-800">负面宣传</strong>，将阅兵描绘成特朗普的“独裁倾向”和美国的“军国主义”的证据。</p>
+                            </div>
+                            <div class="bg-gray-100 p-4 rounded-lg">
+                                <h3 class="text-xl font-semibold mb-3 flex items-center"><span class="text-2xl mr-2">🌍</span> 中立国家</h3>
+                                <p class="text-gray-600">大多数国家<strong class="text-gray-800">保持沉默</strong>，将此事件严格视为美国的内部政治秀，避免卷入其中或发表评论。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <footer class="text-center mt-8 text-sm text-gray-500">
+            <p>本报告基于公开信息进行分析，旨在提供一个全面的事件视角。</p>
+        </footer>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            let reactionChart = null;
+
+            function activateTab(tab) {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const targetId = tab.dataset.tab;
+                
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === targetId) {
+                        content.classList.add('active');
+                    }
+                });
+                
+                if (targetId === 'reaction' && !reactionChart) {
+                    renderReactionChart();
+                }
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => activateTab(tab));
+            });
+            
+            function renderReactionChart() {
+                const ctx = document.getElementById('reactionChart').getContext('2d');
+                reactionChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['支持方', '反对方'],
+                        datasets: [{
+                            label: '国内反应',
+                            data: [45, 55],
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.7)',  // Blue-500
+                                'rgba(239, 68, 68, 0.7)'   // Red-500
+                            ],
+                            borderColor: [
+                                'rgba(59, 130, 246, 1)',
+                                'rgba(239, 68, 68, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    font: {
+                                        size: 14,
+                                        family: "'Noto Sans SC', sans-serif"
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += context.parsed + '% (估算)';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Initial load
+            activateTab(tabs[0]);
+        });
+    </script>
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>

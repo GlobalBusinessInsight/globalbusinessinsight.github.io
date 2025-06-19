@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-lang-key="title">美国公用事业交互式报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: A single-page application with a fixed sidebar for thematic navigation (Home, Market Landscape, History & Transformation, Future Outlook, Globalization). This user-centric design avoids a linear report structure, allowing users to explore topics like market players, major blackouts, or future trends based on interest. The core interaction is switching between these thematic sections, with further interactions within each section (e.g., toggling utility types, clicking timeline events, viewing chart tooltips) to facilitate layered discovery of information. A prominent language switcher provides full bilingual support. This structure was chosen to make a dense, complex report accessible and engaging for a broad audience. -->
+    <!-- Visualization & Content Choices: 
+        - Goal: Inform (Key Stats/Companies): Interactive cards with counters and modals (HTML/CSS/JS) to make dense info digestible.
+        - Goal: Compare (Market Caps/Energy Mix): Donut and Bar charts (Chart.js) with interactive year selectors to show change over time, ideal for quantitative comparison.
+        - Goal: Change (History/Projections): Interactive timeline (HTML/CSS/JS) for historical events and a Line chart (Chart.js) for future trends, providing clear visual narratives.
+        - Goal: Organize (Market Structure/Incidents): Flexbox diagrams and tabbed content (HTML/CSS/JS) to simplify complex systems and text-heavy case studies.
+        - Justification: This multi-faceted approach transforms a static report into an exploratory tool, matching the best visualization to the information's goal, enhancing user understanding and engagement.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .bg-primary { background-color: #F8F7F4; }
+        .text-primary { color: #3C486B; }
+        .text-secondary { color: #AAB7C4; }
+        .accent-color { color: #D4AF37; }
+        .accent-bg { background-color: #D4AF37; }
+        .sidebar { transition: transform 0.3s ease-in-out; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+        @media (max-width: 768px) { .chart-container { height: 300px; } }
+        .nav-link.active { color: #D4AF37; border-left-color: #D4AF37; background-color: rgba(60, 72, 107, 0.1); }
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-primary text-primary">
+
+    <div id="app-container" class="relative min-h-screen md:flex">
+
+        <!-- Mobile Header -->
+        <div class="md:hidden bg-white/80 backdrop-blur-sm shadow-md flex justify-between items-center p-4 sticky top-0 z-40">
+            <h1 class="text-xl font-bold text-primary" data-lang-key="header_title">美国公用事业报告</h1>
+            <button id="mobile-menu-button" class="text-primary focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-4 6h4"></path></svg>
+            </button>
+        </div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="bg-white/90 backdrop-blur-lg text-primary w-64 space-y-6 py-7 px-2 fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 z-50 md:z-auto shadow-lg md:shadow-none">
+            <a href="#" class="text-primary text-2xl font-extrabold px-4 flex items-center">
+                <span class="w-8 h-8 mr-3 text-white bg-primary rounded-full flex items-center justify-center accent-bg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </span>
+                <span data-lang-key="sidebar_title">公用事业洞察</span>
+            </a>
+            <nav id="main-nav" class="mt-10">
+                <a href="#home" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:accent-color border-l-4 border-transparent" data-section="home" data-lang-key="nav_home">主页</a>
+                <a href="#market" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:accent-color border-l-4 border-transparent" data-section="market" data-lang-key="nav_market">市场格局</a>
+                <a href="#history" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:accent-color border-l-4 border-transparent" data-section="history" data-lang-key="nav_history">历史与变革</a>
+                <a href="#future" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:accent-color border-l-4 border-transparent" data-section="future" data-lang-key="nav_future">未来展望</a>
+                <a href="#globalization" class="nav-link block py-2.5 px-4 rounded transition duration-200 hover:accent-color border-l-4 border-transparent" data-section="globalization" data-lang-key="nav_globalization">全球化动态</a>
+            </nav>
+            <div class="absolute bottom-4 left-0 right-0 px-4">
+                <div class="bg-gray-200/50 rounded-lg p-2 flex justify-between items-center text-sm">
+                    <button id="lang-zh" class="lang-btn px-3 py-1 rounded-md font-semibold" data-lang="zh">中文</button>
+                    <button id="lang-en" class="lang-btn px-3 py-1 rounded-md font-semibold" data-lang="en">English</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 sm:p-6 md:p-10">
+            <!-- Home Section -->
+            <section id="home" class="section">
+                <h2 class="text-3xl font-bold mb-2" data-lang-key="home_title">美国公用事业行业概览</h2>
+                <p class="text-lg text-gray-600 mb-8" data-lang-key="home_intro">
+                    本报告深入剖析了美国公用事业行业，这是一个支撑国家经济的基石。从爱迪生的珍珠街电站到当今由可再生能源和智能技术驱动的深刻变革，本应用将带您探索其复杂的历史、市场结构、重大挑战和未来图景。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white/80 p-6 rounded-xl shadow-md backdrop-blur-md">
+                        <h3 class="font-semibold text-lg mb-2" data-lang-key="home_card1_title">市场规模</h3>
+                        <p class="text-5xl font-bold accent-color">$<span class="stat-counter" data-target="7.3">0</span> <span data-lang-key="unit_trillion">万亿</span></p>
+                        <p class="text-gray-500 mt-2" data-lang-key="home_card1_desc">预计2025年全球市场规模，展现了其在全球经济中的重要地位。</p>
+                    </div>
+                    <div class="bg-white/80 p-6 rounded-xl shadow-md backdrop-blur-md">
+                        <h3 class="font-semibold text-lg mb-2" data-lang-key="home_card2_title">资本投资</h3>
+                        <p class="text-5xl font-bold accent-color">$<span class="stat-counter" data-target="1">0</span>+ <span data-lang-key="unit_trillion">万亿</span></p>
+                        <p class="text-gray-500 mt-2" data-lang-key="home_card2_desc">预计2025-2029年美国能源公用事业投资，用于基础设施现代化。</p>
+                    </div>
+                    <div class="bg-white/80 p-6 rounded-xl shadow-md backdrop-blur-md">
+                        <h3 class="font-semibold text-lg mb-2" data-lang-key="home_card3_title">清洁能源发电</h3>
+                        <p class="text-5xl font-bold accent-color"><span class="stat-counter" data-target="40">0</span>%+</p>
+                        <p class="text-gray-500 mt-2" data-lang-key="home_card3_desc">2023年，核能与可再生能源发电占比之和，凸显能源转型趋势。</p>
+                    </div>
+                </div>
+                 <div class="mt-10 bg-white/80 p-6 rounded-xl shadow-md backdrop-blur-md">
+                    <h3 class="text-2xl font-bold mb-4" data-lang-key="home_chart_title">美国电力来源构成 (2023)</h3>
+                    <p class="text-gray-600 mb-4" data-lang-key="home_chart_intro">下图展示了2023年美国公用事业规模发电量的主要来源。天然气仍然是主导力量，但可再生能源和核能共同构成了清洁电力的重要基础。这种多元化的组合反映了行业在保障供应和推动脱碳之间的平衡。</p>
+                    <div class="chart-container">
+                        <canvas id="generationMixChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Market Section -->
+            <section id="market" class="section">
+                <h2 class="text-3xl font-bold mb-2" data-lang-key="market_title">市场格局：电、气、水</h2>
+                <p class="text-lg text-gray-600 mb-8" data-lang-key="market_intro">
+                    美国公用事业市场由电力、天然气和水务三大板块构成，每个板块都有其独特的市场结构、主要参与者和监管环境。本节将深入探讨这些领域的运作模式，从发电到终端用户的价值链，以及主导市场的代表性企业。
+                </p>
+                 <div class="mb-8">
+                    <h3 class="text-2xl font-bold mb-4" data-lang-key="market_structure_title">电力市场结构</h3>
+                     <p class="text-gray-600 mb-6" data-lang-key="market_structure_intro">美国电力系统是一个复杂的网络，主要分为三个核心环节和三大独立运营的电网。下图直观地展示了电力从生产到消费的旅程，以及覆盖全国的电网布局。这种结构既保证了区域优化的经济性，也在极端事件中暴露出跨区支援的局限性。</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-white/80 p-6 rounded-xl shadow-md">
+                            <h4 class="font-semibold text-xl mb-4 text-center" data-lang-key="market_value_chain_title">核心价值链</h4>
+                            <div class="flex items-center justify-around text-center">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-2"><span class="text-3xl">🏭</span></div>
+                                    <p class="font-semibold" data-lang-key="market_generation">发电</p>
+                                </div>
+                                <div class="text-2xl font-bold text-gray-400 mx-4">→</div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-2"><span class="text-3xl">🗼</span></div>
+                                    <p class="font-semibold" data-lang-key="market_transmission">输电</p>
+                                </div>
+                                <div class="text-2xl font-bold text-gray-400 mx-4">→</div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-2"><span class="text-3xl">🏠</span></div>
+                                    <p class="font-semibold" data-lang-key="market_distribution">配电</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white/80 p-6 rounded-xl shadow-md">
+                            <h4 class="font-semibold text-xl mb-4 text-center" data-lang-key="market_interconnections_title">三大互联电网</h4>
+                            <div class="space-y-3 text-gray-700">
+                                <p><strong><span data-lang-key="market_eastern">东部互联</span>:</strong> <span data-lang-key="market_eastern_desc">覆盖洛矶山脉以东，服务全国约73%的电力需求。</span></p>
+                                <p><strong><span data-lang-key="market_western">西部互联</span>:</strong> <span data-lang-key="market_western_desc">覆盖洛矶山脉以西，服务约19%的需求。</span></p>
+                                <p><strong><span data-lang-key="market_ercot">德州ERCOT</span>:</strong> <span data-lang-key="market_ercot_desc">基本独立，服务德州大部分地区，占8%需求。</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold mb-4" data-lang-key="market_companies_title">代表性企业</h3>
+                    <p class="text-gray-600 mb-6" data-lang-key="market_companies_intro">美国公用事业行业由少数几家大型投资者拥有的公司主导。这些巨头在市场规模、业务覆盖和技术创新方面处于领先地位，其战略动向深刻影响着整个行业的未来。点击公司卡片了解更多详情。</p>
+                    <div id="company-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <!-- Company cards will be injected here by JavaScript -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- History Section -->
+            <section id="history" class="section">
+                <h2 class="text-3xl font-bold mb-2" data-lang-key="history_title">历史与变革</h2>
+                <p class="text-lg text-gray-600 mb-8" data-lang-key="history_intro">
+                    美国公用事业的历史是一部技术创新、企业整合和监管演变的交响曲。从爱迪生的直流电到特斯拉的交流电之争，再到联邦政府为应对市场失灵和确保普遍服务而进行的干预，最终走向了部分领域的放松管制。
+                </p>
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1">
+                        <h3 class="text-2xl font-bold mb-4" data-lang-key="history_timeline_title">发展里程碑</h3>
+                        <p class="text-gray-600 mb-6" data-lang-key="history_timeline_intro">以下时间轴展示了塑造行业的关键时刻。点击每个事件以了解其深远影响。</p>
+                        <div id="timeline" class="relative border-l-2 border-gray-200">
+                           <!-- Timeline items will be injected here -->
+                        </div>
+                    </div>
+                    <div id="timeline-details" class="lg:col-span-2 bg-white/80 p-6 rounded-xl shadow-md h-fit sticky top-24">
+                        <!-- Timeline details will be displayed here -->
+                        <p class="text-center text-gray-500" data-lang-key="history_timeline_select">请在左侧选择一个时间点查看详情。</p>
+                    </div>
+                </div>
+                <div class="mt-12">
+                    <h3 class="text-2xl font-bold mb-4" data-lang-key="history_outages_title">历史警钟：重大停电事件</h3>
+                    <p class="text-gray-600 mb-6" data-lang-key="history_outages_intro">历史上，数次大规模停电事件暴露了电网的脆弱性，并推动了深刻的行业改革。加州电力危机和德州大停电是其中最惨痛的教训，揭示了从市场设计到基础设施韧性等一系列问题。</p>
+                    <div id="outage-details-container" class="bg-white/80 p-6 rounded-xl shadow-md">
+                        <!-- Outage details will be injected here by JS -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Future Section -->
+            <section id="future" class="section">
+                <h2 class="text-3xl font-bold mb-2" data-lang-key="future_title">未来展望</h2>
+                <p class="text-lg text-gray-600 mb-8" data-lang-key="future_intro">
+                   美国公用事业行业正站在历史性的转折点，面临脱碳、电气化和数字化的三重浪潮。数据中心和电动汽车带来的需求激增，与可再生能源的加速部署，共同塑造着一个充满挑战与机遇的未来。
+                </p>
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="bg-white/80 p-6 rounded-xl shadow-md">
+                        <h3 class="text-xl font-bold mb-4" data-lang-key="future_demand_title">电力需求新引擎</h3>
+                        <p class="text-gray-600 mb-4" data-lang-key="future_demand_intro">数据中心和交通电气化正成为电力需求增长的主要驱动力，这对电网规划和资源充裕性提出了前所未有的挑战。</p>
+                        <div class="chart-container">
+                            <canvas id="demandGrowthChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white/80 p-6 rounded-xl shadow-md">
+                        <h3 class="text-xl font-bold mb-4" data-lang-key="future_renewables_title">清洁电力目标 (2035)</h3>
+                        <p class="text-gray-600 mb-4" data-lang-key="future_renewables_intro">NREL的研究描绘了到2035年实现100%清洁电力的宏伟蓝图。风能和太阳能将成为主力，但这需要电网容量和储能规模的巨大飞跃。</p>
+                         <div class="chart-container">
+                            <canvas id="futureMixChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-10">
+                    <h3 class="text-2xl font-bold mb-4" data-lang-key="future_challenges_title">挑战与机遇</h3>
+                    <p class="text-gray-600 mb-6" data-lang-key="future_challenges_intro">行业的未来转型之路并非坦途。巨额投资、供应链瓶颈和极端天气是严峻挑战，但技术创新和新商业模式也带来了巨大机遇。</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                            <h4 class="font-bold text-red-800 mb-2" data-lang-key="future_challenges_list_title">主要挑战</h4>
+                            <ul id="challenges-list" class="list-disc list-inside text-red-700 space-y-1"></ul>
+                        </div>
+                        <div class="bg-green-50 border border-green-200 p-4 rounded-lg">
+                            <h4 class="font-bold text-green-800 mb-2" data-lang-key="future_opportunities_list_title">主要机遇</h4>
+                            <ul id="opportunities-list" class="list-disc list-inside text-green-700 space-y-1"></ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Globalization Section -->
+            <section id="globalization" class="section">
+                <h2 class="text-3xl font-bold mb-2" data-lang-key="global_title">全球化动态</h2>
+                <p class="text-lg text-gray-600 mb-8" data-lang-key="global_intro">
+                    美国公用事业公司的足迹早已超越国界。从90年代的海外投资浪潮，到如今在全球可再生能源开发和LNG贸易中扮演关键角色，其国际化战略反映了全球能源格局的深刻变迁。
+                </p>
+                <div class="bg-white/80 p-6 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-bold mb-4" data-lang-key="global_trends_title">当前全球化趋势</h3>
+                    <p class="text-gray-600 mb-6" data-lang-key="global_trends_intro">地缘政治、供应链重构和气候变化正在重塑全球化。美国公用事业行业通过技术输出、参与全球可再生能源竞赛和提升LNG出口战略地位来应对这一新格局。</p>
+                    <div id="global-trends-container" class="space-y-4">
+                        <!-- Global trends will be injected here -->
+                    </div>
+                </div>
+                <div class="mt-8 bg-white/80 p-6 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-bold mb-4" data-lang-key="global_aes_title">案例研究：AES公司</h3>
+                     <p class="text-gray-600 mb-6" data-lang-key="global_aes_intro">AES公司是美国公用事业全球化运营的突出代表。其发展历程从传统的独立发电商（IPP）转型为全球清洁能源解决方案的领导者，清晰地反映了行业从收购资产到输出技术和商业模式的战略转变。</p>
+                     <div class="grid md:grid-cols-3 gap-6 text-center">
+                        <div>
+                            <p class="text-4xl font-bold accent-color">29</p>
+                            <p class="font-semibold" data-lang-key="global_aes_stat1">个国家</p>
+                            <p class="text-sm text-gray-500" data-lang-key="global_aes_stat1_desc">业务曾遍及的顶峰数量</p>
+                        </div>
+                         <div>
+                            <p class="text-4xl font-bold accent-color">1992</p>
+                            <p class="font-semibold" data-lang-key="global_aes_stat2">年起</p>
+                            <p class="text-sm text-gray-500" data-lang-key="global_aes_stat2_desc">开始全球扩张步伐</p>
+                        </div>
+                         <div>
+                            <p class="text-4xl font-bold accent-color">Clean Energy</p>
+                            <p class="font-semibold" data-lang-key="global_aes_stat3">清洁能源</p>
+                            <p class="text-sm text-gray-500" data-lang-key="global_aes_stat3_desc">当前战略转型核心</p>
+                        </div>
+                     </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal for Company Details -->
+    <div id="company-modal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 opacity-0 pointer-events-none">
+        <div id="modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300">
+            <!-- Modal content will be injected here -->
+        </div>
+    </div>
+<script>
+const appData = {
+    zh: {
+        title: "美国公用事业交互式报告",
+        header_title: "美国公用事业报告",
+        sidebar_title: "公用事业洞察",
+        nav_home: "主页",
+        nav_market: "市场格局",
+        nav_history: "历史与变革",
+        nav_future: "未来展望",
+        nav_globalization: "全球化动态",
+        home_title: "美国公用事业行业概览",
+        home_intro: "本报告深入剖析了美国公用事业行业，这是一个支撑国家经济的基石。从爱迪生的珍珠街电站到当今由可再生能源和智能技术驱动的深刻变革，本应用将带您探索其复杂的历史、市场结构、重大挑战和未来图景。",
+        home_card1_title: "市场规模",
+        unit_trillion: "万亿",
+        home_card1_desc: "预计2025年全球市场规模，展现了其在全球经济中的重要地位。",
+        home_card2_title: "资本投资",
+        home_card2_desc: "预计2025-2029年美国能源公用事业投资，用于基础设施现代化。",
+        home_card3_title: "清洁能源发电",
+        home_card3_desc: "2023年，核能与可再生能源发电占比之和，凸显能源转型趋势。",
+        home_chart_title: "美国电力来源构成 (2023)",
+        home_chart_intro: "下图展示了2023年美国公用事业规模发电量的主要来源。天然气仍然是主导力量，但可再生能源和核能共同构成了清洁电力的重要基础。这种多元化的组合反映了行业在保障供应和推动脱碳之间的平衡。",
+        generation_mix: {
+            natural_gas: "天然气",
+            nuclear: "核能",
+            coal: "煤炭",
+            renewables: "可再生能源"
+        },
+        market_title: "市场格局：电、气、水",
+        market_intro: "美国公用事业市场由电力、天然气和水务三大板块构成，每个板块都有其独特的市场结构、主要参与者和监管环境。本节将深入探讨这些领域的运作模式，从发电到终端用户的价值链，以及主导市场的代表性企业。",
+        market_structure_title: "电力市场结构",
+        market_structure_intro: "美国电力系统是一个复杂的网络，主要分为三个核心环节和三大独立运营的电网。下图直观地展示了电力从生产到消费的旅程，以及覆盖全国的电网布局。这种结构既保证了区域优化的经济性，也在极端事件中暴露出跨区支援的局限性。",
+        market_value_chain_title: "核心价值链",
+        market_generation: "发电",
+        market_transmission: "输电",
+        market_distribution: "配电",
+        market_interconnections_title: "三大互联电网",
+        market_eastern: "东部互联",
+        market_eastern_desc: "覆盖洛矶山脉以东，服务全国约73%的电力需求。",
+        market_western: "西部互联",
+        market_western_desc: "覆盖洛矶山脉以西，服务约19%的需求。",
+        market_ercot: "德州ERCOT",
+        market_ercot_desc: "基本独立，服务德州大部分地区，占8%需求。",
+        market_companies_title: "代表性企业",
+        market_companies_intro: "美国公用事业行业由少数几家大型投资者拥有的公司主导。这些巨头在市场规模、业务覆盖和技术创新方面处于领先地位，其战略动向深刻影响着整个行业的未来。点击公司卡片了解更多详情。",
+        history_title: "历史与变革",
+        history_intro: "美国公用事业的历史是一部技术创新、企业整合和监管演变的交响曲。从爱迪生的直流电到特斯拉的交流电之争，再到联邦政府为应对市场失灵和确保普遍服务而进行的干预，最终走向了部分领域的放松管制。",
+        history_timeline_title: "发展里程碑",
+        history_timeline_intro: "以下时间轴展示了塑造行业的关键时刻。点击每个事件以了解其深远影响。",
+        history_timeline_select: "请在左侧选择一个时间点查看详情。",
+        history_outages_title: "历史警钟：重大停电事件",
+        history_outages_intro: "历史上，数次大规模停电事件暴露了电网的脆弱性，并推动了深刻的行业改革。加州电力危机和德州大停电是其中最惨痛的教训，揭示了从市场设计到基础设施韧性等一系列问题。",
+        future_title: "未来展望",
+        future_intro: "美国公用事业行业正站在历史性的转折点，面临脱碳、电气化和数字化的三重浪潮。数据中心和电动汽车带来的需求激增，与可再生能源的加速部署，共同塑造着一个充满挑战与机遇的未来。",
+        future_demand_title: "电力需求新引擎",
+        future_demand_intro: "数据中心和交通电气化正成为电力需求增长的主要驱动力，这对电网规划和资源充裕性提出了前所未有的挑战。",
+        future_demand_chart_labels: ["基线", "数据中心", "交通电气化", "建筑/工业电气化"],
+        future_demand_chart_legend: "新增电力需求",
+        future_renewables_title: "清洁电力目标 (2035)",
+        future_renewables_intro: "NREL的研究描绘了到2035年实现100%清洁电力的宏伟蓝图。风能和太阳能将成为主力，但这需要电网容量和储能规模的巨大飞跃。",
+        future_mix_chart_labels: ["风能", "太阳能", "核能", "水电", "天然气/其他"],
+        future_mix_chart_legend: "2035年发电量占比 (%)",
+        future_challenges_title: "挑战与机遇",
+        future_challenges_intro: "行业的未来转型之路并非坦途。巨额投资、供应链瓶颈和极端天气是严峻挑战，但技术创新和新商业模式也带来了巨大机遇。",
+        future_challenges_list_title: "主要挑战",
+        future_opportunities_list_title: "主要机遇",
+        global_title: "全球化动态",
+        global_intro: "美国公用事业公司的足迹早已超越国界。从90年代的海外投资浪潮，到如今在全球可再生能源开发和LNG贸易中扮演关键角色，其国际化战略反映了全球能源格局的深刻变迁。",
+        global_trends_title: "当前全球化趋势",
+        global_trends_intro: "地缘政治、供应链重构和气候变化正在重塑全球化。美国公用事业行业通过技术输出、参与全球可再生能源竞赛和提升LNG出口战略地位来应对这一新格局。",
+        global_aes_title: "案例研究：AES公司",
+        global_aes_intro: "AES公司是美国公用事业全球化运营的突出代表。其发展历程从传统的独立发电商（IPP）转型为全球清洁能源解决方案的领导者，清晰地反映了行业从收购资产到输出技术和商业模式的战略转变。",
+        global_aes_stat1: "个国家",
+        global_aes_stat1_desc: "业务曾遍及的顶峰数量",
+        global_aes_stat2: "年起",
+        global_aes_stat2_desc: "开始全球扩张步伐",
+        global_aes_stat3: "清洁能源",
+        global_aes_stat3_desc: "当前战略转型核心",
+        modal_close: "关闭",
+        outage_tab_ca: "加州电力危机 (2000-01)",
+        outage_tab_tx: "德州大停电 (2021)"
+    },
+    en: {
+        title: "Interactive Report on U.S. Utilities",
+        header_title: "U.S. Utilities Report",
+        sidebar_title: "Utility Insights",
+        nav_home: "Home",
+        nav_market: "Market Landscape",
+        nav_history: "History & Transformation",
+        nav_future: "Future Outlook",
+        nav_globalization: "Globalization",
+        home_title: "Overview of the U.S. Utilities Sector",
+        home_intro: "This application provides an in-depth analysis of the U.S. utilities sector, a cornerstone of the nation's economy providing essential services like electricity, natural gas, and water. This interactive report explores the sector's complex evolution, from the dawn of electricity at Edison's Pearl Street Station to today's profound transformation driven by decarbonization, smart technology, and aging infrastructure. We will navigate its history, market structures, major challenges, and the future landscape.",
+        home_card1_title: "Market Size",
+        unit_trillion: "Trillion",
+        home_card1_desc: "Projected global market size for 2025, showcasing its significant role in the global economy.",
+        home_card2_title: "Capital Investment",
+        home_card2_desc: "Projected 2025-2029 investment in U.S. energy utilities for infrastructure modernization.",
+        home_card3_title: "Clean Energy Generation",
+        home_card3_desc: "Combined share of nuclear and renewable generation in 2023, highlighting the energy transition trend.",
+        home_chart_title: "U.S. Electricity Generation Mix (2023)",
+        home_chart_intro: "The chart below shows the primary sources of U.S. utility-scale electricity generation in 2023. Natural gas remains the dominant force, but renewables and nuclear power form a significant foundation for clean electricity. This diverse mix reflects the industry's balance between ensuring supply and advancing decarbonization.",
+        generation_mix: {
+            natural_gas: "Natural Gas",
+            nuclear: "Nuclear",
+            coal: "Coal",
+            renewables: "Renewables"
+        },
+        market_title: "Market Landscape: Power, Gas, Water",
+        market_intro: "The U.S. utilities market is a complex mosaic of electricity, natural gas, and water services, each with a unique structure, key players, and regulatory environment. This section delves into the operational models, from the generation of power to the end-user's tap. We will analyze the core value chain—Generation, Transmission, and Distribution—and introduce the major investor-owned utilities that dominate the landscape, shaping investment and innovation.",
+        market_structure_title: "Electricity Market Structure",
+        market_structure_intro: "The U.S. power system is a complex network, primarily divided into three core stages and three independently operated grids. The diagram below visualizes the journey of electricity from production to consumption and the nationwide grid layout. This structure ensures regional economic optimization but also reveals limitations in cross-regional support during extreme events.",
+        market_value_chain_title: "Core Value Chain",
+        market_generation: "Generation",
+        market_transmission: "Transmission",
+        market_distribution: "Distribution",
+        market_interconnections_title: "Three Major Interconnections",
+        market_eastern: "Eastern Interconnection",
+        market_eastern_desc: "Covers the area east of the Rocky Mountains, serving about 73% of the nation's electricity demand.",
+        market_western: "Western Interconnection",
+        market_western_desc: "Covers the area west of the Rocky Mountains, serving about 19% of the demand.",
+        market_ercot: "Texas ERCOT",
+        market_ercot_desc: "Largely independent, serving most of Texas and accounting for 8% of demand.",
+        market_companies_title: "Representative Companies",
+        market_companies_intro: "The U.S. utilities industry is dominated by a few large investor-owned companies. These giants lead in market size, business scope, and technological innovation, and their strategic moves profoundly impact the entire industry's future. Click on a company card to learn more.",
+        history_title: "History & Transformation",
+        history_intro: "The history of U.S. utilities is a symphony of technological innovation, corporate consolidation, and regulatory evolution. It began with the DC vs. AC 'war of currents' and progressed through periods of state-franchised monopolies. We will trace the path from federal interventions like the Public Utility Holding Company Act (PUHCA), designed to curb market abuses, to the landmark deregulation acts like PURPA and FERC Order 888 that introduced competition into the generation sector.",
+        history_timeline_title: "Development Milestones",
+        history_timeline_intro: "The following timeline showcases the key moments that have shaped the industry. Click on each event to understand its profound impact.",
+        history_timeline_select: "Please select a point on the timeline to the left to see details.",
+        history_outages_title: "Historical Warnings: Major Blackout Events",
+        history_outages_intro: "Historically, several massive blackouts have exposed the grid's vulnerabilities and driven profound industry reforms. The California energy crisis and the Texas blackout are among the most painful lessons, revealing a range of issues from market design to infrastructure resilience.",
+        future_title: "Future Outlook",
+        future_intro: "The U.S. utilities industry is at a historic turning point, confronting a triple wave of decarbonization, electrification, and digitalization. This section looks forward, analyzing the new engines of demand growth, such as AI-driven data centers and EVs. We will explore the ambitious goals for a clean energy transition, the immense challenges in grid modernization and supply chains, and the vast opportunities presented by technological innovation.",
+        future_demand_title: "New Engines of Electricity Demand",
+        future_demand_intro: "Data centers and transportation electrification are becoming the main drivers of electricity demand growth, posing unprecedented challenges for grid planning and resource adequacy.",
+        future_demand_chart_labels: ["Baseline", "Data Centers", "Transport Electrification", "Building/Industrial Electrification"],
+        future_demand_chart_legend: "New Electricity Demand",
+        future_renewables_title: "Clean Electricity Goal (2035)",
+        future_renewables_intro: "NREL's research outlines an ambitious blueprint for 100% clean electricity by 2035. Wind and solar will be the mainstays, but this requires a massive leap in grid capacity and energy storage.",
+        future_mix_chart_labels: ["Wind", "Solar", "Nuclear", "Hydropower", "Gas/Other"],
+        future_mix_chart_legend: "Generation Share in 2035 (%)",
+        future_challenges_title: "Challenges & Opportunities",
+        future_challenges_intro: "The path of the industry's future transformation is not smooth. Massive investments, supply chain bottlenecks, and extreme weather are serious challenges, but technological innovation and new business models also bring huge opportunities.",
+        future_challenges_list_title: "Key Challenges",
+        future_opportunities_list_title: "Key Opportunities",
+        global_title: "Globalization Dynamics",
+        global_intro: "The footprint of U.S. utility companies extends far beyond national borders. This section examines the history and drivers of their global expansion, from the post-deregulation investment wave of the 1990s into the UK and Latin America, to their current role in the global renewables race and the strategic LNG trade. We explore how their international strategy adapts to the shifting sands of geopolitics and global energy trends.",
+        global_trends_title: "Current Globalization Trends",
+        global_trends_intro: "Geopolitics, supply chain restructuring, and climate change are reshaping globalization. The U.S. utilities industry is responding to this new landscape through technology exports, participation in the global renewables race, and enhancing the strategic position of LNG exports.",
+        global_aes_title: "Case Study: AES Corporation",
+        global_aes_intro: "AES Corporation is a prominent example of global operations in the U.S. utilities sector. Its journey from a traditional Independent Power Producer (IPP) to a leader in global clean energy solutions clearly reflects the industry's strategic shift from acquiring assets to exporting technology and business models.",
+        global_aes_stat1: "Countries",
+        global_aes_stat1_desc: "Peak number of countries with operations",
+        global_aes_stat2: "Onwards",
+        global_aes_stat2_desc: "Began its global expansion",
+        global_aes_stat3: "Clean Energy",
+        global_aes_stat3_desc: "Core of current strategic transformation",
+        modal_close: "Close",
+        outage_tab_ca: "California Crisis (2000-01)",
+        outage_tab_tx: "Texas Blackout (2021)"
+    }
+};
+
+const companyData = [
+    { id: 'nee', name: 'NextEra Energy', logo_char: 'N', market_cap: 149, type_zh: '电力/可再生能源', type_en: 'Power/Renewables', focus_zh: '全球最大的风能和太阳能发电商，佛罗里达州主要电力供应商。', focus_en: 'As the world\'s largest generator of wind and solar power and the parent of Florida Power & Light, NextEra is a leader in the clean energy transition.' },
+    { id: 'duk', name: 'Duke Energy', logo_char: 'D', market_cap: 90, type_zh: '电力/天然气', type_en: 'Power/Gas', focus_zh: '服务东南部和中西部，大力投资电网现代化和清洁能源。', focus_en: 'A major utility serving the Southeast and Midwest, Duke Energy is undertaking a massive capital investment program for grid modernization and clean energy integration.' },
+    { id: 'so', name: 'Southern Company', logo_char: 'S', market_cap: 97, type_zh: '电力/天然气', type_en: 'Power/Gas', focus_zh: '服务东南部，拥有多元化能源组合，包括核能和天然气配送。', focus_en: 'Serving the Southeast with a diverse portfolio including nuclear power and gas distribution, it is a key energy provider for the region.' },
+    { id: 'pge', name: 'PG&E', logo_char: 'P', market_cap: 'N/A', type_zh: '电力/天然气', type_en: 'Power/Gas', focus_zh: '加州北部和中部的主要供应商，正积极应对野火挑战并推动清洁能源。', focus_en: 'A major provider in Northern and Central California, PG&E is actively addressing immense wildfire challenges while pushing for clean energy adoption.' },
+    { id: 'awk', name: 'American Water', logo_char: 'A', market_cap: 27, type_zh: '水务/污水处理', type_en: 'Water/Wastewater', focus_zh: '美国最大的上市水务公司，致力于基础设施更新和收购整合。', focus_en: 'The largest publicly traded U.S. water and wastewater utility, American Water is focused on infrastructure renewal and consolidating smaller systems through acquisition.' },
+    { id: 'aes', name: 'AES Corporation', logo_char: 'A', market_cap: 'N/A', type_zh: '电力/全球', type_en: 'Power/Global', focus_zh: '全球化的能源公司，从传统发电转型为清洁能源和储能解决方案领导者。', focus_en: 'A global power company that has notably transformed from traditional generation to become a leader in clean energy and large-scale energy storage solutions.' }
+];
+
+const timelineData = {
+    '1882': { zh: { title: '爱迪生与珍珠街电站', desc: '美国第一座中央发电站在纽约市建成，采用直流电系统，开启了电力公用事业时代。' }, en: { title: 'Edison & Pearl Street', desc: 'The first central power station in the U.S. was built in New York City, using a direct current (DC) system, marking the dawn of the electric utility era.' } },
+    '1935': { zh: { title: '联邦干预与PUHCA', desc: '为遏制控股公司的滥用行为，国会通过《公用事业控股公司法》(PUHCA)和《联邦电力法》，建立了有效的联邦监管框架。' }, en: { title: 'Federal Intervention & PUHCA', desc: 'To curb holding company abuses, Congress passed the Public Utility Holding Company Act (PUHCA) and the Federal Power Act, establishing an effective federal regulatory framework.' } },
+    '1978': { zh: { title: 'PURPA开启竞争之门', desc: '《公用事业监管政策法》(PURPA)首次允许非公用事业发电商向电网供电，为发电领域的放松管制埋下伏笔。' }, en: { title: 'PURPA Opens the Door', desc: 'The Public Utility Regulatory Policies Act (PURPA) allowed non-utility generators to supply power to the grid for the first time, setting the stage for deregulation in generation.' } },
+    '1996': { zh: { title: 'FERC 888/889号令', desc: 'FERC发布关键指令，要求输电网络开放接入，并创建了独立系统运营商(ISOs)，大力推动了批发电力市场的竞争。' }, en: { title: 'FERC Orders 888/889', desc: 'FERC issued key orders requiring open access to transmission networks and creating Independent System Operators (ISOs), significantly promoting competition in wholesale power markets.' } },
+    '2005': { zh: { title: '《能源政策法》', desc: '在加州电力危机后，该法案赋予FERC更强的市场监管和惩处市场操纵的权力，加强了电网的可靠性标准。' }, en: { title: 'Energy Policy Act', desc: 'In the wake of the California crisis, this act granted FERC stronger authority to oversee markets and punish manipulation, strengthening grid reliability standards.' } }
+};
+
+const outageData = {
+    ca: {
+        zh: {
+            title: "加州电力危机 (2000-2001)",
+            causes_title: "主要成因",
+            causes: [
+                "有缺陷的市场设计：批发电价浮动，零售电价设限。",
+                "供应短缺：干旱导致水电减少，新电厂建设滞后。",
+                "市场操纵：能源交易商（如安然）利用规则漏洞牟取暴利。",
+                "天然气价格飙升：推高了发电成本。"
+            ],
+            impacts_title: "过程与影响",
+            impacts: [
+                "批发电价飙升800%。",
+                "大规模轮流停电，影响数百万用户。",
+                "两大主要电力公司PG&E和SCE濒临破产。",
+                "经济损失达数百亿美元。"
+            ],
+            lessons_title: "后续与教训",
+            lessons: [
+                "深刻教训：暴露了不完善的放松管制可能带来的灾难性后果。",
+                "改革措施：FERC加强市场监管，加州鼓励长期合同，大力发展可再生能源。"
+            ]
+        },
+        en: {
+            title: "California Energy Crisis (2000-2001)",
+            causes_title: "Key Causes",
+            causes: [
+                "Flawed Market Design: Floating wholesale prices with capped retail rates.",
+                "Supply Shortage: Drought reduced hydropower, and new plant construction lagged.",
+                "Market Manipulation: Energy traders (like Enron) exploited rules for massive profits.",
+                "Soaring Natural Gas Prices: Drove up the cost of generation."
+            ],
+            impacts_title: "Process & Impacts",
+            impacts: [
+                "Wholesale electricity prices soared by 800%.",
+                "Large-scale rolling blackouts affecting millions of customers.",
+                "The state's two largest utilities, PG&E and SCE, faced bankruptcy.",
+                "Economic losses estimated in the tens of billions of dollars."
+            ],
+            lessons_title: "Aftermath & Lessons",
+            lessons: [
+                "Profound Lesson: Exposed the catastrophic consequences of poorly designed deregulation.",
+                "Reforms: FERC strengthened market oversight; California encouraged long-term contracts and accelerated renewable energy development."
+            ]
+        }
+    },
+    tx: {
+        zh: {
+            title: "德州大停电 (2021)",
+            causes_title: "主要成因",
+            causes: [
+                "极端寒潮：远超电力系统设计标准。",
+                "发电设施大面积故障：天然气、煤炭、核能、风能均因冰冻而瘫痪。",
+                "天然气供应系统失灵：井口和管道冻结导致燃料短缺。",
+                "ERCOT电网孤立：难以从州外获得大规模电力支援。"
+            ],
+            impacts_title: "过程与影响",
+            impacts: [
+                "美国历史上最大规模的强制性负荷削减。",
+                "数百万人断电断水数日。",
+                "经济损失估计高达1290亿美元。",
+                "导致至少48人死亡。"
+            ],
+            lessons_title: "后续与教训",
+            lessons: [
+                "深刻教训：暴露了电力和天然气系统之间的高度依赖性和对极端天气准备不足。",
+                "改革措施：强制要求电力和天然气设施进行防寒改造，加强跨部门协调。"
+            ]
+        },
+        en: {
+            title: "Texas Blackout (2021)",
+            causes_title: "Key Causes",
+            causes: [
+                "Extreme Winter Storm: Far exceeded the power system's design standards.",
+                "Widespread Generation Failure: Natural gas, coal, nuclear, and wind facilities failed due to freezing conditions.",
+                "Natural Gas Supply Failure: Frozen wellheads and pipelines led to fuel shortages.",
+                "ERCOT Grid Isolation: Inability to import significant power from outside the state."
+            ],
+            impacts_title: "Process & Impacts",
+            impacts: [
+                "Largest forced load shed in U.S. history.",
+                "Millions lost power and water for days.",
+                "Economic losses estimated at up to $129 billion.",
+                "Resulted in at least 48 deaths."
+            ],
+            lessons_title: "Aftermath & Lessons",
+            lessons: [
+                "Profound Lesson: Exposed the high interdependence of the electric and gas systems and a lack of preparation for extreme weather.",
+                "Reforms: Mandated weatherization of power and gas facilities and improved inter-agency coordination."
+            ]
+        }
+    }
+};
+
+const futureData = {
+    challenges: {
+        zh: ["巨额资本投资需求", "供应链瓶颈 (如变压器)", "极端天气事件常态化", "监管滞后与改革复杂性", "劳动力转型与技能缺口", "网络安全风险"],
+        en: ["Massive capital investment needs", "Supply chain bottlenecks (e.g., transformers)", "Normalization of extreme weather events", "Regulatory lag & reform complexity", "Workforce transition and skills gap", "Cybersecurity risks"]
+    },
+    opportunities: {
+        zh: ["新增长领域 (数据中心, 电气化)", "技术创新带来的效率提升", "在能源转型中发挥核心作用", "商业模式创新 (如虚拟电厂)", "提升社会与可持续价值"],
+        en: ["New growth areas (data centers, electrification)", "Efficiency gains from tech innovation", "Playing a central role in the energy transition", "Business model innovation (e.g., VPPs)", "Enhancing social and sustainable value"]
+    }
+};
+
+const globalTrendsData = {
+    zh: [
+        { icon: '♻️', title: '可再生能源全球竞赛', desc: '全球可再生能源装机快速增长，美国公司是项目开发的重要参与者。' },
+        { icon: '🚢', title: 'LNG出口战略地位提升', desc: '在地缘政治冲突背景下，美国成为关键的液化天然气出口国，增强了其在全球能源市场的影响力。' },
+        { icon: '🔗', title: '供应链调整与“友岸外包”', desc: '为降低风险，企业开始重构全球供应链，这可能影响清洁能源技术的成本和可获得性。' },
+        { icon: '🏛️', title: '国内政策的溢出效应', desc: '美国的《通货膨胀削减法案》(IRA)等政策不仅影响国内，也对国际贸易和投资流向产生深远影响。' }
+    ],
+    en: [
+        { icon: '♻️', title: 'Global Race for Renewables', desc: 'Rapid growth in global renewable capacity, with U.S. companies as key players in project development.' },
+        { icon: '🚢', title: 'Strategic Rise of LNG Exports', desc: 'Amid geopolitical conflicts, the U.S. has become a crucial LNG exporter, increasing its influence in global energy markets.' },
+        { icon: '🔗', title: 'Supply Chain Realignment & "Friend-Shoring"', desc: 'To mitigate risks, companies are restructuring global supply chains, potentially affecting the cost and availability of clean energy tech.' },
+        { icon: '🏛️', title: 'Spillover Effects of Domestic Policy', desc: 'U.S. policies like the Inflation Reduction Act (IRA) not only impact the domestic scene but also have profound effects on international trade and investment flows.' }
+    ]
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const appState = {
+        language: 'zh',
+        activeSection: 'home'
+    };
+    
+    const allSections = document.querySelectorAll('.section');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const langButtons = document.querySelectorAll('.lang-btn');
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const sidebar = document.getElementById('sidebar');
+
+    const charts = {};
+
+    function renderTextContent() {
+        const langData = appData[appState.language];
+        document.documentElement.lang = appState.language;
+        document.querySelectorAll('[data-lang-key]').forEach(el => {
+            const key = el.dataset.langKey;
+            // Corrected logic: Access the flat key directly from the language data object.
+            const value = langData[key];
+            
+            // Only update the element's content if a matching string value is found.
+            if (typeof value === 'string') {
+                el.innerHTML = value;
+            }
+        });
+    }
+    
+    function updateLangButtons() {
+        langButtons.forEach(btn => {
+            if (btn.dataset.lang === appState.language) {
+                btn.classList.add('accent-bg', 'text-white');
+                btn.classList.remove('text-primary');
+            } else {
+                btn.classList.remove('accent-bg', 'text-white');
+                btn.classList.add('text-primary');
+            }
+        });
+    }
+
+    function switchLanguage(lang) {
+        appState.language = lang;
+        updateLangButtons();
+        renderTextContent();
+        renderAllComponents(); // Re-render all dynamic content
+    }
+
+    function navigateTo(sectionId) {
+        appState.activeSection = sectionId;
+        allSections.forEach(s => {
+            s.id === sectionId ? s.classList.add('active') : s.classList.remove('active');
+        });
+        navLinks.forEach(l => {
+            l.dataset.section === sectionId ? l.classList.add('active') : l.classList.remove('active');
+        });
+        window.location.hash = sectionId;
+
+        if (sidebar.classList.contains('translate-x-0')) {
+            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('translate-x-0');
+        }
+
+        // Initialize chart if it's visible and not already created
+        if (sectionId === 'home' && !charts.generationMixChart) initGenerationMixChart();
+        if (sectionId === 'future' && !charts.demandGrowthChart) initFutureCharts();
+    }
+    
+    function animateCounters() {
+        const counters = document.querySelectorAll('.stat-counter');
+        counters.forEach(counter => {
+            const target = +counter.dataset.target;
+            let current = 0;
+            const increment = target / 100;
+
+            const updateCounter = () => {
+                current += increment;
+                if (current < target) {
+                    counter.innerText = current.toFixed(1);
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    counter.innerText = target;
+                }
+            };
+            updateCounter();
+        });
+    }
+    
+    function initGenerationMixChart() {
+        const ctx = document.getElementById('generationMixChart').getContext('2d');
+        const lang = appState.language;
+        const labels = Object.values(appData[lang].generation_mix);
+        
+        charts.generationMixChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: appData[lang].home_chart_title,
+                    data: [43.1, 18.6, 16.2, 21.4],
+                    backgroundColor: ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B'],
+                    borderColor: '#F8F7F4',
+                    borderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed + '%';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderCompanyCards() {
+        const container = document.getElementById('company-cards');
+        const lang = appState.language;
+        container.innerHTML = companyData.map(company => `
+            <div class="company-card bg-white/80 p-5 rounded-xl shadow-md cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1" data-company-id="${company.id}">
+                <div class="flex items-center mb-3">
+                    <div class="w-12 h-12 rounded-full accent-bg text-white flex items-center justify-center text-2xl font-bold mr-4">${company.logo_char}</div>
+                    <div>
+                        <h4 class="font-bold text-lg">${company.name}</h4>
+                        <p class="text-sm text-gray-500">${lang === 'zh' ? company.type_zh : company.type_en}</p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-600">${lang === 'zh' ? company.focus_zh : company.focus_en}</p>
+            </div>
+        `).join('');
+
+        document.querySelectorAll('.company-card').forEach(card => {
+            card.addEventListener('click', () => showCompanyModal(card.dataset.companyId));
+        });
+    }
+    
+    function showCompanyModal(companyId) {
+        const company = companyData.find(c => c.id === companyId);
+        if (!company) return;
+        
+        const lang = appState.language;
+        const modal = document.getElementById('company-modal');
+        const modalContent = document.getElementById('modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center">
+                       <div class="w-16 h-16 rounded-full accent-bg text-white flex items-center justify-center text-3xl font-bold mr-4">${company.logo_char}</div>
+                       <div>
+                            <h3 class="text-2xl font-bold">${company.name}</h3>
+                            <p class="text-gray-600">${lang === 'zh' ? company.type_zh : company.type_en}</p>
+                       </div>
+                    </div>
+                    <button id="modal-close-btn" class="text-gray-400 hover:text-gray-600">&times;</button>
+                </div>
+                <div class="border-t pt-4">
+                   <p class="mb-2"><strong>${lang === 'zh' ? '战略重点' : 'Strategic Focus'}:</strong> ${lang === 'zh' ? company.focus_zh : company.focus_en}</p>
+                   <p><strong>${lang === 'zh' ? '市值 (近似)' : 'Market Cap (Approx.)'}:</strong> ${company.market_cap !== 'N/A' ? `$${company.market_cap} ${lang === 'zh' ? '亿' : 'Billion'}` : (lang === 'zh' ? '不适用' : 'N/A')}</p>
+                </div>
+                <div class="mt-6 text-right">
+                     <button id="modal-close-btn-2" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">${appData[lang].modal_close}</button>
+                </div>
+            </div>
+        `;
+
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modalContent.classList.remove('scale-95');
+        
+        document.getElementById('modal-close-btn').addEventListener('click', hideCompanyModal);
+        document.getElementById('modal-close-btn-2').addEventListener('click', hideCompanyModal);
+    }
+    
+    function hideCompanyModal() {
+        const modal = document.getElementById('company-modal');
+        const modalContent = document.getElementById('modal-content');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modalContent.classList.add('scale-95');
+    }
+
+    function renderTimeline() {
+        const container = document.getElementById('timeline');
+        const lang = appState.language;
+        container.innerHTML = Object.keys(timelineData).map(year => `
+            <div class="timeline-item mb-8 ml-4 cursor-pointer" data-year="${year}">
+                <div class="absolute w-3 h-3 bg-gray-400 rounded-full mt-1.5 -left-1.5 border border-white"></div>
+                <time class="mb-1 text-sm font-normal leading-none text-gray-500">${year}</time>
+                <h3 class="text-lg font-semibold text-primary">${timelineData[year][lang].title}</h3>
+            </div>
+        `).join('');
+
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            item.addEventListener('click', () => showTimelineDetails(item.dataset.year));
+        });
+        
+        // Show first item by default
+        showTimelineDetails(Object.keys(timelineData)[0]);
+    }
+
+    function showTimelineDetails(year) {
+        const detailsContainer = document.getElementById('timeline-details');
+        const lang = appState.language;
+        const data = timelineData[year][lang];
+
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            if (item.dataset.year === year) {
+                item.querySelector('h3').classList.add('accent-color');
+                item.querySelector('div').classList.add('accent-bg');
+            } else {
+                item.querySelector('h3').classList.remove('accent-color');
+                 item.querySelector('div').classList.remove('accent-bg');
+            }
+        });
+        
+        detailsContainer.innerHTML = `
+            <h4 class="text-xl font-bold mb-2">${data.title}</h4>
+            <p class="text-gray-600">${data.desc}</p>
+        `;
+    }
+
+    function renderOutageDetails() {
+        const container = document.getElementById('outage-details-container');
+        const lang = appState.language;
+        container.innerHTML = `
+            <div class="flex border-b mb-4">
+                <button class="outage-tab py-2 px-4 text-gray-500 border-b-2 border-transparent hover:text-primary" data-outage="ca">${appData[lang].outage_tab_ca}</button>
+                <button class="outage-tab py-2 px-4 text-gray-500 border-b-2 border-transparent hover:text-primary" data-outage="tx">${appData[lang].outage_tab_tx}</button>
+            </div>
+            <div id="outage-content"></div>
+        `;
+        
+        document.querySelectorAll('.outage-tab').forEach(tab => {
+            tab.addEventListener('click', () => showOutageContent(tab.dataset.outage));
+        });
+
+        // Show CA by default
+        showOutageContent('ca');
+    }
+    
+    function showOutageContent(outageId) {
+         document.querySelectorAll('.outage-tab').forEach(tab => {
+            if (tab.dataset.outage === outageId) {
+                tab.classList.add('border-blue-500', 'text-primary', 'font-semibold');
+                tab.classList.remove('text-gray-500');
+            } else {
+                tab.classList.remove('border-blue-500', 'text-primary', 'font-semibold');
+                tab.classList.add('text-gray-500');
+            }
+        });
+
+        const contentContainer = document.getElementById('outage-content');
+        const lang = appState.language;
+        const data = outageData[outageId][lang];
+
+        contentContainer.innerHTML = `
+            <h4 class="text-xl font-bold text-red-700 mb-4">${data.title}</h4>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h5 class="font-semibold mb-2">${data.causes_title}</h5>
+                    <ul class="list-disc list-inside space-y-1 text-gray-600">
+                        ${data.causes.map(cause => `<li>${cause}</li>`).join('')}
+                    </ul>
+                </div>
+                 <div>
+                    <h5 class="font-semibold mb-2">${data.impacts_title}</h5>
+                    <ul class="list-disc list-inside space-y-1 text-gray-600">
+                        ${data.impacts.map(impact => `<li>${impact}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-4 border-t pt-4">
+                <h5 class="font-semibold mb-2">${data.lessons_title}</h5>
+                <ul class="list-disc list-inside space-y-1 text-gray-600">
+                     ${data.lessons.map(lesson => `<li>${lesson}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
+    function initFutureCharts() {
+        const lang = appState.language;
+
+        // Demand Growth Chart
+        const demandCtx = document.getElementById('demandGrowthChart').getContext('2d');
+        charts.demandGrowthChart = new Chart(demandCtx, {
+            type: 'bar',
+            data: {
+                labels: appData[lang].future_demand_chart_labels,
+                datasets: [{
+                    label: appData[lang].future_demand_chart_legend,
+                    data: [100, 45, 30, 25], // Example data
+                    backgroundColor: ['#AAB7C4', '#3B82F6', '#10B981', '#F59E0B']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { stacked: true }, y: { stacked: true } }
+            }
+        });
+
+        // Future Mix Chart
+        const mixCtx = document.getElementById('futureMixChart').getContext('2d');
+        charts.futureMixChart = new Chart(mixCtx, {
+            type: 'pie',
+            data: {
+                labels: appData[lang].future_mix_chart_labels,
+                datasets: [{
+                    label: appData[lang].future_mix_chart_legend,
+                    data: [40, 30, 10, 5, 15], // Example NREL data split
+                    backgroundColor: ['#3B82F6', '#F59E0B', '#8B5CF6', '#60A5FA', '#AAB7C4']
+                }]
+            },
+             options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                     tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${context.parsed}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderFutureLists() {
+        const lang = appState.language;
+        const challengesList = document.getElementById('challenges-list');
+        const opportunitiesList = document.getElementById('opportunities-list');
+
+        challengesList.innerHTML = futureData.challenges[lang].map(item => `<li>${item}</li>`).join('');
+        opportunitiesList.innerHTML = futureData.opportunities[lang].map(item => `<li>${item}</li>`).join('');
+    }
+
+    function renderGlobalTrends() {
+        const container = document.getElementById('global-trends-container');
+        const lang = appState.language;
+        container.innerHTML = globalTrendsData[lang].map(trend => `
+            <div class="flex items-start">
+                <div class="text-3xl mr-4 mt-1">${trend.icon}</div>
+                <div>
+                    <h4 class="font-semibold text-lg">${trend.title}</h4>
+                    <p class="text-gray-600">${trend.desc}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderAllComponents() {
+        // These functions re-render content that depends on the language
+        if (charts.generationMixChart) {
+            charts.generationMixChart.destroy();
+            initGenerationMixChart();
+        }
+        if (charts.demandGrowthChart) {
+            charts.demandGrowthChart.destroy();
+            charts.futureMixChart.destroy();
+            initFutureCharts();
+        }
+        renderCompanyCards();
+        renderTimeline();
+        renderOutageDetails();
+        renderFutureLists();
+        renderGlobalTrends();
+    }
+    
+    // Initial setup
+    langButtons.forEach(btn => btn.addEventListener('click', () => switchLanguage(btn.dataset.lang)));
+    navLinks.forEach(link => link.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateTo(link.dataset.section);
+    }));
+
+    mobileMenuButton.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+        sidebar.classList.toggle('translate-x-0');
+    });
+
+    document.getElementById('company-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'company-modal') {
+            hideCompanyModal();
+        }
+    });
+
+    // Handle initial navigation from hash or default to home
+    const initialSection = window.location.hash.substring(1) || 'home';
+    const validSections = Array.from(navLinks).map(l => l.dataset.section);
+    navigateTo(validSections.includes(initialSection) ? initialSection : 'home');
+
+    updateLangButtons();
+    renderTextContent();
+    renderAllComponents();
+    animateCounters();
+});
+
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The L.A. Immigration Crisis: An Integrated Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: A single-page application with a fixed left-hand navigation sidebar. This allows users to easily jump between key thematic sections (Timeline, Key Players, Impact, Root Causes) without a long, linear scroll. This non-linear, thematic structure breaks down the complex event into digestible parts, allowing users to explore what interests them most. The goal is to facilitate understanding by organizing information by its function (chronology, comparison, impact analysis) rather than the report's original narrative order, which is better for usability and exploration. -->
+    <!-- Visualization & Content Choices:
+        - Timeline (Chronology): Report Info: Day-by-day events from June 6-12 with embedded videos. Goal: Show rapid escalation visually. Viz/Method: Interactive horizontal timeline using HTML/CSS/JS with an iframe for video. Interaction: Clicking a day reveals detailed info and corresponding video. Justification: More engaging and visually representative of time than a list. Library: Vanilla JS.
+        - Key Players (Comparison): Report Info: Expanded responses from federal, state, city gov. Goal: Compare conflicting stances in detail. Viz/Method: Interactive expandable cards. Interaction: Clicking a card expands it to show detailed text. Justification: Clearer and more interactive than a static table. Library: Vanilla JS.
+        - Impact (Data Visualization): Report Info: Arrest numbers, economic costs, national spread. Goal: Visualize scale of impact. Viz/Method: Bar chart (arrests) and Donut chart (costs). Interaction: Hover tooltips. Justification: Provides a quick, powerful summary of quantitative data. Library: Chart.js (Canvas).
+        - Root Causes & Solutions (Organization): Report Info: Expanded analysis of conflicts and proposed reforms. Goal: Organize complex text logically. Viz/Method: Tabbed component. Interaction: Clicking tabs switches content. Justification: Manages a large amount of text in a user-driven format. Library: Vanilla JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .active-nav { background-color: #374151; color: #F9FAFB; }
+        .nav-item { transition: all 0.2s ease-in-out; }
+        .nav-item:hover { background-color: #4B5563; color: #F9FAFB; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .timeline-item.active-timeline { border-color: #3B82F6; background-color: #EFF6FF; }
+        .player-card .details { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; }
+        .player-card.open .details { max-height: 1000px; }
+        .chart-container { position: relative; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; height: 300px; max-height: 350px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; max-height: 400px; } }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 bg-slate-800 text-slate-200 p-4 md:p-6 flex-shrink-0">
+            <h1 class="text-2xl font-bold mb-2">L.A. Flashpoint</h1>
+            <p class="text-sm text-slate-400 mb-6">An Interactive Analysis</p>
+            <nav id="main-nav">
+                <ul>
+                    <li><a href="#timeline" class="nav-item active-nav flex items-center p-3 rounded-lg">Timeline of Events</a></li>
+                    <li><a href="#players" class="nav-item flex items-center p-3 rounded-lg mt-2">Key Players</a></li>
+                    <li><a href="#impact" class="nav-item flex items-center p-3 rounded-lg mt-2">Wider Consequences</a></li>
+                    <li><a href="#roots" class="nav-item flex items-center p-3 rounded-lg mt-2">Analysis & Solutions</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+
+            <!-- Section: Timeline of Events -->
+            <section id="timeline" class="content-section active">
+                <h2 class="text-3xl font-bold mb-2">Timeline of Events</h2>
+                <p class="text-slate-600 mb-8">This section provides a day-by-day breakdown of how a federal law enforcement operation rapidly escalated into a national crisis. Click on each day to see the key actions, reactions, and related video footage that defined the conflict.</p>
+                
+                <div id="timeline-nav" class="flex flex-wrap gap-2 mb-6 border-b pb-4">
+                    <!-- Timeline nav items will be injected here -->
+                </div>
+
+                <div id="timeline-content" class="bg-white p-6 rounded-lg shadow-md">
+                    <!-- Timeline content will be injected here -->
+                </div>
+            </section>
+
+            <!-- Section: Key Players -->
+            <section id="players" class="content-section">
+                <h2 class="text-3xl font-bold mb-2">Key Players & Reactions</h2>
+                 <p class="text-slate-600 mb-8">The crisis exposed deep divisions in American governance. This section explores the fundamentally opposed positions, justifications, and actions of the primary government entities involved, from the federal to the local level. Click on each entity to expand their detailed response.</p>
+
+                <div id="players-container" class="space-y-4">
+                    <!-- Player cards will be injected here -->
+                </div>
+            </section>
+            
+            <!-- Section: Wider Consequences -->
+            <section id="impact" class="content-section">
+                <h2 class="text-3xl font-bold mb-2">Wider Consequences: National & Economic</h2>
+                <p class="text-slate-600 mb-8">The events in Los Angeles quickly became a national flashpoint, inspiring solidarity protests, revealing deep economic vulnerabilities, and damaging the city's global reputation. This section visualizes the scale of the unrest and analyzes the long-term damage.</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4">Arrests During The Crisis</h3>
+                        <div class="chart-container">
+                            <canvas id="arrestsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4">Estimated Direct Costs (USD)</h3>
+                        <div class="chart-container">
+                            <canvas id="costsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4">National & Economic Repercussions</h3>
+                    <div id="economic-impact-content" class="prose max-w-none text-slate-700">
+                        <!-- Economic impact content will be injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Analysis & Solutions -->
+            <section id="roots" class="content-section">
+                <h2 class="text-3xl font-bold mb-2">Analysis: Root Causes & Path to Reform</h2>
+                 <p class="text-slate-600 mb-8">The turmoil was a symptom of deep, unresolved issues in U.S. immigration policy and law. This section explores the fundamental tensions that fueled the crisis and outlines expert consensus on a more stable, humane path forward. Use the tabs to switch between the diagnosis of the problem and potential solutions.</p>
+                 <div>
+                    <div class="border-b border-gray-200">
+                      <nav id="roots-tabs" class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <a href="#" class="roots-tab border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" aria-current="page" data-tab="tensions">Fundamental Tensions</a>
+                        <a href="#" class="roots-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="solutions">Path to Reform</a>
+                      </nav>
+                    </div>
+                    <div id="roots-content" class="mt-6 prose max-w-none text-slate-700">
+                        <!-- Roots/Solutions content will be injected here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+const DATA = {
+    timeline: [
+        {
+            day: 'Fri, June 6',
+            title: 'The Spark: Federal Raids and Immediate Backlash',
+            content: 'A multi-agency federal task force launches "military-style" raids across Los Angeles, targeting the Fashion District and Home Depot locations. SEIU President David Huerta is arrested during protests, galvanizing organized labor. Spontaneous protests erupt, leading to clashes with police who use tear gas and declare a citywide tactical alert.',
+            video: 'https://youtu.be/eKBGOAUpNOg?si=OCKXWREdReSuXJDA'
+        },
+        {
+            day: 'Sat, June 7',
+            title: 'Escalation: Federalization of National Guard',
+            content: 'Continued ICE raids fuel more protests. President Trump issues an executive order to deploy 2,000 National Guard troops under federal command (Title 10), bypassing the governor. Gov. Newsom responds by announcing CHP will protect state freeways, setting up a state-federal confrontation.',
+            video: 'https://youtu.be/ZmKVFIGA1fo?si=nVnBvl2mgtatjCov'
+        },
+        {
+            day: 'Sun, June 8',
+            title: 'Chaos: Freeways Blocked and Cars Burned',
+            content: 'Federalized troops deploy in downtown L.A. Thousands of protesters march, blocking the 101 Freeway. Several autonomous Waymo cars are vandalized and set on fire, becoming a defining image of the unrest. Police and troops use rubber bullets and tear gas to clear the crowds.',
+            video: 'https://youtu.be/AzRSuavRzOo?si=RMZWPzf2qBBDz-i3'
+        },
+        {
+            day: 'Mon, June 9',
+            title: 'Institutional Conflict: Lawsuits and Troop Buildup',
+            content: 'Gov. Newsom announces a lawsuit against the Trump administration over the "unlawful" troop deployment. SEIU organizes a large, peaceful rally. The Pentagon responds by activating 2,000 more Guard members and deploying 700 active-duty U.S. Marines to the area.',
+            video: 'https://youtu.be/6TumuajgN0I?si=sBcgv0il7B4s18Pl'
+        },
+        {
+            day: 'Tue-Thu, June 10-12',
+            title: 'City Under Curfew and National Protests',
+            content: 'Mayor Karen Bass declares a state of emergency and imposes a nightly curfew on downtown L.A. to quell looting. Solidarity protests erupt in cities nationwide. U.S. Senator Alex Padilla is forcibly removed from a DHS press conference, further inflaming tensions.',
+            video: 'https://youtu.be/XxMyTFGmPEc?si=1KhsBTeqaCjPaNJP'
+        },
+    ],
+    players: [
+        {
+            name: 'Federal: White House',
+            position: 'Framed protests as a "rebellion" and "insurrection" by "Radical Left" mobs requiring military force to "liberate Los Angeles." The narrative aimed to dehumanize opponents and establish a legal predicate for using military force under the Insurrection Act or related statutes.',
+            actions: 'Ordered the initial ICE raids with a directive to maximize arrests. Bypassed the governor to federalize the National Guard under Title 10. Deployed active-duty U.S. Marines to a domestic civil unrest situation. President Trump used aggressive rhetoric, stating "IF THEY SPIT, WE WILL HIT," and threatened further escalation.'
+        },
+        {
+            name: 'Federal: Dept. of Homeland Security',
+            position: 'Justified raids by claiming they targeted the "worst of the worst" criminals and released lists of arrested individuals with criminal records to support this. Blamed the unrest on local "sanctuary" policies, arguing they endanger federal officers and create a hostile environment.',
+            actions: 'Conducted the multi-agency raids. Publicly defended the military deployment as necessary support against "invasive, violent, insurrectionist mobs." Secretary Kristi Noem held press conferences reinforcing the administration\'s narrative and accused local leaders of inciting violence.'
+        },
+        {
+            name: 'State: Governor Gavin Newsom',
+            position: 'Condemned federal actions as an "unlawful, authoritarian" abuse of power and a "serious breach of state sovereignty." Argued the crisis was deliberately "manufactured" by the President for political gain. Framed the conflict as a defense of constitutional principles and states\' rights.',
+            actions: 'Filed a federal lawsuit against the Trump administration to block the troop deployment, challenging the legality of federalizing the state\'s National Guard without gubernatorial consent. Deployed the California Highway Patrol (CHP) to protect state-controlled freeways as a countermeasure. Publicly called Trump a "tyrant."'
+        },
+        {
+            name: 'City: Mayor Karen Bass',
+            position: 'Caught in a "squeeze play." Denounced federal intervention as a "deliberate attempt to create disorder and chaos" that "sows terror in our communities." Simultaneously, she was responsible for maintaining public order and had to address acts of vandalism and looting.',
+            actions: 'Declared a local state of emergency. Imposed a nightly curfew on the downtown area to "stop the vandalism, to stop the looting." Pleaded for peace while simultaneously condemning the federal actions that provoked the unrest.'
+        },
+        {
+            name: 'Local: LAPD',
+            position: 'Publicly stated support for First Amendment rights but made a clear distinction that "criminal activity under the guise of protest" (e.g., violence, vandalism) would not be tolerated.',
+            actions: 'Acted as the primary on-the-ground force confronting protesters. Declared multiple gatherings unlawful assemblies. Deployed riot gear, tear gas, rubber bullets, and flash-bangs to disperse crowds. Made over 850 arrests for offenses like failure to disperse, assault, and property destruction.'
+        },
+    ],
+    economicImpact: `
+        <h4>National Protest Contagion</h4>
+        <p>The confrontation in Los Angeles quickly became a national flashpoint, inspiring a wave of solidarity protests in at least a dozen other U.S. cities, including New York, Chicago, Seattle, San Francisco, and Austin. This replication of conflict dynamics across other "sanctuary" jurisdictions highlighted a national map of potential flashpoints where the federal government's enforcement-heavy agenda could collide with local political opposition.</p>
+        
+        <h4 class="mt-4">Economic Disruption & Labor Shortages</h4>
+        <p>The crisis revealed the U.S. economy's profound reliance on immigrant labor. The fear induced by the raids caused significant absenteeism in key California sectors:</p>
+        <ul class="list-disc list-inside space-y-2">
+            <li><strong>Agriculture:</strong> Farmworker absenteeism spiked to 25-45% in some areas, directly threatening harvests for a state that supplies over a third of the country's vegetables and three-quarters of its fruits.</li>
+            <li><strong>Construction & Hospitality:</strong> Economists warned of critical labor shortages, projecting suppressed job growth, diminished housing production, and rising consumer prices that could fuel inflation and potentially trigger a recession.</li>
+        </ul>
+
+        <h4 class="mt-4">Damage to Global Image</h4>
+        <p>At a time when Los Angeles was preparing to host the 2026 World Cup and 2028 Olympics, the images of urban chaos tarnished the city's reputation. Analysts warned this narrative of "disaster" would deter tourism and investment, undermining efforts to present a welcoming face to the world. The Mexican national soccer team even relocated its hotel from downtown L.A. due to the unrest, a tangible sign of the reputational damage.</p>
+    `,
+    roots: {
+        tensions: `
+            <h3 class="font-semibold text-lg">1. Federal Supremacy vs. States' Rights</h3>
+            <p class="mt-1">A classic constitutional struggle. The federal government asserts its supreme authority over immigration law, while "sanctuary" states like California invoke the 10th Amendment to refuse cooperation, creating a legal and political standoff that formed the central battleground of the crisis.</p>
+            
+            <h3 class="font-semibold text-lg mt-4">2. National Security vs. Community Policing</h3>
+            <p class="mt-1">Two mutually exclusive law enforcement models clashed. The federal government framed immigration as a national security threat, justifying militarized tactics. Local authorities argued for a community policing model based on trust, which federal actions directly undermined by making residents fearful of all law enforcement.</p>
+
+            <h3 class="font-semibold text-lg mt-4">3. The Economic "Liberal Paradox"</h3>
+            <p class="mt-1">A core contradiction in the U.S. system: its economy is heavily reliant on immigrant labor, yet its political system is susceptible to populist movements demanding restrictive policies. The raids were a stark example of a political agenda inflicting harm on economic necessity, disrupting vital industries like agriculture and construction.</p>
+
+             <h3 class="font-semibold text-lg mt-4">4. The Legal Gray Area of Executive Power</h3>
+            <p class="mt-1">The administration used a legally "murky" statute (10 U.S.C. § 12406) to federalize the Guard, claiming the protests constituted a "rebellion." This broad interpretation, which bypassed the governor, set a dangerous precedent for using military force against civil disobedience, blurring the lines of the Posse Comitatus Act, which normally prohibits using the military for domestic law enforcement.</p>
+        `,
+        solutions: `
+            <p class="mb-4">The crisis is a symptom of a profoundly broken U.S. immigration system. Policy experts largely agree on a path forward that moves beyond an ineffective enforcement-only approach.</p>
+            <h3 class="font-semibold text-lg">1. Disentangle Local & Federal Enforcement</h3>
+            <p class="mt-1">End federal programs that deputize local police as immigration agents (like 287(g)) and cease the use of ICE "detainers." This would reduce federal-state friction, rebuild community trust, and allow local police to focus on local public safety priorities.</p>
+            
+            <h3 class="font-semibold text-lg mt-4">2. Shift from Detention to Humane Alternatives</h3>
+            <p class="mt-1">Replace costly and punitive detention with effective community-based case management programs. These alternatives are far less expensive (as little as $38/day vs. over $300/day for detention) and have proven highly effective (99-100% compliance) at ensuring individuals appear for their court hearings.</p>
+
+            <h3 class="font-semibold text-lg mt-4">3. Enact Comprehensive Legislative Reform</h3>
+            <p class="mt-1">A multi-pronged strategy is needed to address the root causes. This includes expanding legal immigration pathways to meet labor needs, modernizing the asylum system to process claims efficiently, and providing a pathway to legal status for the millions of undocumented individuals already integrated into U.S. society. This would regularize the workforce and provide a significant boost to the U.S. economy.</p>
+        `
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const timelineNav = document.getElementById('timeline-nav');
+    const timelineContentEl = document.getElementById('timeline-content');
+    const playersContainer = document.getElementById('players-container');
+    const economicImpactContent = document.getElementById('economic-impact-content');
+    const rootsContent = document.getElementById('roots-content');
+
+    const mainNav = document.getElementById('main-nav');
+    const contentSections = document.querySelectorAll('.content-section');
+
+    mainNav.addEventListener('click', (e) => {
+        e.preventDefault();
+        const navLink = e.target.closest('a');
+        if (!navLink) return;
+
+        const targetId = navLink.getAttribute('href').substring(1);
+
+        contentSections.forEach(section => {
+            section.classList.remove('active');
+            if (section.id === targetId) {
+                section.classList.add('active');
+            }
+        });
+
+        mainNav.querySelectorAll('a').forEach(link => {
+            link.classList.remove('active-nav');
+        });
+        navLink.classList.add('active-nav');
+    });
+
+    function getYouTubeEmbedUrl(url) {
+        let videoId;
+        try {
+            const urlObj = new URL(url);
+            if (urlObj.hostname === 'youtu.be') {
+                videoId = urlObj.pathname.slice(1);
+            } else if (urlObj.hostname === 'www.youtube.com' || urlObj.hostname === 'youtube.com') {
+                videoId = urlObj.searchParams.get('v');
+            }
+            return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function renderTimeline(activeIndex = 0) {
+        timelineNav.innerHTML = DATA.timeline.map((item, index) => `
+            <button class="timeline-item text-sm font-medium border-2 rounded-full px-4 py-2 ${index === activeIndex ? 'active-timeline' : 'border-slate-300 hover:bg-slate-100'}" data-index="${index}">
+                ${item.day}
+            </button>
+        `).join('');
+
+        const activeItem = DATA.timeline[activeIndex];
+        const embedUrl = getYouTubeEmbedUrl(activeItem.video);
+
+        timelineContentEl.innerHTML = `
+            <h3 class="text-xl font-bold mb-2">${activeItem.title}</h3>
+            <p class="text-slate-700">${activeItem.content}</p>
+            ${embedUrl ? `
+                <div class="mt-4 rounded-lg overflow-hidden">
+                    <div class="video-container">
+                        <iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                </div>
+            ` : ''}
+        `;
+    }
+
+    timelineNav.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            const index = parseInt(e.target.dataset.index);
+            renderTimeline(index);
+        }
+    });
+
+    function renderPlayers() {
+        playersContainer.innerHTML = DATA.players.map((player, index) => `
+            <div class="player-card border rounded-lg overflow-hidden bg-white">
+                <button class="w-full text-left p-4 flex justify-between items-center hover:bg-slate-50 focus:outline-none" data-index="${index}">
+                    <h3 class="text-lg font-semibold text-slate-900">${player.name}</h3>
+                    <span class="transform transition-transform duration-300">
+                        <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </span>
+                </button>
+                <div class="details">
+                    <div class="p-4 border-t border-slate-200 prose max-w-none text-slate-700">
+                        <p><strong>Position:</strong> ${player.position}</p>
+                        <p><strong>Actions:</strong> ${player.actions}</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    playersContainer.addEventListener('click', (e) => {
+        const button = e.target.closest('button');
+        if (button) {
+            const card = button.parentElement;
+            card.classList.toggle('open');
+            const icon = button.querySelector('span');
+            icon.classList.toggle('rotate-180');
+        }
+    });
+
+    function renderEconomicImpact() {
+        economicImpactContent.innerHTML = DATA.economicImpact;
+    }
+    
+    function renderCharts() {
+        if(window.arrestsChartInstance) window.arrestsChartInstance.destroy();
+        if(window.costsChartInstance) window.costsChartInstance.destroy();
+
+        const arrestsCtx = document.getElementById('arrestsChart').getContext('2d');
+        window.arrestsChartInstance = new Chart(arrestsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['June 6', 'June 7', 'June 8', 'June 9', 'June 10-12'],
+                datasets: [{
+                    label: 'Total Arrests',
+                    data: [45, 118, 250, 400, 850],
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, title: { display: true, text: 'Cumulative Arrests' } } },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        const costsCtx = document.getElementById('costsChart').getContext('2d');
+        window.costsChartInstance = new Chart(costsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Military Deployment', 'Property Damage (Est.)'],
+                datasets: [{
+                    label: 'Cost Breakdown',
+                    data: [134, 20],
+                    backgroundColor: ['rgba(239, 68, 68, 0.7)', 'rgba(245, 158, 11, 0.7)'],
+                    borderColor: ['rgba(239, 68, 68, 1)', 'rgba(245, 158, 11, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed !== null) { label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(context.parsed * 1000000); }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const rootsTabs = document.getElementById('roots-tabs');
+    function renderRoots(activeTab = 'tensions') {
+        rootsContent.innerHTML = DATA.roots[activeTab];
+        rootsTabs.querySelectorAll('a').forEach(tab => {
+            if (tab.dataset.tab === activeTab) {
+                tab.classList.add('border-blue-500', 'text-blue-600');
+                tab.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            } else {
+                tab.classList.remove('border-blue-500', 'text-blue-600');
+                tab.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            }
+        });
+    }
+
+    rootsTabs.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tabLink = e.target.closest('a');
+        if (tabLink) {
+            renderRoots(tabLink.dataset.tab);
+        }
+    });
+
+    // Initial render
+    renderTimeline();
+    renderPlayers();
+    renderEconomicImpact();
+    renderCharts();
+    renderRoots();
+});
+</script>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>

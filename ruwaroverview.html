@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Chosen Palette: Neutral Gray, Deep Blue, Amber Accent -->
+    <!-- Application Structure Plan: A single-page application structured with a top navigation bar linking to distinct sections. This update adds a new section for territorial changes and significantly expands the 'Core Figures' and 'Force Evolution' sections with more granular data and analysis, including military commanders and specific technology domains (air power, drones, C4ISR). The structure remains a single-page dashboard to keep all related information within one explorable context. Key interactions include a clickable timeline, tabbed battle analyses, and new interactive charts. -->
+    <!-- Visualization & Content Choices: 
+        - Goal: Show chronological flow -> A responsive horizontal timeline (HTML/CSS/JS) for key events. Interaction: Click events to expand details below. On mobile, it gracefully reflows to a vertical layout for better readability. Justification: Addresses user feedback on layout aesthetics and space utilization.
+        - Goal: Show territorial changes -> An interactive schematic map with a timeline slider (HTML/JS). Interaction: Drag slider to see quarterly map changes. Map blocks are enhanced with labels and subtle textures for better visual appeal. Justification: Provides a clear, interactive visualization of front-line shifts without the overhead of external mapping libraries, ensuring fast loading and self-contained functionality. This is a direct implementation of the user's request for a more "vivid" map.
+        - Goal: Compare military leaders -> Added dedicated profile cards within a grid layout. Interaction: Static display. Justification: Clearly separates and profiles key military figures alongside political leaders.
+        - Goal: Detail force evolution -> Restructured with tabs for different domains (Ground, Air, Drones, etc.) and added new charts. Interaction: Click tabs, hover charts. Justification: Organizes complex, multi-domain information logically.
+        - Goal: Monetization -> Integrated user-provided Google Adsense code in a non-intrusive container before the final section.
+        - Library/Method: Chart.js for all canvas-based charts, Vanilla JS for all DOM manipulation and interactive logic. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <title>俄乌战争全景扫描 - 交互式分析报告 v2.5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .nav-link.active {
+            color: #0369a1; /* sky-700 */
+            border-bottom-color: #0369a1;
+        }
+        .tab-button.active {
+            border-color: #fbbf24; /* amber-400 */
+            background-color: #fffbeb; /* amber-50 */
+            color: #b45309; /* amber-700 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+        @media (min-width: 768px) {
+             .chart-container {
+                height: 350px;
+            }
+        }
+        /* Custom slider styles */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #0369a1;
+            cursor: pointer;
+            margin-top: -8px; 
+        }
+        input[type=range]::-moz-range-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #0369a1;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 5px;
+        }
+         input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 5px;
+        }
+        /* Schematic Map Styles */
+        #schematic-map {
+            position: relative;
+            width: 100%;
+            padding-top: 75%; /* Aspect ratio 4:3 */
+            background-color: #e2e8f0; /* slate-200 */
+            border: 1px solid #94a3b8; /* slate-400 */
+        }
+        .map-region {
+            position: absolute;
+            border: 1px solid rgba(0,0,0,0.2);
+            transition: background-color 0.5s ease;
+        }
+        #region-north { top: 0; left: 20%; width: 60%; height: 25%; clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%); }
+        #region-east { top: 20%; left: 65%; width: 35%; height: 50%; clip-path: polygon(25% 0, 100% 20%, 100% 80%, 25% 100%, 0 50%); }
+        #region-south { top: 65%; left: 25%; width: 50%; height: 35%; clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%); }
+        #region-center { top: 25%; left: 15%; width: 70%; height: 40%; clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%); }
+        #region-west { top: 20%; left: 0; width: 30%; height: 50%; clip-path: polygon(0 20%, 75% 0, 75% 100%, 0 80%); }
+        
+        .bg-control-rus {
+            background-color: rgba(239, 68, 68, 0.7);
+            background-image: linear-gradient(45deg, rgba(0,0,0,0.08) 25%, transparent 25%, transparent 50%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.08) 75%, transparent 75%, transparent);
+            background-size: 15px 15px;
+        }
+        .bg-control-ukr {
+            background-color: rgba(59, 130, 246, 0.7);
+            background-image: linear-gradient(45deg, rgba(255,255,255,0.08) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.08) 75%, transparent 75%, transparent);
+            background-size: 15px 15px;
+        }
+        .bg-control-contested { background-color: rgba(251, 191, 36, 0.7); }
+
+        .map-label {
+            position: absolute;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            pointer-events: none;
+            opacity: 0.9;
+        }
+        #label-kyiv { top: 40%; left: 50%; transform: translate(-50%, -50%); }
+        #label-kharkiv { top: 50%; left: 85%; transform: translate(-50%, -50%); }
+        #label-donbas { top: 65%; left: 80%; transform: translate(-50%, -50%); }
+        #label-kherson { top: 85%; left: 40%; transform: translate(-50%, -50%); }
+        #label-crimea { top: 95%; left: 55%; transform: translate(-50%, -50%); }
+        #label-lviv { top: 50%; left: 15%; transform: translate(-50%, -50%); }
+
+        /* Horizontal Timeline Styles */
+        .timeline-wrapper {
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+        .timeline-track {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-width: 1200px;
+            height: 100px;
+        }
+        .timeline-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: #cbd5e1; /* slate-300 */
+            transform: translateY(-50%);
+        }
+        .timeline-node {
+            position: relative;
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+        }
+        .timeline-dot {
+            position: relative;
+            z-index: 1;
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background-color: #cbd5e1; /* slate-300 */
+            border: 3px solid #f8fafc; /* slate-50 */
+            border-radius: 50%;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .timeline-label {
+            position: absolute;
+            width: 150px;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 500;
+            color: #475569; /* slate-600 */
+        }
+        .timeline-node.active .timeline-dot {
+            background-color: #0369a1; /* sky-700 */
+            transform: scale(1.25);
+        }
+         .timeline-node.active .timeline-label {
+            font-weight: 700;
+            color: #0c4a6e; /* sky-900 */
+        }
+        #timeline-content-panel {
+            transition: opacity 0.5s;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <header class="bg-white/95 backdrop-blur-sm sticky top-0 z-50 shadow-md">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl font-bold text-slate-900">俄乌战争全景扫描</h1>
+                <nav class="hidden lg:flex items-center space-x-2 xl:space-x-4 text-sm">
+                    <a href="#timeline" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-sky-600">战争进程</a>
+                    <a href="#battles" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-sky-600">关键战役</a>
+                    <a href="#territory" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-sky-600">战线变化</a>
+                    <a href="#figures" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-sky-600">核心人物</a>
+                    <a href="#forces" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-sky-600">战力演进</a>
+                    <a href="#opinion" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-sky-600">国内舆论</a>
+                    <a href="#world" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-sky-600">国际社会</a>
+                    <a href="#future" class="nav-link py-2 px-3 border-b-2 border-transparent transition-colors duration-300 hover:text-sky-600">未来展望</a>
+                </nav>
+                <div class="lg:hidden">
+                    <select id="mobile-nav" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm">
+                        <option value="#timeline">战争进程</option>
+                        <option value="#battles">关键战役</option>
+                        <option value="#territory">战线变化</option>
+                        <option value="#figures">核心人物</option>
+                        <option value="#forces">战力演进</option>
+                        <option value="#opinion">国内舆论</option>
+                        <option value="#world">国际社会</option>
+                        <option value="#future">未来展望</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        
+        <!-- 1. 战争进程 -->
+        <section id="timeline" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-6 text-center">1. 战争进程：关键节点时间轴</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="md:hidden">
+                    <p class="text-sm text-center text-slate-500">在移动设备上，时间轴将以纵向模式显示，请点击查看详情。</p>
+                    <div id="vertical-timeline" class="mt-4">
+                        <!-- Vertical timeline for mobile will be injected here -->
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                     <p class="text-sm text-center text-slate-500 mb-2">点击下方时间轴上的节点，查看该阶段的关键事件。</p>
+                    <div class="timeline-wrapper">
+                        <div id="horizontal-timeline" class="timeline-track">
+                            <div class="timeline-line"></div>
+                             <!-- Horizontal timeline nodes for desktop will be injected here -->
+                        </div>
+                    </div>
+                </div>
+                <div id="timeline-content-panel" class="mt-6 p-6 bg-slate-50 rounded-lg border border-slate-200 min-h-[150px]">
+                    <h3 id="timeline-title" class="text-xl font-bold text-slate-800 mb-2"></h3>
+                    <p id="timeline-content" class="text-slate-600"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 关键战役 -->
+        <section id="battles" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">2. 关键战役分析</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8" id="battles-grid">
+                 <!-- Battle cards will be injected here by JS -->
+            </div>
+        </section>
+
+        <!-- 3. 战线变化 -->
+        <section id="territory" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">3. 战线变化模拟图</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="max-w-4xl mx-auto">
+                    <div id="schematic-map" class="rounded-md overflow-hidden">
+                        <div id="region-north" class="map-region"></div>
+                        <div id="region-east" class="map-region"></div>
+                        <div id="region-south" class="map-region"></div>
+                        <div id="region-center" class="map-region"></div>
+                        <div id="region-west" class="map-region"></div>
+                        <!-- Labels for key locations -->
+                        <span id="label-kyiv" class="map-label">基辅</span>
+                        <span id="label-kharkiv" class="map-label">哈尔科夫</span>
+                        <span id="label-donbas" class="map-label">顿巴斯</span>
+                        <span id="label-kherson" class="map-label">赫尔松</span>
+                        <span id="label-crimea" class="map-label">克里米亚</span>
+                        <span id="label-lviv" class="map-label">利沃夫</span>
+                        <div class="absolute bottom-2 right-2 text-xs text-slate-700 bg-white/70 p-2 rounded">
+                            <h4 class="font-bold">图例</h4>
+                            <div class="flex items-center mt-1"><div class="w-4 h-4 mr-2 bg-control-rus"></div>俄方控制</div>
+                            <div class="flex items-center mt-1"><div class="w-4 h-4 mr-2 bg-control-ukr"></div>乌方控制</div>
+                            <div class="flex items-center mt-1"><div class="w-4 h-4 mr-2 bg-control-contested"></div>争夺中</div>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex items-center gap-4">
+                        <label for="timeline-slider" class="flex-shrink-0 font-semibold text-slate-700">拖动滑块查看季度变化:</label>
+                        <input type="range" id="timeline-slider" min="0" max="13" value="0" class="w-full">
+                    </div>
+                    <div id="map-caption" class="text-center mt-4 font-semibold text-slate-800 text-lg"></div>
+                    <p id="map-description" class="text-center text-sm text-slate-600 mt-1"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. 核心人物 -->
+        <section id="figures" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">4. 核心人物分析</h2>
+             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-center">🇷🇺 弗拉基米尔·普京</h3>
+                    <p class="text-slate-600">作为最高决策者，他为战争构建“历史合法性”，以北约东扩为由发动“特别军事行动”。战时通过强硬讲话塑造“与西方集体”的生存之战叙事，下达“部分动员”令，并改组国防部以适应长期战争，在国际上被西方孤立，但在“全球南方”获得部分支持。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-center">🇺🇦 弗拉基米尔·泽连斯基</h3>
+                     <p class="text-slate-600">战前拒绝撤离，成为抵抗象征。战时通过卓越的沟通技巧和“元首外交”，成功为乌克兰争取到巨额国际援助，其个人形象与乌克兰的抵抗意志深度绑定，成为国家精神的化身，被《时代》杂志评为2022年度风云人物。</p>
+                </div>
+            </div>
+            <h3 class="text-2xl font-semibold mb-6 text-center text-slate-700">军事指挥官</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-lg text-center">瓦列里·格拉西莫夫 (俄)</h4>
+                    <p class="text-xs text-center text-slate-500 mb-2">总参谋长 / 战区总指挥</p>
+                    <p class="text-sm text-slate-600">作为俄军总参谋长，是战争初期的主要策划者。2023年1月被正式任命为一体化联合部队总指挥。其指挥风格被认为较为传统，在战争初期因计划失利而受批评，但后续通过调整战略，稳固了防线，并主导了对乌克兰的消耗战。</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-lg text-center">谢尔盖·苏罗维金 (俄)</h4>
+                    <p class="text-xs text-center text-slate-500 mb-2">前战区总指挥</p>
+                    <p class="text-sm text-slate-600">因作风强硬被称为“末日将军”。在2022年底短暂担任总指挥期间，他主导了从赫尔松的有序撤退，并下令修建了坚固的“苏罗维金防线”，该防线成功抵御了乌军2023年的大反攻。在瓦格纳兵变后被解职。</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-lg text-center">瓦列里·扎卢日内 (乌)</h4>
+                    <p class="text-xs text-center text-slate-500 mb-2">前武装部队总司令</p>
+                    <p class="text-sm text-slate-600">被誉为“铁将军”，在战争初期领导乌军成功保卫基辅，并策划了2022年哈尔科夫和赫尔松的成功反攻，在军中和民间享有极高威望。他强调下放权力、鼓励战术灵活性。2024年初因与总统在战略上存在分歧而被解职。</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h4 class="font-bold text-lg text-center">亚历山大·西尔斯基 (乌)</h4>
+                    <p class="text-xs text-center text-slate-500 mb-2">现任武装部队总司令</p>
+                    <p class="text-sm text-slate-600">曾是基辅保卫战和哈尔科夫反攻的前线指挥官。接替扎卢日内后，他面临着兵员短缺和俄军持续进攻的巨大压力。他主导了从阿夫迪伊夫卡的困难撤退，以保存兵力。其指挥风格被认为更倾向于不惜代价坚守阵地。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. 战力演进 -->
+        <section id="forces" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">5. 多维度战力演进分析</h2>
+            <div class="bg-white rounded-lg shadow-lg">
+                <div class="border-b border-slate-200">
+                    <nav class="flex flex-wrap -mb-px p-4" id="forces-tabs">
+                         <button data-tab="ground" class="tab-button text-sm font-semibold whitespace-nowrap py-3 px-4 border-b-2 mr-2 mb-2 active">地面力量</button>
+                         <button data-tab="air" class="tab-button text-sm font-semibold whitespace-nowrap py-3 px-4 border-b-2 mr-2 mb-2">空中力量</button>
+                         <button data-tab="unmanned" class="tab-button text-sm font-semibold whitespace-nowrap py-3 px-4 border-b-2 mr-2 mb-2">无人系统</button>
+                         <button data-tab="c4isr" class="tab-button text-sm font-semibold whitespace-nowrap py-3 px-4 border-b-2 mr-2 mb-2">指挥与情报</button>
+                         <button data-tab="himars" class="tab-button text-sm font-semibold whitespace-nowrap py-3 px-4 border-b-2 mr-2 mb-2">关键武器效应</button>
+                    </nav>
+                </div>
+                <div id="forces-content" class="p-6">
+                    <!-- Content will be injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- EXPANDED: 6. 国内舆论 -->
+        <section id="opinion" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">6. 双方国内舆论（扩展版）</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-center">🇷🇺 俄罗斯</h3>
+                    <div class="text-slate-600 space-y-4 text-sm">
+                        <div>
+                            <h4 class="font-semibold text-slate-800">阶段一：入侵初期 (2022年2-3月)</h4>
+                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>官方叙事：</strong>国家电视台（如第一频道）滚动播出普京讲话，将行动定义为“特别军事行动”，目标是“去军事化”和“去纳粹化”，保护顿巴斯人民。大量宣传“Z”、“V”等支持符号。</li>
+                                <li><strong>舆论反应：</strong>出现“旗帜下团结”效应，据列瓦达中心数据，普京支持率从战前约69%飙升至83%。然而，莫斯科、圣彼得堡等大城市爆发反战抗议，据OVD-Info统计，头几周有超过15000人被捕。</li>
+                                <li><strong>信息控制：</strong>当局迅速通过《假新闻法》，对传播与官方不符的“虚假信息”者处以最高15年监禁，导致“莫斯科回声”电台、”雨“电视台等最后几家独立媒体关闭或迁往国外。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-800">阶段二：部分动员 (2022年9月)</h4>
+                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>官方叙事：</strong>普京称动员是为保卫“祖国、主权和领土完整”，并对抗“整个西方的军事机器”。</li>
+                                <li><strong>舆论反应：</strong>动员令在社会层面引发了自战争开始以来最明显的震动。多地出现抗议活动，征兵站遭纵火。数十万适龄男性选择离开俄罗斯，造成边境口岸严重拥堵。社交媒体上充满对征兵标准混乱和装备低劣的抱怨。</li>
+                            </ul>
+                        </div>
+                        <div>
+                             <h4 class="font-semibold text-slate-800">阶段三：持久战常态化 (2023年至今)</h4>
+                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>官方叙事：</strong>宣传重点转向“俄罗斯经济的韧性”和“社会团结”，将战争常态化，并描绘成一场与西方争夺未来世界秩序的长期斗争。</li>
+                                <li><strong>舆论反应：</strong>公开抗议基本消失，社会表面平静。然而，部分军人家属（如“回家之路”运动）开始在社交媒体上发声，要求轮换和明确服役期限。Telegram上的“军事博主”影响力巨大，他们支持战争，但时常尖锐批评国防部的战术和腐败问题，成为一种被容忍的“压力阀”。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-center">🇺🇦 乌克兰</h3>
+                    <div class="text-slate-600 space-y-4 text-sm">
+                        <div>
+                            <h4 class="font-semibold text-slate-800">阶段一：全民抵抗 (2022年2-4月)</h4>
+                            <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>官方叙事：</strong>泽连斯基留在基辅，其每日视频讲话成为全国抵抗的号角。媒体推出“联合新闻马拉松”，24小时不间断播出，塑造了“蛇岛卫士”、“基辅幽灵”等一系列英雄叙事，极大地凝聚了民心。</li>
+                                <li><strong>舆论反应：</strong>社会展现出空前的团结。Rating Group民调显示，超过90%的乌克兰人相信能赢得战争。全国各地涌现大量志愿者，加入国土防御部队或为军队提供后勤支持。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-800">阶段二：反攻与希望 (2022年下半年)</h4>
+                             <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>官方叙事：</strong>大力宣传哈尔科夫和赫尔松反攻的胜利，强调西方武器（特别是HIMARS）的有效性，增强国民信心。</li>
+                                <li><strong>舆论反应：</strong>解放赫尔松等地的消息在社交媒体上引发狂欢，民众庆祝活动的照片和视频广为流传。对军队和国家领导层的信任度达到顶峰。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-800">阶段三：消耗战与社会韧性 (2023年至今)</h4>
+                             <ul class="list-disc pl-5 mt-1 space-y-1">
+                                <li><strong>官方叙事：</strong>在承认2023年反攻未达预期后，官方话语开始更多强调战争的长期性和艰巨性。同时，加强宣传动员的必要性。</li>
+                                <li><strong>舆论反应：</strong>“战争疲劳”情绪开始出现，社会上对动员法案、官员腐败等问题的讨论和批评增多。扎卢日内被解职等事件引发了公众的广泛辩论。尽管如此，根据基辅国际社会学研究所(KIIS)的民调，绝大多数民众（通常超过80%）依然反对以领土换和平，显示出强大的社会韧性。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. 国际社会 -->
+        <section id="world" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold mb-8 text-center">7. 国际社会态度与行动（扩展版）</h2>
+            <div class="space-y-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold text-blue-600 mb-4">坚定支持乌克兰阵营 (G7, 欧盟, 北约核心国)</h3>
+                    <div class="space-y-4 text-slate-700">
+                        <div>
+                            <h4 class="font-semibold text-lg">对俄制裁措施</h4>
+                            <ul class="list-disc pl-5 text-sm space-y-1 mt-2">
+                                <li><strong>金融领域：</strong>将多家俄罗斯主要银行（如Sberbank, VTB）排除出SWIFT国际结算系统；冻结俄罗斯中央银行约3000亿美元的海外资产；禁止对俄投资。</li>
+                                <li><strong>能源领域：</strong>欧盟实施对俄罗斯海运原油的禁运；G7国家对俄罗斯石油实施价格上限（每桶60美元），以限制其战争收入。</li>
+                                <li><strong>技术与贸易：</strong>对半导体、量子计算、航空航天等领域的军民两用技术实施严格的出口管制。</li>
+                                <li><strong>个人与实体：</strong>对普京本人、政府高官、寡头及其家人等超过2000名个人和数百个实体实施资产冻结和旅行禁令。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-lg">对乌克兰的援助</h4>
+                             <ul class="list-disc pl-5 text-sm space-y-1 mt-2">
+                                <li><strong>资金援助：</strong>根据基尔世界经济研究所的数据，截至2024年底，对乌克兰的承诺援助总额已超过2000亿欧元。主要贡献者包括美国、欧盟机构（通过其500亿欧元的“乌克兰基金”）、国际货币基金组织(IMF)等。</li>
+                                <li><strong>军事援助：</strong>
+                                    <ul>
+                                        <li><strong>🇺🇸 美国:</strong> HIMARS火箭炮, 爱国者防空系统, 艾布拉姆斯主战坦克, 布拉德利步兵战车, 大量炮弹。</li>
+                                        <li><strong>🇬🇧 英国:</strong> NLAW反坦克导弹, 挑战者2主战坦克, “风暴阴影”远程巡航导弹。</li>
+                                        <li><strong>🇩🇪 德国:</strong> 豹2主战坦克, IRIS-T防空系统, 黄鼠狼步兵战车, Gepard自行高炮。</li>
+                                        <li><strong>🇫🇷 法国:</strong> 凯撒自行火炮, SCALP远程巡航导弹。</li>
+                                    </ul>
+                                </li>
+                                <li><strong>人道主义援助：</strong>接收了数百万乌克兰难民，并提供了大量食品、医疗和住所援助。</li>
+                            </ul>
+                        </div>
+                         <div>
+                            <h4 class="font-semibold text-lg">关键外交与政治行动</h4>
+                             <ul class="list-disc pl-5 text-sm space-y-1 mt-2">
+                                <li><strong>联合国：</strong>联合国大会多次通过决议，以压倒性多数谴责俄罗斯的侵略并要求其无条件撤军。</li>
+                                <li><strong>国际刑事法院(ICC)：</strong>对普京及其他俄方高官发出逮捕令，指控其犯有与非法驱逐乌克兰儿童有关的战争罪。</li>
+                                <li><strong>北约扩张：</strong>芬兰（2023年4月）和瑞典（2024年3月）正式加入北约，从根本上改变了波罗的海地区的安全格局，被视为俄罗斯侵略行动的重大战略失败。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold text-amber-600 mb-4">立场复杂/中立阵营</h3>
+                    <div class="space-y-4 text-slate-700">
+                        <p class="text-sm">以“全球南方”国家为代表，它们大多在联合国投票中选择弃权，呼吁和平，但反对西方主导的对俄制裁，其立场主要基于国家利益、历史联系和对现有国际秩序的不同看法。</p>
+                        <ul class="list-disc pl-5 text-sm space-y-1 mt-2">
+                            <li><strong>🇨🇳 中国：</strong>官方立场是“中立”和“劝和促谈”，但其“上不封顶”的伙伴关系为俄罗斯提供了重要的经济生命线，成为俄最大的贸易伙伴，吸收了大量俄能源出口，并被指控向俄提供军民两用物资。</li>
+                            <li><strong>🇮🇳 印度：</strong>出于能源安全（大量进口俄折扣石油）和对俄制军事装备的长期依赖，未参与制裁。</li>
+                            <li><strong>🇹🇷 土耳其：</strong>作为北约成员国，在向乌克兰出售TB-2无人机的同时，也维持与普京的良好沟通，成功斡旋了《黑海谷物协议》。</li>
+                            <li><strong>独联体国家：</strong>哈萨克斯坦等中亚国家虽是俄罗斯的传统盟友，但在战争问题上保持谨慎距离，尊重乌克兰主权，并努力遵守西方对俄制裁以避免自身受牵连，显示出俄罗斯在该地区影响力的相对下降。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ad Section -->
+        <section id="ad-break" class="my-12">
+            <div class="max-w-3xl mx-auto p-4 bg-slate-100 rounded-lg text-center" style="min-width: 260px;">
+                 <p class="text-xs text-slate-400 mb-2">广告</p>
+                 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+                 crossorigin="anonymous"></script>
+                 <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-format="fluid"
+                 data-ad-layout-key="-fy+4+18-27-l"
+                 data-ad-client="ca-pub-6214772877334340"
+                 data-ad-slot="1537824208"></ins>
+                 <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+                 </script>
+            </div>
+        </section>
+
+        <!-- 8. 未来展望 -->
+        <section id="future" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold mb-8 text-center">8. 战争未来走向预测（扩展版）</h2>
+            <div class="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto text-slate-600 space-y-6">
+                <p>战争已进入消耗战和持久战阶段，任何一方都难以在短期内取得决定性胜利。未来的走向将由多个复杂因素共同决定。</p>
+                
+                <div>
+                    <h4 class="font-semibold text-lg text-slate-800 mb-2">军事实力演进预测</h4>
+                    <ul class="list-disc pl-5 text-sm space-y-2">
+                        <li><strong>乌克兰：</strong>战后将拥有一支欧洲规模最大、经验最丰富的军队。其核心挑战在于从苏式装备体系完全过渡到北约标准，并建立可持续的、不完全依赖外部援助的后勤和维护体系。人力资源的补充和轮换将是长期挑战。</li>
+                        <li><strong>俄罗斯：</strong>战后需要数年甚至更长时间来重建其遭受重创的地面部队，特别是精锐的装甲和机械化单位。战争中暴露的缺陷将推动其军队改革，重点发展无人机、电子战和精确打击能力。在长期受制裁的情况下，其高端武器的生产将面临技术瓶颈。</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold text-lg text-slate-800 mb-2">国际政治格局演变</h4>
+                     <ul class="list-disc pl-5 text-sm space-y-2">
+                        <li><strong>乌克兰：</strong>将加速融入欧洲。获得欧盟候选国地位是第一步，正式加入虽需时日但方向明确。北约成员国身份仍是最大悬念，一种可能的结果是获得类似以色列模式的、由主要大国提供的双边或多边长期安全保障，作为正式入约前的过渡。</li>
+                        <li><strong>俄罗斯：</strong>将面临来自西方的长期孤立和遏制。其地缘政治重心将不可逆转地“向东转”，深化与中国在经济、军事和技术上的战略捆绑。在传统势力范围（如高加索和中亚），其影响力将被削弱。</li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-lg text-slate-800 mb-2">大胆预测：战后经济与国家走向</h4>
+                    <div class="mt-4 p-4 border-l-4 border-amber-400 bg-amber-50 rounded-r-lg">
+                        <h5 class="font-bold text-amber-800">🇺🇦 乌克兰：军工崛起与“马歇尔计划”</h5>
+                        <p class="text-sm mt-2">战后，乌克兰有望依托其在战争中积累的丰富经验和创新能力，一举成为**新的军事技术强国**，特别是**在无人机、无人艇、电子战和战场软件等非对称作战领域**。这些经过实战检验、成本相对低廉的武器系统，可能成为乌克兰出口创汇的“新石油”，使其成为全球军工市场的一个重要参与者。巨大的战后重建需求（“乌克兰版马歇र्ट计划”）将吸引大量国际投资，若能有效推进反腐和司法改革，这笔资金可能成为推动乌克兰经济现代化的强大引擎。</p>
+                    </div>
+                     <div class="mt-4 p-4 border-l-4 border-red-400 bg-red-50 rounded-r-lg">
+                        <h5 class="font-bold text-red-800">🇷🇺 俄罗斯：资源诅咒与现代化困境</h5>
+                        <p class="text-sm mt-2">战后，俄罗斯经济能否从**资源依赖型国家转变为现代化工业国**，前景不容乐观。其面临的**核心制约因素**包括：<br>1) **技术封锁：** 西方的长期制裁将使其难以获得发展先进制造业所需的高端机床、芯片和软件。<br>2) **人力资本流失：** 战争导致的大量专业技术人才“润”出国外，将对其创新能力造成持久伤害。<br>3) **失去欧洲市场：** 失去了最有利可图的欧洲天然气市场，使其能源出口更依赖价格和议价能力都较弱的亚洲市场。<br>4) **国家主义模式：** 战争加剧了经济的国家主义和军事化色彩，不利于私营部门的创新和活力的释放。若无根本性的政治经济体制变革，俄罗斯很可能在战后陷入长期的技术停滞和经济边缘化。</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Section 1: Timeline Logic
+    const timelineData = [
+        { year: '战前', title: '普京发表《论历史统一》', content: '2021年7月，普京发表长文，系统性地否定乌克兰作为一个独立民族和国家存在的历史合法性，为后续行动提供理论基础。' },
+        { year: '战前', title: '俄军边境集结', content: '2021年底，俄罗斯在乌克兰边境集结超过10万军队，并向美国和北约提出安全保障协议草案，要求北约停止东扩，遭到拒绝。' },
+        { year: '2022 Q1', title: '战争全面爆发', content: '2022年2月24日，普京宣布进行“特别军事行动”，俄军从北、东、南三线全面进攻乌克兰。基辅战役打响。' },
+        { year: '2022 Q2', title: '俄军重点转向顿巴斯', content: '俄军从基辅撤退后，将战略重心转向乌克兰东部和南部。经过残酷围困，俄军于5月占领马里乌波尔。' },
+        { year: '2022 Q3', title: '哈尔科夫大反攻', content: '9月，乌军在哈尔科夫地区发起闪电反攻，迅速收复大片失地。普京于9月21日宣布“部分动员”。' },
+        { year: '2022 Q4', title: '解放赫尔松', content: '11月，乌军解放第聂伯河西岸的唯一一座州府城市赫尔松。随后，俄罗斯开始对乌克兰全境的能源设施进行系统性打击。' },
+        { year: '2023 Q1-Q2', title: '巴赫穆特“绞肉机”', content: '瓦格纳集团主导了对巴赫穆特的漫长攻势，双方在此地展开了战争中最血腥的消耗战。5月，俄方宣布占领该城。' },
+        { year: '2023 Q3', title: '乌克兰夏季大反攻', content: '6月，乌克兰在南部扎波罗热等地发起大规模反攻，但面对俄军坚固的“苏罗维金防线”，未能取得战略性突破。' },
+        { year: '2024 Q1', title: '阿夫迪伊夫卡易手', content: '在西方援助延迟、弹药短缺的背景下，坚守多年的乌军于2月宣布从顿巴斯重镇阿夫迪伊夫卡撤退。' },
+        { year: '2024 Q2', title: '哈尔科夫新战线', content: '5月，俄军在哈尔科夫州北部发起攻势，试图分散乌军兵力，并建立缓冲区。' },
+        { year: '2024 Q3-Q4', title: '消耗战升级', content: '战线进入相对僵持的消耗战。乌克兰获准使用部分西方武器打击俄本土目标。F-16战机开始交付。' },
+        { year: '2025 Q1-Q2', title: '持久战态势', content: '战争进入第四个年头，双方都已深度适应长期冲突。战场焦点集中于技术对抗（无人机、电子战）和后方生产能力的较量。' },
+    ];
+    
+    const hTimeline = document.getElementById('horizontal-timeline');
+    const vTimeline = document.getElementById('vertical-timeline');
+    const timelineTitle = document.getElementById('timeline-title');
+    const timelineContent = document.getElementById('timeline-content');
+
+    function updateTimelineContent(index) {
+        const item = timelineData[index];
+        timelineTitle.textContent = `${item.year} - ${item.title}`;
+        timelineContent.textContent = item.content;
+        
+        document.querySelectorAll('.timeline-node').forEach((node, i) => node.classList.toggle('active', i === index));
+        document.querySelectorAll('.v-timeline-item').forEach((node, i) => {
+             const dot = node.querySelector('.v-timeline-dot');
+             node.classList.toggle('active', i === index);
+             if(dot) {
+                dot.classList.toggle('bg-slate-300', i !== index);
+                dot.classList.toggle('bg-sky-700', i === index);
+             }
+        });
+    }
+
+    timelineData.forEach((item, index) => {
+        // Horizontal for desktop
+        const hNode = document.createElement('div');
+        hNode.className = 'timeline-node';
+        hNode.innerHTML = `<span class="timeline-dot"></span><span class="timeline-label">${item.year}<br>${item.title}</span>`;
+        hNode.addEventListener('click', () => updateTimelineContent(index));
+        if(hTimeline) hTimeline.appendChild(hNode);
+
+        // Vertical for mobile
+        const vNode = document.createElement('div');
+        vNode.className = 'v-timeline-item relative mb-8 cursor-pointer border-l-2 border-slate-300 pl-8 ml-[-1px]';
+        vNode.innerHTML = `
+            <div class="v-timeline-dot absolute left-[-7px] top-1 w-3 h-3 rounded-full bg-slate-300 border-2 border-white transition-colors"></div>
+            <div class="font-bold text-sky-700">${item.year}</div>
+            <h4 class="font-semibold text-slate-800">${item.title}</h4>
+        `;
+        vNode.addEventListener('click', () => {
+             updateTimelineContent(index);
+             document.getElementById('timeline-content-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        if(vTimeline) vTimeline.appendChild(vNode);
+    });
+    updateTimelineContent(0);
+
+    // Section 2: Battle Analyses Logic
+    const battleAnalyses = [
+        { id: 'kyiv', name: '基辅战役', obj: '俄军企图快速占领首都，实现“斩首行动”，但因后勤不济和乌军顽强抵抗而失败。', imp: '粉碎了俄“闪电战”计划，保全了乌克兰政府，是乌克兰首个重大战略胜利。', loss: { rus: [15000, 300, 600], ukr: [4500, 80, 150] } },
+        { id: 'mariupol', name: '马里乌波尔围城战', obj: '俄军旨在打通克里米亚陆地走廊，并摧毁“亚速团”。', imp: '俄军惨胜，但城市化为废墟，乌军抵抗成为民族象征，牵制了大量俄军。', loss: { rus: [6000, 100, 200], ukr: [10000, 100, 250] } },
+        { id: 'kharkiv', name: '哈尔科夫反攻(2022)', obj: '乌军利用俄军防线薄弱，发起闪电突袭，旨在收复失地并切断俄军后勤。', imp: '乌军取得惊人胜利，解放大片土地，迫使俄进行“部分动员”。', loss: { rus: [5000, 200, 400], ukr: [2500, 40, 90] } },
+        { id: 'drone_strikes', name: '乌克兰无人机袭俄机场', obj: '通过远程无人机打击俄纵深空军基地，旨在削弱其战略轰炸能力。', imp: '成功摧毁或损坏了数架Tu-22M3等战略轰炸机，迫使俄军将部分空中力量后撤，展示了乌克兰的非对称打击能力。', loss: { rus: [10, 8, 15], ukr: [0,0,0], labels: ['人员','战略轰炸机','其他飞机']} },
+        { id: 'bakhmut', name: '巴赫穆特战役', obj: '俄（瓦格纳）旨在占领城市作为跳板，并与乌军进行消耗战。', imp: '战争中最血腥的“绞肉机”，俄军付出巨大代价占领废墟，瓦格纳集团因此役元气大伤并最终兵变。', loss: { rus: [60000, 300, 500], ukr: [20000, 150, 350] } },
+        { id: 'counteroffensive2023', name: '2023夏季反攻', obj: '乌军旨在突破俄军“苏罗维金防线”，切断通往克里米亚的陆地走廊。', imp: '乌军进展有限，未能实现战略突破，暴露了突破坚固防线的极端困难。', loss: { rus: [35000, 200, 400], ukr: [45000, 250, 550] } },
+        { id: 'avdiivka', name: '阿夫迪伊夫卡战役', obj: '俄军旨在夺取这座自2014年以来的乌军坚固堡垒。', imp: '俄军在付出极高伤亡后获胜，凸显了滑翔炸弹的威力以及乌军弹药短缺的困境。', loss: { rus: [47000, 360, 750], ukr: [8000, 50, 120] } }
+    ];
+    const battlesGrid = document.getElementById('battles-grid');
+    battleAnalyses.forEach(battle => {
+        const battleCard = document.createElement('div');
+        battleCard.className = 'bg-white rounded-lg shadow-lg overflow-hidden flex flex-col';
+        const defaultLabels = ['人员', '坦克', '装甲车'];
+        battleCard.innerHTML = `<div class="p-6 flex-grow"><h3 class="text-xl font-bold mb-2">${battle.name}</h3><div class="mb-4"><button data-id="${battle.id}" data-type="obj" class="tab-button text-xs font-medium py-1 px-3 rounded-full border-2 active">目标</button><button data-id="${battle.id}" data-type="imp" class="tab-button text-xs font-medium py-1 px-3 rounded-full border-2">影响</button></div><p id="content-${battle.id}" class="text-slate-600 text-sm h-20">${battle.obj}</p><div class="mt-4"><h5 class="font-semibold text-center text-sm mb-2">估计损失对比</h5><div class="chart-container" style="height: 200px;"><canvas id="chart-${battle.id}"></canvas></div></div></div>`;
+        battlesGrid.appendChild(battleCard);
+        new Chart(document.getElementById(`chart-${battle.id}`), {
+            type: 'bar',
+            data: { labels: battle.loss.labels || defaultLabels, datasets: [{ label: '俄军损失', data: battle.loss.rus, backgroundColor: 'rgba(239, 68, 68, 0.7)' }, { label: '乌军损失', data: battle.loss.ukr, backgroundColor: 'rgba(59, 130, 246, 0.7)' }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+        });
+    });
+    battlesGrid.addEventListener('click', e => {
+        if (e.target.classList.contains('tab-button')) {
+            const { id, type } = e.target.dataset;
+            const contentP = document.getElementById(`content-${id}`);
+            const battle = battleAnalyses.find(b => b.id === id);
+            contentP.textContent = type === 'obj' ? battle.obj : battle.imp;
+            e.target.parentElement.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+        }
+    });
+
+    // Section 3: Territory Map Logic
+    const mapSlider = document.getElementById('timeline-slider');
+    const mapCaption = document.getElementById('map-caption');
+    const mapDescription = document.getElementById('map-description');
+    const regions = {
+        north: document.getElementById('region-north'),
+        east: document.getElementById('region-east'),
+        south: document.getElementById('region-south'),
+        center: document.getElementById('region-center'),
+        west: document.getElementById('region-west')
+    };
+    const mapStates = [
+        { q: '2022 Q1', desc: '俄军发动全面进攻，试图快速占领基辅，并控制乌克兰东部和南部大片地区。', control: { north: 'rus', east: 'rus', south: 'rus', center: 'contested', west: 'ukr' } },
+        { q: '2022 Q2', desc: '俄军从基辅撤退，将重心转向顿巴斯，马里乌波尔被占领，战线在东部和南部拉锯。', control: { north: 'ukr', east: 'rus', south: 'rus', center: 'ukr', west: 'ukr' } },
+        { q: '2022 Q3', desc: '乌克兰在哈尔科夫地区发起闪电反攻，收复大片领土，东北部战线发生重大变化。', control: { north: 'ukr', east: 'contested', south: 'rus', center: 'ukr', west: 'ukr' } },
+        { q: '2022 Q4', desc: '乌克兰解放赫尔松市，俄军撤至第聂伯河东岸，南部战线向南推移。', control: { north: 'ukr', east: 'contested', south: 'contested', center: 'ukr', west: 'ukr' } },
+        { q: '2023 Q1', desc: '战线进入僵持，巴赫穆特成为焦点，俄军在此地缓慢推进。', control: { north: 'ukr', east: 'rus', south: 'rus', center: 'ukr', west: 'ukr' } },
+        { q: '2023 Q2', desc: '巴赫穆特被俄军占领，双方都在为即将到来的乌克兰大反攻做准备。', control: { north: 'ukr', east: 'rus', south: 'rus', center: 'ukr', west: 'ukr' } },
+        { q: '2023 Q3', desc: '乌克兰在南部发起反攻，收复少量村庄，但未能突破俄军主要防线。', control: { north: 'ukr', east: 'rus', south: 'contested', center: 'ukr', west: 'ukr' } },
+        { q: '2023 Q4', desc: '战线再次僵持，俄军开始对阿夫迪伊夫卡发起猛攻，东部压力增大。', control: { north: 'ukr', east: 'contested', south: 'rus', center: 'ukr', west: 'ukr' } },
+        { q: '2024 Q1', desc: '乌军从阿夫迪伊夫卡撤退，俄军在顿涅茨克地区取得战术性进展。', control: { north: 'ukr', east: 'rus', south: 'rus', center: 'ukr', west: 'ukr' } },
+        { q: '2024 Q2', desc: '俄军在多条战线缓慢推进，并在哈尔科夫北部开辟新战线，威胁北部。', control: { north: 'contested', east: 'rus', south: 'rus', center: 'ukr', west: 'ukr' } },
+        { q: '2024 Q3', desc: '战线在哈尔科夫北部趋于稳定，双方在顿巴斯地区继续激战。', control: { north: 'contested', east: 'rus', south: 'rus', center: 'ukr', west: 'ukr' } },
+        { q: '2024 Q4', desc: '消耗战持续，俄军继续对乌克兰基础设施进行打击，战线无重大变化。', control: { north: 'ukr', east: 'rus', south: 'rus', center: 'ukr', west: 'ukr' } },
+        { q: '2025 Q1', desc: '乌克兰开始接收F-16战斗机，俄军则继续利用兵力优势在东部施压。', control: { north: 'ukr', east: 'contested', south: 'rus', center: 'ukr', west: 'ukr' } },
+        { q: '2025 Q2', desc: '持久战态势巩固，双方都在寻求非对称优势，战线变化缓慢。', control: { north: 'ukr', east: 'contested', south: 'rus', center: 'ukr', west: 'ukr' } }
+    ];
+    function updateMap(index) {
+        const data = mapStates[index];
+        if (!data) return;
+        mapCaption.textContent = data.q;
+        mapDescription.textContent = data.desc;
+        for (const regionName in data.control) {
+            const regionEl = regions[regionName];
+            if (regionEl) {
+                regionEl.className = 'map-region bg-control-' + data.control[regionName];
+            }
+        }
+    }
+    mapSlider.addEventListener('input', (e) => updateMap(parseInt(e.target.value, 10)));
+    updateMap(0);
+
+    // Section 5: Force Evolution Logic
+    const forcesTabs = document.getElementById('forces-tabs');
+    const forcesContent = document.getElementById('forces-content');
+    const forcesData = {
+        ground: `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div><h4 class="font-bold text-center mb-2">估计现役兵力规模演进 (万人)</h4><div class="chart-container"><canvas id="forceSizeChart"></canvas></div></div>
+                <div><h4 class="font-bold text-center mb-2">估计主战坦克数量演进</h4><div class="chart-container"><canvas id="tanksChart"></canvas></div></div>
+                <div><h4 class="font-bold text-center mb-2">估计火炮系统数量演进</h4><div class="chart-container"><canvas id="artilleryChart"></canvas></div></div>
+                <div><h4 class="font-bold text-center mb-2">战术演进总结</h4><div class="text-sm text-slate-600 space-y-2"><p><strong>🇷� 俄军:</strong> 从初期呆板的大规模装甲突击，转向以炮兵为核心的阵地消耗战。</p><p><strong>🇺🇦 乌军:</strong> 从初期的灵活防御，到利用HIMARS打击后方，再到大规模使用FPV无人机弥补炮弹不足。</p></div></div>
+            </div>`,
+        air: `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div><h4 class="font-bold text-center mb-2">估计作战飞机数量演进 (战斗机/攻击机)</h4><div class="chart-container"><canvas id="airPowerChart"></canvas></div></div>
+                <div><h4 class="font-bold text-center mb-2">空中力量与战略武器变化</h4><div class="text-sm text-slate-600 space-y-2">
+                    <p><strong>🇷🇺 俄军:</strong> 保持着巨大的数量优势，但因乌克兰防空系统的威胁，很少深入乌纵深执行任务。大规模使用Kh-101/Kh-555等巡航导弹以及“匕首”高超音速导弹进行战略打击。FAB系列滑翔炸弹成为摧毁前线工事的利器。</p>
+                    <p><strong>🇺🇦 乌军:</strong> 早期依赖苏式战机（米格-29, 苏-27）。通过整合西方导弹（如SCALP/Storm Shadow）获得了有限的远程打击能力。F-16的到来（2024年底-2025年初）旨在提升防空和对地打击能力，但数量有限，难以根本改变空中力量对比。</p>
+                </div></div>
+            </div>`,
+        unmanned: `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div><h4 class="font-bold text-center mb-2">无人系统演进</h4><div class="text-sm text-slate-600 space-y-2">
+                    <p><strong>侦察无人机:</strong> 双方都广泛使用，如俄军的“海鹰-10”和乌军的“Leleka-100”，为炮兵提供侦察和校射，是战场透明化的关键。</p>
+                    <p><strong>FPV攻击无人机:</strong> 成为“穷人的炮兵”，数量爆炸式增长。乌克兰在此领域初期占据优势，但俄罗斯迅速追赶。FPV无人机深刻改变了堑壕战和装甲车辆的生存环境。</p>
+                    <p><strong>远程攻击无人机:</strong> 俄军大量使用伊朗设计的“见证者”系列消耗乌克兰防空。乌克兰则发展了自己的远程无人机，用于攻击俄境内炼油厂、空军基地等战略目标。</p>
+                    <p><strong>无人艇(USV):</strong> 乌克兰的创新之举。使用无人艇多次成功袭击黑海舰队舰艇，迫使其将大部分船只从克里米亚转移，是非对称作战的典范。</p>
+                </div></div>
+                 <div><h4 class="font-bold text-center mb-2">估计月度FPV无人机使用量</h4><div class="chart-container"><canvas id="droneChart"></canvas></div></div>
+            </div>`,
+        c4isr: `
+            <div><h4 class="font-bold text-center mb-2">指挥、控制、通信、计算机、情报、监视与侦察 (C4ISR)</h4><div class="text-sm text-slate-600 space-y-3 mt-4">
+                <p><strong>情报系统:</strong> 乌克兰极大地受益于西方（特别是美国）提供的实时卫星图像、信号情报和战场分析，这为其精确打击和防御部署提供了巨大优势。</p>
+                <p><strong>指挥与协同:</strong> 乌克兰军队得益于北约标准的训练，指挥体系更加灵活，鼓励下级军官的主动性。利用“三角洲”(Delta)等战场管理系统，实现了更高效的协同作战。俄罗斯的指挥体系则更为僵化，但在战争中也在不断改进其协同能力。</p>
+                <p><strong>通信与电子战:</strong> Starlink（星链）为乌军提供了可靠的战场通信，尤其是在战争初期。俄罗斯拥有强大的电子战能力，能够干扰GPS信号、无人机通信和无线电，对双方的无人机和精确制导弹药都构成了巨大威胁。</p>
+            </div></div>`,
+        himars: `
+            <div><h4 class="font-bold text-center mb-2">关键武器效应分析: M142 HIMARS</h4><div class="text-sm text-slate-600 space-y-3 mt-4">
+                <p><strong>引入时间与背景:</strong> 2022年夏季，乌克兰开始接收美国提供的HIMARS高机动性多管火箭系统。当时，俄军凭借其强大的火炮优势在顿巴斯地区稳步推进。</p>
+                <p><strong>战术效果:</strong> HIMARS的GMLRS精确制导火箭弹（射程约80公里）使乌军首次获得了可靠的、能够打击俄军战线后方纵深目标的能力。乌军利用HIMARS系统性地打击了俄军的指挥所、弹药库、后勤枢纽和集结点。</p>
+                <p><strong>战略影响:</strong> HIMARS的到来，迫使俄军将其弹药库和指挥中心后撤至离前线80公里以外的地方，极大地增加了其后勤补给的难度和成本，削弱了其前线炮兵的火力密度。这被认为是阻止俄军在2022年夏季攻势、并为乌克兰在赫尔松和哈尔科夫的反攻创造条件的关键因素之一。它完美诠释了少量高精度武器如何能够改变战场平衡。</p>
+            </div></div>`
+    };
+    function renderForcesContent(tab) {
+        forcesContent.innerHTML = forcesData[tab];
+        if (tab === 'ground') {
+            const quarterlyLabels = ['22Q1', '22Q2', '22Q3', '22Q4', '23Q1', '23Q2', '23Q3', '23Q4', '24Q1', '24Q2', '24Q3', '24Q4', '25Q1', '25Q2'];
+            new Chart(document.getElementById('forceSizeChart'), { type: 'line', data: { labels: quarterlyLabels, datasets: [{ label: '俄军 (含占领区)', data: [19, 17, 35, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95], borderColor: 'rgba(239, 68, 68, 0.7)' }, { label: '乌军', data: [25, 40, 50, 60, 65, 70, 75, 70, 68, 70, 72, 75, 78, 80], borderColor: 'rgba(59, 130, 246, 0.7)' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } } });
+            new Chart(document.getElementById('tanksChart'), { type: 'line', data: { labels: quarterlyLabels, datasets: [{ label: '俄军', data: [2800, 2400, 2200, 2000, 1800, 1700, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000], borderColor: 'rgba(239, 68, 68, 0.7)' }, { label: '乌军', data: [900, 800, 950, 1100, 1300, 1500, 1400, 1300, 1200, 1300, 1400, 1500, 1600, 1700], borderColor: 'rgba(59, 130, 246, 0.7)' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } } });
+            new Chart(document.getElementById('artilleryChart'), { type: 'line', data: { labels: quarterlyLabels, datasets: [{ label: '俄军', data: [5000, 4500, 4000, 3800, 3500, 3300, 3500, 3800, 4200, 4500, 4800, 5000, 5200, 5400], borderColor: 'rgba(239, 68, 68, 0.7)' }, { label: '乌军', data: [1800, 2000, 2500, 2800, 3000, 3200, 3000, 2800, 2500, 2800, 3100, 3400, 3600, 3800], borderColor: 'rgba(59, 130, 246, 0.7)' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } } });
+        } else if (tab === 'air') {
+            const airLabels = ['2022', '2023', '2024', '2025 (Est.)'];
+            new Chart(document.getElementById('airPowerChart'), { type: 'line', data: { labels: airLabels, datasets: [{ label: '俄军', data: [1200, 1100, 1000, 950], borderColor: 'rgba(239, 68, 68, 0.7)' }, { label: '乌军', data: [150, 120, 100, 130], borderColor: 'rgba(59, 130, 246, 0.7)' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } } });
+        } else if (tab === 'unmanned') {
+            const droneLabels = ['2023 Q1', '2023 Q4', '2024 Q3', '2025 Q1'];
+            new Chart(document.getElementById('droneChart'), { type: 'bar', data: { labels: droneLabels, datasets: [{ label: '俄军', data: [5000, 20000, 50000, 80000], backgroundColor: 'rgba(239, 68, 68, 0.7)' }, { label: '乌军', data: [8000, 30000, 60000, 90000], backgroundColor: 'rgba(59, 130, 246, 0.7)' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+        }
+    }
+    forcesTabs.addEventListener('click', e => {
+        if (e.target.tagName === 'BUTTON') {
+            const tab = e.target.dataset.tab;
+            forcesTabs.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            renderForcesContent(tab);
+        }
+    });
+    renderForcesContent('ground');
+
+    // Navigation scroll spy
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('main > section');
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const sectionId = entry.target.id;
+                navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${sectionId}`));
+                const mobileNav = document.getElementById('mobile-nav');
+                if (mobileNav.value !== `#${sectionId}`) mobileNav.value = `#${sectionId}`;
+            }
+        });
+    }, { rootMargin: "-40% 0px -60% 0px" });
+    sections.forEach(section => observer.observe(section));
+    document.getElementById('mobile-nav').addEventListener('change', function() {
+        document.querySelector(this.value).scrollIntoView({ behavior: 'smooth' });
+    });
+});
+</script>
+</body>
+</html>

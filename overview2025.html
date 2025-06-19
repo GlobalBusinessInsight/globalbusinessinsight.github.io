@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"  crossorigin="anonymous"></script>
+    <meta name="google-adsense-account" content="ca-pub-6214772877334340">  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INOSSEM - Enable Digital Infinity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet.js for Interactive Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: The SPA uses a narrative, single-page scroll structure to guide the user on a journey. It begins with INOSSEM's grand vision ("Digital Infinity"), identifies the core challenges of global business, presents the ProcessGo Plus™ suite as the targeted solution via interactive cards, visualizes the power of the AI Agent through an animated demo, provides tangible proof of value with animated statistics and client logos, showcases the company's global reach and partnership model, and concludes with a clear call to action. This thematic flow was chosen over a direct report-to-webpage mapping because it creates a compelling story, making complex information more digestible and engaging for potential clients and partners. The interactive elements encourage exploration and focus user attention on key value propositions. -->
+    <!-- Visualization & Content Choices: 
+        - Report: Vision -> Goal: Inspire -> Viz: Animated hero text -> Interaction: Fade-in animation -> Justification: Creates an impactful, modern first impression.
+        - Report: Product Pillars (P, T, S) -> Goal: Organize/Compare -> Viz: Interactive tabbed content with recreated diagrams and embedded videos -> Interaction: Click to reveal details -> Justification: Visually explains complex processes clearly and natively within the page layout, with video for deeper dives.
+        - Report: AI Agent Chat -> Goal: Explain -> Viz: Animated chat interface (HTML/CSS/JS) -> Interaction: Timed sequence of messages -> Justification: Makes the abstract AI concept tangible and demonstrates its ease of use more effectively than a static image.
+        - Report: Value Metrics (25%, 30%, 47%) -> Goal: Impress -> Viz: Animated number counters (JS) -> Interaction: Animate on scroll -> Justification: Adds a dynamic "wow" factor, making the data more memorable and impactful.
+        - Report: Global Presence -> Goal: Inform -> Viz: Interactive map using Leaflet.js -> Interaction: Pan, zoom, click markers -> Justification: Provides the most reliable, interactive, and professional way to display multiple geographic locations without API keys.
+        - Report: Client Logos -> Goal: Build Trust -> Viz: Scrolling logo marquee (CSS animation) -> Interaction: Continuous scroll -> Justification: Provides strong social proof in a dynamic, space-efficient manner. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        .hero-bg {
+            background: linear-gradient(45deg, rgba(248, 249, 250, 0.9), rgba(248, 249, 250, 0.95)), url('https://placehold.co/1920x1080/e0e0e0/e0e0e0?text=') no-repeat center center;
+            background-size: cover;
+        }
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #007BFF;
+        }
+        .fade-in {
+            animation: fadeIn 1.5s ease-in-out forwards;
+            opacity: 0;
+        }
+        .fade-in-delay-1 { animation-delay: 0.3s; }
+        .fade-in-delay-2 { animation-delay: 0.6s; }
+        .fade-in-delay-3 { animation-delay: 0.9s; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chat-bubble {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .chat-bubble.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .scrolling-logos {
+            display: inline-block;
+            white-space: nowrap;
+            animation: scroll 60s linear infinite;
+        }
+        .scrolling-logos img {
+            max-height: 48px;
+            width: auto;
+            vertical-align: middle;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .tab-button.active {
+            background-color: #007BFF;
+            color: white;
+            border-color: #007BFF;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Custom styles for Leaflet map labels and icons */
+        .city-label {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            color: #1f2937; /* gray-800 */
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .city-marker-icon {
+            background: transparent;
+            border: none;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-white/80 backdrop-blur-sm fixed top-0 left-0 right-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <a href="#hero" class="block">
+                        <img src="https://uploads-ssl.webflow.com/62495d72e77476025d2c2935/62495d72e774766f602c2941_inossem-logo.svg" alt="INOSSEM Logo" class="h-8 w-auto" onerror="this.onerror=null;this.src='https://placehold.co/150x40/ffffff/333333?text=INOSSEM';">
+                    </a>
+                </div>
+                <div class="hidden md:block">
+                    <nav class="flex items-baseline space-x-4">
+                        <a href="#solutions" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Solutions</a>
+                        <a href="#ai-agent" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">AI Agent</a>
+                        <a href="#value" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Value</a>
+                        <a href="#global" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Global Reach</a>
+                        <a href="#contact" class="ml-4 px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition">Contact Us</a>
+                    </nav>
+                </div>
+                <div class="md:hidden">
+                     <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#solutions" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Solutions</a>
+                <a href="#ai-agent" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">AI Agent</a>
+                <a href="#value" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Value</a>
+                <a href="#global" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Global Reach</a>
+                <a href="#contact" class="block w-full text-left mt-2 px-4 py-2 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700 transition">Contact Us</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero" class="relative min-h-screen flex items-center justify-center text-center hero-bg pt-16">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-gray-800 leading-tight fade-in">
+                    From Digital Transformation
+                </h1>
+                <h2 class="mt-4 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-blue-600 leading-tight fade-in fade-in-delay-1">
+                    to Digital Infinity
+                </h2>
+                <p class="mt-8 max-w-2xl mx-auto text-base sm:text-lg md:text-xl text-gray-600 fade-in fade-in-delay-2">
+                    INOSSEM is an innovative Process Automation Company, guiding global corporations to a state of boundless operational excellence and perpetual innovation.
+                </p>
+                <div class="mt-12 fade-in fade-in-delay-3">
+                    <a href="#solutions" class="inline-block bg-blue-600 text-white font-bold rounded-full py-3 px-6 sm:py-4 sm:px-8 uppercase tracking-wider text-base sm:text-lg hover:bg-blue-700 transition-transform transform hover:scale-105">Discover Our Solutions</a>
+                </div>
+            </div>
+        </section>
+        
+        <section id="solutions" class="py-16 md:py-32 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12 md:mb-16">
+                    <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">Intelligent Process Automation with ProcessGo Plus™</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-base sm:text-lg text-gray-600">Our flagship suite is engineered to transform your daily operations. We mitigate complexity through targeted, AI-powered solution packages.</p>
+                </div>
+
+                <div class="max-w-5xl mx-auto">
+                    <div class="mb-8 flex flex-col sm:flex-row flex-wrap justify-center border-b border-gray-200">
+                        <button data-tab="p" class="tab-button active flex-1 md:flex-none text-center px-4 py-3 text-base sm:text-lg font-semibold border-b-2 border-transparent transition duration-300">
+                            <span class="sm:text-2xl">P</span> Essential Operations
+                        </button>
+                        <button data-tab="t" class="tab-button flex-1 md:flex-none text-center px-4 py-3 text-base sm:text-lg font-semibold border-b-2 border-transparent transition duration-300">
+                           <span class="sm:text-2xl">T</span> Integration Technology
+                        </button>
+                         <button data-tab="s" class="tab-button flex-1 md:flex-none text-center px-4 py-3 text-base sm:text-lg font-semibold border-b-2 border-transparent transition duration-300">
+                           <span class="sm:text-2xl">S</span> Supply Chain
+                        </button>
+                    </div>
+
+                    <div id="p-content" class="tab-content active">
+                        <div class="bg-gray-50 p-6 md:p-8 rounded-lg shadow-md">
+                            <h3 class="text-xl sm:text-2xl font-bold text-blue-600 mb-4">Accelerate Your Business for Global Success</h3>
+                            <p class="text-gray-700 mb-6 text-sm sm:text-base">Transform your entire Accounts Payable lifecycle into a single, seamless, and transparent process. Our "One-Ledger" approach ensures real-time visibility and control, turning complex global finance into a strategic advantage.</p>
+                            <div class="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-center mb-8">
+                                <div class="bg-blue-100 text-blue-800 rounded-full px-3 py-1 sm:px-4 sm:py-2">Invoice Integration</div>
+                                <div class="text-gray-400">→</div>
+                                <div class="bg-blue-100 text-blue-800 rounded-full px-3 py-1 sm:px-4 sm:py-2">Authenticating</div>
+                                <div class="text-gray-400">→</div>
+                                <div class="bg-blue-100 text-blue-800 rounded-full px-3 py-1 sm:px-4 sm:py-2">Reconciliation</div>
+                                <div class="text-gray-400">→</div>
+                                <div class="bg-blue-100 text-blue-800 rounded-full px-3 py-1 sm:px-4 sm:py-2">Compliance</div>
+                                <div class="text-gray-400">→</div>
+                                <div class="bg-blue-100 text-blue-800 rounded-full px-3 py-1 sm:px-4 sm:py-2">Reporting</div>
+                            </div>
+                             <iframe class="w-full aspect-video rounded-lg" src="https://www.youtube.com/embed/Kg0StXs1Vhs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <div id="t-content" class="tab-content">
+                        <div class="bg-gray-50 p-6 md:p-8 rounded-lg shadow-md">
+                            <h3 class="text-xl sm:text-2xl font-bold text-blue-600 mb-4">Unify Your Digital Ecosystem</h3>
+                            <p class="text-gray-700 mb-6 text-sm sm:text-base">Break down silos between your ERP, CRM, and other critical applications. Our Integration Platform as a Service (iPaaS) uses a Business Process Model and Notation (BPMN) engine to simplify data exchange and automate workflows across your entire organization.</p>
+                             <div class="flex items-center justify-center gap-2 sm:gap-4 mb-8">
+                                <div class="flex flex-col gap-2 text-center text-xs sm:text-sm">
+                                    <div class="bg-blue-100 text-blue-800 p-2 sm:p-3 rounded-lg">People</div>
+                                    <div class="bg-blue-100 text-blue-800 p-2 sm:p-3 rounded-lg">APIs</div>
+                                </div>
+                                <div class="text-gray-400 text-xl sm:text-2xl font-bold">↔</div>
+                                <div class="bg-blue-600 text-white p-4 sm:p-6 rounded-xl text-center font-bold text-sm sm:text-base">ProcessGo Plus™</div>
+                                <div class="text-gray-400 text-xl sm:text-2xl font-bold">↔</div>
+                                <div class="flex flex-col gap-2 text-center text-xs sm:text-sm">
+                                    <div class="bg-blue-100 text-blue-800 p-2 sm:p-3 rounded-lg">Ecosystems</div>
+                                    <div class="bg-blue-100 text-blue-800 p-2 sm:p-3 rounded-lg">Core Apps</div>
+                                </div>
+                            </div>
+                            <iframe class="w-full aspect-video rounded-lg" src="https://www.youtube.com/embed/WsY2c0bPWH8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <div id="s-content" class="tab-content">
+                        <div class="bg-gray-50 p-6 md:p-8 rounded-lg shadow-md">
+                            <h3 class="text-xl sm:text-2xl font-bold text-blue-600 mb-4">Real-Time Inventory, Everywhere</h3>
+                            <p class="text-gray-700 mb-6 text-sm sm:text-base">Our "New-in-Stock" solution provides end-to-end, real-time inventory visibility across all your sales channels—B2B, B2C, e-commerce, and physical stores. Eliminate stockouts, reduce carrying costs, and exceed customer expectations with accurate availability data.</p>
+                            <div class="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm font-semibold text-center mb-8">
+                                <div class="bg-blue-100 text-blue-800 rounded-full px-3 py-1 sm:px-4 sm:py-2">Demand Review</div>
+                                <div class="text-gray-400">→</div>
+                                <div class="bg-blue-100 text-blue-800 rounded-full px-3 py-1 sm:px-4 sm:py-2">Order Release</div>
+                                <div class="text-gray-400">→</div>
+                                <div class="bg-blue-100 text-blue-800 rounded-full px-3 py-1 sm:px-4 sm:py-2">Receipt</div>
+                                <div class="text-gray-400">→</div>
+                                <div class="bg-blue-100 text-blue-800 rounded-full px-3 py-1 sm:px-4 sm:py-2">Shipping</div>
+                                 <div class="text-gray-400">→</div>
+                                <div class="bg-blue-100 text-blue-800 rounded-full px-3 py-1 sm:px-4 sm:py-2">Consumption</div>
+                            </div>
+                             <iframe class="w-full aspect-video rounded-lg" src="https://www.youtube.com/embed/EDDalAZszAw" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ai-agent" class="py-16 md:py-32 bg-gray-100">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">The Future of Work is Here: The ProcessGo Plus Agent</h2>
+                        <p class="mt-4 text-base sm:text-lg text-gray-600">Our AI Agent is the brain and central nervous system of your automated enterprise. Operating on a simple yet powerful "Infer, Command, Do" principle, it understands natural language to orchestrate complex tasks across all your major platforms.</p>
+                        <div class="mt-8 space-y-4">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xl">1</div>
+                                <div class="ml-4">
+                                    <h4 class="text-lg sm:text-xl font-semibold">Infer</h4>
+                                    <p class="text-gray-600 text-sm sm:text-base">Understands your requests and analyzes data with deep contextual awareness.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xl">2</div>
+                                <div class="ml-4">
+                                    <h4 class="text-lg sm:text-xl font-semibold">Command</h4>
+                                    <p class="text-gray-600 text-sm sm:text-base">Makes intelligent decisions and formulates optimal action plans across systems.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xl">3</div>
+                                <div class="ml-4">
+                                    <h4 class="text-lg sm:text-xl font-semibold">Do</h4>
+                                    <p class="text-gray-600 text-sm sm:text-base">Executes commands flawlessly, integrating with SAP, Salesforce, Microsoft, and more.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="chat-container" class="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 max-w-md mx-auto w-full mt-12 lg:mt-0">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-bold text-blue-600">AI</div>
+                            <div class="ml-3">
+                                <p class="font-semibold text-gray-800">ProcessGo Agent</p>
+                                <p class="text-sm text-green-500">Online</p>
+                            </div>
+                        </div>
+                        <div class="h-80 bg-gray-50 rounded-lg p-4 flex flex-col space-y-4 overflow-y-auto">
+                            <div class="chat-bubble self-start bg-gray-200 text-gray-800 rounded-lg rounded-bl-none py-2 px-4 max-w-xs">
+                                Good Afternoon! How can I help?
+                            </div>
+                             <div class="chat-bubble self-end bg-blue-500 text-white rounded-lg rounded-br-none py-2 px-4 max-w-xs">
+                                Give me the summary of cashflow for Inossem Canada from last month.
+                            </div>
+                            <div class="chat-bubble self-start bg-gray-200 text-gray-800 rounded-lg rounded-bl-none py-2 px-4 max-w-xs">
+                                Of course. As of this week, your total cash inflows are $546,000 and outflows are $378,000. Current balance is $415,000. I've also prepared the full report for you.
+                            </div>
+                             <div class="chat-bubble self-start bg-white border border-gray-200 text-gray-800 rounded-lg rounded-bl-none py-2 px-4 max-w-xs flex items-center">
+                                <span class="text-blue-500 mr-2">📄</span> March_Cashflow_Report.pdf
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="value" class="py-16 md:py-32 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12 md:mb-16">
+                    <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">Transforming Potential into Performance</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-base sm:text-lg text-gray-600">Our solutions deliver tangible, measurable results that create lasting competitive advantage.</p>
+                </div>
+                <div id="stats-container" class="grid md:grid-cols-3 gap-8 text-center">
+                    <div class="bg-gray-50 p-8 rounded-lg shadow-md">
+                        <div class="text-5xl sm:text-6xl font-extrabold text-blue-600 mb-2 stat-value" data-value="25">0%</div>
+                        <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Automation Uplift</h3>
+                        <p class="text-gray-600 mt-2 text-sm sm:text-base">In supply chain performance, minimizing errors and manual input.</p>
+                    </div>
+                    <div class="bg-gray-50 p-8 rounded-lg shadow-md">
+                        <div class="text-5xl sm:text-6xl font-extrabold text-blue-600 mb-2 stat-value" data-value="30">0%</div>
+                        <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Efficiency Improvement</h3>
+                        <p class="text-gray-600 mt-2 text-sm sm:text-base">In seamless omni-channel order fulfillment across mainstream platforms.</p>
+                    </div>
+                    <div class="bg-gray-50 p-8 rounded-lg shadow-md">
+                        <div class="text-5xl sm:text-6xl font-extrabold text-blue-600 mb-2 stat-value" data-value="47">0%</div>
+                        <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Faster Market Entry</h3>
+                        <p class="text-gray-600 mt-2 text-sm sm:text-base">Reduction in IT enablement timelines by streamlining local compliance.</p>
+                    </div>
+                </div>
+                <div class="mt-16 md:mt-20">
+                    <h3 class="text-center text-xl sm:text-2xl font-semibold text-gray-700 mb-8">Trusted by Industry Leaders Worldwide</h3>
+                    <div class="relative overflow-hidden group">
+                        <div class="scrolling-logos group-hover:[animation-play-state:paused]">
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=Segway" alt="Segway-Ninebot Logo" title="Segway-Ninebot"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=Wanhua" alt="Wanhua Chemical Logo" title="Wanhua Chemical"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=Sailun" alt="Sailun Tire Logo" title="Sailun Tire"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=SANY" alt="SANY Logo" title="SANY"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=Trinasolar" alt="Trinasolar Logo" title="Trinasolar"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=ExxonMobil" alt="ExxonMobil Logo" title="ExxonMobil"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=COSCO" alt="COSCO SHIPPING Logo" title="COSCO SHIPPING"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=Greenworks" alt="Greenworks Logo" title="Greenworks"></div>
+                        </div>
+                        <div class="scrolling-logos group-hover:[animation-play-state:paused]" aria-hidden="true">
+                           <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=Segway" alt="Segway-Ninebot Logo" title="Segway-Ninebot"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=Wanhua" alt="Wanhua Chemical Logo" title="Wanhua Chemical"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=Sailun" alt="Sailun Tire Logo" title="Sailun Tire"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=SANY" alt="SANY Logo" title="SANY"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=Trinasolar" alt="Trinasolar Logo" title="Trinasolar"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=ExxonMobil" alt="ExxonMobil Logo" title="ExxonMobil"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=COSCO" alt="COSCO SHIPPING Logo" title="COSCO SHIPPING"></div>
+                            <div class="inline-block mx-8 h-12 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition duration-300"><img src="https://placehold.co/150x50/f0f0f0/333333?text=Greenworks" alt="Greenworks Logo" title="Greenworks"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="global" class="py-16 md:py-32 bg-gray-100">
+             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                 <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div id="map" class="w-full max-w-xl mx-auto h-80 md:h-96 rounded-lg shadow-md overflow-hidden z-0">
+                    </div>
+                    <div>
+                        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">Your Trusted Partner: Global Network, Local Expertise</h2>
+                        <p class="mt-4 text-base sm:text-lg text-gray-600">With success stories spanning the Americas, EMEA, MENA, and APAC, our global service network ensures you receive world-class support, wherever you operate.</p>
+                        <div class="mt-8 space-y-6">
+                            <div>
+                                <h4 class="text-lg sm:text-xl font-bold text-gray-800 mb-2">Our "All-in-One" Service Model</h4>
+                                <p class="text-gray-600 text-sm sm:text-base">We offer comprehensive bundled services covering both end-to-end implementation and on-going Application Management Services (AMS). This ensures high service levels and operational stability for your critical enterprise systems.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-lg sm:text-xl font-bold text-gray-800 mb-3">Seamless Ecosystem Integration</h4>
+                                <div class="flex flex-col space-y-3">
+                                    <div class="flex items-center">
+                                        <img src="https://www.sap.com/dam/application/shared/logos/sap-logo-svg.svg" class="h-6 mr-4" alt="SAP logo">
+                                        <p class="text-gray-600 text-sm sm:text-base">Enhance your SAP S/4HANA investment with our integrated ProcessGo Plus Suite.</p>
+                                    </div>
+                                    <div class="flex items-center">
+                                         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Microsoft_logo_%282012%29.svg/1024px-Microsoft_logo_%282012%29.svg.png" class="h-6 mr-4" alt="Microsoft logo">
+                                        <p class="text-gray-600 text-sm sm:text-base">Bring a new level of automation and insight to your Microsoft ERP Platform.</p>
+                                    </div>
+                                    <div class="flex items-center">
+                                         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Salesforce.com_logo.svg/1280px-Salesforce.com_logo.svg.png" class="h-8 mr-4" alt="Salesforce logo">
+                                        <p class="text-gray-600 text-sm sm:text-base">Drive agility and intelligence in your Salesforce CRM processes.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+             </div>
+        </section>
+
+        <section id="contact" class="py-16 md:py-32 bg-blue-700 text-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold">Let's Build Your Digital Future, Together.</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-base sm:text-lg text-blue-100">Connect with us to explore how the ProcessGo Plus™ suite can pave your path to Digital Infinity.</p>
+                <div class="mt-10">
+                    <a href="mailto:marketing@inossem.com" class="inline-block bg-white text-blue-600 font-bold rounded-full py-3 px-6 sm:py-4 sm:px-8 uppercase tracking-wider text-base sm:text-lg hover:bg-gray-100 transition-transform transform hover:scale-105">Start the Conversation</a>
+                </div>
+                 <div class="mt-12 sm:mt-16 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-8 text-blue-200">
+                    <div class="text-center">
+                        <h4 class="text-lg sm:text-xl font-semibold text-white">Innovation</h4>
+                        <p class="text-sm sm:text-base">Leading-edge solutions</p>
+                    </div>
+                     <div class="text-center">
+                        <h4 class="text-lg sm:text-xl font-semibold text-white">Networking</h4>
+                        <p class="text-sm sm:text-base">Collaborative partnership</p>
+                    </div>
+                     <div class="text-center">
+                        <h4 class="text-lg sm:text-xl font-semibold text-white">Ownership</h4>
+                        <p class="text-sm sm:text-base">Accountable for results</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400">
+            <p>&copy; 2025 INOSSEM. All rights reserved.</p>
+            <p class="mt-2 text-sm">Merci pour votre attention. | Gracias por su atención. | ご注目いただきありがとうございます。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // Smooth scroll for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    if (this.getAttribute('href').length > 1) {
+                        e.preventDefault();
+                        document.querySelector(this.getAttribute('href')).scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                        if (!mobileMenu.classList.contains('hidden')) {
+                            mobileMenu.classList.add('hidden');
+                        }
+                    }
+                });
+            });
+
+            // Tab functionality for solutions section
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.dataset.tab;
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === `${target}-content`) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+
+            // Animate numbers on scroll
+            const animateValue = (element, start, end, duration) => {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    element.innerHTML = Math.floor(progress * (end - start) + start) + '%';
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    }
+                };
+                window.requestAnimationFrame(step);
+            };
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5
+            };
+
+            const statsObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const statValues = entry.target.querySelectorAll('.stat-value');
+                        statValues.forEach(el => {
+                            const value = parseInt(el.dataset.value, 10);
+                            animateValue(el, 0, value, 2000);
+                        });
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            const statsContainer = document.getElementById('stats-container');
+            if(statsContainer) {
+                statsObserver.observe(statsContainer);
+            }
+
+            // Animate chat bubbles on scroll
+            const chatObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const bubbles = entry.target.querySelectorAll('.chat-bubble');
+                        bubbles.forEach((bubble, index) => {
+                            setTimeout(() => {
+                                bubble.classList.add('visible');
+                            }, index * 1000); 
+                        });
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            const chatContainer = document.getElementById('chat-container');
+            if (chatContainer) {
+                chatObserver.observe(chatContainer);
+            }
+
+            // --- Leaflet.js Map Initialization ---
+            const mapId = 'map';
+            const mapElement = document.getElementById(mapId);
+            if(mapElement) {
+                const map = L.map(mapId, {
+                    scrollWheelZoom: false
+                }).setView([30, 15], 2);
+
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                    subdomains: 'abcd',
+                    maxZoom: 20
+                }).addTo(map);
+
+                const locations = [
+                    { lat: 32.0603, lng: 118.7969, title: 'Nanjing' },
+                    { lat: 45.5017, lng: -73.5673, title: 'Montreal' },
+                    { lat: 48.8566, lng: 2.3522, title: 'Paris' },
+                    { lat: 43.6532, lng: -79.3832, title: 'Toronto' },
+                    { lat: 40.7178, lng: -74.0431, title: 'Jersey City' },
+                    { lat: 35.6895, lng: 139.6917, title: 'Tokyo' },
+                    { lat: 1.3521, lng: 103.8198, title: 'Singapore' }
+                ];
+                
+                locations.forEach(location => {
+                    const icon = L.divIcon({
+                        className: 'city-marker-icon',
+                        html: `<span class="text-blue-600 text-3xl font-bold">*</span>`,
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 20]
+                    });
+
+                    const marker = L.marker([location.lat, location.lng], { icon: icon }).addTo(map);
+
+                    marker.bindTooltip(location.title, {
+                        permanent: true,
+                        className: 'city-label',
+                        offset: [10, 0],
+                        direction: 'right'
+                    });
+                });
+            }
+        });
+    </script>
+    
+</body>
+</html>
