@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Shang Yang Reforms: An Interactive Analysis</title>
+    <!-- Chosen Palette: Stone & Ember -->
+    <!-- Application Structure Plan: A thematic, single-page narrative structure guides the user through the story of the reforms. It begins with the 'problem' (pre-reform Qin), introduces the 'solution' (the reforms and their architects), shows the 'process' (implementation), and concludes with the 'outcome' (legacy). This narrative flow is more engaging than a simple chapter-by-chapter layout. Key interactions include a 'before-and-after' comparison, tabbed sections for detailed reform policies, an interactive chart for the military ranks, and a clickable timeline. This structure was chosen to transform a dense historical report into an exploratory journey, making complex interrelationships easier to grasp. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: State of pre-reform Qin vs. post-reform results. Goal: Compare. Viz/Method: Side-by-side card layout. Interaction: Hover effects to reveal details. Justification: Provides an immediate, high-impact understanding of the reforms' scale. Library/Method: HTML/Tailwind.
+        - Report Info: Four main categories of reforms (Political, Economic, Military, Social). Goal: Organize & Inform. Viz/Method: Tabbed interface. Interaction: Clicking tabs reveals detailed content for each category. Justification: Prevents overwhelming the user with text and allows for focused exploration of each reform area. Library/Method: HTML/Tailwind/JS.
+        - Report Info: 20-Rank Military Merit system. Goal: Inform & Compare. Viz/Method: Vertical Bar Chart. Interaction: Hovering over bars shows rank name and rewards in a tooltip. Justification: Visually represents the new hierarchy and the strong incentives for military achievement. Library/Method: Chart.js (Canvas).
+        - Report Info: The two phases and key events of implementation. Goal: Show Change Over Time. Viz/Method: Stylized horizontal timeline. Interaction: Clickable event markers to show descriptive pop-ups. Justification: Clearly illustrates the strategic rollout and pivotal moments of the reforms. Library/Method: HTML/Tailwind/JS.
+        - Report Info: Interlocking nature of the legal reforms. Goal: Show Relationships. Viz/Method: Styled HTML/CSS flowchart diagram. Interaction: Static visual. Justification: Makes the abstract concept of the 'Legalist Web' of control tangible and easy to understand. Library/Method: HTML/Tailwind.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F5F4; /* stone-100 */
+            color: #44403C; /* stone-700 */
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #D97706; /* amber-600 */
+            border-bottom-color: #D97706;
+        }
+        .tab-button {
+            transition: all 0.3s;
+        }
+        .tab-button.active {
+            background-color: #44403C; /* stone-700 */
+            color: #F5F5F4; /* stone-100 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -0.5rem;
+            transform: translateY(-50%);
+            width: 1rem;
+            height: 1rem;
+            border-radius: 9999px;
+            background-color: #A8A29E; /* stone-400 */
+            border: 3px solid #F5F5F4; /* stone-100 */
+        }
+        .timeline-item:hover::before {
+            background-color: #D97706; /* amber-600 */
+        }
+        .modal {
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-stone-100/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-stone-800">The Shang Yang Reforms</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#crisis" class="nav-link px-3 py-2 rounded-md text-sm font-medium">The Crisis</a>
+                        <a href="#architects" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Architects</a>
+                        <a href="#blueprint" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Blueprint</a>
+                        <a href="#implementation" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Implementation</a>
+                        <a href="#legacy" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Legacy</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero" class="py-20 sm:py-24 lg:py-32 bg-stone-200">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-4xl font-bold tracking-tight text-stone-900 sm:text-5xl lg:text-6xl">A State Reborn in Fire & Law</h2>
+                <p class="mt-6 text-lg leading-8 text-stone-600 max-w-3xl mx-auto">In an era of brutal conflict, the marginal state of Qin was weak and despised. Explore the story of how one man's radical vision for a society ordered by absolute law transformed a backwater into a superpower, and laid the foundation for the Chinese empire.</p>
+            </div>
+        </section>
+
+        <section id="crisis" class="py-16 sm:py-20 lg:py-24">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">The Crisis: Qin on the Brink</h2>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">Before Shang Yang, Qin was a state defined by weakness. Its government, economy, and military were archaic and inefficient, leaving it vulnerable and isolated. The reforms targeted these systemic flaws with brutal precision.</p>
+                </div>
+
+                <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                    <div class="bg-white p-8 rounded-lg shadow-lg border border-stone-200">
+                        <h3 class="text-2xl font-bold text-rose-800 text-center">BEFORE: The Old Order</h3>
+                        <ul class="mt-6 space-y-4 text-stone-600">
+                            <li class="flex items-start"><span class="flex-shrink-0 w-6 h-6 text-rose-700 mr-3">🏛️</span><div><strong class="font-semibold text-stone-800">Fragmented Politics:</strong> Power was held by hereditary nobles in their own fiefdoms, not the Duke. The central government was weak and ignored.</div></li>
+                            <li class="flex items-start"><span class="flex-shrink-0 w-6 h-6 text-rose-700 mr-3">📉</span><div><strong class="font-semibold text-stone-800">Stagnant Economy:</strong> Land was owned by nobles, and farmers had no incentive to produce more. Inconsistent taxes and no standard measures stifled trade.</div></li>
+                            <li class="flex items-start"><span class="flex-shrink-0 w-6 h-6 text-rose-700 mr-3">🛡️</span><div><strong class="font-semibold text-stone-800">Weak Military:</strong> The army was small, poorly organized, and led by aristocrats, not skilled generals. It was no match for its powerful eastern rivals.</div></li>
+                            <li class="flex items-start"><span class="flex-shrink-0 w-6 h-6 text-rose-700 mr-3">🌏</span><div><strong class="font-semibold text-stone-800">Isolated & "Barbarian":</strong> Geographically and culturally cut off, other states viewed Qin with contempt and excluded it from alliances.</div></li>
+                        </ul>
+                    </div>
+                    <div class="bg-stone-800 p-8 rounded-lg shadow-lg">
+                        <h3 class="text-2xl font-bold text-amber-400 text-center">AFTER: The Legalist Machine</h3>
+                        <ul class="mt-6 space-y-4 text-stone-300">
+                            <li class="flex items-start"><span class="flex-shrink-0 w-6 h-6 text-amber-400 mr-3">👑</span><div><strong class="font-semibold text-white">Centralized Power:</strong> The Duke became an absolute ruler. A centralized bureaucracy of appointed officials replaced the nobility, enforcing laws uniformly.</div></li>
+                            <li class="flex items-start"><span class="flex-shrink-0 w-6 h-6 text-amber-400 mr-3">📈</span><div><strong class="font-semibold text-white">Agricultural Engine:</strong> Privatized land and production-based rewards massively increased food output, fueling the state and its armies.</div></li>
+                            <li class="flex items-start"><span class="flex-shrink-0 w-6 h-6 text-amber-400 mr-3">⚔️</span><div><strong class="font-semibold text-white">Meritocratic War Machine:</strong> Any man could earn rank and riches through battlefield success. The army became disciplined, ferocious, and unstoppable.</div></li>
+                            <li class="flex items-start"><span class="flex-shrink-0 w-6 h-6 text-amber-400 mr-3">💥</span><div><strong class="font-semibold text-white">Dominant Superpower:</strong> Qin transformed into the most feared and powerful state, systematically conquering its rivals and on the path to unifying China.</div></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="architects" class="py-16 sm:py-20 lg:py-24 bg-stone-200">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">The Architects of Change</h2>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">A radical transformation requires both a visionary architect and a powerful patron willing to build. The reforms were born from the fateful partnership between a Legalist philosopher and an ambitious ruler.</p>
+                </div>
+                <div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <div class="text-5xl mb-4">📜</div>
+                        <h3 class="text-xl font-bold text-stone-800">Shang Yang</h3>
+                        <p class="text-sm font-medium text-amber-600">The Legalist Visionary</p>
+                        <p class="mt-3 text-stone-600">A brilliant but ruthless theorist who believed that absolute state power, built on agriculture and war, was the only path to survival. For him, law was a tool to engineer the perfect state, free from the constraints of morality or tradition.</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <div class="text-5xl mb-4">👑</div>
+                        <h3 class="text-xl font-bold text-stone-800">Duke Xiao of Qin</h3>
+                        <p class="text-sm font-medium text-amber-600">The Royal Patron</p>
+                        <p class="mt-3 text-stone-600">The ambitious ruler of Qin who was shamed by his state's weakness. He staked his reign on Shang Yang's radical ideas, providing the crucial political will and protection needed to enforce the reforms against violent opposition from the nobility.</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                        <div class="text-5xl mb-4">🎭</div>
+                        <h3 class="text-xl font-bold text-stone-800">The Old Nobility</h3>
+                        <p class="text-sm font-medium text-amber-600">The Entrenched Opposition</p>
+                        <p class="mt-3 text-stone-600">Led by members of the royal clan like Prince Qian, the hereditary aristocracy fought bitterly to protect their inherited power and privileges. They were the primary target of the reforms and were ultimately crushed by the new laws they defied.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="blueprint" class="py-16 sm:py-20 lg:py-24">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">The Blueprint for Power</h2>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">Shang Yang's reforms were not isolated policies but a single, interlocking machine designed to re-engineer society. Explore the four pillars that systematically concentrated power, maximized resources, and forged a nation of farmers and soldiers.</p>
+                </div>
+                <div class="mt-12">
+                    <div class="mb-8 flex justify-center flex-wrap gap-2">
+                        <button class="tab-button px-4 py-2 rounded-md font-semibold active" data-tab="political">Political</button>
+                        <button class="tab-button px-4 py-2 rounded-md font-semibold" data-tab="economic">Economic</button>
+                        <button class="tab-button px-4 py-2 rounded-md font-semibold" data-tab="military">Military</button>
+                        <button class="tab-button px-4 py-2 rounded-md font-semibold" data-tab="social">Social & Legal</button>
+                    </div>
+
+                    <div id="tab-content" class="bg-white p-8 rounded-lg shadow-lg border border-stone-200 min-h-[450px]">
+                        
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="implementation" class="py-16 sm:py-20 lg:py-24 bg-stone-200">
+            <div class="container mx-auto px-4 sm:px-6 lg:_px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">From Decree to Reality</h2>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">A blueprint is worthless without execution. Shang Yang implemented his radical vision through strategic phasing and moments of shocking brutality that demonstrated the absolute and inescapable power of the new laws.</p>
+                </div>
+                <div class="mt-16">
+                    <div class="relative">
+                        <div class="absolute left-1/2 top-0 h-full w-0.5 bg-stone-300 hidden md:block"></div>
+                        <div id="timeline-container" class="space-y-12 md:space-y-0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="legacy" class="py-16 sm:py-20 lg:py-24">
+             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">A Double-Edged Legacy</h2>
+                    <p class="mt-4 text-lg text-stone-600 max-w-3xl mx-auto">The reforms were an undeniable success, catapulting Qin to supreme power and enabling the unification of China. Yet, this success was built on a foundation of terror and control, creating a brutal but effective model of governance whose influence would echo for millennia.</p>
+                </div>
+                <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div class="bg-white p-8 rounded-lg shadow-lg border border-stone-200">
+                        <h3 class="text-2xl font-bold text-green-800 text-center">Triumphs of the Reforms</h3>
+                        <ul class="mt-6 space-y-4 text-stone-600">
+                            <li class="flex items-start"><span class="flex-shrink-0 w-6 h-6 text-green-700 mr-3">🏆</span><div><strong class="font-semibold text-stone-800">Foundation for Empire:</strong> The reforms created the centralized bureaucracy, economic might, and unstoppable army that Qin Shi Huang used to conquer all other states and create China's first unified empire.</div></li>
+                            <li class="flex items-start"><span class="flex-shrink-0 w-6 h-6 text-green-700 mr-3">⚙️</span><div><strong class="font-semibold text-stone-800">A New Model of Governance:</strong> The county system, rule of law, and merit-based advancement provided a powerful and enduring template for imperial administration that would be copied by future dynasties for 2,000 years.</div></li>
+                        </ul>
+                    </div>
+                     <div class="bg-white p-8 rounded-lg shadow-lg border border-stone-200">
+                        <h3 class="text-2xl font-bold text-rose-800 text-center">Tragedies of the Reforms</h3>
+                        <ul class="mt-6 space-y-4 text-stone-600">
+                            <li class="flex items-start"><span class="flex-shrink-0 w-6 h-6 text-rose-700 mr-3">⛓️</span><div><strong class="font-semibold text-stone-800">Brutality and Authoritarianism:</strong> The system relied on absolute control, harsh punishments, and mutual spying. It destroyed ethical traditions and treated people as mere cogs in the state machine.</div></li>
+                            <li class="flex items-start"><span class="flex-shrink-0 w-6 h-6 text-rose-700 mr-3">🏛️</span><div><strong class="font-semibold text-stone-800">Paradox of Success:</strong> The state machine was built for war. In peacetime, its oppressive nature became intolerable, leading to massive rebellions that caused the Qin Dynasty's swift collapse just 15 years after unification.</div></li>
+                        </ul>
+                    </div>
+                </div>
+             </div>
+        </section>
+    </main>
+
+    <footer class="bg-stone-800 text-stone-400 py-8">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p>Interactive report on the Shang Yang Reforms.</p>
+            <p class="text-sm mt-2">Content adapted from historical sources for educational purposes.</p>
+        </div>
+    </footer>
+    
+    <div id="modal" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none">
+        <div id="modal-content" class="bg-white rounded-lg shadow-2xl max-w-lg w-full p-6 relative">
+            <button id="modal-close" class="absolute top-2 right-2 text-stone-500 hover:text-stone-800 text-2xl">&times;</button>
+            <h3 id="modal-title" class="text-xl font-bold text-stone-900"></h3>
+            <p id="modal-text" class="mt-4 text-stone-600"></p>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabData = {
+                political: {
+                    title: 'Political Reforms: Forging a Centralized Bureaucracy',
+                    content: `
+                        <p class="text-center text-stone-600 mb-6">The goal was to shatter the power of the hereditary nobles and concentrate all authority in the hands of the central government and the Duke.</p>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-lg text-stone-800 mb-2">Abolition of Hereditary Privilege</h4>
+                                <p class="text-stone-600">The system of passing down titles and posts from father to son was completely eliminated. Even royal family members lost their status if they did not earn it through military service. This destroyed the old power structure.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-stone-800 mb-2">Establishment of the County System</h4>
+                                <p class="text-stone-600">Feudal fiefdoms were replaced with centrally controlled counties (Xian). The Duke appointed loyal officials to govern these counties, ensuring his laws were enforced everywhere and creating a direct line of command.</p>
+                            </div>
+                        </div>
+                        <div class="mt-8 p-4 bg-stone-100 rounded-lg">
+                            <h5 class="text-center font-semibold text-stone-700 mb-4">Qin's Administrative Transformation</h5>
+                            <div class="grid grid-cols-2 gap-4 text-center text-sm">
+                                <div>
+                                    <h6 class="font-bold">Before: Feudal Network</h6>
+                                    <div class="p-2 border rounded mt-2">Duke 👑</div>
+                                    <div class="h-4 border-l mx-auto w-0"></div>
+                                    <div class="p-2 border rounded mt-2 text-rose-700">Nobles 🏛️ (Semi-Autonomous)</div>
+                                </div>
+                                <div>
+                                    <h6 class="font-bold">After: Centralized Hierarchy</h6>
+                                    <div class="p-2 border rounded mt-2">Duke 👑</div>
+                                    <div class="h-4 border-l mx-auto w-0"></div>
+                                    <div class="p-2 border rounded mt-2 text-green-700">Appointed Governors 🧑‍💼 (Loyal)</div>
+                                </div>
+                            </div>
+                        </div>`
+                },
+                economic: {
+                    title: 'Economic Reforms: Fueling the State Through Agriculture',
+                    content: `
+                        <p class="text-center text-stone-600 mb-6">These reforms aimed to maximize state wealth by relentlessly promoting agriculture—the foundation of Qin's food supply and army provisions.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-bold text-lg text-stone-800 mb-2">Privatization of Land</h4>
+                                <p class="text-stone-600">The old communal "well-field" system was abolished. Land was now privately owned and could be bought and sold freely. This gave farmers a powerful incentive to increase production and cultivate new wasteland.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-stone-800 mb-2">"Agriculture First" Policy (重农抑商)</h4>
+                                <p class="text-stone-600">Farming and weaving were declared the 'fundamental' occupations and heavily rewarded. Commerce and craftsmanship were suppressed as 'secondary' pursuits, with traders facing heavy taxes and social restrictions.</p>
+                            </div>
+                             <div>
+                                <h4 class="font-bold text-lg text-stone-800 mb-2">Standardization of Measures</h4>
+                                <p class="text-stone-600">A single, state-mandated system of weights and measures was enforced across Qin. This simple change unified the economy, rationalized tax collection, and eliminated commercial disputes, greatly enhancing central control.</p>
+                            </div>
+                        </div>`
+                },
+                military: {
+                    title: 'Military Reforms: Engineering the Qin War Machine',
+                    content: `
+                        <p class="text-center text-stone-600 mb-6">This was the heart of the reforms, transforming the army into the most disciplined and ferocious fighting force of the age by making warfare the sole path to social advancement.</p>
+                        <h4 class="font-bold text-lg text-stone-800 mb-2 text-center">The Twenty-Rank System of Military Merit</h4>
+                        <p class="text-center text-stone-600 mb-6">A soldier's rank, wealth, and status were determined by one thing: the number of enemy heads taken in battle. This unleashed the ambition of the common people and created a culture of extreme martial valor. Explore the ranks below.</p>
+                        <div class="chart-container">
+                            <canvas id="militaryRankChart"></canvas>
+                        </div>`
+                },
+                social: {
+                    title: 'Social & Legal Reforms: Imposing Absolute Order',
+                    content: `
+                        <p class="text-center text-stone-600 mb-6">These laws aimed to atomize society, break down traditional loyalties to family and clan, and make every individual directly and constantly accountable to the state.</p>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-lg text-stone-800 mb-2">The Law of Collective Responsibility</h4>
+                                <p class="text-stone-600">The entire population was organized into groups of 5 or 10 households. If one person committed a crime, all were punished equally unless they reported the offender. This turned neighbors into state informants and ensured total social control.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-stone-800 mb-2">Harsh Punishments & Legal Supremacy</h4>
+                                <p class="text-stone-600">The law applied to everyone, from peasant to prince. Punishments for even minor crimes were severe (mutilation, death) to deter all lawbreaking. This established the absolute supremacy of the state's law over any other moral or traditional code.</p>
+                            </div>
+                        </div>
+                         <div class="mt-8 p-4 bg-stone-100 rounded-lg">
+                            <h5 class="text-center font-semibold text-stone-700 mb-4">The Legalist Web of Control</h5>
+                            <div class="text-center">
+                                <div class="inline-block p-2 border rounded bg-white">Household Registration (户籍)</div>
+                                <div class="flex justify-around mt-2">
+                                    <div class="w-px bg-stone-400 h-6"></div>
+                                    <div class="w-px bg-stone-400 h-6"></div>
+                                    <div class="w-px bg-stone-400 h-6"></div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 mt-2">
+                                    <div class="p-2 border rounded bg-white">Taxation</div>
+                                    <div class="p-2 border rounded bg-white">Conscription</div>
+                                    <div class="p-2 border rounded bg-white">Collective Responsibility (连坐)</div>
+                                </div>
+                            </div>
+                        </div>
+                        `
+                }
+            };
+            
+            const timelineData = [
+                { year: "c. 361 BCE", title: "Duke Xiao's Edict", text: "Duke Xiao ascends the throne of a weak Qin and issues a famous edict, inviting talented men from all over China to help him strengthen the state. This call brings Shang Yang to Qin." },
+                { year: "c. 359/356 BCE", title: "First Phase of Reforms", text: "Shang Yang launches his first wave of reforms, focusing on establishing the new social order. This includes the household registration, collective responsibility laws, and the military merit system." },
+                { year: "c. 350 BCE", title: "Second Phase of Reforms", text: "With the state strengthened, a second, deeper phase is initiated. This includes establishing the county system, privatizing land on a massive scale, and standardizing weights and measures." },
+                { year: "c. ??? BCE", title: "Punishment of the Tutors", text: "In a pivotal test, the crown prince violates a law. Shang Yang punishes the prince's powerful tutors with mutilation, proving brutally that no one is above the law and crushing aristocratic opposition." },
+                { year: "338 BCE", title: "The Fall of the Architect", text: "Duke Xiao dies. The new king, who holds a deep grudge, has Shang Yang arrested and executed. However, he pragmatically keeps the reforms in place, as they have already made Qin too powerful to reverse course." }
+            ];
+
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContent = document.getElementById('tab-content');
+
+            function switchTab(tab) {
+                tabButtons.forEach(button => button.classList.remove('active'));
+                document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+
+                tabContent.innerHTML = `
+                    <h3 class="text-2xl font-bold text-stone-900 text-center mb-6">${tabData[tab].title}</h3>
+                    ${tabData[tab].content}
+                `;
+
+                if (tab === 'military') {
+                    renderMilitaryChart();
+                }
+            }
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    switchTab(button.dataset.tab);
+                });
+            });
+
+            switchTab('political');
+
+            function renderMilitaryChart() {
+                const ctx = document.getElementById('militaryRankChart').getContext('2d');
+                const ranks = Array.from({length: 20}, (_, i) => `Rank ${i + 1}`);
+                const rankData = {
+                    1: "Gongshi: Granted land & a homestead.",
+                    5: "Dafu: Increased land grants.",
+                    9: "Wudaifu: Eligible for high office.",
+                    16: "Da Liangzao: Prime Minister level.",
+                    20: "Liehou: Highest rank with a fiefdom.",
+                };
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ranks,
+                        datasets: [{
+                            label: 'Path to Power & Wealth',
+                            data: Array.from({length: 20}, (_, i) => (i + 1) * 5),
+                            backgroundColor: '#FDE68A', // amber-200
+                            borderColor: '#FBBF24', // amber-400
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                display: false
+                            },
+                            x: {
+                                ticks: {
+                                    font: { size: 10 }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const rank = context.dataIndex + 1;
+                                        let reward = `Rank ${rank}`;
+                                        if(rankData[rank]){
+                                            reward += `: ${rankData[rank]}`;
+                                        } else if(rank > 16) {
+                                            reward += `: High Nobility.`
+                                        } else if(rank > 9) {
+                                            reward += `: Senior Command/Admin.`
+                                        } else {
+                                            reward += `: Junior Officer/Privileges.`
+                                        }
+                                        return reward;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            const timelineContainer = document.getElementById('timeline-container');
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modal-content');
+            const modalTitle = document.getElementById('modal-title');
+            const modalText = document.getElementById('modal-text');
+            const modalClose = document.getElementById('modal-close');
+
+            timelineData.forEach((item, index) => {
+                const isEven = index % 2 === 0;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `md:grid md:grid-cols-2 md:gap-8 timeline-event`;
+                itemDiv.innerHTML = `
+                    <div class="${isEven ? 'md:order-1' : 'md:order-2 md:text-right'}">
+                        <div class="p-4 bg-white rounded-lg shadow-md border border-stone-200 cursor-pointer hover:shadow-xl transition-shadow" data-index="${index}">
+                            <p class="font-bold text-amber-600">${item.year}</p>
+                            <h4 class="text-lg font-semibold text-stone-800">${item.title}</h4>
+                        </div>
+                    </div>
+                    <div class="hidden md:block ${isEven ? 'md:order-2' : 'md:order-1'} relative">
+                        <div class="timeline-item h-full"></div>
+                    </div>
+                `;
+                timelineContainer.appendChild(itemDiv);
+            });
+            
+            timelineContainer.addEventListener('click', (e) => {
+                const eventCard = e.target.closest('.timeline-event [data-index]');
+                if (eventCard) {
+                    const index = eventCard.dataset.index;
+                    const data = timelineData[index];
+                    modalTitle.textContent = data.title;
+                    modalText.textContent = data.text;
+                    modal.classList.remove('opacity-0', 'pointer-events-none');
+                }
+            });
+
+            modalClose.addEventListener('click', () => {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if(e.target === modal) {
+                    modal.classList.add('opacity-0', 'pointer-events-none');
+                }
+            });
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
