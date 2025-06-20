@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Return to the Moon: From Apollo to the Future</title>
+    <!-- Chosen Palette: Cosmic Calm -->
+    <!-- Application Structure Plan: This application is designed as a single-page scrolling experience with a fixed top navigation bar for quick access to four core sections: "Introduction," "The Apollo Era," "The New Lunar Era," and "Future Outlook." This non-linear, thematic structure aims to break from traditional report reading, allowing users to explore freely based on interest. The Apollo Era uses an interactive timeline to visualize historical progress. The New Lunar Era employs a tab-based, side-by-side comparison layout to clearly present the similarities and differences between US and Chinese lunar programs. The Future Outlook uses clickable, expandable cards and data charts to vividly explain lunar resources and base concepts. The overall design aims to transform complex report content into an easy-to-digest and engaging exploratory journey through interaction and visualization, enhancing user understanding and engagement. -->
+    <!-- Visualization & Content Choices: 1. Apollo Program Termination Reasons (Bar Chart): Goal-Clarify reasons, Method-Chart.js bar chart, Interaction-Hover tooltip. Rationale: Intuitively shows the combined impact of multiple factors (political, financial, public interest). 2. New Era Lunar Alliances (Horizontal Bar Chart): Goal-Compare, Method-Chart.js horizontal bar chart, Interaction-Hover shows country count. Rationale: Clearly compares the scale of the Artemis Accords and ILRS camps. 3. Lunar Regolith Composition (Doughnut Chart): Goal-Inform composition, Method-Chart.js doughnut chart, Interaction-Hover shows element and percentage. Rationale: Vividly displays the proportion of elements in lunar soil, highlighting oxygen's vast potential. 4. Key Figures/Resources (Interactive Cards): Goal-Organize/Inform, Method-HTML/CSS/JS cards, Interaction-Click to expand/flip. Rationale: Provides an entry point for deeper understanding while keeping the page clean, enhancing exploration. All charts are rendered using Chart.js on Canvas; all diagrams are built with HTML/CSS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', 'Noto Sans SC', sans-serif; background-color: #F8F9FA; color: #2C3E50; }
+        .nav-link { transition: color 0.3s, border-bottom-color 0.3s; }
+        .nav-link-active { color: #F39C12; border-bottom-color: #F39C12; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+        .section-title { font-size: 2.25rem; font-weight: 700; color: #34495E; border-bottom: 3px solid #F39C12; padding-bottom: 0.5rem; display: inline-block; }
+        .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); transition: transform 0.3s, box-shadow 0.3s; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1); }
+        .tab-button { transition: background-color 0.3s, color 0.3s; }
+        .tab-button-active { background-color: #34495E; color: white; }
+        .timeline-item::before { content: ''; position: absolute; top: 1.25rem; left: -0.875rem; width: 1.5rem; height: 1.5rem; background-color: white; border: 4px solid #34495E; border-radius: 9999px; z-index: 10; }
+        .timeline-line { position: absolute; top: 0; left: -0.25rem; height: 100%; width: 4px; background-color: #e5e7eb; }
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-white/80 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="text-xl font-bold text-[#2C3E50]">New Era of Lunar Exploration</div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#intro" class="nav-link text-gray-600 hover:text-[#F39C12] border-b-2 border-transparent pb-1">Introduction</a>
+                <a href="#apollo" class="nav-link text-gray-600 hover:text-[#F39C12] border-b-2 border-transparent pb-1">The Apollo Era</a>
+                <a href="#new-era" class="nav-link text-gray-600 hover:text-[#F39C12] border-b-2 border-transparent pb-1">The New Lunar Era</a>
+                <a href="#future" class="nav-link text-gray-600 hover:text-[#F39C12] border-b-2 border-transparent pb-1">Future Outlook</a>
+            </div>
+             <div class="md:hidden">
+                <select onchange="window.location.href=this.value" class="bg-white border border-gray-300 rounded-md p-2">
+                    <option value="#intro">Introduction</option>
+                    <option value="#apollo">The Apollo Era</option>
+                    <option value="#new-era">The New Lunar Era</option>
+                    <option value="#future">Future Outlook</option>
+                </select>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="intro" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4 text-center">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-[#2C3E50] mb-4">Return to the Moon</h1>
+                <p class="text-xl text-gray-600 mb-8">From the Glory of Apollo to the Blueprint for New-Century Lunar Development</p>
+                <div class="max-w-4xl mx-auto text-left text-gray-700 space-y-4">
+                    <p>In the latter half of the 20th century, the Moon became the ultimate arena for geopolitical competition between the US and the Soviet Union. America's Apollo program left the first human footprints on another celestial body, a pinnacle of science and a triumph of ideology. However, this glory was followed by half a century of silence.</p>
+                    <p>Today, we stand at the dawn of a new lunar era. The Moon's value is being redefined; it is now seen as a scientific treasure trove, a future source of energy, a stepping stone for deep space exploration, and a new frontier for human civilization. This application will take you through history, focus on the present, and look to the future, revealing how human exploration of the Moon has evolved from a "sprint" to a multi-participant "marathon."</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="apollo" class="py-20">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-16">
+                    <h2 class="section-title">The Apollo Era: One Giant Leap for Mankind</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-gray-600">This section will take you back to the epic space program born from the Cold War—the Apollo program. Through an interactive timeline, you will learn about its key milestones, meet the heroes both in front of and behind the scenes, and explore the complex reasons for its glorious conclusion.</p>
+                </div>
+                
+                <div class="mb-16">
+                    <h3 class="text-2xl font-bold text-center mb-8 text-[#34495E]">Key Mission Milestones</h3>
+                    <div class="relative max-w-5xl mx-auto">
+                        <div class="timeline-line"></div>
+                        <div class="space-y-12">
+                            <div class="relative pl-8 md:pl-12 timeline-item">
+                                <h4 class="font-bold text-xl mb-1">The Tragedy of Apollo 1 (1967)</h4>
+                                <p class="text-gray-600">A fire during a ground rehearsal claimed the lives of three astronauts. This tragedy exposed serious design and safety flaws but also led to a more stringent quality management system, laying the groundwork for the success of subsequent missions.</p>
+                            </div>
+                            <div class="relative pl-8 md:pl-12 timeline-item">
+                                <h4 class="font-bold text-xl mb-1">The Triumph of Apollo 8 (1968)</h4>
+                                <p class="text-gray-600">Humans left Earth's gravity for the first time, entering lunar orbit. The "Earthrise" photograph taken by the astronauts became a symbol of the environmental movement, profoundly changing humanity's perception of its home planet.</p>
+                            </div>
+                            <div class="relative pl-8 md:pl-12 timeline-item">
+                                <h4 class="font-bold text-xl mb-1">The Peak of Apollo 11 (1969)</h4>
+                                <p class="text-gray-600">Neil Armstrong and Buzz Aldrin successfully landed on the Moon, fulfilling President Kennedy's promise. Armstrong's famous words, "That's one small step for a man, one giant leap for mankind," resonated worldwide, becoming the ultimate symbol of the human spirit of exploration.</p>
+                            </div>
+                            <div class="relative pl-8 md:pl-12 timeline-item">
+                                 <h4 class="font-bold text-xl mb-1">Apollo 13: A Successful Failure (1970)</h4>
+                                 <p class="text-gray-600">An oxygen tank in the service module exploded en route, turning the mission from a lunar landing into a life-or-death rescue. The exceptional performance of mission control and the calm response of the astronauts created a rescue miracle in space history, showcasing NASA's powerful crisis management capabilities.</p>
+                            </div>
+                            <div class="relative pl-8 md:pl-12 timeline-item">
+                                <h4 class="font-bold text-xl mb-1">The Finale of Apollo 17 (1972)</h4>
+                                <p class="text-gray-600">As the final lunar mission, it carried a geologist, Harrison Schmitt, for the first time, marking a shift in lunar exploration from engineering verification to deeper scientific research.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 items-center mb-16">
+                    <div class="text-center md:text-left">
+                        <h3 class="text-2xl font-bold mb-4 text-[#34495E]">Heroes and Titans</h3>
+                        <p class="text-gray-600 mb-6">Apollo's success was impossible without the astronauts in the spotlight and the engineers and commanders behind the scenes. Click the cards below to learn their legendary stories.</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="card p-4 text-center cursor-pointer" onclick="showPersonDetail('armstrong')">
+                                <span class="text-4xl">👨‍🚀</span>
+                                <h4 class="font-bold mt-2">Neil Armstrong</h4>
+                                <p class="text-sm text-gray-500">First Man on the Moon</p>
+                            </div>
+                            <div class="card p-4 text-center cursor-pointer" onclick="showPersonDetail('vonbraun')">
+                                <span class="text-4xl">🚀</span>
+                                <h4 class="font-bold mt-2">Wernher von Braun</h4>
+                                <p class="text-sm text-gray-500">Father of the Rocket</p>
+                            </div>
+                            <div class="card p-4 text-center cursor-pointer" onclick="showPersonDetail('kranz')">
+                                <span class="text-4xl">📡</span>
+                                <h4 class="font-bold mt-2">Gene Kranz</h4>
+                                <p class="text-sm text-gray-500">Legendary Flight Director</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="person-detail-container" class="card p-6 min-h-[200px] flex items-center justify-center">
+                        <p class="text-gray-500">Click a card to see details</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold text-center mb-4 text-[#34495E]">End of an Era</h3>
+                     <p class="mt-4 max-w-3xl mx-auto text-gray-600 text-center mb-8">The Apollo program came to an abrupt end in 1972, a result of a combination of political, economic, and public interest factors. The chart below visualizes the key drivers that led to the program's termination.</p>
+                    <div class="chart-container">
+                        <canvas id="apolloEndChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="new-era" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-16">
+                    <h2 class="section-title">The New Lunar Era: Two Protagonists and the Global Landscape</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-gray-600">Half a century later, the Moon is back in the spotlight, but the stage is different. This section provides an in-depth comparison of the two core forces in today's lunar exploration: America's "Artemis" program and China's "Chang'e" project. Through interactive tabs, you can learn about their strategies, architectures, and progress, and observe the two emerging international camps through a chart.</p>
+                </div>
+                
+                <div class="mb-12">
+                    <div class="flex justify-center mb-6 border-b">
+                        <button id="tab-btn-goals" class="tab-button px-6 py-3 font-medium -mb-px border-b-2 border-transparent">Strategic Goals</button>
+                        <button id="tab-btn-arch" class="tab-button px-6 py-3 font-medium -mb-px border-b-2 border-transparent">Core Architecture</button>
+                        <button id="tab-btn-progress" class="tab-button px-6 py-3 font-medium -mb-px border-b-2 border-transparent">Current Progress</button>
+                    </div>
+                    <div id="tab-content" class="grid md:grid-cols-2 gap-8">
+                        <div class="card p-6">
+                            <h4 class="text-xl font-bold mb-4 text-center">🇺🇸 Artemis Program</h4>
+                            <div id="artemis-content"></div>
+                        </div>
+                        <div class="card p-6">
+                            <h4 class="text-xl font-bold mb-4 text-center">🇨🇳 Chang'e Project / ILRS</h4>
+                            <div id="change-content"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-16">
+                    <h3 class="text-2xl font-bold text-center mb-8 text-[#34495E]">Two Camps: Competition and Cooperation</h3>
+                    <p class="mt-4 max-w-3xl mx-auto text-gray-600 text-center mb-8">Current global lunar activities are gradually forming two major cooperation frameworks: the US-led Artemis Accords and the China-Russia proposed International Lunar Research Station (ILRS). This "coopetition" relationship is fundamentally different from the zero-sum game of the Cold War.</p>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="alliancesChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="max-w-6xl mx-auto">
+                    <h3 class="text-2xl font-bold text-center mb-8 text-[#34495E]">Core Elements Comparison of Three Lunar Programs</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-200">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">Feature</th>
+                                    <th scope="col" class="px-6 py-3">Apollo Program</th>
+                                    <th scope="col" class="px-6 py-3">Artemis Program</th>
+                                    <th scope="col" class="px-6 py-3">Chang'e / ILRS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white border-b">
+                                    <td class="px-6 py-4 font-medium">Core Goal</td>
+                                    <td class="px-6 py-4">Win the Space Race, land a man on the Moon</td>
+                                    <td class="px-6 py-4">Establish sustainable lunar presence, prepare for Mars</td>
+                                    <td class="px-6 py-4">Achieve tech independence, build a lunar research station</td>
+                                </tr>
+                                <tr class="bg-gray-50 border-b">
+                                    <td class="px-6 py-4 font-medium">Management Model</td>
+                                    <td class="px-6 py-4">Government-led national effort</td>
+                                    <td class="px-6 py-4">Government-Commercial-International ecosystem</td>
+                                    <td class="px-6 py-4">New state-led model, gradually opening up</td>
+                                </tr>
+                                <tr class="bg-white border-b">
+                                    <td class="px-6 py-4 font-medium">International Model</td>
+                                    <td class="px-6 py-4">Basically no international cooperation</td>
+                                    <td class="px-6 py-4">Artemis Accords alliance</td>
+                                    <td class="px-6 py-4">International Lunar Research Station (ILRS) platform</td>
+                                </tr>
+                                 <tr class="bg-gray-50">
+                                    <td class="px-6 py-4 font-medium">Signature Goal/Achievement</td>
+                                    <td class="px-6 py-4">First crewed lunar landing</td>
+                                    <td class="px-6 py-4">Land the first woman on the Moon, south pole presence</td>
+                                    <td class="px-6 py-4">First landing on far side, first far-side sample return</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="py-20">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-16">
+                    <h2 class="section-title">Future Outlook: The Moon in the Next Five Years</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-gray-600">The next five years represent a historic turning point for humanity, shifting from "visiting" the Moon to "utilizing" it. This section will focus on the core concept of "In-Situ Resource Utilization" (ISRU), exploring the development prospects of key resources like water ice and Helium-3, and the initial concepts for a lunar base. These activities will lay the foundation for humanity to become a multi-planetary species.</p>
+                </div>
+                
+                <div class="mb-16">
+                     <h3 class="text-2xl font-bold text-center mb-8 text-[#34495E]">Lunar Resources: From Sci-Fi to Reality</h3>
+                     <p class="mt-4 max-w-3xl mx-auto text-gray-600 text-center mb-8">"In-Situ Resource Utilization" (ISRU) is key to the sustainability of the new wave of lunar exploration. Click the cards below to learn about the three most valuable resources on the Moon.</p>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <div id="resource-water" class="card p-6 cursor-pointer">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-4xl">💧</span>
+                                    <h4 class="text-xl font-bold mt-2">Water Ice</h4>
+                                    <p class="text-gray-500">Source of Life, Basis of Fuel</p>
+                                </div>
+                                <span class="text-2xl text-gray-400 transform transition-transform duration-300">+</span>
+                            </div>
+                            <div class="text-gray-600 mt-4" style="display: none;">
+                                <p><strong>Strategic Value:</strong> Water ice in the permanently shadowed craters of the lunar south pole is crucial for life support (drinking water, oxygen) and producing rocket fuel (liquid hydrogen/oxygen), forming the cornerstone of a lunar base and a deep space refueling station.</p>
+                            </div>
+                        </div>
+                        <div id="resource-helium" class="card p-6 cursor-pointer">
+                             <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-4xl">⚛️</span>
+                                    <h4 class="text-xl font-bold mt-2">Helium-3</h4>
+                                    <p class="text-gray-500">The Ultimate Clean Energy</p>
+                                </div>
+                                <span class="text-2xl text-gray-400 transform transition-transform duration-300">+</span>
+                            </div>
+                            <div class="text-gray-600 mt-4" style="display: none;">
+                                <p><strong>Strategic Value:</strong> Abundant in lunar soil, Helium-3 is an ideal fuel for nuclear fusion, with a clean, non-radioactive reaction process. Its reserves could meet Earth's energy needs for thousands of years, offering immense potential.</p>
+                            </div>
+                        </div>
+                        <div id="resource-regolith" class="card p-6 cursor-pointer">
+                           <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-4xl">🧱</span>
+                                    <h4 class="text-xl font-bold mt-2">Lunar Regolith</h4>
+                                    <p class="text-gray-500">The All-Purpose Building Material</p>
+                                </div>
+                                <span class="text-2xl text-gray-400 transform transition-transform duration-300">+</span>
+                            </div>
+                            <div class="text-gray-600 mt-4" style="display: none;">
+                                <p><strong>Strategic Value:</strong> Can be used as a raw material for 3D printing to build bases and shield against radiation. It is also rich in oxygen (~45%) and various metals, making it a foundational material for lunar industry.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold text-center md:text-left mb-4 text-[#34495E]">Regolith Composition Analysis</h3>
+                        <p class="text-gray-600 mb-8">Lunar regolith is not just a building material; it's a vast reservoir of oxygen and metals. This chart shows its main elemental composition. Oxygen makes up nearly half, which is invaluable for supporting life and industrial activities.</p>
+                        <ul class="text-gray-600 space-y-2">
+                           <li><span class="font-bold text-[#F39C12]">●</span> <strong>Scientific Research Platform:</strong> Build moon-based telescopes free from atmospheric interference.</li>
+                           <li><span class="font-bold text-[#F39C12]">●</span> <strong>Technology Proving Ground:</strong> Serve as a "dress rehearsal" for crewed missions to Mars.</li>
+                           <li><span class="font-bold text-[#F39C12]">●</span> <strong>Cornerstone of Cislunar Economy:</strong> Support space manufacturing and deep space exploration.</li>
+                        </ul>
+                    </div>
+                     <div class="chart-container" style="height: 350px;">
+                        <canvas id="regolithChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-[#2C3E50] text-white py-8">
+        <div class="container mx-auto px-4 text-center text-gray-400">
+            <p>This is an interactive web application built from report data.</p>
+            <p class="text-sm mt-2">Content sourced from the report "Return to the Moon: From the Glory of Apollo to the Blueprint for New-Century Lunar Development."</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const personDetails = {
+                armstrong: {
+                    title: 'Neil Armstrong - First Man on the Moon',
+                    text: 'As commander of Apollo 11, he was known for his exceptional piloting skills and calm demeanor in critical moments. His words upon stepping on the moon, "That\'s one small step for a man, one giant leap for mankind," have become eternal, and he himself a symbol of the spirit of exploration.'
+                },
+                vonbraun: {
+                    title: 'Wernher von Braun - Father of the Rocket',
+                    text: 'As the chief architect of the Saturn V heavy-lift launch vehicle, he provided the immense power needed for America to reach the Moon. Although his WWII background is controversial, his genius in aerospace engineering was a key pillar of the Apollo program\'s success.'
+                },
+                kranz: {
+                    title: 'Gene Kranz - Legendary Flight Director',
+                    text: 'During the Apollo 13 crisis, as the lead flight director, he led his team with an iron will and brilliant leadership to resolve a fatal crisis, bringing three astronauts home safely. "Failure is not an option" became the motto of NASA\'s culture.'
+                }
+            };
+
+            const missionComparisonContent = {
+                goals: {
+                    artemis: '<ul><li class="mb-2"><strong>Sustainable Presence:</strong> Establish a long-term base at the lunar south pole, not just a short visit.</li><li class="mb-2"><strong>Mars Springboard:</strong> Use the Moon as a proving ground to test technologies and gain experience for crewed Mars missions.</li><li><strong>Global Leadership:</strong> Emphasize inclusivity (first woman and person of color on the Moon) to solidify space leadership.</li></ul>',
+                    change: '<ul><li class="mb-2"><strong>Technological Self-Reliance:</strong> Master the entire chain of autonomous and controllable technologies, from exploration and sample return to crewed landings.</li><li class="mb-2"><strong>Scientific Research:</strong> Establish the International Lunar Research Station (ILRS) for systematic study of the lunar environment and resources.</li><li><strong>New Model for International Cooperation:</strong> Propose an international cooperation platform parallel to the Artemis Accords.</li></ul>',
+                },
+                arch: {
+                    artemis: '<ul><li class="mb-2"><strong>Modular Combination:</strong> Relies on multiple modules like the SLS rocket, Orion spacecraft, Gateway space station, and commercial landers (HLS).</li><li class="mb-2"><strong>Commercial Outsourcing:</strong> Outsources key components like the human landing system to commercial companies like SpaceX and Blue Origin to introduce competition.</li><li><strong>International Cooperation:</strong> Relies on the Artemis Accords for division of labor and cooperation with multiple countries.</li></ul>',
+                    change: '<ul><li class="mb-2"><strong>Incremental Development:</strong> Strictly follows the "orbit, land, return" three-step strategy, with each step verifying technology for the next, ensuring controlled risk.</li><li class="mb-2"><strong>Systematic Development:</strong> Due to external restrictions, forced to develop a full-chain, self-sufficient system from rockets to tracking and control.</li><li><strong>Gradual Opening:</strong> Invites international partners to join the ILRS program on the basis of self-reliance.</li></ul>',
+                },
+                progress: {
+                    artemis: '<ul><li class="mb-2"><strong>Artemis I (2022):</strong> Successfully completed an uncrewed lunar flyby.</li><li class="mb-2"><strong>Artemis II (Planned 2026):</strong> Will conduct a crewed lunar flyby, but has been delayed several times due to technical issues.</li><li><strong>Artemis III (Planned 2027):</strong> Aims for a crewed lunar landing, highly dependent on the progress of commercial partners (like Starship).</li></ul>',
+                    change: '<ul><li class="mb-2"><strong>Chang\'e 4 (2019):</strong> Achieved the first-ever soft landing on the far side of the Moon.</li><li class="mb-2"><strong>Chang\'e 5/6 (2020/2024):</strong> Successfully completed sample return missions from the Moon\'s near side and far side.</li><li><strong>Crewed Lunar Landing (Planned before 2030):</strong> Officially started the project, aiming for a landing before 2030.</li></ul>',
+                }
+            };
+
+            const personDetailContainer = document.getElementById('person-detail-container');
+            window.showPersonDetail = (person) => {
+                const detail = personDetails[person];
+                personDetailContainer.innerHTML = `
+                    <div class="text-left">
+                        <h4 class="font-bold text-lg text-[#34495E] mb-2">${detail.title}</h4>
+                        <p class="text-gray-600">${detail.text}</p>
+                    </div>`;
+            };
+
+            const resourceCards = document.querySelectorAll('#future .card');
+            resourceCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const detail = card.querySelector('div[style*="display: none;"]');
+                    const icon = card.querySelector('.transform');
+                    if (detail) {
+                        const isVisible = detail.style.display === 'block';
+                        detail.style.display = isVisible ? 'none' : 'block';
+                        icon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(45deg)';
+                    }
+                });
+            });
+
+            const tabs = {
+                goals: document.getElementById('tab-btn-goals'),
+                arch: document.getElementById('tab-btn-arch'),
+                progress: document.getElementById('tab-btn-progress'),
+            };
+            const artemisContent = document.getElementById('artemis-content');
+            const changeContent = document.getElementById('change-content');
+
+            function updateTabContent(activeTab) {
+                Object.keys(tabs).forEach(key => {
+                    tabs[key].classList.remove('tab-button-active', 'text-white', 'bg-[#34495E]');
+                    tabs[key].classList.add('text-gray-600');
+                });
+                tabs[activeTab].classList.add('tab-button-active', 'text-white', 'bg-[#34495E]');
+                tabs[activeTab].classList.remove('text-gray-600');
+                
+                artemisContent.innerHTML = missionComparisonContent[activeTab].artemis;
+                changeContent.innerHTML = missionComparisonContent[activeTab].change;
+            }
+
+            Object.keys(tabs).forEach(key => {
+                tabs[key].addEventListener('click', () => updateTabContent(key));
+            });
+            updateTabContent('goals');
+
+
+            new Chart(document.getElementById('apolloEndChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Political Goal Achieved', 'Financial Pressure (Vietnam/Economy)', 'Declining Public Interest', 'Risk Aversion (Apollo 13)'],
+                    datasets: [{
+                        label: 'Impact Weight on Program Termination',
+                        data: [90, 85, 65, 50],
+                        backgroundColor: ['#34495E', '#95a5a6', '#bdc3c7', '#ecf0f1'],
+                        borderColor: '#2C3E50',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: { suggestedMax: 100, ticks: { color: '#2C3E50' } },
+                        y: { ticks: { color: '#2C3E50', font: { size: 12 } } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Key Factors in Apollo Program Termination', color: '#2C3E50', font: { size: 16 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Impact Index: ${context.raw}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            new Chart(document.getElementById('alliancesChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Artemis Accords Alliance (US-led)', 'International Lunar Research Station (China/Russia-led)'],
+                    datasets: [{
+                        label: 'Number of Signatory/Participating Countries & Regions',
+                        data: [43, 11],
+                        backgroundColor: ['#3498db', '#e74c3c'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: { beginAtZero: true, suggestedMax: 50, ticks: { color: '#2C3E50' } },
+                        y: { ticks: { color: '#2C3E50' } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'International Cooperation Alliances in the New Lunar Era (as of 2024)', color: '#2C3E50', font: { size: 16 } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('regolithChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Oxygen (~45%)', 'Silicon (~21%)', 'Iron (~13%)', 'Calcium (~8%)', 'Aluminum (~7%)', 'Other'],
+                    datasets: [{
+                        data: [45, 21, 13, 8, 7, 6],
+                        backgroundColor: ['#3498db', '#95a5a6', '#e74c3c', '#f1c40f', '#2ecc71', '#bdc3c7'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#2C3E50' } },
+                        title: { display: true, text: 'Main Elemental Composition of Lunar Regolith', color: '#2C3E50', font: { size: 16 } }
+                    }
+                }
+            });
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('nav-link-active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('nav-link-active');
+                    }
+                });
+            });
+        });
+    </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
