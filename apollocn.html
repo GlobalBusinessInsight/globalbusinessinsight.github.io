@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>重返月球：从阿波罗到未来</title>
+    <!-- Chosen Palette: Cosmic Calm -->
+    <!-- Application Structure Plan: 本应用设计为一个单页滚动式体验，顶部设有固定导航栏，方便用户快速跳转至“引言”、“阿波罗时代”、“新月球时代”和“未来展望”四大核心板块。这种非线性的主题式结构旨在打破传统报告的阅读模式，让用户可以根据兴趣自由探索。阿波罗时代采用互动时间轴，直观展现历史进程；新月球时代采用标签页切换的并排对比布局，清晰呈现中美探月计划的异同；未来展望则通过可点击展开的卡片和数据图表，生动解读月球资源和基地构想。整体设计旨在通过互动和可视化，将复杂的报告内容转化为易于消化和引人入胜的探索旅程，提升用户理解和参与感。 -->
+    <!-- Visualization & Content Choices: 1. 阿波罗计划终止原因 (柱状图): 目标-阐明原因, 方式-Chart.js柱状图, 互动-悬停提示。理由：直观展示多重因素（政治、财政、公众兴趣）的综合影响。 2. 新时代探月阵营 (横向柱状图): 目标-对比, 方式-Chart.js横向柱状图, 互动-悬停显示国家数量。理由：清晰对比《阿尔忒弥斯协定》与ILRS两大阵营的规模。 3. 月壤成分 (环形图): 目标-告知构成, 方式-Chart.js环形图, 互动-悬停显示元素和百分比。理由：生动展示月壤中各元素的比例，突出氧的巨大潜力。 4. 关键人物/资源 (互动卡片): 目标-组织/告知, 方式-HTML/CSS/JS卡片, 互动-点击展开/翻转。理由：在保持页面整洁的同时，提供深入了解的入口，增强探索性。所有图表均使用Chart.js基于Canvas渲染，所有图示均使用HTML/CSS构建。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans SC', sans-serif; background-color: #F8F9FA; color: #2C3E50; }
+        .nav-link { transition: color 0.3s, border-bottom-color 0.3s; }
+        .nav-link-active { color: #F39C12; border-bottom-color: #F39C12; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+        .section-title { font-size: 2.25rem; font-weight: 700; color: #34495E; border-bottom: 3px solid #F39C12; padding-bottom: 0.5rem; display: inline-block; }
+        .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); transition: transform 0.3s, box-shadow 0.3s; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1); }
+        .tab-button { transition: background-color 0.3s, color 0.3s; }
+        .tab-button-active { background-color: #34495E; color: white; }
+        .timeline-item::before { content: ''; position: absolute; top: 1.25rem; left: -0.875rem; width: 1.5rem; height: 1.5rem; background-color: white; border: 4px solid #34495E; border-radius: 9999px; z-index: 10; }
+        .timeline-line { position: absolute; top: 0; left: -0.25rem; height: 100%; width: 4px; background-color: #e5e7eb; }
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-white/80 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="text-xl font-bold text-[#2C3E50]">月球探索新纪元</div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#intro" class="nav-link text-gray-600 hover:text-[#F39C12] border-b-2 border-transparent pb-1">引言</a>
+                <a href="#apollo" class="nav-link text-gray-600 hover:text-[#F39C12] border-b-2 border-transparent pb-1">阿波罗时代</a>
+                <a href="#new-era" class="nav-link text-gray-600 hover:text-[#F39C12] border-b-2 border-transparent pb-1">新月球时代</a>
+                <a href="#future" class="nav-link text-gray-600 hover:text-[#F39C12] border-b-2 border-transparent pb-1">未来展望</a>
+            </div>
+             <div class="md:hidden">
+                <select onchange="window.location.href=this.value" class="bg-white border border-gray-300 rounded-md p-2">
+                    <option value="#intro">引言</option>
+                    <option value="#apollo">阿波罗时代</option>
+                    <option value="#new-era">新月球时代</option>
+                    <option value="#future">未来展望</option>
+                </select>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="intro" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4 text-center">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-[#2C3E50] mb-4">重返月球</h1>
+                <p class="text-xl text-gray-600 mb-8">从阿波罗的辉煌到新世纪的月球开发蓝图</p>
+                <div class="max-w-4xl mx-auto text-left text-gray-700 space-y-4">
+                    <p>月球，在20世纪下半叶成为美苏地缘政治博弈的终极竞技场。美国的阿波罗计划将人类足迹首次印在另一颗天体上，这既是科学的巅峰，也是意识形态的胜利。然而，辉煌过后是长达半个世纪的沉寂。</p>
+                    <p>如今，我们正站在新月球时代的黎明。月球的价值被重新定义，它被视为科学的宝库、未来的能源、深空探索的中转站和人类文明的新边疆。本应用将带您回顾历史，聚焦当下，展望未来，揭示人类对月球的探索如何从“冲刺赛”演变为一场多方参与的“马拉松”。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="apollo" class="py-20">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-16">
+                    <h2 class="section-title">阿波罗时代：人类的伟大一步</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-gray-600">本节将带您回顾由冷战催生的史诗级太空计划——阿波罗计划。您将通过互动时间轴了解其关键里程碑，认识那些在幕前幕后的英雄，并探索其辉煌落幕背后的复杂原因。</p>
+                </div>
+                
+                <div class="mb-16">
+                    <h3 class="text-2xl font-bold text-center mb-8 text-[#34495E]">关键任务里程碑</h3>
+                    <div class="relative max-w-5xl mx-auto">
+                        <div class="timeline-line"></div>
+                        <div class="space-y-12">
+                            <div class="relative pl-8 md:pl-12 timeline-item">
+                                <h4 class="font-bold text-xl mb-1">阿波罗1号的悲剧 (1967)</h4>
+                                <p class="text-gray-600">一次地面演练中的大火夺走了三名宇航员的生命，这场悲剧暴露了设计和安全上的严重缺陷，但也催生了更严苛的质量管理体系，为后续任务的成功奠定了基础。</p>
+                            </div>
+                            <div class="relative pl-8 md:pl-12 timeline-item">
+                                <h4 class="font-bold text-xl mb-1">阿波罗8号的创举 (1968)</h4>
+                                <p class="text-gray-600">人类首次离开地球引力，进入月球轨道。宇航员拍摄的“地出”照片成为环保运动的象征，深刻改变了人类对自身家园的看法。</p>
+                            </div>
+                            <div class="relative pl-8 md:pl-12 timeline-item">
+                                <h4 class="font-bold text-xl mb-1">阿波罗11号的巅峰 (1969)</h4>
+                                <p class="text-gray-600">尼尔·阿姆斯特朗和巴兹·奥尔德林成功登陆月球，实现了肯尼迪总统的承诺。阿姆斯特朗的名言“这是一个人的一小步，却是人类的一大步”传遍全球，成为人类探索精神的最高象征。</p>
+                            </div>
+                            <div class="relative pl-8 md:pl-12 timeline-item">
+                                 <h4 class="font-bold text-xl mb-1">阿波罗13号：成功的失败 (1970)</h4>
+                                 <p class="text-gray-600">服务舱氧气罐在途中爆炸，任务从登月转为生死救援。地面控制中心的卓越表现和宇航员的沉着应对，创造了航天史上的救援奇迹，展现了NASA应对危机的强大能力。</p>
+                            </div>
+                            <div class="relative pl-8 md:pl-12 timeline-item">
+                                <h4 class="font-bold text-xl mb-1">阿波罗17号的收官 (1972)</h4>
+                                <p class="text-gray-600">作为最后一次登月任务，首次搭载了地质学家哈里森·施密特，标志着月球探索从工程验证转向了更深入的科学研究。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 items-center mb-16">
+                    <div class="text-center md:text-left">
+                        <h3 class="text-2xl font-bold mb-4 text-[#34495E]">英雄与巨匠</h3>
+                        <p class="text-gray-600 mb-6">阿波罗的成功离不开聚光灯下的宇航员和幕后的工程师与指挥官。点击下方卡片，了解他们的传奇事迹。</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="card p-4 text-center cursor-pointer" onclick="showPersonDetail('armstrong')">
+                                <span class="text-4xl">👨‍🚀</span>
+                                <h4 class="font-bold mt-2">尼尔·阿姆斯特朗</h4>
+                                <p class="text-sm text-gray-500">登月第一人</p>
+                            </div>
+                            <div class="card p-4 text-center cursor-pointer" onclick="showPersonDetail('vonbraun')">
+                                <span class="text-4xl">🚀</span>
+                                <h4 class="font-bold mt-2">冯·布劳恩</h4>
+                                <p class="text-sm text-gray-500">火箭之父</p>
+                            </div>
+                            <div class="card p-4 text-center cursor-pointer" onclick="showPersonDetail('kranz')">
+                                <span class="text-4xl">📡</span>
+                                <h4 class="font-bold mt-2">吉恩·克兰兹</h4>
+                                <p class="text-sm text-gray-500">传奇指挥官</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="person-detail-container" class="card p-6 min-h-[200px] flex items-center justify-center">
+                        <p class="text-gray-500">点击人物卡片查看详细介绍</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold text-center mb-4 text-[#34495E]">辉煌的落幕</h3>
+                     <p class="mt-4 max-w-3xl mx-auto text-gray-600 text-center mb-8">阿波罗计划在1972年戛然而止，其背后是政治、经济和公众兴趣等多重因素共同作用的结果。下面的图表直观地展示了导致计划终止的几个关键驱动力。</p>
+                    <div class="chart-container">
+                        <canvas id="apolloEndChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="new-era" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-16">
+                    <h2 class="section-title">新月球时代：两大主角与全球格局</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-gray-600">半个世纪后，月球重回视野，但舞台已然不同。本节将深入对比当前探月领域的两大核心力量——美国的“阿尔忒弥斯”计划与中国的“嫦娥工程”。您可以通过互动标签页了解它们的战略、架构与进展，并通过图表观察正在形成的两大国际阵营。</p>
+                </div>
+                
+                <div class="mb-12">
+                    <div class="flex justify-center mb-6 border-b">
+                        <button id="tab-btn-goals" class="tab-button px-6 py-3 font-medium -mb-px border-b-2 border-transparent">战略目标</button>
+                        <button id="tab-btn-arch" class="tab-button px-6 py-3 font-medium -mb-px border-b-2 border-transparent">核心架构</button>
+                        <button id="tab-btn-progress" class="tab-button px-6 py-3 font-medium -mb-px border-b-2 border-transparent">当前进展</button>
+                    </div>
+                    <div id="tab-content" class="grid md:grid-cols-2 gap-8">
+                        <div class="card p-6">
+                            <h4 class="text-xl font-bold mb-4 text-center">🇺🇸 阿尔忒弥斯计划</h4>
+                            <div id="artemis-content"></div>
+                        </div>
+                        <div class="card p-6">
+                            <h4 class="text-xl font-bold mb-4 text-center">🇨🇳 嫦娥工程 / ILRS</h4>
+                            <div id="change-content"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-16">
+                    <h3 class="text-2xl font-bold text-center mb-8 text-[#34495E]">两大阵营：竞争与合作</h3>
+                    <p class="mt-4 max-w-3xl mx-auto text-gray-600 text-center mb-8">当前全球探月活动正逐渐形成以美国主导的《阿尔忒弥斯协定》和中俄倡议的国际月球科研站（ILRS）为核心的两大合作框架。这种“竞合”关系与冷战时期的零和博弈有着本质区别。</p>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="alliancesChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="max-w-6xl mx-auto">
+                    <h3 class="text-2xl font-bold text-center mb-8 text-[#34495E]">三大探月计划核心要素对比</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-200">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">特征维度</th>
+                                    <th scope="col" class="px-6 py-3">阿波罗计划</th>
+                                    <th scope="col" class="px-6 py-3">阿尔忒弥斯计划</th>
+                                    <th scope="col" class="px-6 py-3">嫦娥工程/ILRS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white border-b">
+                                    <td class="px-6 py-4 font-medium">核心目标</td>
+                                    <td class="px-6 py-4">赢得太空竞赛，实现载人登月</td>
+                                    <td class="px-6 py-4">建立可持续月球存在，进军火星</td>
+                                    <td class="px-6 py-4">技术自立自强，建月球科研站</td>
+                                </tr>
+                                <tr class="bg-gray-50 border-b">
+                                    <td class="px-6 py-4 font-medium">管理模式</td>
+                                    <td class="px-6 py-4">政府主导的举国体制</td>
+                                    <td class="px-6 py-4">政府-商业-国际合作生态</td>
+                                    <td class="px-6 py-4">新型举国体制，逐步开放</td>
+                                </tr>
+                                <tr class="bg-white border-b">
+                                    <td class="px-6 py-4 font-medium">国际模式</td>
+                                    <td class="px-6 py-4">基本无国际合作</td>
+                                    <td class="px-6 py-4">《阿尔忒弥斯协定》联盟</td>
+                                    <td class="px-6 py-4">国际月球科研站(ILRS)平台</td>
+                                </tr>
+                                 <tr class="bg-gray-50">
+                                    <td class="px-6 py-4 font-medium">标志性成就/目标</td>
+                                    <td class="px-6 py-4">首次载人登月</td>
+                                    <td class="px-6 py-4">首次将女性送上月球，南极驻留</td>
+                                    <td class="px-6 py-4">首次月背着陆，月背采样返回</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="py-20">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-16">
+                    <h2 class="section-title">未来展望：未来五年的月球</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-gray-600">未来五年是人类从“访问”到“利用”月球的历史性转折期。本节将聚焦“就地资源利用”（ISRU）这一核心理念，探讨水冰、氦-3等关键资源的开发前景，以及月球基地的初步构想。这些活动将为人类成为多行星物种奠定基础。</p>
+                </div>
+                
+                <div class="mb-16">
+                     <h3 class="text-2xl font-bold text-center mb-8 text-[#34495E]">月球资源：从科幻到现实</h3>
+                     <p class="mt-4 max-w-3xl mx-auto text-gray-600 text-center mb-8">“就地资源利用”（ISRU）是新一轮探月可持续性的关键。点击下方卡片，了解月球上最具价值的三大资源。</p>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <div id="resource-water" class="card p-6 cursor-pointer">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-4xl">💧</span>
+                                    <h4 class="text-xl font-bold mt-2">水冰</h4>
+                                    <p class="text-gray-500">生命之源，燃料之基</p>
+                                </div>
+                                <span class="text-2xl text-gray-400 transform transition-transform duration-300">+</span>
+                            </div>
+                            <div class="text-gray-600 mt-4" style="display: none;">
+                                <p><strong>战略价值：</strong>月球南极永久阴影坑中的水冰是生命支持（饮水、氧气）和制造火箭燃料（液氢液氧）的关键，是建立月球基地和深空探索中转站的基石。</p>
+                            </div>
+                        </div>
+                        <div id="resource-helium" class="card p-6 cursor-pointer">
+                             <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-4xl">⚛️</span>
+                                    <h4 class="text-xl font-bold mt-2">氦-3</h4>
+                                    <p class="text-gray-500">终极清洁能源</p>
+                                </div>
+                                <span class="text-2xl text-gray-400 transform transition-transform duration-300">+</span>
+                            </div>
+                            <div class="text-gray-600 mt-4" style="display: none;">
+                                <p><strong>战略价值：</strong>月壤中富集的氦-3是理想的核聚变燃料，反应过程干净、无放射性，储量可满足地球数千年能源需求，潜力巨大。</p>
+                            </div>
+                        </div>
+                        <div id="resource-regolith" class="card p-6 cursor-pointer">
+                           <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-4xl">🧱</span>
+                                    <h4 class="text-xl font-bold mt-2">月壤</h4>
+                                    <p class="text-gray-500">万能的建筑材料</p>
+                                </div>
+                                <span class="text-2xl text-gray-400 transform transition-transform duration-300">+</span>
+                            </div>
+                            <div class="text-gray-600 mt-4" style="display: none;">
+                                <p><strong>战略价值：</strong>可作为3D打印原料，用于建造基地、屏蔽辐射；同时富含氧（约45%）和多种金属，是月面工业的基础原料。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold text-center md:text-left mb-4 text-[#34495E]">月壤成分分析</h3>
+                        <p class="text-gray-600 mb-8">月壤不仅是建筑材料，更是巨大的氧气库和金属矿。这张图表展示了其主要元素构成，其中氧元素占比接近一半，这对于支持生命和工业活动具有不可估量的价值。</p>
+                        <ul class="text-gray-600 space-y-2">
+                           <li><span class="font-bold text-[#F39C12]">●</span> <strong>科学研究平台：</strong>建立不受大气干扰的月基望远镜。</li>
+                           <li><span class="font-bold text-[#F39C12]">●</span> <strong>技术验证场：</strong>作为载人火星任务的“预演基地”。</li>
+                           <li><span class="font-bold text-[#F39C12]">●</span> <strong>地月经济圈基石：</strong>支持太空制造和深空探索。</li>
+                        </ul>
+                    </div>
+                     <div class="chart-container" style="height: 350px;">
+                        <canvas id="regolithChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-[#2C3E50] text-white py-8">
+        <div class="container mx-auto px-4 text-center text-gray-400">
+            <p>这是一个基于报告数据构建的交互式网页应用。</p>
+            <p class="text-sm mt-2">内容源自《重返月球——从阿波罗的辉煌到新世纪的月球开发蓝图》报告。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const personDetails = {
+                armstrong: {
+                    title: '尼尔·阿姆斯特朗 - 登月第一人',
+                    text: '作为阿波罗11号指令长，他以卓越的飞行技术和关键时刻的沉着冷静而闻名。他踏上月球时说的“这是一个人的一小步，却是人类的一大步”已成为永恒经典，他本人也成为了探索精神的象征。'
+                },
+                vonbraun: {
+                    title: '沃纳·冯·布劳恩 - 火箭之父',
+                    text: '作为“土星5号”重型运载火箭的总设计师，他为美国登月提供了无与伦比的强大动力。尽管其二战背景备受争议，但他在航天工程领域的才华是阿波罗计划成功的关键支柱。'
+                },
+                kranz: {
+                    title: '吉恩·克兰兹 - 传奇指挥官',
+                    text: '在阿波罗13号危机中，他作为地面飞行主任，以钢铁般的意志和卓越的领导力，带领团队化解了致命危机，成功救回三名宇航员。“失败不是一个选项”成为NASA文化的座右铭。'
+                }
+            };
+
+            const missionComparisonContent = {
+                goals: {
+                    artemis: '<ul><li class="mb-2"><strong>可持续存在:</strong> 在月球南极建立长期基地，而非短期访问。</li><li class="mb-2"><strong>火星跳板:</strong> 将月球作为试验场，为载人火星任务验证技术、积累经验。</li><li><strong>全球领导力:</strong> 强调包容性（首位女性和有色人种登月），巩固太空领导地位。</li></ul>',
+                    change: '<ul><li class="mb-2"><strong>技术自立:</strong> 掌握从探测到采样返回再到载人登月的全链条自主可控技术。</li><li class="mb-2"><strong>科学研究:</strong> 建立国际月球科研站（ILRS），系统性地研究月球环境与资源。</li><li><strong>国际合作新模式:</strong> 提出与《阿尔忒弥斯协定》并行的国际合作平台。</li></ul>',
+                },
+                arch: {
+                    artemis: '<ul><li class="mb-2"><strong>模块化组合:</strong> 依赖SLS火箭、猎户座飞船、月球门户空间站和商业着陆器（HLS）等多个模块。</li><li class="mb-2"><strong>商业外包:</strong> 将载人着陆器等关键部分外包给SpaceX、蓝色起源等商业公司，引入竞争。</li><li><strong>国际合作:</strong> 依托《阿尔忒弥斯协定》与多国进行分工合作。</li></ul>',
+                    change: '<ul><li class="mb-2"><strong>滚动式发展:</strong> 严格遵循“绕、落、回”三步走战略，每一步都为下一步进行技术验证，风险可控。</li><li class="mb-2"><strong>体系化发展:</strong> 由于外部限制，被迫发展出从火箭到测控的全产业链自主体系。</li><li><strong>逐步开放:</strong> 在自主基础上，邀请国际伙伴加入ILRS计划。</li></ul>',
+                },
+                progress: {
+                    artemis: '<ul><li class="mb-2"><strong>阿尔忒弥斯1号 (2022):</strong> 成功完成无人绕月飞行。</li><li class="mb-2"><strong>阿尔忒弥斯2号 (计划2026):</strong> 进行载人绕月飞行，但因技术问题已数次推迟。</li><li><strong>阿尔忒弥斯3号 (计划2027):</strong> 计划载人登月，高度依赖商业伙伴（如星舰）的进度。</li></ul>',
+                    change: '<ul><li class="mb-2"><strong>嫦娥四号 (2019):</strong> 首次实现月背软着陆。</li><li class="mb-2"><strong>嫦娥五/六号 (2020/2024):</strong> 成功实现月球正面和背面的采样返回。</li><li><strong>载人登月 (计划2030前):</strong> 正式启动工程，目标2030年前实现。</li></ul>',
+                }
+            };
+
+            const personDetailContainer = document.getElementById('person-detail-container');
+            window.showPersonDetail = (person) => {
+                const detail = personDetails[person];
+                personDetailContainer.innerHTML = `
+                    <div class="text-left">
+                        <h4 class="font-bold text-lg text-[#34495E] mb-2">${detail.title}</h4>
+                        <p class="text-gray-600">${detail.text}</p>
+                    </div>`;
+            };
+
+            const resourceCards = document.querySelectorAll('#future .card');
+            resourceCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const detail = card.querySelector('div[style*="display: none;"]');
+                    const icon = card.querySelector('.transform');
+                    if (detail) {
+                        const isVisible = detail.style.display === 'block';
+                        detail.style.display = isVisible ? 'none' : 'block';
+                        icon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(45deg)';
+                    }
+                });
+            });
+
+            const tabs = {
+                goals: document.getElementById('tab-btn-goals'),
+                arch: document.getElementById('tab-btn-arch'),
+                progress: document.getElementById('tab-btn-progress'),
+            };
+            const artemisContent = document.getElementById('artemis-content');
+            const changeContent = document.getElementById('change-content');
+
+            function updateTabContent(activeTab) {
+                Object.keys(tabs).forEach(key => {
+                    tabs[key].classList.remove('tab-button-active', 'text-white', 'bg-[#34495E]');
+                    tabs[key].classList.add('text-gray-600');
+                });
+                tabs[activeTab].classList.add('tab-button-active', 'text-white', 'bg-[#34495E]');
+                tabs[activeTab].classList.remove('text-gray-600');
+                
+                artemisContent.innerHTML = missionComparisonContent[activeTab].artemis;
+                changeContent.innerHTML = missionComparisonContent[activeTab].change;
+            }
+
+            Object.keys(tabs).forEach(key => {
+                tabs[key].addEventListener('click', () => updateTabContent(key));
+            });
+            updateTabContent('goals');
+
+
+            new Chart(document.getElementById('apolloEndChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['政治目标达成', '财政压力(越战/经济)', '公众兴趣下降', '风险厌恶(阿波罗13)'],
+                    datasets: [{
+                        label: '对计划终止的影响权重',
+                        data: [90, 85, 65, 50],
+                        backgroundColor: ['#34495E', '#95a5a6', '#bdc3c7', '#ecf0f1'],
+                        borderColor: '#2C3E50',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: { suggestedMax: 100, ticks: { color: '#2C3E50' } },
+                        y: { ticks: { color: '#2C3E50', font: { size: 12 } } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: '阿波罗计划终止关键因素分析', color: '#2C3E50', font: { size: 16 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` 影响指数: ${context.raw}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            new Chart(document.getElementById('alliancesChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['《阿尔忒弥斯协定》联盟 (美国主导)', '国际月球科研站 (中俄主导)'],
+                    datasets: [{
+                        label: '签约/参与国家及地区数量',
+                        data: [43, 11],
+                        backgroundColor: ['#3498db', '#e74c3c'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: { beginAtZero: true, suggestedMax: 50, ticks: { color: '#2C3E50' } },
+                        y: { ticks: { color: '#2C3E50' } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: '新月球时代国际合作阵营对比 (截至2024)', color: '#2C3E50', font: { size: 16 } }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('regolithChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['氧 (~45%)', '硅 (~21%)', '铁 (~13%)', '钙 (~8%)', '铝 (~7%)', '其他'],
+                    datasets: [{
+                        data: [45, 21, 13, 8, 7, 6],
+                        backgroundColor: ['#3498db', '#95a5a6', '#e74c3c', '#f1c40f', '#2ecc71', '#bdc3c7'],
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#2C3E50' } },
+                        title: { display: true, text: '月壤主要元素构成', color: '#2C3E50', font: { size: 16 } }
+                    }
+                }
+            });
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('nav-link-active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('nav-link-active');
+                    }
+                });
+            });
+        });
+    </script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
