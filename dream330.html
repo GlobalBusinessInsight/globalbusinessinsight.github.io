@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全马330冲刺计划 | 交互式分析报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Endurance Calm -->
+    <!-- Application Structure Plan: A single-page, multi-section layout with a sticky navigation bar. The structure guides the user from diagnosis to solution. It starts with a hero section establishing the core challenge (Current vs. Goal). It then moves to "The Diagnosis" to explain the 'why' with data visualizations. "The Goal" section clarifies what's required using benchmark charts. "The Blueprint" is the core, using interactive tabs for training principles and a week-by-week viewer for the complex 16-week plan, making it highly digestible. "The Support System" uses a similar tabbed interface for strength and nutrition. This structure transforms a linear report into an exploratory tool, prioritizing user understanding and interaction over simply mimicking the report's chapters. -->
+    <!-- Visualization & Content Choices: 1. Current vs. Goal (Inform/Compare): Large stat cards and a horizontal bar chart (Chart.js) to highlight the 20-minute performance gap. 2. Benchmark Times (Compare): A grouped bar chart (Chart.js) to show the speed deficit against 330-level requirements. 3. 80/20 Rule (Inform/Compare): A Donut chart (Chart.js) to contrast current vs. ideal training intensity distribution. 4. 16-Week Plan (Organize/Explore): An interactive plan viewer (HTML/CSS/JS) with buttons to filter by training phase (Base, Peak, Taper), replacing a static, unreadable table. 5. Strength & Nutrition (Organize): Tabbed content cards using HTML/CSS/JS for clarity and focus. All choices are designed to make complex data intuitive and interactive, adhering to the designed application structure. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #FDFBF8;
+            color: #34495e;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 640px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #2563eb;
+            border-color: #2563eb;
+        }
+        .tab-btn.active {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+        .plan-phase-btn.active {
+            background-color: #16a34a;
+            color: #ffffff;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-blue-600">330逐梦指南</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div id="nav-menu" class="ml-10 flex items-baseline space-x-4">
+                        <a href="#diagnosis" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">现状评估</a>
+                        <a href="#goal" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">目标解码</a>
+                        <a href="#blueprint" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">智慧蓝图</a>
+                        <a href="#support" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">辅助系统</a>
+                        <a href="#conclusion" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">结论展望</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 sm:py-12">
+
+        <!-- Section 1: Diagnosis -->
+        <section id="diagnosis" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">第一章：当前能力综合评估</h2>
+            <p class="text-center text-gray-500 mb-8 max-w-3xl mx-auto">您拥有卓越的毅力，但当前的训练模式已达瓶颈。本章节将通过数据深度剖析您目前的真实水平，并揭示与330目标之间的差距。</p>
+            
+            <div class="grid md:grid-cols-2 gap-8 items-center bg-white p-6 rounded-xl shadow-lg">
+                <div class="text-center md:text-left">
+                    <h3 class="text-2xl font-bold text-blue-700 mb-4">从半马数据看全马潜力</h3>
+                    <p class="mb-4 text-gray-600">您 1:48:47 的半马成绩非常出色，但平均心率高达166bpm，这表明您的训练强度长期处于“比赛”而非“建设”状态。这种模式限制了有氧耐力的发展，是突破330的最大障碍。</p>
+                    <div class="flex flex-col space-y-4">
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <p class="text-sm text-blue-500 font-semibold">当前半马成绩</p>
+                            <p class="text-2xl font-bold text-blue-800">1:48:47</p>
+                        </div>
+                        <div class="p-4 bg-red-50 rounded-lg">
+                            <p class="text-sm text-red-500 font-semibold">预测全马成绩 (Riegel公式)</p>
+                            <p class="text-2xl font-bold text-red-800">~3:50:11</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-center mb-2 text-gray-700">与330目标的差距</h3>
+                    <div class="chart-container">
+                        <canvas id="predictionChart"></canvas>
+                    </div>
+                    <p class="text-center text-xs text-gray-500 mt-2">基于当前半马成绩预测的全马时间与目标时间的差距可视化。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Goal -->
+        <section id="goal" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">第二章：解码全马330</h2>
+            <p class="text-center text-gray-500 mb-8 max-w-3xl mx-auto">要实现3小时30分，意味着需以4:59/公里的配速稳定巡航42.195公里。这不仅需要耐力，更需要显著的速度储备。让我们看看达成目标所需的硬性指标。</p>
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h3 class="text-xl font-semibold text-center mb-4 text-gray-700">能力基准：当前 vs 目标</h3>
+                <p class="text-center text-sm text-gray-500 mb-4">为了让4:59/公里的马拉松配速感觉“相对轻松”，您需要在更短距离上达到以下标准。图表清晰地展示了您在速度能力上需要提升的空间。</p>
+                <div class="chart-container">
+                    <canvas id="benchmarkChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Blueprint -->
+        <section id="blueprint" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">第三章：智慧训练蓝图</h2>
+            <p class="text-center text-gray-500 mb-8 max-w-3xl mx-auto">成功的关键在于从“苦练”转向“智取”。本章将介绍现代耐力训练的核心原则，并为您呈现一份详细的、为期16周的行动计划。</p>
+            
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div id="blueprint-tabs" class="mb-6 flex justify-center space-x-2 sm:space-x-4 border-b">
+                    <button class="tab-btn px-4 py-2 font-semibold text-gray-600 rounded-t-lg transition" data-tab="principle">核心原则</button>
+                    <button class="tab-btn px-4 py-2 font-semibold text-gray-600 rounded-t-lg transition" data-tab="workouts">关键训练</button>
+                    <button class="tab-btn px-4 py-2 font-semibold text-gray-600 rounded-t-lg transition" data-tab="plan">16周计划</button>
+                </div>
+                <div id="blueprint-content">
+                    <div data-content="principle">
+                        <h3 class="text-2xl font-bold text-center text-gray-800 mb-4">80/20法则：两极化训练</h3>
+                        <div class="grid md:grid-cols-2 gap-8 items-center">
+                            <div>
+                                <p class="text-gray-600 mb-4">这是您训练理念的根本转变：将每周80%的训练量用于低强度、可对话的轻松跑，以构建强大的有氧基础；另外20%则投入到高强度的节奏跑和间歇跑中，以提升速度上限。您必须告别目前100%处于中高强度的“灰色地带”训练模式。</p>
+                                <ul class="space-y-2 text-sm">
+                                    <li class="flex items-start"><span class="text-green-500 font-bold mr-2">✔ 80%低强度:</span><span class="text-gray-600">构建有氧引擎，促进恢复，降低损伤风险。</span></li>
+                                    <li class="flex items-start"><span class="text-red-500 font-bold mr-2">✔ 20%高强度:</span><span class="text-gray-600">提升乳酸阈值和最大摄氧量，保证训练质量。</span></li>
+                                    <li class="flex items-start"><span class="text-yellow-500 font-bold mr-2">✘ 避免灰色地带:</span><span class="text-gray-600">强度不上不下，既不利于恢复，也不足以刺激速度提升。</span></li>
+                                </ul>
+                            </div>
+                            <div class="chart-container h-64 sm:h-72">
+                                <canvas id="polarizationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div data-content="workouts" class="hidden">
+                        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-blue-800">长距离慢跑(LSD)</h4>
+                                <p class="text-sm text-blue-700 mt-1">目的：提升有氧耐力、脂肪利用效率和抗冲击能力。是马拉松训练的基石。</p>
+                                <p class="text-xs mt-2 text-blue-600">执行：心率2区，配速比目标配速慢60-90秒。</p>
+                            </div>
+                             <div class="bg-orange-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-orange-800">节奏跑(Tempo)</h4>
+                                <p class="text-sm text-orange-700 mt-1">目的：提升乳酸阈值，让比赛配速感觉更轻松、可控。</p>
+                                <p class="text-xs mt-2 text-orange-600">执行：“舒适的困难”，能说短语但不能聊天。</p>
+                            </div>
+                             <div class="bg-red-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-red-800">间歇跑(Interval)</h4>
+                                <p class="text-sm text-red-700 mt-1">目的：提升最大摄氧量(VO2max)和跑步经济性，提高速度上限。</p>
+                                <p class="text-xs mt-2 text-red-600">执行：短距离、高强度重复跑，组间慢跑恢复。</p>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <h4 class="font-bold text-green-800">轻松/恢复跑</h4>
+                                <p class="text-sm text-green-700 mt-1">目的：积极恢复，促进血液循环，在不增加压力的情况下累积跑量。</p>
+                                <p class="text-xs mt-2 text-green-600">执行：心率1-2区，速度极慢，感觉非常轻松。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div data-content="plan" class="hidden">
+                        <h3 class="text-2xl font-bold text-center text-gray-800 mb-4">16周训练日历</h3>
+                        <p class="text-center text-gray-500 text-sm mb-6">这是一个周期化的训练计划。点击下方按钮，查看每个阶段的具体安排。请注意跑量和强度的循序渐进。</p>
+                        <div id="plan-phase-selector" class="flex flex-wrap justify-center gap-2 mb-6">
+                            <button class="plan-phase-btn text-sm font-semibold px-4 py-2 rounded-full bg-gray-200 text-gray-700 transition" data-phase="base">基础期 (1-6周)</button>
+                            <button class="plan-phase-btn text-sm font-semibold px-4 py-2 rounded-full bg-gray-200 text-gray-700 transition" data-phase="peak">强化期 (7-13周)</button>
+                            <button class="plan-phase-btn text-sm font-semibold px-4 py-2 rounded-full bg-gray-200 text-gray-700 transition" data-phase="taper">减量期 (14-16周)</button>
+                        </div>
+                        <div id="training-plan-display" class="space-y-4 max-h-[60vh] overflow-y-auto p-2 bg-gray-50 rounded-lg">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Support Systems -->
+        <section id="support" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">第四章：强化辅助系统</h2>
+            <p class="text-center text-gray-500 mb-8 max-w-3xl mx-auto">跑步之外的功夫同样重要。强大的力量和科学的营养是您不受伤、跑得更快的坚实后盾。</p>
+             <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div id="support-tabs" class="mb-6 flex justify-center space-x-2 sm:space-x-4 border-b">
+                    <button class="tab-btn px-4 py-2 font-semibold text-gray-600 rounded-t-lg transition" data-tab="strength">力量训练</button>
+                    <button class="tab-btn px-4 py-2 font-semibold text-gray-600 rounded-t-lg transition" data-tab="nutrition">营养策略</button>
+                </div>
+                <div id="support-content">
+                    <div data-content="strength">
+                        <h3 class="text-xl font-bold text-center text-gray-800 mb-4">跑者力量训练清单</h3>
+                        <p class="text-center text-sm text-gray-500 mb-6">每周2次，安排在轻松跑后或休息日，构建坚不可摧的“跑步底盘”。</p>
+                        <div id="strength-exercises" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        </div>
+                    </div>
+                    <div data-content="nutrition" class="hidden">
+                         <h3 class="text-xl font-bold text-center text-gray-800 mb-4">决胜赛场：营养补给时间线</h3>
+                         <p class="text-center text-sm text-gray-500 mb-6">黄金法则：绝不在比赛日尝试新东西！所有策略都应在长距离训练中反复演练。</p>
+                         <div id="nutrition-timeline" class="space-y-4">
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 5: Conclusion -->
+        <section id="conclusion" class="scroll-mt-24">
+            <h2 class="text-3xl font-bold text-center mb-2 text-gray-800">第五章：结论与展望</h2>
+            <p class="text-center text-gray-500 mb-8 max-w-3xl mx-auto">您已具备成功跑者最重要的品质。现在，将您的毅力注入到更科学的体系中，330将不再是梦想。</p>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                    <div class="text-3xl mb-3">1️⃣</div>
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">训练模式转型</h3>
+                    <p class="text-sm text-gray-600">从“每日竞赛”转向“80/20两极化训练”，构建强大的有氧基础。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                    <div class="text-3xl mb-3">2️⃣</div>
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">成为整合型运动员</h3>
+                    <p class="text-sm text-gray-600">将力量训练视为必修课，打造更强壮、更高效、不易受伤的身体。</p>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-md text-center">
+                    <div class="text-3xl mb-3">3️⃣</div>
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">执行策略性补给</h3>
+                    <p class="text-sm text-gray-600">将营养提升到战略高度，通过演练制定精确的比赛日补给计划。</p>
+                </div>
+            </div>
+            <p class="text-center text-lg font-semibold text-blue-600 mt-12">前方的道路充满挑战，但终点线的荣耀正等待着一位更强大的您。</p>
+        </section>
+    </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const reportData = {
+        prediction: {
+            predictedTime: 230.18, 
+            goalTime: 210, 
+            predictedLabel: '预测成绩 3:50:11',
+            goalLabel: '目标成绩 <3:30:00',
+        },
+        benchmarks: {
+            labels: ['5公里', '10公里', '半马'],
+            required: [21.83, 45.67, 102],
+            current: [null, null, 108.78]
+        },
+        trainingPlan: [
+            { week: 1, phase: 'base', volume: 47, content: '间歇:6x400m@4:15 | 节奏:5km@4:45 | LSD:16km@5:50' },
+            { week: 2, phase: 'base', volume: 52, content: '间歇:8x400m@4:15 | 节奏:6km@4:45 | LSD:18km@5:50' },
+            { week: 3, phase: 'base', volume: 62, content: '间歇:6x800m@4:25 | 节奏:8km@4:40 | LSD:20km@5:45' },
+            { week: 4, phase: 'base', volume: 37, content: '恢复周. 间歇:5x400m@4:15 | LSD:16km@5:50' },
+            { week: 5, phase: 'base', volume: 64, content: '间歇:5x1km@4:30 | 节奏:8km@4:40 | LSD:22km@5:45' },
+            { week: 6, phase: 'base', volume: 70, content: '间歇:6x1km@4:30 | 节奏:10km@4:40 | LSD:24km@5:45' },
+            { week: 7, phase: 'peak', volume: 74, content: '间歇:5x1.2km@4:30 | 节奏:10km@4:35 | LSD:26km@5:45' },
+            { week: 8, phase: 'peak', volume: 79, content: '间歇:4x1.6km@4:30 | 节奏:12km@4:35 | LSD:28km@5:45' },
+            { week: 9, phase: 'peak', volume: 50, content: '恢复周. 节奏:8km@4:40 | LSD:20km 含10km比赛配速' },
+            { week: 10, phase: 'peak', volume: 84, content: '间歇:8x1km@4:59 | 节奏:12km@4:35 | LSD:30km@5:40' },
+            { week: 11, phase: 'peak', volume: 88, content: '间歇:6x1.2km@4:59 | 节奏:14km@4:35 | LSD:32km@5:40' },
+            { week: 12, phase: 'peak', volume: 58, content: '恢复周. 间歇:5x1km@4:59 | LSD:22km@5:45' },
+            { week: 13, phase: 'peak', volume: 63, content: '10公里测试赛 | 节奏:6km@4:59 | LSD:20km@5:50' },
+            { week: 14, phase: 'taper', volume: 45, content: '减量. 间歇:4x800m | 节奏:5km@4:59 | LSD:14km' },
+            { week: 15, phase: 'taper', volume: 33, content: '减量. 间歇:3x1km@4:59 | LSD:10km' },
+            { week: 16, phase: 'taper', volume: 47, content: '赛前调整, 2-3km轻松跑 | **比赛日！**' }
+        ],
+        strengthExercises: [
+            { name: '深蹲', benefit: '发展全面的下肢力量，是所有跑动动作的基础。', icon: '🏋️' },
+            { name: '单腿硬拉', benefit: '强化后侧链，提升单腿站立时的平衡与稳定。', icon: '🦵' },
+            { name: '反向弓箭步', benefit: '建立单侧腿部力量，对膝关节压力更小。', icon: '🚶' },
+            { name: '平板支撑', benefit: '维持躯干稳定，防止疲劳时跑姿崩溃。', icon: '🤸' },
+            { name: '臀桥', benefit: '有效激活臀部肌群，防止下背部代偿性损伤。', icon: '🌉' },
+            { name: '提踵', benefit: '强化小腿和跟腱，为蹬地提供爆发力。', icon: '🦶' },
+        ],
+        nutritionTimeline: [
+            { time: '赛前2-3小时', action: '享用早餐', details: '300-500千卡高碳水、低脂、低纤早餐 (如燕麦、百吉饼)，补满肝糖原。', color: 'blue' },
+            { time: '赛前15-20分钟', action: '最后一口能量', details: '服用一支能量胶(约25-30g碳水)，直接提升血糖水平。', color: 'green' },
+            { time: '比赛中(每小时)', action: '持续、规律地补给', details: '目标摄入60-90g碳水(2-3支能量胶)和300-600ml液体。从早期开始，不要等饿/渴。', color: 'orange' },
+            { time: '赛后30分钟内', action: '开启恢复窗口', details: '立即补充碳水:蛋白质约为3:1的食物或饮品(如巧克力牛奶)，高效启动恢复。', color: 'purple' },
+        ]
+    };
+
+    function minutesToMMSS(minutes) {
+        const sign = minutes < 0 ? "-" : "";
+        const absMinutes = Math.abs(minutes);
+        const min = Math.floor(absMinutes);
+        const sec = Math.round((absMinutes * 60) % 60);
+        return `${sign}${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    }
+
+    new Chart(document.getElementById('predictionChart'), {
+        type: 'bar',
+        data: {
+            labels: ['成绩'],
+            datasets: [{
+                label: reportData.prediction.goalLabel,
+                data: [reportData.prediction.goalTime],
+                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1
+            }, {
+                label: reportData.prediction.predictedLabel,
+                data: [reportData.prediction.predictedTime],
+                backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                borderColor: 'rgba(239, 68, 68, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: { display: true, text: '时间 (分钟)' }
+                }
+            },
+            plugins: {
+                title: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.x !== null) {
+                                const hours = Math.floor(context.parsed.x / 60);
+                                const minutes = Math.floor(context.parsed.x % 60);
+                                const seconds = Math.round((context.parsed.x * 60) % 60);
+                                label += `${hours}h ${minutes}m ${seconds}s`;
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('benchmarkChart'), {
+        type: 'bar',
+        data: {
+            labels: reportData.benchmarks.labels,
+            datasets: [{
+                label: '330目标要求 (分钟)',
+                data: reportData.benchmarks.required,
+                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1
+            }, {
+                label: '当前水平 (分钟)',
+                data: reportData.benchmarks.current,
+                backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                borderColor: 'rgba(239, 68, 68, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: '时间 (分钟)' }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let value = context.parsed.y;
+                            return value ? context.dataset.label + ': ' + value.toFixed(2) + ' 分钟' : context.dataset.label + ': N/A';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('polarizationChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['80% 低强度', '20% 高强度', '当前模式 (100% 灰色地带)'],
+            datasets: [{
+                label: '训练强度分布',
+                data: [80, 20],
+                backgroundColor: ['rgba(74, 222, 128, 0.7)', 'rgba(239, 68, 68, 0.7)'],
+                borderColor: ['#fff', '#fff'],
+                borderWidth: 2,
+                circumference: 180,
+                rotation: 270,
+            }, {
+                label: '当前模式',
+                data: [100],
+                backgroundColor: ['rgba(251, 146, 60, 0.7)'],
+                borderColor: ['#fff'],
+                borderWidth: 2,
+                circumference: 180,
+                rotation: 270,
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            cutout: '50%',
+            plugins: {
+                legend: { position: 'bottom' },
+                title: { display: true, text: '理想训练 vs 当前训练' }
+            }
+        }
+    });
+    
+    function setupTabs(containerId) {
+        const container = document.getElementById(containerId);
+        const tabButtons = container.querySelectorAll('.tab-btn');
+        const tabContents = container.querySelectorAll('[data-content]');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                const targetTab = button.dataset.tab;
+                tabContents.forEach(content => {
+                    if (content.dataset.content === targetTab) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+        });
+        if(tabButtons.length > 0) tabButtons[0].click();
+    }
+    setupTabs('blueprint-tabs');
+    setupTabs('support-tabs');
+
+    const planDisplay = document.getElementById('training-plan-display');
+    const phaseSelector = document.getElementById('plan-phase-selector');
+    const phaseButtons = phaseSelector.querySelectorAll('.plan-phase-btn');
+
+    function displayPlan(phase) {
+        planDisplay.innerHTML = '';
+        const filteredPlan = reportData.trainingPlan.filter(item => phase === 'all' || item.phase === phase);
+        
+        filteredPlan.forEach(item => {
+            const weekCard = `
+                <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 ${item.phase === 'base' ? 'border-blue-400' : item.phase === 'peak' ? 'border-red-400' : 'border-green-400'}">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-gray-800">第 ${item.week} 周</h4>
+                        <span class="text-xs font-medium text-gray-500">周跑量: ~${item.volume}km</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">${item.content}</p>
+                </div>
+            `;
+            planDisplay.innerHTML += weekCard;
+        });
+    }
+
+    phaseButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            phaseButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            displayPlan(button.dataset.phase);
+        });
+    });
+    if(phaseButtons.length > 0) phaseButtons[0].click();
+
+    const strengthContainer = document.getElementById('strength-exercises');
+    reportData.strengthExercises.forEach(ex => {
+        strengthContainer.innerHTML += `
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <h4 class="font-bold text-gray-800 flex items-center"><span class="text-xl mr-2">${ex.icon}</span>${ex.name}</h4>
+                <p class="text-sm text-gray-600 mt-1">${ex.benefit}</p>
+            </div>
+        `;
+    });
+
+    const nutritionContainer = document.getElementById('nutrition-timeline');
+    reportData.nutritionTimeline.forEach(item => {
+        nutritionContainer.innerHTML += `
+            <div class="relative pl-8">
+                <div class="absolute left-0 top-1 h-full w-0.5 bg-gray-200"></div>
+                <div class="absolute left-[-9px] top-1 w-5 h-5 rounded-full bg-${item.color}-500 border-4 border-white"></div>
+                <p class="font-bold text-gray-800">${item.time} - ${item.action}</p>
+                <p class="text-sm text-gray-600">${item.details}</p>
+            </div>
+        `;
+    });
+    
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('#nav-menu a');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === entry.target.id) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+    }, { rootMargin: '-50% 0px -50% 0px' });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+});
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
