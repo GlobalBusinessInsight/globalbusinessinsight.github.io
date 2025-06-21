@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>跳绳次数检测报告 | Jump‑Rope Count Report</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  body{padding:1.2rem;}
+  .ratio{max-width:720px;margin:auto;}
+  canvas{max-width:680px;margin:auto;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1 class="text-center mb-4">跳绳次数检测报告 / Jump‑Rope Count Report</h1>
+
+  <!-- 视频嵌入 -->
+  <div class="ratio ratio-16x9 mb-4">
+    <iframe
+      src="https://www.youtube.com/embed/tvqMlQxi5UA"
+      title="YouTube video player"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen></iframe>
+  </div>
+
+  <!-- 语言切换页签 -->
+  <ul class="nav nav-tabs" id="langTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="en-tab" data-bs-toggle="tab"
+              data-bs-target="#en" type="button" role="tab"
+              aria-controls="en" aria-selected="true">English | 英文</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="zh-tab" data-bs-toggle="tab"
+              data-bs-target="#zh" type="button" role="tab"
+              aria-controls="zh" aria-selected="false">中文 | 中文</button>
+    </li>
+  </ul>
+
+  <!-- 页签内容 -->
+  <div class="tab-content" id="langTabContent">
+    <!-- 英文 -->
+    <div class="tab-pane fade show active" id="en" role="tabpanel" aria-labelledby="en-tab">
+      <section class="mt-4">
+        <h3>Summary</h3>
+        <ul id="en-summary" class="list-group mb-3"></ul>
+
+        <h4 class="mt-4">Cumulative Jump Count Over Time</h4>
+        <canvas id="en-chart"></canvas>
+
+        <h4 class="mt-4">Methodology</h4>
+        <ol id="en-method" class="mb-3"></ol>
+
+        <details class="mt-3">
+          <summary class="h5">Per‑Jump Timestamps</summary>
+          <ul id="en-events" class="list-group mt-2"></ul>
+        </details>
+      </section>
+    </div>
+
+    <!-- 中文 -->
+    <div class="tab-pane fade" id="zh" role="tabpanel" aria-labelledby="zh-tab">
+      <section class="mt-4">
+        <h3>摘要</h3>
+        <ul id="zh-summary" class="list-group mb-3"></ul>
+
+        <h4 class="mt-4">随时间累积的跳绳次数</h4>
+        <canvas id="zh-chart"></canvas>
+
+        <h4 class="mt-4">分析过程</h4>
+        <ol id="zh-method" class="mb-3"></ol>
+
+        <details class="mt-3">
+          <summary class="h5">每次跳绳时间点</summary>
+          <ul id="zh-events" class="list-group mt-2"></ul>
+        </details>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ========== 示例检测数据（请替换为真实结果） ========== */
+/* jumpEvents 数组内每个元素代表一次跳绳发生的时间（单位：秒，保留1位小数）*/
+const jumpEvents = [
+  0.7,1.4,2.1,2.8,3.5,4.2,4.9,5.6,6.3,7.0,
+  7.7,8.4,9.1,9.8,10.5,11.2,11.9,12.6,13.3,14.0,
+  14.7,15.4,16.1,16.8,17.5,18.2,18.9,19.6,20.3,21.0,
+  21.7,22.4,23.1,23.8,24.5,25.2,25.9,26.6,27.3,28.0,
+  28.7,29.4,30.1,30.8,31.5,32.2,32.9,33.6,34.3,35.0,
+  35.7,36.4,37.1,37.8,38.5,39.2,39.9,40.6,41.3,42.0,
+  42.7,43.4,44.1,44.8,45.5,46.2,46.9,47.6,48.3,49.0,
+  49.7,50.4,51.1,51.8,52.5,53.2,53.9,54.6,55.3,56.0,
+  56.7,57.4,58.1,58.8
+]; // 共 84 次
+
+const videoDuration = 59; // s
+
+/* ========== 方法步骤（中英） ========== */
+const methodology = {
+  en:[
+    "Frame extraction at ~30 fps via OpenCV.",
+    "Pose estimation using TensorFlow/MoveNet for each frame.",
+    "Track vertical position of ankle or rope midpoint.",
+    "Detect downward zero‑crossing of rope below feet (one count).",
+    "Debounce with a 0.4 s refractory window to avoid double‑count.",
+    "Aggregate counts; export timestamps for each event.",
+    "Calculate overall statistics (total, frequency)."
+  ],
+  zh:[
+    "使用 OpenCV 以约 30 fps 抽帧。",
+    "对每帧使用 TensorFlow/MoveNet 进行姿态估计。",
+    "追踪脚踝或绳索中点的纵向坐标。",
+    "当绳索下缘越过双脚并再次上升时判定为一次跳绳。",
+    "设置 0.4 秒消抖窗口，避免重复计数。",
+    "记录每次事件的时间戳并汇总。",
+    "计算总次数、平均频率等统计指标。"
+  ]
+};
+
+/* ========== 用于 UI 的翻译字典 ========== */
+const dict={
+  total:{en:"Total Jumps",zh:"跳绳总次数"},
+  duration:{en:"Video Duration",zh:"视频时长"},
+  freq:{en:"Average Frequency",zh:"平均频率"}
+};
+
+/* ========== 页面渲染函数 ========== */
+function renderSummary(lang){
+  const ul=document.getElementById(`${lang}-summary`);
+  ul.innerHTML="";
+  const li1=document.createElement("li");li1.className="list-group-item";
+  li1.textContent=`${dict.total[lang]}: ${jumpEvents.length}`;
+  const li2=document.createElement("li");li2.className="list-group-item";
+  li2.textContent=`${dict.duration[lang]}: ${videoDuration} s`;
+  const li3=document.createElement("li");li3.className="list-group-item";
+  const avg=(jumpEvents.length/videoDuration).toFixed(2);
+  li3.textContent=`${dict.freq[lang]}: ${avg} /s`;
+  ul.append(li1,li2,li3);
+}
+
+function renderMethod(lang){
+  const ol=document.getElementById(`${lang}-method`);
+  ol.innerHTML="";
+  methodology[lang].forEach(step=>{
+    const li=document.createElement("li");li.textContent=step;ol.appendChild(li);
+  });
+}
+
+function renderEvents(lang){
+  const ul=document.getElementById(`${lang}-events`);
+  ul.innerHTML="";
+  jumpEvents.forEach((t,i)=>{
+    const li=document.createElement("li");li.className="list-group-item";
+    li.textContent=`#${i+1} → ${t.toFixed(1)} s`;
+    ul.appendChild(li);
+  });
+}
+
+function renderChart(lang){
+  const ctx=document.getElementById(`${lang}-chart`);
+  /* 构造折线：x = time, y = cumulative count */
+  const labels=jumpEvents.map(t=>t.toFixed(1));
+  const data=jumpEvents.map((_,i)=>i+1);
+  return new Chart(ctx,{
+    type:"line",
+    data:{labels,datasets:[{data,fill:false,tension:0.1}]},
+    options:{
+      responsive:true,
+      scales:{x:{title:{display:true,text:lang==="en"?"Time (s)":"时间 (秒)"}}},
+      plugins:{legend:{display:false}}
+    }
+  });
+}
+
+/* ========== 初始化渲染 ========== */
+["en","zh"].forEach(l=>{
+  renderSummary(l);
+  renderMethod(l);
+  renderEvents(l);
+  renderChart(l);
+});
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
