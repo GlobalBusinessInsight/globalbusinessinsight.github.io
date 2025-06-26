@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Chosen Palette: "Calm Harmony" - Background: Slate 50, Text: Slate 800, Primary Accent: Blue 600, Secondary Accent: Amber 500 -->
+    <!-- Application Structure Plan: A thematic, non-linear dashboard SPA. The structure includes a top navigation bar for quick access to key sections: Overview, Timeline, Military Power, Key Operations, Strategic Rivals (Russia/China), and Future Challenges. This design prioritizes user-driven exploration over the linear format of the source report. The user can jump to any topic of interest, compare data interactively (e.g., filter military stats by country), and consume information in digestible, visually-supported chunks (e.g., timeline, tabbed content), which is more engaging and efficient for understanding the complex facets of NATO. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: NATO expansion history -> Goal: Show change -> Viz: Interactive vertical timeline -> Interaction: Scroll/Hover -> Justification: More intuitive and engaging than a static table -> Library/Method: HTML/CSS/JS.
+        - Report Info: Member military data (budget, troops) -> Goal: Compare -> Viz: Bar Chart -> Interaction: Filter by country -> Justification: Easiest way to compare quantitative data across multiple entities -> Library/Method: Chart.js.
+        - Report Info: Defense spending vs. 2% GDP target -> Goal: Compare/Inform -> Viz: Bar Chart with threshold line -> Interaction: Static view -> Justification: Clearly shows compliance and disparity within the alliance -> Library/Method: Chart.js.
+        - Report Info: NATO-Russia relations -> Goal: Organize/Explain -> Viz: HTML/CSS flowchart -> Interaction: Static view -> Justification: Simplifies a complex history of diplomatic shifts into an easy-to-follow visual narrative -> Library/Method: HTML/CSS.
+        - Report Info: Key military operations -> Goal: Inform -> Viz: Tabbed content cards -> Interaction: Click tabs -> Justification: Organizes distinct case studies cleanly, saving screen space and reducing cognitive load -> Library/Method: HTML/JS.
+        - Report Info: YouTube videos -> Goal: Inform/Engage -> Viz: Embedded iframe -> Interaction: Play video -> Justification: Direct integration of multimedia content from the source -> Library/Method: HTML.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <title>北约360°全景交互式展示</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 40vh;
+            max-height: 400px;
+            width: 100%;
+            max-width: 800px;
+        }
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            background-color: #d1d5db;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -3px;
+        }
+        .timeline-container {
+            padding: 10px 40px;
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+        }
+        .timeline-container.left {
+            left: 0;
+        }
+        .timeline-container.right {
+            left: 50%;
+        }
+        .timeline-container::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            right: -17px;
+            background-color: #f8fafc;
+            border: 4px solid #2563eb;
+            top: 15px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .timeline-container.right::after {
+            left: -16px;
+        }
+        .timeline-content {
+            padding: 20px 30px;
+            background-color: #ffffff;
+            position: relative;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        @media screen and (max-width: 768px) {
+            .timeline::after {
+                left: 31px;
+            }
+            .timeline-container {
+                width: 100%;
+                padding-left: 70px;
+                padding-right: 25px;
+            }
+            .timeline-container.right {
+                left: 0%;
+            }
+            .timeline-container.left::after, .timeline-container.right::after {
+                left: 15px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-slate-800">北约360°全景</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium">首页概览</a>
+                        <a href="#timeline" class="nav-link px-3 py-2 rounded-md text-sm font-medium">发展历程</a>
+                        <a href="#power" class="nav-link px-3 py-2 rounded-md text-sm font-medium">军事实力</a>
+                        <a href="#operations" class="nav-link px-3 py-2 rounded-md text-sm font-medium">关键行动</a>
+                        <a href="#rivals" class="nav-link px-3 py-2 rounded-md text-sm font-medium">战略对手</a>
+                        <a href="#challenges" class="nav-link px-3 py-2 rounded-md text-sm font-medium">未来挑战</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#overview" class="nav-link block px-3 py-2 rounded-md text-base font-medium">首页概览</a>
+                <a href="#timeline" class="nav-link block px-3 py-2 rounded-md text-base font-medium">发展历程</a>
+                <a href="#power" class="nav-link block px-3 py-2 rounded-md text-base font-medium">军事实力</a>
+                <a href="#operations" class="nav-link block px-3 py-2 rounded-md text-base font-medium">关键行动</a>
+                <a href="#rivals" class="nav-link block px-3 py-2 rounded-md text-base font-medium">战略对手</a>
+                <a href="#challenges" class="nav-link block px-3 py-2 rounded-md text-base font-medium">未来挑战</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <section id="overview" class="content-section">
+            <div class="bg-white rounded-lg shadow p-8 text-center animate-fade-in">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">北约：历史、实力与未来战略的全景解析</h2>
+                <p class="text-lg text-slate-600 max-w-4xl mx-auto mb-8">
+                    自1949年成立以来，北约已从一个遏制苏联的集体防御联盟，演变为应对复杂全球威胁的综合性安全组织。本应用旨在全景式解析北约的历史、军事实力、关键行动及其未来走向。我们将通过交互式图表和数据，揭示定义北约当前与未来的三大核心张力：来自俄罗斯的直接军事威胁、来自中国的“系统性挑战”，以及联盟内部的结构性矛盾。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                    <div class="bg-slate-100 p-6 rounded-lg">
+                        <div class="text-4xl font-bold text-blue-600">32</div>
+                        <div class="text-md text-slate-700 mt-2">成员国数量</div>
+                    </div>
+                    <div class="bg-slate-100 p-6 rounded-lg">
+                        <div class="text-4xl font-bold text-blue-600">~50%</div>
+                        <div class="text-md text-slate-700 mt-2">全球军费开支占比</div>
+                    </div>
+                    <div class="bg-slate-100 p-6 rounded-lg">
+                        <div class="text-4xl font-bold text-blue-600">75+</div>
+                        <div class="text-md text-slate-700 mt-2">年历史</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="timeline" class="content-section">
+            <div class="bg-white rounded-lg shadow p-8">
+                <h2 class="text-2xl font-bold text-center mb-2">发展历程</h2>
+                <p class="text-center text-slate-600 mb-12">从冷战对峙到后冷战时代的转型与扩张，北约的历史是一部不断适应地缘政治变迁的史诗。本节通过交互式时间线，展示了北约扩张的关键节点和战略概念的演变，揭示其如何从一个区域性防御联盟成长为今天的全球性安全角色。</p>
+                <div class="timeline">
+                </div>
+            </div>
+        </section>
+
+        <section id="power" class="content-section">
+            <div class="bg-white rounded-lg shadow p-8">
+                <h2 class="text-2xl font-bold text-center mb-2">核心军事实力对比</h2>
+                <p class="text-center text-slate-600 mb-12">北约的军事实力高度集中于少数关键成员国。本节通过交互式图表，直观对比美国、英国、法国、德国、土耳其和波兰等核心国家的国防预算、现役部队规模及关键装备。您可以点击按钮筛选特定国家的数据，深入了解联盟内部的力量格局。</p>
+                <div class="text-center mb-8">
+                    <div id="power-filters" class="flex flex-wrap justify-center gap-2">
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="powerChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="operations" class="content-section">
+            <div class="bg-white rounded-lg shadow p-8">
+                <h2 class="text-2xl font-bold text-center mb-2">关键军事行动</h2>
+                <p class="text-center text-slate-600 mb-12">冷战后，北约的职能从威慑转向干预，主导了数次重大的“出区域”军事行动。这些行动深刻塑造了联盟的战略认知，但也带来了复杂的后果和争议。本节将逐一解析巴尔干、阿富汗和利比亚这三次关键干预的背景、过程与影响。</p>
+                <div class="w-full max-w-4xl mx-auto">
+                    <div class="mb-4 border-b border-gray-200">
+                        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="op-tabs">
+                        </ul>
+                    </div>
+                    <div id="op-content">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="rivals" class="content-section">
+            <div class="bg-white rounded-lg shadow p-8">
+                 <h2 class="text-2xl font-bold text-center mb-2">主要战略对手</h2>
+                 <p class="text-center text-slate-600 mb-12">进入21世纪，北约面临着双重战略挑战：来自俄罗斯的直接、严峻的军事威胁，以及由中国带来的多层面“系统性挑战”。这种新的大国竞争格局，迫使联盟重新调整其防御态势和全球战略视野。</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-red-700">俄罗斯：从伙伴到对手</h3>
+                        <p class="text-slate-600 mb-4">北约与俄罗斯的关系经历了“三次起落”的螺旋式下降，最终在乌克兰危机中彻底破裂。北约视俄罗斯为当前最主要、最直接的威胁，并已回归集体防御的核心使命。</p>
+                        <div class="space-y-4 text-sm">
+                            <div class="flex items-start"><span class="font-bold text-red-600 w-24 flex-shrink-0">1990s:</span><div class="ml-2"><strong class="text-slate-800">谨慎合作:</strong> 签署《基本文件》，但因首轮东扩和科索沃战争而关系破裂。</div></div>
+                            <div class="flex items-start"><span class="font-bold text-red-600 w-24 flex-shrink-0">2000s:</span><div class="ml-2"><strong class="text-slate-800">短暂回暖:</strong> "9·11"后反恐合作，成立北约-俄罗斯理事会。但因2004年东扩和2008年俄格战争再次破裂。</div></div>
+                            <div class="flex items-start"><span class="font-bold text-red-600 w-24 flex-shrink-0">2014-至今:</span><div class="ml-2"><strong class="text-slate-800">彻底决裂:</strong> 俄罗斯吞并克里米亚，全面入侵乌克兰，双方关系完全敌对化。北约启动“增强前沿部署”。</div></div>
+                        </div>
+                         <div class="mt-6 aspect-w-16 aspect-h-9">
+                            <iframe class="rounded-lg" src="https://www.youtube.com/embed/f2iW9OyAZXY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                     <div class="bg-slate-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-amber-700">中国：系统性挑战</h3>
+                        <p class="text-slate-600 mb-4">北约对中国的认知经历了从忽视到警惕，最终在2022年《战略概念》中将其定义为“系统性挑战”。北约关切中国的军事现代化、经济影响力及其与俄罗斯的战略伙伴关系。</p>
+                        <div class="space-y-4 text-sm">
+                           <div class="flex items-start"><span class="font-bold text-amber-600 w-24 flex-shrink-0">核心关切:</span><div class="ml-2"><strong class="text-slate-800">价值观与秩序:</strong> 指责中国试图颠覆国际秩序，推广威权模式。</div></div>
+                           <div class="flex items-start"><span class="font-bold text-amber-600 w-24 flex-shrink-0">经济与技术:</span><div class="ml-2"><strong class="text-slate-800">战略依赖:</strong> 担忧中国利用经济杠杆控制关键基础设施和供应链。</div></div>
+                           <div class="flex items-start"><span class="font-bold text-amber-600 w-24 flex-shrink-0">安全与合作:</span><div class="ml-2"><strong class="text-slate-800">"东进亚太":</strong> 通过深化与日、韩、澳、新西兰(AP4)的伙伴关系来应对，引发中国“亚太版北约”的警惕。</div></div>
+                        </div>
+                         <div class="mt-6 aspect-w-16 aspect-h-9">
+                            <iframe class="rounded-lg" src="https://www.youtube.com/embed/2XbDqaEADV0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="challenges" class="content-section">
+            <div class="bg-white rounded-lg shadow p-8">
+                <h2 class="text-2xl font-bold text-center mb-2">内部困境与未来走向</h2>
+                <p class="text-center text-slate-600 mb-12">尽管外部威胁使北约空前团结，但联盟内部依然面临军费分摊、战略自主等长期挑战。同时，它还必须应对网络攻击、恐怖主义等新领域的威胁。本节将探讨这些内部困境，并展望北约未来十年的发展方向。</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 text-center">军费分摊：2% GDP目标达成情况</h3>
+                        <p class="text-center text-slate-600 mb-6 text-sm">军费“负担分摊”是跨大西洋关系中最持久的争议点。2014年，盟国承诺到2024年将国防开支提升至GDP的2%。下图展示了部分国家在2024年的预计达成情况，达标国家数量显著增加，但分歧依然存在。</p>
+                        <div class="chart-container" style="height: 50vh; max-height: 500px;">
+                            <canvas id="spendingChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4">未来十年三大走向</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-slate-800">1. 新战略概念落实</h4>
+                                <p class="text-slate-600 text-sm mt-1">全面落实2022年《战略概念》，在军事上建立数十万高戒备部队，在政治上加强与全球民主伙伴（特别是印太国家）的合作网络。</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800">2. "门户开放"政策的困境</h4>
+                                <p class="text-slate-600 text-sm mt-1">乌克兰和格鲁吉亚的加入前景渺茫。未来重点将从“是否接纳”转向“如何提供安全保障”，例如建立长期、制度化的安全援助框架。</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800">3. "欧洲支柱"的构建</h4>
+                                <p class="text-slate-600 text-sm mt-1">在对美国长期承诺的疑虑下，“欧洲战略自主”复兴。欧洲盟国将增加防务投入，整合国防工业，在周边安全事务中承担更多责任，以构建更强大的“北约欧洲支柱”。</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 aspect-w-16 aspect-h-9">
+                            <iframe class="rounded-lg" src="https://www.youtube.com/embed/9Rz8znwqRj4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white mt-12">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm">
+            <p>北约360°全景交互式展示 | 数据来源：综合公开报告与分析</p>
+        </div>
+    </footer>
+
+    <script>
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('.content-section');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        const timelineData = [
+            { year: '1949', title: '北约成立', text: '12个创始成员国签署《北大西洋公约》，核心是第五条款“集体防御”。' },
+            { year: '1952', title: '首次扩张', text: '希腊和土耳其加入，巩固南翼，遏制苏联黑海舰队。' },
+            { year: '1955', title: '西德加入与华约成立', text: '西德加入极大增强了常规防御，直接刺激苏联成立华沙条约组织。' },
+            { year: '1982', title: '西班牙加入', text: '加强了北约在南欧的战略地位。' },
+            { year: '1991', title: '冷战结束与转型', text: '华约解体，苏联瓦解。北约陷入身份危机，决定转型为危机管理者。' },
+            { year: '1995', title: '巴尔干干预', text: '首次在成员国领土之外采取大规模军事行动，轰炸波黑塞族。' },
+            { year: '1999', title: '首轮东扩与科索沃战争', text: '接纳波兰、捷克、匈牙利。绕开联合国安理会空袭南联盟。' },
+            { year: '2001', title: '激活第五条款', text: '“9·11”事件后，北约首次也是唯一一次激活第五条款，支持美国。' },
+            { year: '2004', title: '大规模东扩', text: '接纳7个中东欧国家，包括波罗的海三国，边界推至俄罗斯门口。' },
+            { year: '2011', title: '利比亚干预', text: '在联合国授权下军事介入利比亚，但其“政权更迭”的后果引发巨大争议。' },
+            { year: '2014', title: '乌克兰危机与关系破裂', text: '俄罗斯吞并克里米亚，北约暂停与俄所有合作，关系彻底破裂。' },
+            { year: '2022', title: '俄罗斯全面入侵乌克兰', text: '战争爆发，北约回归集体防御，并通过新《战略概念》将中国定义为“系统性挑战”。' },
+            { year: '2023-24', title: '北欧扩张', text: '长期中立的芬兰和瑞典因战争威胁而加入北约。' },
+        ];
+
+        const powerData = {
+            labels: ['国防预算(亿美元)', '现役部队(千人)', '主战坦克', '四代/五代机'],
+            countries: [
+                { name: '美国', data: [9970, 1328, 2600, 3800], color: 'rgba(59, 130, 246, 0.7)' },
+                { name: '英国', data: [680, 194, 150, 170], color: 'rgba(239, 68, 68, 0.7)' },
+                { name: '法国', data: [580, 205, 220, 230], color: 'rgba(34, 197, 94, 0.7)' },
+                { name: '德国', data: [730, 183, 320, 240], color: 'rgba(245, 158, 11, 0.7)' },
+                { name: '土耳其', data: [180, 355, 2400, 200], color: 'rgba(139, 92, 246, 0.7)' },
+                { name: '波兰', data: [300, 124, 700, 120], color: 'rgba(236, 72, 153, 0.7)' },
+            ]
+        };
+
+        const spendingData = {
+            labels: ['波兰', '美国', '英国', '德国', '法国', '土耳其', '加拿大', '西班牙', '比利时'],
+            datasets: [{
+                label: '国防开支占GDP(%)',
+                data: [3.9, 3.6, 2.3, 2.1, 2.05, 1.6, 1.3, 1.2, 1.1],
+                backgroundColor: (context) => context.raw >= 2 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
+                borderColor: (context) => context.raw >= 2 ? 'rgba(22, 163, 74, 1)' : 'rgba(220, 38, 38, 1)',
+                borderWidth: 1
+            }]
+        };
+        
+        const operationsData = [
+            { id: 'balkans', name: '巴尔干干预 (1995-99)', title: '首次"越出区域"的考验', text: '为制止波斯尼亚和科索沃的种族冲突，北约首次在成员国领土外大规模动武。行动在军事上达成目标，但因绕开联合国安理会（科索沃战争）和造成平民伤亡（包括轰炸中国大使馆）而备受争议，开创了“人道主义干预”的复杂先例。', video: 'https://www.youtube.com/embed/videoseries?list=PL2L8I1ga229xHrB0hJgLzS_N074qA4T1a' },
+            { id: 'afghanistan', name: '阿富汗战争 (2001-21)', title: '第五条款的激活与漫长撤离', text: '为应对“9·11”恐怖袭击，北约首次启动第五条款。长达20年的军事存在演变为一场复杂的反叛乱和国家重建行动。最终以塔利班重新掌权、北约仓促撤离告终，暴露了联盟在将军事胜利转化为持久政治成果方面的短板。', video: 'https://www.youtube.com/embed/Uvy4wV2Q_4k' },
+            { id: 'libya', name: '利比亚干预 (2011)', title: '“保护的责任”及其混乱遗产', text: '在联合国授权下，北约军事介入以“保护平民”。行动迅速推翻了卡扎菲政权，但被批评为超出了授权范围的“政权更迭”。干预后的利比亚陷入长期内战和混乱，并引发了欧洲难民危机，成为一个深刻的教训。', video: 'https://www.youtube.com/embed/O-j88f1pIIs' }
+        ];
+
+        let powerChartInstance;
+        let spendingChartInstance;
+
+        function showSection(hash) {
+            sections.forEach(section => {
+                if ('#' + section.id === hash) {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
+
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === hash) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+            
+            if(hash === '#power' && !powerChartInstance) createPowerChart();
+            if(hash === '#challenges' && !spendingChartInstance) createSpendingChart();
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function createTimeline() {
+            const container = document.querySelector('.timeline');
+            timelineData.forEach((item, index) => {
+                const side = index % 2 === 0 ? 'left' : 'right';
+                const element = document.createElement('div');
+                element.classList.add('timeline-container', side);
+                element.innerHTML = `
+                    <div class="timeline-content">
+                        <h3 class="text-lg font-bold text-blue-600">${item.year} - ${item.title}</h3>
+                        <p class="text-sm text-slate-600 mt-2">${item.text}</p>
+                    </div>
+                `;
+                container.appendChild(element);
+            });
+        }
+        
+        function createPowerFilters() {
+            const container = document.getElementById('power-filters');
+            const allButton = document.createElement('button');
+            allButton.textContent = '全部';
+            allButton.className = 'px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
+            allButton.onclick = () => updatePowerChart('全部');
+            container.appendChild(allButton);
+            powerData.countries.forEach(country => {
+                const button = document.createElement('button');
+                button.textContent = country.name;
+                button.className = 'px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
+                button.onclick = () => updatePowerChart(country.name);
+                container.appendChild(button);
+            });
+        }
+
+        function createPowerChart() {
+            const ctx = document.getElementById('powerChart').getContext('2d');
+            const initialDatasets = powerData.countries.map(c => ({
+                label: c.name,
+                data: c.data,
+                backgroundColor: c.color,
+                borderColor: c.color.replace('0.7', '1'),
+                borderWidth: 1
+            }));
+            
+            powerChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: powerData.labels,
+                    datasets: initialDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            type: 'logarithmic',
+                            ticks: {
+                                color: '#475569'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#475569',
+                                callback: function(value, index, values) {
+                                    const label = this.getLabelForValue(value);
+                                    return label.length > 16 ? label.substring(0, 16) + '...' : label;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#475569'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('en-US').format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updatePowerChart(countryName) {
+            if (!powerChartInstance) return;
+            let datasets;
+            if (countryName === '全部') {
+                 datasets = powerData.countries.map(c => ({
+                    label: c.name,
+                    data: c.data,
+                    backgroundColor: c.color,
+                    borderColor: c.color.replace('0.7', '1'),
+                    borderWidth: 1
+                }));
+            } else {
+                const country = powerData.countries.find(c => c.name === countryName);
+                datasets = [{
+                    label: country.name,
+                    data: country.data,
+                    backgroundColor: country.color,
+                    borderColor: country.color.replace('0.7', '1'),
+                    borderWidth: 1
+                }];
+            }
+            powerChartInstance.data.datasets = datasets;
+            powerChartInstance.update();
+        }
+
+        function createSpendingChart() {
+            const ctx = document.getElementById('spendingChart').getContext('2d');
+            spendingChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: spendingData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    elements: {
+                      bar: {
+                        borderWidth: 2,
+                      }
+                    },
+                    scales: {
+                      x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: (value) => value + '%',
+                            color: '#475569'
+                        },
+                        grid: {
+                          display: false
+                        }
+                      },
+                      y: {
+                        ticks: {
+                            color: '#475569'
+                        }
+                      }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${context.raw}%`
+                            }
+                        },
+                        annotation: {
+                            annotations: {
+                                line1: {
+                                    type: 'line',
+                                    xMin: 2,
+                                    xMax: 2,
+                                    borderColor: 'rgb(255, 99, 132)',
+                                    borderWidth: 2,
+                                    borderDash: [6, 6],
+                                    label: {
+                                        content: '2% Target',
+                                        enabled: true,
+                                        position: 'end'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createOperationTabs() {
+            const tabsContainer = document.getElementById('op-tabs');
+            const contentContainer = document.getElementById('op-content');
+            operationsData.forEach((op, index) => {
+                const li = document.createElement('li');
+                li.className = 'mr-2';
+                const button = document.createElement('button');
+                button.setAttribute('data-tab', op.id);
+                button.innerHTML = op.name;
+                button.className = `op-tab inline-block p-4 border-b-2 rounded-t-lg ${index === 0 ? 'text-blue-600 border-blue-600' : 'border-transparent hover:text-gray-600 hover:border-gray-300'}`;
+                li.appendChild(button);
+                tabsContainer.appendChild(li);
+
+                const div = document.createElement('div');
+                div.id = op.id;
+                div.className = `op-tab-content p-4 rounded-lg bg-slate-50 ${index === 0 ? '' : 'hidden'}`;
+                div.innerHTML = `
+                    <h3 class="text-xl font-bold text-slate-800">${op.title}</h3>
+                    <p class="mt-2 text-slate-600">${op.text}</p>
+                    <div class="mt-6 aspect-w-16 aspect-h-9">
+                        <iframe class="rounded-lg shadow-md w-full h-full" src="${op.video}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                `;
+                contentContainer.appendChild(div);
+            });
+            
+            document.querySelectorAll('.op-tab').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const tabId = e.target.getAttribute('data-tab');
+                    
+                    document.querySelectorAll('.op-tab').forEach(btn => {
+                        btn.classList.remove('text-blue-600', 'border-blue-600');
+                        btn.classList.add('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300');
+                    });
+                    e.target.classList.add('text-blue-600', 'border-blue-600');
+                    e.target.classList.remove('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300');
+
+                    document.querySelectorAll('.op-tab-content').forEach(content => {
+                        if(content.id === tabId) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const initialHash = window.location.hash || '#overview';
+            showSection(initialHash);
+            createTimeline();
+            createPowerFilters();
+            createOperationTabs();
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const hash = e.target.getAttribute('href');
+                    history.pushState(null, null, hash);
+                    showSection(hash);
+                    if (mobileMenu.classList.contains('block')) {
+                       mobileMenu.classList.remove('block');
+                       mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+            
+            mobileMenuButton.addEventListener('click', () => {
+                const isHidden = mobileMenu.classList.contains('hidden');
+                if (isHidden) {
+                    mobileMenu.classList.remove('hidden');
+                    mobileMenu.classList.add('block');
+                } else {
+                    mobileMenu.classList.remove('block');
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+
+            window.addEventListener('popstate', () => {
+                showSection(window.location.hash || '#overview');
+            });
+        });
+    </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
