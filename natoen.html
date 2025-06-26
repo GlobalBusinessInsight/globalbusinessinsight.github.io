@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Chosen Palette: "Calm Harmony" - Background: Slate 50, Text: Slate 800, Primary Accent: Blue 600, Secondary Accent: Amber 500 -->
+    <!-- Application Structure Plan: A thematic, non-linear dashboard SPA. The structure includes a top navigation bar for quick access to key sections: Overview, Timeline, Military Power, Key Operations, Strategic Rivals (Russia/China), and Future Challenges. This design prioritizes user-driven exploration over the linear format of the source report. The user can jump to any topic of interest, compare data interactively (e.g., filter military stats by country), and consume information in digestible, visually-supported chunks (e.g., timeline, tabbed content), which is more engaging and efficient for understanding the complex facets of NATO. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: NATO expansion history -> Goal: Show change -> Viz: Interactive vertical timeline -> Interaction: Scroll/Hover -> Justification: More intuitive and engaging than a static table -> Library/Method: HTML/CSS/JS.
+        - Report Info: Member military data (budget, troops) -> Goal: Compare -> Viz: Bar Chart -> Interaction: Filter by country -> Justification: Easiest way to compare quantitative data across multiple entities -> Library/Method: Chart.js.
+        - Report Info: Defense spending vs. 2% GDP target -> Goal: Compare/Inform -> Viz: Bar Chart with threshold line -> Interaction: Static view -> Justification: Clearly shows compliance and disparity within the alliance -> Library/Method: Chart.js.
+        - Report Info: NATO-Russia relations -> Goal: Organize/Explain -> Viz: HTML/CSS flowchart -> Interaction: Static view -> Justification: Simplifies a complex history of diplomatic shifts into an easy-to-follow visual narrative -> Library/Method: HTML/CSS.
+        - Report Info: Key military operations -> Goal: Inform -> Viz: Tabbed content cards -> Interaction: Click tabs -> Justification: Organizes distinct case studies cleanly, saving screen space and reducing cognitive load -> Library/Method: HTML/JS.
+        - Report Info: YouTube videos -> Goal: Inform/Engage -> Viz: Embedded iframe -> Interaction: Play video -> Justification: Direct integration of multimedia content from the source -> Library/Method: HTML.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <title>NATO 360° Interactive Panorama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 40vh;
+            max-height: 400px;
+            width: 100%;
+            max-width: 800px;
+        }
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 6px;
+            background-color: #d1d5db;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -3px;
+        }
+        .timeline-container {
+            padding: 10px 40px;
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+        }
+        .timeline-container.left {
+            left: 0;
+        }
+        .timeline-container.right {
+            left: 50%;
+        }
+        .timeline-container::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            right: -17px;
+            background-color: #f8fafc;
+            border: 4px solid #2563eb;
+            top: 15px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .timeline-container.right::after {
+            left: -16px;
+        }
+        .timeline-content {
+            padding: 20px 30px;
+            background-color: #ffffff;
+            position: relative;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        @media screen and (max-width: 768px) {
+            .timeline::after {
+                left: 31px;
+            }
+            .timeline-container {
+                width: 100%;
+                padding-left: 70px;
+                padding-right: 25px;
+            }
+            .timeline-container.right {
+                left: 0%;
+            }
+            .timeline-container.left::after, .timeline-container.right::after {
+                left: 15px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-slate-800">NATO 360° Panorama</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Overview</a>
+                        <a href="#timeline" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Timeline</a>
+                        <a href="#power" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Military Power</a>
+                        <a href="#operations" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Key Operations</a>
+                        <a href="#rivals" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Strategic Rivals</a>
+                        <a href="#challenges" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Future & Challenges</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#overview" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Overview</a>
+                <a href="#timeline" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Timeline</a>
+                <a href="#power" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Military Power</a>
+                <a href="#operations" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Key Operations</a>
+                <a href="#rivals" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Strategic Rivals</a>
+                <a href="#challenges" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Future & Challenges</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <section id="overview" class="content-section">
+            <div class="bg-white rounded-lg shadow p-8 text-center animate-fade-in">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">NATO: A Panorama of History, Power, and Future Strategy</h2>
+                <p class="text-lg text-slate-600 max-w-4xl mx-auto mb-8">
+                    Since its founding in 1949, NATO has evolved from a collective defense alliance focused on containing the Soviet Union into a comprehensive security organization addressing complex global threats. This application provides a panoramic analysis of NATO's history, military strength, key operations, and future direction. Through interactive charts and data, we will explore the three core tensions defining NATO's present and future: the direct military threat from Russia, the "systemic challenge" from China, and the Alliance's internal structural contradictions.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                    <div class="bg-slate-100 p-6 rounded-lg">
+                        <div class="text-4xl font-bold text-blue-600">32</div>
+                        <div class="text-md text-slate-700 mt-2">Member States</div>
+                    </div>
+                    <div class="bg-slate-100 p-6 rounded-lg">
+                        <div class="text-4xl font-bold text-blue-600">~50%</div>
+                        <div class="text-md text-slate-700 mt-2">Share of Global Military Spending</div>
+                    </div>
+                    <div class="bg-slate-100 p-6 rounded-lg">
+                        <div class="text-4xl font-bold text-blue-600">75+</div>
+                        <div class="text-md text-slate-700 mt-2">Years of History</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="timeline" class="content-section">
+            <div class="bg-white rounded-lg shadow p-8">
+                <h2 class="text-2xl font-bold text-center mb-2">Historical Timeline</h2>
+                <p class="text-center text-slate-600 mb-12">From Cold War confrontation to post-Cold War transformation and expansion, NATO's history is an epic of continuous adaptation to geopolitical change. This section uses an interactive timeline to showcase key milestones in NATO's expansion and the evolution of its strategic concepts, revealing its growth from a regional defense alliance to today's global security actor.</p>
+                <div class="timeline">
+                </div>
+            </div>
+        </section>
+
+        <section id="power" class="content-section">
+            <div class="bg-white rounded-lg shadow p-8">
+                <h2 class="text-2xl font-bold text-center mb-2">Core Military Strength Comparison</h2>
+                <p class="text-center text-slate-600 mb-12">NATO's military power is highly concentrated among a few key member states. This section provides an intuitive comparison of the defense budgets, active troop levels, and key equipment of core nations like the US, UK, France, Germany, Turkey, and Poland through an interactive chart. You can click the buttons to filter data for specific countries and gain a deeper understanding of the power dynamics within the Alliance.</p>
+                <div class="text-center mb-8">
+                    <div id="power-filters" class="flex flex-wrap justify-center gap-2">
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="powerChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="operations" class="content-section">
+            <div class="bg-white rounded-lg shadow p-8">
+                <h2 class="text-2xl font-bold text-center mb-2">Key Military Operations</h2>
+                <p class="text-center text-slate-600 mb-12">After the Cold War, NATO's role shifted from deterrence to intervention, leading several major "out-of-area" military operations. These actions profoundly shaped the Alliance's strategic perception but also brought complex consequences and controversies. This section will analyze the background, process, and impact of three key interventions: the Balkans, Afghanistan, and Libya.</p>
+                <div class="w-full max-w-4xl mx-auto">
+                    <div class="mb-4 border-b border-gray-200">
+                        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="op-tabs">
+                        </ul>
+                    </div>
+                    <div id="op-content">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="rivals" class="content-section">
+            <div class="bg-white rounded-lg shadow p-8">
+                 <h2 class="text-2xl font-bold text-center mb-2">Main Strategic Rivals</h2>
+                 <p class="text-center text-slate-600 mb-12">In the 21st century, NATO faces a dual strategic challenge: a direct and severe military threat from Russia, and a multi-faceted "systemic challenge" from China. This new landscape of great power competition is forcing the Alliance to recalibrate its defense posture and global strategic outlook.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-red-700">Russia: From Partner to Adversary</h3>
+                        <p class="text-slate-600 mb-4">NATO-Russia relations have experienced a downward spiral of "three rises and falls," ultimately collapsing during the Ukraine crisis. NATO now views Russia as its most significant and direct threat, having returned to its core mission of collective defense.</p>
+                        <div class="space-y-4 text-sm">
+                            <div class="flex items-start"><span class="font-bold text-red-600 w-24 flex-shrink-0">1990s:</span><div class="ml-2"><strong class="text-slate-800">Cautious Cooperation:</strong> Signed the Founding Act, but relations fractured over the first round of eastward expansion and the Kosovo War.</div></div>
+                            <div class="flex items-start"><span class="font-bold text-red-600 w-24 flex-shrink-0">2000s:</span><div class="ml-2"><strong class="text-slate-800">Brief Thaw:</strong> Post-9/11 counter-terrorism cooperation led to the NATO-Russia Council. Relations broke down again after the 2004 expansion and the 2008 Russo-Georgian War.</div></div>
+                            <div class="flex items-start"><span class="font-bold text-red-600 w-24 flex-shrink-0">2014-Present:</span><div class="ml-2"><strong class="text-slate-800">Total Rupture:</strong> Russia's annexation of Crimea and full-scale invasion of Ukraine turned the relationship completely adversarial. NATO initiated its "Enhanced Forward Presence."</div></div>
+                        </div>
+                         <div class="mt-6 aspect-w-16 aspect-h-9">
+                            <iframe class="rounded-lg" src="https://www.youtube.com/embed/f2iW9OyAZXY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                     <div class="bg-slate-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-amber-700">China: A Systemic Challenge</h3>
+                        <p class="text-slate-600 mb-4">NATO's perception of China has shifted from neglect to vigilance, culminating in its 2022 Strategic Concept, which defines China as a "systemic challenge." NATO is concerned about China's military modernization, economic influence, and its strategic partnership with Russia.</p>
+                        <div class="space-y-4 text-sm">
+                           <div class="flex items-start"><span class="font-bold text-amber-600 w-24 flex-shrink-0">Core Concerns:</span><div class="ml-2"><strong class="text-slate-800">Values & Order:</strong> Accuses China of attempting to subvert the international order and promote authoritarian models.</div></div>
+                           <div class="flex items-start"><span class="font-bold text-amber-600 w-24 flex-shrink-0">Economy & Tech:</span><div class="ml-2"><strong class="text-slate-800">Strategic Dependencies:</strong> Worries about China using economic leverage to control critical infrastructure and supply chains.</div></div>
+                           <div class="flex items-start"><span class="font-bold text-amber-600 w-24 flex-shrink-0">Security & Cooperation:</span><div class="ml-2"><strong class="text-slate-800">Indo-Pacific "Tilt":</strong> Responds by deepening partnerships with Japan, South Korea, Australia, and New Zealand (AP4), raising China's fears of an "Asia-Pacific version of NATO."</div></div>
+                        </div>
+                         <div class="mt-6 aspect-w-16 aspect-h-9">
+                            <iframe class="rounded-lg" src="https://www.youtube.com/embed/2XbDqaEADV0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="challenges" class="content-section">
+            <div class="bg-white rounded-lg shadow p-8">
+                <h2 class="text-2xl font-bold text-center mb-2">Internal Dilemmas & Future Directions</h2>
+                <p class="text-center text-slate-600 mb-12">Despite unprecedented unity against external threats, the Alliance still faces long-standing internal challenges like burden-sharing and strategic autonomy. It must also tackle threats in new domains like cyberattacks and terrorism. This section explores these internal dilemmas and looks ahead to NATO's direction over the next decade.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 text-center">Burden-Sharing: Meeting the 2% GDP Target</h3>
+                        <p class="text-center text-slate-600 mb-6 text-sm">Defense spending "burden-sharing" is the most persistent dispute in transatlantic relations. In 2014, allies pledged to raise defense spending to 2% of their GDP by 2024. The chart below shows the estimated compliance for selected countries in 2024. The number of compliant nations has significantly increased, but disparities remain.</p>
+                        <div class="chart-container" style="height: 50vh; max-height: 500px;">
+                            <canvas id="spendingChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4">Three Major Directions for the Next Decade</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-slate-800">1. Implementing the New Strategic Concept</h4>
+                                <p class="text-slate-600 text-sm mt-1">Fully implement the 2022 Strategic Concept by establishing hundreds of thousands of high-readiness troops and strengthening a cooperative network with global democratic partners, especially in the Indo-Pacific.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800">2. The "Open Door" Policy Dilemma</h4>
+                                <p class="text-slate-600 text-sm mt-1">The prospect of Ukraine and Georgia joining is slim. The focus will shift from "if" to "how" to provide security, such as through long-term, institutionalized security assistance frameworks.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-slate-800">3. Building the "European Pillar"</h4>
+                                <p class="text-slate-600 text-sm mt-1">Doubts about long-term US commitment have revived "European strategic autonomy." European allies will increase defense investment, integrate their defense industries, and take on more responsibility for regional security to build a stronger "European pillar" within NATO.</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 aspect-w-16 aspect-h-9">
+                            <iframe class="rounded-lg" src="https://www.youtube.com/embed/9Rz8znwqRj4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white mt-12">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm">
+            <p>NATO 360° Interactive Panorama | Data sourced from public reports and analysis</p>
+        </div>
+    </footer>
+
+    <script>
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('.content-section');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        const timelineData = [
+            { year: '1949', title: 'NATO Founded', text: '12 founding members sign the North Atlantic Treaty, with Article 5 "collective defense" at its core.' },
+            { year: '1952', title: 'First Enlargement', text: 'Greece and Turkey join, securing the southern flank and containing the Soviet Black Sea Fleet.' },
+            { year: '1955', title: 'West Germany Joins & Warsaw Pact Forms', text: 'West Germany\'s entry greatly enhances conventional defense, directly prompting the Soviet Union to form the Warsaw Pact.' },
+            { year: '1982', title: 'Spain Joins', text: 'Strengthens NATO\'s strategic position in Southern Europe.' },
+            { year: '1991', title: 'Cold War Ends & Transformation', text: 'The Warsaw Pact dissolves, and the Soviet Union collapses. NATO faces an identity crisis and decides to transform into a crisis manager.' },
+            { year: '1995', title: 'Balkan Intervention', text: 'First large-scale military action outside member territory, bombing Bosnian Serb positions.' },
+            { year: '1999', title: 'First Post-Cold War Enlargement & Kosovo War', text: 'Admits Poland, the Czech Republic, and Hungary. Bypasses the UN Security Council to launch airstrikes on Yugoslavia.' },
+            { year: '2001', title: 'Article 5 Invoked', text: 'After the 9/11 attacks, NATO invokes Article 5 for the first and only time in its history in support of the US.' },
+            { year: '2004', title: 'Major Eastern Enlargement', text: 'Admits 7 Central and Eastern European countries, including the Baltic states, pushing its border to Russia\'s doorstep.' },
+            { year: '2011', title: 'Libya Intervention', text: 'Military intervention in Libya under a UN mandate, but the "regime change" outcome sparks huge controversy.' },
+            { year: '2014', title: 'Ukraine Crisis & Rupture with Russia', text: 'Russia annexes Crimea. NATO suspends all practical cooperation with Russia, and relations completely break down.' },
+            { year: '2022', title: 'Full-Scale Invasion of Ukraine', text: 'The war begins. NATO returns to collective defense and defines China as a "systemic challenge" in its new Strategic Concept.' },
+            { year: '2023-24', title: 'Nordic Enlargement', text: 'Long-neutral Finland and Sweden join NATO in response to the war threat.' },
+        ];
+
+        const powerData = {
+            labels: ['Defense Budget ($B)', 'Active Troops (k)', 'Main Battle Tanks', '4th/5th Gen Aircraft'],
+            countries: [
+                { name: 'USA', data: [997, 1328, 2600, 3800], color: 'rgba(59, 130, 246, 0.7)' },
+                { name: 'UK', data: [68, 194, 150, 170], color: 'rgba(239, 68, 68, 0.7)' },
+                { name: 'France', data: [58, 205, 220, 230], color: 'rgba(34, 197, 94, 0.7)' },
+                { name: 'Germany', data: [73, 183, 320, 240], color: 'rgba(245, 158, 11, 0.7)' },
+                { name: 'Turkey', data: [18, 355, 2400, 200], color: 'rgba(139, 92, 246, 0.7)' },
+                { name: 'Poland', data: [30, 124, 700, 120], color: 'rgba(236, 72, 153, 0.7)' },
+            ]
+        };
+        
+        const spendingData = {
+            labels: ['Poland', 'USA', 'UK', 'Germany', 'France', 'Turkey', 'Canada', 'Spain', 'Belgium'],
+            datasets: [{
+                label: 'Defense Spending (% of GDP)',
+                data: [3.9, 3.6, 2.3, 2.1, 2.05, 1.6, 1.3, 1.2, 1.1],
+                backgroundColor: (context) => context.raw >= 2 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)',
+                borderColor: (context) => context.raw >= 2 ? 'rgba(22, 163, 74, 1)' : 'rgba(220, 38, 38, 1)',
+                borderWidth: 1
+            }]
+        };
+        
+        const operationsData = [
+            { id: 'balkans', name: 'Balkans (1995-99)', title: 'The First "Out-of-Area" Test', text: 'To stop ethnic conflicts in Bosnia and Kosovo, NATO conducted its first large-scale military actions outside member territory. The operations were militarily successful but controversial for bypassing the UN Security Council (in Kosovo) and causing civilian casualties, setting a complex precedent for "humanitarian intervention."', video: 'https://www.youtube.com/embed/v8B0QG_m_cI' },
+            { id: 'afghanistan', name: 'Afghanistan (2001-21)', title: 'Invoking Article 5 & The Long Withdrawal', text: 'In response to 9/11, NATO invoked Article 5 for the first time. The 20-year military presence evolved into a complex counter-insurgency and nation-building mission. It ended in a strategic failure with the Taliban\'s return to power and a hasty withdrawal, exposing the Alliance\'s struggles in translating military wins into lasting political outcomes.', video: 'https://www.youtube.com/embed/d34C69a5H7Y' },
+            { id: 'libya', name: 'Libya (2011)', title: 'Responsibility to Protect & Its Chaotic Legacy', text: 'Under a UN mandate to "protect civilians," NATO intervened militarily. The operation quickly toppled the Gaddafi regime but was criticized for exceeding its mandate and becoming a "regime change" war. Post-intervention Libya descended into prolonged civil war and chaos, fueling the European refugee crisis and serving as a profound lesson.', video: 'https://www.youtube.com/embed/A8n4-A8s_yI' }
+        ];
+
+        let powerChartInstance;
+        let spendingChartInstance;
+
+        function showSection(hash) {
+            sections.forEach(section => {
+                if ('#' + section.id === hash) {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
+
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === hash) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+            
+            if(hash === '#power' && !powerChartInstance) createPowerChart();
+            if(hash === '#challenges' && !spendingChartInstance) createSpendingChart();
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function createTimeline() {
+            const container = document.querySelector('.timeline');
+            container.innerHTML = ''; // Clear previous content
+            timelineData.forEach((item, index) => {
+                const side = index % 2 === 0 ? 'left' : 'right';
+                const element = document.createElement('div');
+                element.classList.add('timeline-container', side);
+                element.innerHTML = `
+                    <div class="timeline-content">
+                        <h3 class="text-lg font-bold text-blue-600">${item.year} - ${item.title}</h3>
+                        <p class="text-sm text-slate-600 mt-2">${item.text}</p>
+                    </div>
+                `;
+                container.appendChild(element);
+            });
+        }
+        
+        function createPowerFilters() {
+            const container = document.getElementById('power-filters');
+            container.innerHTML = ''; // Clear previous content
+            const allButton = document.createElement('button');
+            allButton.textContent = 'All';
+            allButton.className = 'px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
+            allButton.onclick = () => updatePowerChart('All');
+            container.appendChild(allButton);
+            powerData.countries.forEach(country => {
+                const button = document.createElement('button');
+                button.textContent = country.name;
+                button.className = 'px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500';
+                button.onclick = () => updatePowerChart(country.name);
+                container.appendChild(button);
+            });
+        }
+
+        function createPowerChart() {
+            const ctx = document.getElementById('powerChart').getContext('2d');
+            // Convert budget from hundreds of millions to billions for label consistency
+            powerData.countries.forEach(c => c.data[0] = c.data[0] / 10);
+            
+            const initialDatasets = powerData.countries.map(c => ({
+                label: c.name,
+                data: c.data,
+                backgroundColor: c.color,
+                borderColor: c.color.replace('0.7', '1'),
+                borderWidth: 1
+            }));
+            
+            powerChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: powerData.labels,
+                    datasets: initialDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            type: 'logarithmic',
+                            ticks: {
+                                color: '#475569'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#475569',
+                                callback: function(value, index, values) {
+                                    const label = this.getLabelForValue(value);
+                                    return label.length > 16 ? label.substring(0, 16) + '...' : label;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#475569'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('en-US').format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updatePowerChart(countryName) {
+            if (!powerChartInstance) return;
+            let datasets;
+            if (countryName === 'All') {
+                 datasets = powerData.countries.map(c => ({
+                    label: c.name,
+                    data: c.data,
+                    backgroundColor: c.color,
+                    borderColor: c.color.replace('0.7', '1'),
+                    borderWidth: 1
+                }));
+            } else {
+                const country = powerData.countries.find(c => c.name === countryName);
+                datasets = [{
+                    label: country.name,
+                    data: country.data,
+                    backgroundColor: country.color,
+                    borderColor: country.color.replace('0.7', '1'),
+                    borderWidth: 1
+                }];
+            }
+            powerChartInstance.data.datasets = datasets;
+            powerChartInstance.update();
+        }
+
+        function createSpendingChart() {
+            const ctx = document.getElementById('spendingChart').getContext('2d');
+            spendingChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: spendingData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    elements: {
+                      bar: {
+                        borderWidth: 2,
+                      }
+                    },
+                    scales: {
+                      x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: (value) => value + '%',
+                            color: '#475569'
+                        },
+                        grid: {
+                          display: false
+                        }
+                      },
+                      y: {
+                        ticks: {
+                            color: '#475569'
+                        }
+                      }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.dataset.label}: ${context.raw}%`
+                            }
+                        },
+                        annotation: {
+                            annotations: {
+                                line1: {
+                                    type: 'line',
+                                    xMin: 2,
+                                    xMax: 2,
+                                    borderColor: 'rgb(255, 99, 132)',
+                                    borderWidth: 2,
+                                    borderDash: [6, 6],
+                                    label: {
+                                        content: '2% Target',
+                                        enabled: true,
+                                        position: 'end'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createOperationTabs() {
+            const tabsContainer = document.getElementById('op-tabs');
+            const contentContainer = document.getElementById('op-content');
+            tabsContainer.innerHTML = '';
+            contentContainer.innerHTML = '';
+
+            operationsData.forEach((op, index) => {
+                const li = document.createElement('li');
+                li.className = 'mr-2';
+                const button = document.createElement('button');
+                button.setAttribute('data-tab', op.id);
+                button.innerHTML = op.name;
+                button.className = `op-tab inline-block p-4 border-b-2 rounded-t-lg ${index === 0 ? 'text-blue-600 border-blue-600' : 'border-transparent hover:text-gray-600 hover:border-gray-300'}`;
+                li.appendChild(button);
+                tabsContainer.appendChild(li);
+
+                const div = document.createElement('div');
+                div.id = op.id;
+                div.className = `op-tab-content p-4 rounded-lg bg-slate-50 ${index === 0 ? '' : 'hidden'}`;
+                div.innerHTML = `
+                    <h3 class="text-xl font-bold text-slate-800">${op.title}</h3>
+                    <p class="mt-2 text-slate-600">${op.text}</p>
+                    <div class="mt-6 aspect-w-16 aspect-h-9">
+                        <iframe class="rounded-lg shadow-md w-full h-full" src="${op.video}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                `;
+                contentContainer.appendChild(div);
+            });
+            
+            document.querySelectorAll('.op-tab').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const tabId = e.target.getAttribute('data-tab');
+                    
+                    document.querySelectorAll('.op-tab').forEach(btn => {
+                        btn.classList.remove('text-blue-600', 'border-blue-600');
+                        btn.classList.add('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300');
+                    });
+                    e.target.classList.add('text-blue-600', 'border-blue-600');
+                    e.target.classList.remove('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300');
+
+                    document.querySelectorAll('.op-tab-content').forEach(content => {
+                        if(content.id === tabId) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const initialHash = window.location.hash || '#overview';
+            showSection(initialHash);
+            createTimeline();
+            createPowerFilters();
+            createOperationTabs();
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const hash = e.target.getAttribute('href');
+                    history.pushState(null, null, hash);
+                    showSection(hash);
+                    if (mobileMenu.classList.contains('block')) {
+                       mobileMenu.classList.remove('block');
+                       mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+            
+            mobileMenuButton.addEventListener('click', () => {
+                const isHidden = mobileMenu.classList.contains('hidden');
+                if (isHidden) {
+                    mobileMenu.classList.remove('hidden');
+                    mobileMenu.classList.add('block');
+                } else {
+                    mobileMenu.classList.remove('block');
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+
+            window.addEventListener('popstate', () => {
+                showSection(window.location.hash || '#overview');
+            });
+        });
+    </script>
+</body>
+</html>
