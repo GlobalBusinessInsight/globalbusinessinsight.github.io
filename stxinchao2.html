@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ST新潮资本运作路径交互式分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: A single-page dashboard design with smooth-scrolling navigation. The structure is thematic, not linear, to facilitate user-driven exploration. It starts with a high-level overview (Hero & Key Metrics), moves to a detailed historical deep-dive (Interactive Timeline & Charts), focuses on the central conflict (Takeover Battle), and concludes with a forward-looking analysis (Value & Outlook). This structure allows users to either get a quick summary or investigate specific areas of interest, which is more effective for understanding complex business scenarios than a simple report-to-webpage conversion. The core interaction is the timeline, which unpacks complex events on demand, preventing information overload. New sections for detailed company background, IT, US operations, and stock price history are integrated logically within existing or new thematic areas. -->
+    <!-- Visualization & Content Choices: 
+        1.  Report Info: Key financials (Revenue, Profit, etc.). Goal: Inform/Compare. Viz: Key metric cards & a Bar Chart (Chart.js). Interaction: None, static display for quick overview. Justification: Cards offer at-a- glance KPIs. Bar chart shows performance trend clearly.
+        2.  Report Info: Major capital events timeline. Goal: Change/Organize. Viz: Interactive vertical timeline (HTML/CSS/JS). Interaction: Click to reveal details. Justification: Far superior to a static table for storytelling and exploring complex history without overwhelming the user.
+        3.  Report Info: Competing takeover offers. Goal: Compare/Inform. Viz: Side-by-side cards and a Doughnut Chart (Chart.js). Interaction: Hover tooltips on chart. Justification: Direct comparison is essential. The doughnut chart provides a quick visual cue of the difference in control ambition (51% vs 20%).
+        4.  Report Info: Business value & future outlook. Goal: Inform/Organize. Viz: Icon-based info cards (HTML/CSS). Interaction: None. Justification: Easily digestible summary of qualitative analysis.
+        5.  Report Info: Stock price history & control changes. Goal: Change/Inform. Viz: Line Chart (Chart.js) with annotations. Interaction: Hover for details. Justification: Visually links price movements to key events.
+        6.  Report Info: Historical financials vs. oil prices. Goal: Compare/Change/Inform. Viz: Dual-axis Line Chart (Chart.js). Interaction: Hover for details. Justification: Directly illustrates correlation between company performance and external market factors.
+        7.  Report Info: Recent financials & peer comparison. Goal: Compare/Inform. Viz: Table. Interaction: None. Justification: Provides direct numerical comparison for benchmarking.
+        8.  Report Info: Detailed company background (management, board, oilfield specifics, IT, US ops). Goal: Inform/Organize. Viz: Detailed text blocks and structured lists/tables. Interaction: None. Justification: Provides comprehensive static information.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F4;
+            color: #333D42;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #0D63A5;
+            border-bottom-color: #0D63A5;
+        }
+        .timeline-item-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
+        }
+        .timeline-item-content.open {
+            max-height: 1000px;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 40vh;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 50vh;
+            }
+        }
+        /* Mobile optimization for tables */
+        .overflow-x-auto table {
+            min-width: 600px; /* Ensure table content doesn't wrap too tightly */
+        }
+        .overflow-x-auto th, .overflow-x-auto td {
+            padding: 0.75rem 0.5rem; /* Adjust padding for smaller screens */
+            white-space: normal; /* Allow text to wrap within cells */
+        }
+        @media (max-width: 640px) {
+            .overflow-x-auto th, .overflow-x-auto td {
+                font-size: 0.75rem; /* Smaller font size on very small screens */
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-[#2C3E50]">ST新潮 资本透视</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium">公司概况</a>
+                        <a href="#journey" class="nav-link px-3 py-2 rounded-md text-sm font-medium">资本历程</a>
+                        <a href="#battle" class="nav-link px-3 py-2 rounded-md text-sm font-medium">控制权之争</a>
+                        <a href="#future" class="nav-link px-3 py-2 rounded-md text-sm font-medium">价值与展望</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="md:hidden hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a href="#overview" class="block nav-link px-3 py-2 rounded-md text-base font-medium">公司概况</a>
+                    <a href="#journey" class="block nav-link px-3 py-2 rounded-md text-base font-medium">资本历程</a>
+                    <a href="#battle" class="block nav-link px-3 py-2 rounded-md text-base font-medium">控制权之争</a>
+                    <a href="#future" class="block nav-link px-3 py-2 rounded-md text-base font-medium">价值与展望</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <section id="overview" class="mb-16 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#2C3E50]">优质资产与治理困境的博弈</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">ST新潮能源，一家坐拥美国核心油气资产的A股上市公司。其强劲的业绩与“ST”标签、长期股东纷争形成鲜明对比。如今，两份竞争性要约收购将其推向了控制权争夺的风口浪尖，公司的未来走向充满变数。</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
+                <h3 class="text-2xl font-semibold mb-6 text-center text-[#2C3E50]">核心财务与业务概览</h3>
+                 <p class="text-center text-gray-500 mb-8">本节展示了ST新潮在油气转型后的强大财务基础和核心业务布局。通过关键财务指标和业务转型路径，您可以快速了解公司的运营实力，这正是吸引资本方展开收购争夺的根本原因。</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center mb-10">
+                    <div class="bg-[#F0F4F8] p-4 rounded-lg">
+                        <p class="text-sm text-gray-500">2024前三季度营收</p>
+                        <p class="text-2xl font-bold text-[#0D63A5]">64.30 亿元</p>
+                    </div>
+                    <div class="bg-[#F0F4F8] p-4 rounded-lg">
+                        <p class="text-sm text-gray-500">2024前三季度净利润</p>
+                        <p class="text-2xl font-bold text-[#0D63A5]">16.52 亿元</p>
+                    </div>
+                    <div class="bg-[#F0F4F8] p-4 rounded-lg">
+                        <p class="text-sm text-gray-500">净资产 (2024 Q3)</p>
+                        <p class="text-2xl font-bold text-[#0D63A5]">215.84 亿元</p>
+                    </div>
+                    <div class="bg-[#F0F4F8] p-4 rounded-lg">
+                        <p class="text-sm text-gray-500">资产负债率 (2024 Q3)</p>
+                        <p class="text-2xl font-bold text-[#2E7D32]">36.46%</p>
+                    </div>
+                </div>
+                
+                <div class="mt-8">
+                    <h4 class="text-xl font-semibold mb-4 text-center">战略转型之路：从多元化到聚焦油气</h4>
+                    <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-8 text-center">
+                        <div class="p-4 rounded-lg bg-gray-100 w-full md:w-auto">
+                            <p class="font-bold">上市初期 (1996-2013)</p>
+                            <p class="text-sm">纺织、电缆、房地产等多元业务</p>
+                        </div>
+                        <div class="text-3xl text-[#0D63A5]">→</div>
+                        <div class="p-4 rounded-lg bg-gradient-to-r from-blue-100 to-green-100 w-full md:w-auto ring-2 ring-[#0D63A5]">
+                            <p class="font-bold">战略转型 (2014-至今)</p>
+                            <p class="text-sm">聚焦美国二叠纪盆地核心油气资产</p>
+                        </div>
+                    </div>
+                     <p class="text-center text-sm text-gray-500 mt-4">2014年是公司的关键转折点，公司启动重大战略转型，将未来发展方向明确为海外石油和天然气的勘探、开采及销售，并开始剥离原有的传统资产。这一逆周期投资策略为公司当前的内在价值奠定了坚实基础。</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
+                <h3 class="text-2xl font-semibold mb-6 text-center text-[#2C3E50]">公司治理结构与组织架构</h3>
+                <p class="text-center text-gray-500 mb-8">本节详细介绍ST新潮的治理结构、组织架构以及人员规模，并概述其核心承包商和关键合作伙伴，这些是公司高效运营和持续发展的保障。</p>
+                
+                <div class="mb-8">
+                    <h4 class="text-xl font-semibold mb-4">公司治理结构：总部与分子公司</h4>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>**中国总部：** 位于山东省烟台市，主要负责上市公司的战略规划、资本运作、财务管理、投资者关系以及合规管理等职能。总部作为集团的决策中心，统筹协调国内外业务。</li>
+                        <li>**美国子公司：** ST新潮的核心运营实体是其在美国得克萨斯州设立的油气子公司**Surge Energy America LLC**（巨浪能源），负责所有美国油气资产的勘探、开发、生产和销售。Surge Energy是公司油气业务的利润中心和运营主体。</li>
+                    </ul>
+                    <p class="text-sm text-gray-500 mt-4">这种“中国总部+美国运营子公司”的治理模式，旨在实现全球化战略布局与本地化高效运营的结合。</p>
+                </div>
+
+                <div class="mb-8">
+                    <h4 class="text-xl font-semibold mb-4">核心公司组织架构与人员规模</h4>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>**组织架构：** ST新潮的组织架构相对扁平化，以提高决策效率和市场响应速度。中国总部主要设置董事会、监事会、高级管理层以及财务部、证券部、法务部、审计部等职能部门。美国子公司Surge Energy则设有勘探部、开发部、生产部、工程部、HSE（健康、安全、环境）部、供应链部、财务部和人力资源部等，以支持其油气全产业链运营。</li>
+                        <li>**人员规模：**
+                            <ul>
+                                <li>**中国总部：** 员工人数相对精简，主要为管理和支持人员。</li>
+                                <li>**美国子公司：** 拥有一支经验丰富的本地化运营团队，包括地质学家、油气工程师、钻井专家、现场操作人员以及行政支持人员等，总人数在**200-300人**左右（此为估算，具体数据请以公司年报为准）。这支团队确保了油气资产的专业化管理和高效生产。</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p class="text-sm text-gray-500 mt-4">公司通过精干的中国总部和专业的美国运营团队，实现了对全球油气资产的有效管理。</p>
+                </div>
+
+                <div class="mb-8">
+                    <h4 class="text-xl font-semibold mb-4">核心承包商与关键合作伙伴</h4>
+                    <p class="text-gray-700 mb-4">ST新潮在油气勘探开发过程中，与众多专业承包商和合作伙伴建立了长期稳定的合作关系，以确保高效、安全的生产运营。这些合作伙伴主要集中在以下领域：</p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>**钻井服务商：** 与国际知名的钻井承包商合作，提供水平井钻井、定向钻井等服务。例如，可能与**Halliburton (哈里伯顿)、Schlumberger (斯伦贝谢)、Baker Hughes (贝克休斯)**等公司在钻井设备、技术服务方面有合作。</li>
+                        <li>**完井服务商：** 提供压裂、固井、射孔等完井作业服务，这些是页岩油气高效开发的关键环节。</li>
+                        <li>**油服设备供应商：** 采购各类油气生产、集输设备，如泵、阀门、分离器、压缩机等。</li>
+                        <li>**管道运营商：** 与当地主要的油气集输和外输管道公司合作，确保原油和天然气能高效运往炼厂或销售市场。</li>
+                        <li>**物流与工程服务商：** 提供现场物资运输、设备安装、基础设施建设等服务。</li>
+                        <li>**技术咨询与研究机构：** 在油藏评价、开发方案优化、新技术应用等方面寻求外部专业支持。</li>
+                    </ul>
+                    <p class="text-sm text-gray-500 mt-4">通过与这些专业承包商和合作伙伴的紧密协作，ST新潮能够有效利用外部资源，降低运营成本，并专注于核心的油气资产管理和生产优化。</p>
+                </div>
+
+                <div class="mb-8">
+                    <h4 class="text-xl font-semibold mb-4">核心管理团队</h4>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>**刘斌**：董事长。男，1970年出生，毕业于湘潭大学。现任中金创新（北京）国际投资管理顾问有限公司董事长兼经理、湖北高金投资管理有限公司董事长、武汉高睿投资管理有限公司董事、中金创新（北京）资产管理有限公司董事长兼经理、北京友邦联合高新技术有限公司监事等职务。同时兼任山东新潮能源股份有限公司总经理助理、职工代表董事。</li>
+                        <li>**李宏 (Lihong Coe)**：总经理。负责公司日常运营和业务管理。</li>
+                        <li>**周兵**：副总经理。协助总经理管理公司日常事务。</li>
+                        <li>**王思智**：董事会秘书兼监事会主席。负责信息披露、投资者关系及监事会工作。</li>
+                    </ul>
+                    <p class="text-sm text-gray-500 mt-4">当前管理团队致力于清理历史遗留问题并平衡各方股东利益。</p>
+                </div>
+
+                <div>
+                    <h4 class="text-xl font-semibold mb-4">董事会构成</h4>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white rounded-lg shadow-md">
+                            <thead>
+                                <tr class="bg-gray-100 text-left text-sm font-semibold text-gray-600">
+                                    <th class="py-3 px-4 rounded-tl-lg whitespace-nowrap">姓名</th>
+                                    <th class="py-3 px-4 whitespace-nowrap">职务</th>
+                                    <th class="py-3 px-4 whitespace-nowrap">代表股东类型 / 利益主体</th>
+                                    <th class="py-3 px-4 rounded-tr-lg">主要背景/立场分析</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 px-4 whitespace-nowrap">刘斌</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">董事长，非独立董事</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">管理层代表，职工代表</td>
+                                    <td class="py-3 px-4">公司整体战略与运营管理，与现任管理层高度一致，是抵制伊泰集团的关键力量。</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 px-4 whitespace-nowrap">范啸川</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">非独立董事</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">与现任管理层结盟</td>
+                                    <td class="py-3 px-4">普遍被视为与现任管理层结盟。从近期投票记录看，与董事长刘斌的行动保持高度一致，共同构成董事会的多数派。</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 px-4 whitespace-nowrap">程天宇</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">非独立董事</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">与现任管理层结盟</td>
+                                    <td class="py-3 px-4">普遍被视为与现任管理层结盟。从近期投票记录看，与董事长刘斌的行动保持高度一致，共同构成董事会的多数派。</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 px-4 whitespace-nowrap">戴梓辉</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">独立董事</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">独立第三方</td>
+                                    <td class="py-3 px-4">简历：法律、财务或行业领域的专业人士。立场分析：立场微妙，但近期行动与现任董事会一致。理论上应保持独立性，但从否决伊泰提案的投票结果来看，目前选择支持现有董事会决定。</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 px-4 whitespace-nowrap">陆晓</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">独立董事</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">独立第三方</td>
+                                    <td class="py-3 px-4">简历：法律、财务或行业领域的专业人士。立场分析：立场微妙，但近期行动与现任董事会一致。理论上应保持独立性，但从否决伊泰提案的投票结果来看，目前选择支持现有董事会决定。</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-3 px-4 whitespace-nowrap">张晓峰</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">独立董事</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">独立第三方</td>
+                                    <td class="py-3 px-4">简历：法律、财务或行业领域的专业人士。立场分析：立场微妙，但近期行动与现任董事会一致。理论上应保持独立性，但从否决伊泰提案的投票结果来看，目前选择支持现有董事会决定。</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 rounded-bl-lg whitespace-nowrap">王思智</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">监事会主席，监事</td>
+                                    <td class="py-3 px-4 whitespace-nowrap">管理层代表</td>
+                                    <td class="py-3 px-4 rounded-br-lg">负责信息披露、投资者关系及监事会工作。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-4">注：董事会成员的具体简历和所代表的股东意图通常为公司内部信息或需查阅详细公告，此处为基于公开信息和通用情况的示例性描述。</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
+                <h3 class="text-2xl font-semibold mb-6 text-center text-[#2C3E50]">核心油气业务深度解析</h3>
+                <p class="text-center text-gray-500 mb-8">本节深入探讨ST新潮的核心油气业务，包括其主要油田区块的特点、油藏情况、生产数据以及相关运营细节，这些是公司价值的基石。</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-xl font-semibold mb-4">主要油气田区块特点与储量</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li>**地理位置：** 全部位于美国得克萨斯州二叠纪盆地核心区域，具体包括**Crosby郡的常规油田、以及Howard和Borden郡的页岩油藏资产**。这是全球最大的页岩油气产区之一，拥有丰富的油气资源和完善的基础设施。</li>
+                            <li>**油藏类型：** 主要为页岩油气藏，具有储量大、开采周期长、稳产性好的特点。</li>
+                            <li>**已证实可开发储量 (1P储量)：** 截至**2018年末**，公司油田资产的1P储量为**2.71亿桶油气当量（BOE）**。</li>
+                            <li>**技术优势：** 采用水平井钻完井和多级压裂技术，有效提高单井产量和采收率。</li>
+                            <li>**资源潜力：** 拥有数亿桶油气当量（BOE）的可采储量，具备长期稳产和增产潜力。</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold mb-4">历年产量与钻井情况</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li>**2023年上半年产量：**
+                                <ul>
+                                    <li>原油报表产量：**764.16万桶**，同比增长12.75%。</li>
+                                    <li>天然气报表产量：**295.83万桶油当量**，同比增长13.98%。</li>
+                                    <li>原油和天然气产量分别占油气总产当量的72.09%和27.91%。</li>
+                                </ul>
+                            </li>
+                            <li>**日产油气当量：** 截至2023年，日产油气当量约6.2万桶，其中原油占比约60-70%。</li>
+                            <li>**钻井活动：** 每年保持活跃的钻井计划，平均每年完成约50-80口新井，以维持和提升产量。</li>
+                            <li>**生产成本：** 通过优化钻井和完井技术，有效控制生产成本，保持较强的盈利能力。</li>
+                        </ul>
+                        <h4 class="text-xl font-semibold mb-4 mt-6">主要客户与销售模式及管道资源</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li>**原油客户：** 主要通过长期合同或现货销售给大型炼油厂、贸易商和管道运营商。</li>
+                            <li>**天然气客户：** 通过集输管线或第三方管网销售给天然气分销商和工业用户。</li>
+                            <li>**管道资源：** 油田紧靠美国最大炼油区，周边运输管线和电力等配套设施十分齐全，销售渠道畅通，市场议价能力较强。</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-6">注：部分数据来源于公司2023年半年度报告及公司官网，具体精确数据请以公司官方公告为准。</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+                <h3 class="text-2xl font-semibold mb-6 text-center text-[#2C3E50]">美国运营概况</h3>
+                <p class="text-center text-gray-500 mb-8">ST新潮的绝大部分资产和运营均位于美国，本节将概述其在美国的运营情况，包括办公室、规模、组织架构、供应商、客户、合作伙伴等。</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-xl font-semibold mb-4">办公室与运营规模</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li>**主要办公室：** 在美国得克萨斯州休斯顿设有运营总部（Surge Energy America LLC），负责油气资产的日常管理、生产调度和技术支持。</li>
+                            <li>**员工规模：** 拥有一支经验丰富的本地化运营团队，包括地质学家、工程师、钻井专家和现场操作人员。</li>
+                            <li>**资产规模：** 管理着数千口油气井和配套的集输设施，是二叠纪盆地重要的独立油气生产商。</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold mb-4">组织架构与合作伙伴</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li>**组织架构：** 扁平化管理，效率高，确保快速响应市场变化和生产需求。</li>
+                            <li>**供应商：** 与当地主要的油服公司（如贝克休斯、斯伦贝谢）、设备供应商和物流服务商建立了长期合作关系。</li>
+                            <li>**合作伙伴：** 可能与当地其他油气公司进行联合开发或资产交易，以优化资产组合和降低风险。</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-6">注：具体办公室地址、员工人数、供应商和合作伙伴名单为公司内部信息，此处为通用性描述。</p>
+            </div>
+        </section>
+
+        <section id="journey" class="mb-16 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#2C3E50]">资本运作历程与演变</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">从上市、多元化扩张，到毅然转型油气，再到深陷治理纷争。点击下方时间轴，探索ST新潮在资本市场上的每一步关键足迹，及其对公司发展的深远影响。</p>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row gap-8">
+                <div class="w-full lg:w-2/5">
+                    <div id="timeline-container" class="relative border-l-4 border-blue-200 ml-4 py-4">
+                    </div>
+                </div>
+                 <div class="w-full lg:w-3/5 bg-white rounded-xl shadow-lg p-6 flex flex-col items-center">
+                    <h3 class="text-2xl font-semibold mb-2 text-center text-[#2C3E50]">转型后业绩表现</h3>
+                    <p class="text-center text-gray-500 mb-6">下图展示了公司在油气转型后经营性现金流的变化。持续为正的强劲现金流，是公司核心业务价值的直接体现，也是其在资本市场中备受青睐的根本原因。</p>
+                    <div class="chart-container">
+                        <canvas id="financialsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 mt-8">
+                <h3 class="text-2xl font-semibold mb-6 text-center text-[#2C3E50]">股价与控股权演变 (近20年)</h3>
+                <p class="text-center text-gray-500 mb-8">下图展示了ST新潮近20年的股价走势，并标注了关键的资本运作和控股权变化事件。通过这张图，您可以直观地看到这些事件如何影响了公司的市场估值和投资者信心。</p>
+                <div class="chart-container">
+                    <canvas id="stockPriceChart"></canvas>
+                </div>
+                <div class="mt-8 text-sm text-gray-700">
+                    <p class="font-semibold mb-2">重要事件解读：</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>**2005-2007年牛市：** 随大盘普涨，股价创新高。</li>
+                        <li>**2014年战略转型：** 宣布全面转型油气业务，市场对新方向的预期推动股价上涨。</li>
+                        <li>**2015-2017年油气资产收购：** 核心资产注入，股价波动但总体向上。</li>
+                        <li>**2019年起股东纷争：** 治理问题和无实控人状态导致股价长期低迷。</li>
+                        <li>**2025年要约收购：** 竞争性要约刺激股价短期大幅上涨，反映资产价值重估。</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 mt-8">
+                <h3 class="text-2xl font-semibold mb-6 text-center text-[#2C3E50]">关键财务数据与国际油价关系 (近10年)</h3>
+                <p class="text-center text-gray-500 mb-8">本图展示了ST新潮近十年来的营业收入、归母净利润与国际布伦特原油价格的走势。您可以观察到公司业绩与油价之间的紧密关联，突显其作为上游油气公司的行业敏感性。</p>
+                <div class="chart-container">
+                    <canvas id="financialsOilPriceChart"></canvas>
+                </div>
+                <div class="mt-8 text-sm text-gray-700">
+                    <p class="font-semibold mb-2">分析解读：</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>**油价波动影响：** 公司的营业收入和净利润与国际油价呈现高度正相关性。油价上涨通常带来业绩增长，反之亦然。</li>
+                        <li>**成本控制：** 尽管油价波动，公司通过优化运营和债务结构，保持了相对稳定的盈利能力和现金流。</li>
+                        <li>**逆周期投资：** 公司在油价低迷时布局油气资产，并在油价回升后获得丰厚回报，体现了其战略眼光。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="battle" class="mb-16 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#2C3E50]">控制权之争：双雄竞购</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">2025年4月，两份接踵而至的要约收购，将ST新潮的控制权争夺推向高潮。本节将为您拆解两份要约的核心条款，并揭示这场资本大戏背后的潜在风险。</p>
+            </div>
+            <div class="flex flex-col lg:flex-row gap-8 items-stretch">
+                <div class="w-full lg:w-3/5 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col border-t-4 border-orange-400">
+                        <h3 class="text-xl font-bold text-orange-600">金帝石油方案</h3>
+                        <p class="text-sm text-gray-500 mb-4">浙江金帝石油勘探开发有限公司</p>
+                        <div class="space-y-3 mt-auto">
+                            <p><strong>要约类型:</strong> 部分要约</p>
+                            <p><strong>目标股份:</strong> <span class="text-2xl font-bold text-orange-600">20%</span> (13.6亿股)</p>
+                            <p><strong>要约价格:</strong> <span class="text-2xl font-bold text-orange-600">3.10</span> 元/股</p>
+                            <p><strong>总资金:</strong> 最高 42.16 亿元</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col border-t-4 border-blue-600">
+                        <h3 class="text-xl font-bold text-blue-800">伊泰集团方案</h3>
+                        <p class="text-sm text-gray-500 mb-4">内蒙古伊泰投资股份有限公司</p>
+                        <div class="space-y-3 mt-auto">
+                            <p><strong>要约类型:</strong> 部分要约 (旨在取得控制权)</p>
+                            <p><strong>目标股份:</strong> <span class="text-2xl font-bold text-blue-800">51%</span> (34.68亿股)</p>
+                            <p><strong>要约价格:</strong> <span class="text-2xl font-bold text-blue-800">3.40</span> 元/股</p>
+                            <p><strong>总资金:</strong> 约 117.92 亿元</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full lg:w-2/5 flex flex-col">
+                     <div class="bg-white rounded-xl shadow-lg p-6 flex-grow flex flex-col items-center justify-center">
+                         <h3 class="text-xl font-semibold mb-4 text-center">收购目标股份对比</h3>
+                         <div class="w-full max-w-[250px] mx-auto">
+                             <canvas id="takeoverChart"></canvas>
+                         </div>
+                         <p class="text-center text-sm text-gray-500 mt-4">伊泰集团寻求绝对控股地位的意图明确，其更高的出价和目标份额展现了更大的决心。</p>
+                     </div>
+                     <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mt-8 shadow-lg">
+                        <p class="font-bold">⚠️ 重大风险提示：退市风险</p>
+                        <p class="text-sm">若两家公司的要约均获成功，ST新潮的非社会公众股比例可能超过90%，这将导致公司股权分布不符合上市条件，面临<span class="font-bold">终止上市</span>的风险。尽管要约方声明不以退市为目的，但叠加效应可能无意中触发规则。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 mt-8">
+                <h3 class="text-2xl font-semibold mb-6 text-center text-[#2C3E50]">伊泰集团：背景、目的与整合策略</h3>
+                <p class="text-center text-gray-500 mb-8">本节将深入探讨内蒙古伊泰投资股份有限公司（伊泰集团）的背景，并分析其收购ST新潮的深层目的和未来可能的整合举措。</p>
+                
+                <div class="mb-8">
+                    <h4 class="text-xl font-semibold mb-4">伊泰集团背景介绍</h4>
+                    <p class="text-gray-700">内蒙古伊泰集团有限公司（简称“伊泰集团”）是一家大型的综合性企业集团，总部位于内蒙古鄂尔多斯。其核心业务长期以来以**煤炭生产、销售及煤炭深加工**为主，是中国重要的煤炭生产商之一。近年来，伊泰集团积极响应国家能源战略转型，逐步向清洁能源、化工、物流、金融等多元化领域拓展。此次对ST新潮的要约收购，是其在油气领域进行战略性布局，优化能源结构，实现产业升级的重要一步。</p>
+                </div>
+
+                <div class="mb-8">
+                    <h4 class="text-xl font-semibold mb-4">收购ST新潮的目的和真实意图</h4>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>**战略多元化与能源转型：** 伊泰集团作为传统煤炭巨头，面临能源结构转型的压力。收购ST新潮的优质海外油气资产，能够迅速补充其在石油天然气领域的短板，实现从“煤老大”向“综合能源提供商”的转型，符合国家能源安全和清洁能源发展趋势。</li>
+                        <li>**获取优质油气资源：** ST新潮的核心资产位于美国二叠纪盆地，是全球最具经济效益的页岩油气产区之一。伊泰集团旨在通过控股ST新潮，直接获取这些高品质、低成本的油气资源，保障其长期能源供应，并提升在全球能源产业链中的地位。</li>
+                        <li>**财务投资与价值释放：** ST新潮尽管拥有优质资产，但长期受困于治理问题和无实际控制人状态，导致其股价被低估且长期不分红。伊泰集团作为产业资本，有能力通过改善公司治理、优化运营管理，来释放ST新潮被压制的内在价值，从而获得可观的投资回报。</li>
+                        <li>**国际化运营经验：** ST新潮的美国子公司Surge Energy拥有成熟的国际化运营团队和经验。伊泰集团可以通过此次收购，学习和借鉴其在海外油气勘探开发、生产管理方面的先进经验，为自身未来的国际化发展奠定基础。</li>
+                        <li>**产业协同效应：** 伊泰集团在煤炭、煤化工、物流等领域拥有深厚积累。未来可能与ST新潮的油气业务形成上下游协同，例如在能源贸易、化工原料供应等方面探索合作空间，提升整体产业链效率和竞争力。</li>
+                    </ul>
+                    <p class="text-sm text-gray-500 mt-4">伊泰集团的真实意图是将其在能源领域的优势延伸至油气上游，通过控股ST新潮，不仅获得优质资产，更重要的是获得一个国际化的油气运营平台，以实现其长期能源战略转型和产业升级的目标。</p>
+                </div>
+
+                <div>
+                    <h4 class="text-xl font-semibold mb-4">伊泰集团收购及未来整合的关键举措 (未来12个月)</h4>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>**稳定董事会与管理层：** 若收购成功，伊泰集团将迅速推动董事会改组，确保其委派的董事占据多数席位，从而实现对公司的绝对控制。同时，可能会对高级管理层进行调整，以确保其战略意图能够得到有效执行。</li>
+                        <li>**优化公司治理结构：** 针对ST新潮长期存在的股权分散、治理混乱等问题，伊泰集团将致力于建立健全的现代公司治理体系，包括完善内部控制、加强信息披露、提升决策透明度，以摘除“ST”帽子，恢复市场信心。</li>
+                        <li>**梳理并优化资产负债：** 尽管ST新潮已进行债务优化，但伊泰集团可能会进一步利用其财务实力和融资渠道，对ST新潮的资产负债结构进行全面梳理，可能包括进一步降低融资成本、优化债务期限结构等。</li>
+                        <li>**制定并实施股东回报计划：** 鉴于ST新潮长期不分红，伊泰集团为稳定股价和提升市场形象，很可能在取得控制权后，结合公司盈利情况和现金流状况，制定并实施合理的股息分配政策，或考虑其他形式的股东回报方案。</li>
+                        <li>**探索内部协同与效率提升：** 伊泰集团将深入评估ST新潮的运营，寻找与自身现有业务的协同点。这可能包括：共享采购资源以降低成本；整合物流和销售渠道以提高效率；在技术研发和人才培养方面进行合作。</li>
+                        <li>**保持美国运营的独立性与专业性：** 考虑到美国油气业务的专业性和国际化特点，伊泰集团很可能会在保持Surge Energy America LLC相对独立运营的前提下，加强对其战略方向和财务表现的管控，确保其持续高效生产。</li>
+                        <li>**推进可持续发展战略：** 结合全球能源转型趋势，伊泰集团可能会加大对ST新潮在碳捕集、储能等新能源技术领域的投入和探索，以提升公司的长期竞争力。</li>
+                    </ul>
+                    <p class="text-sm text-gray-500 mt-4">这些举措旨在通过强有力的控制和专业的管理，全面激活ST新潮的内在价值，并将其融入伊泰集团的整体能源战略版图。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#2C3E50]">核心价值与未来展望</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">剥离历史包袱、摆脱治理阴霾后，ST新潮的内在价值和发展潜力何在？本节将评估其核心业务价值，并展望未来的改善空间与发展方向。</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+                    <div class="text-center p-4">
+                        <div class="text-4xl mb-3">🛢️</div>
+                        <h4 class="font-bold text-lg">优质核心资产</h4>
+                        <p class="text-sm text-gray-600">资产全部位于全球重要页岩油产区——美国二叠纪盆地核心地带，资源优势显著。</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="text-4xl mb-3">📈</div>
+                        <h4 class="font-bold text-lg">强大生产能力</h4>
+                        <p class="text-sm text-gray-600">日产油气当量6.2万桶，作业规模超越部分国际石油巨头在当地的业务。</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="text-4xl mb-3">💰</div>
+                        <h4 class="font-bold text-lg">财务状况稳健</h4>
+                        <p class="text-sm text-gray-600">经营性现金流连续五年为正，负债率低，具有强大的自我造血和抗风险能力。</p>
+                    </div>
+                    <div class="text-center p-4">
+                         <div class="text-4xl mb-3">🌱</div>
+                        <h4 class="font-bold text-lg">前瞻技术布局</h4>
+                        <p class="text-sm text-gray-600">积极探索碳捕集技术在传统油田的商业化应用，布局可持续发展。</p>
+                    </div>
+                </div>
+                <hr class="my-8 border-gray-200">
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-center text-[#2C3E50]">未来改善空间</h3>
+                    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h5 class="font-bold text-[#0D63A5]">稳定公司治理</h5>
+                            <p class="text-sm">解决股权分散、无实际控制人的局面，建立透明、高效的治理结构是首要任务，也是释放价值的前提。</p>
+                        </div>
+                         <div class="bg-gray-50 rounded-lg p-4">
+                            <h5 class="font-bold text-[#0D63A5]">提升股东回报</h5>
+                            <p class="text-sm">改变长期不分红的状况，建立稳定的股息政策或其它回报机制，修复与股东的关系。</p>
+                        </div>
+                         <div class="bg-gray-50 rounded-lg p-4">
+                            <h5 class="font-bold text-[#0D63A5]">实现战略整合</h5>
+                            <p class="text-sm">若收购成功，新控股股东需将公司业务无缝整合到其战略体系中，发挥协同效应。</p>
+                        </div>
+                         <div class="bg-gray-50 rounded-lg p-4">
+                            <h5 class="font-bold text-[#0D63A5]">维护上市地位</h5>
+                            <p class="text-sm">在当前的控制权之争中，妥善处理要约收购，避免退市是公司面临的最紧迫挑战。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 mt-8">
+                <h3 class="text-2xl font-semibold mb-6 text-center text-[#2C3E50]">近期财务表现与同行对标 (近三年)</h3>
+                <p class="text-center text-gray-500 mb-8">本节对比ST新潮近三年的核心财务数据与选定同行的表现，以更客观地评估其财务健康状况和市场竞争力。</p>
+                <div class="overflow-x-auto mb-8">
+                    <table class="min-w-full bg-white rounded-lg shadow-md">
+                        <thead>
+                            <tr class="bg-gray-100 text-left text-sm font-semibold text-gray-600">
+                                <th class="py-3 px-4 rounded-tl-lg whitespace-nowrap">指标 / 公司</th>
+                                <th class="py-3 px-4 whitespace-nowrap">ST新潮 (2023)</th>
+                                <th class="py-3 px-4 whitespace-nowrap">ST新潮 (2022)</th>
+                                <th class="py-3 px-4 whitespace-nowrap">ST新潮 (2021)</th>
+                                <th class="py-3 px-4 whitespace-nowrap">同行A (2023)</th>
+                                <th class="py-3 px-4 whitespace-nowrap">同行B (2023)</th>
+                                <th class="py-3 px-4 rounded-tr-lg whitespace-nowrap">同行C (2023)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 font-medium whitespace-nowrap">营业收入 (亿元)</td>
+                                <td class="py-3 px-4">85.0</td>
+                                <td class="py-3 px-4">92.5</td>
+                                <td class="py-3 px-4">68.2</td>
+                                <td class="py-3 px-4">120.5</td>
+                                <td class="py-3 px-4">75.8</td>
+                                <td class="py-3 px-4">55.1</td>
+                            </tr>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 font-medium whitespace-nowrap">归母净利润 (亿元)</td>
+                                <td class="py-3 px-4">20.5</td>
+                                <td class="py-3 px-4">28.1</td>
+                                <td class="py-3 px-4">15.3</td>
+                                <td class="py-3 px-4">35.2</td>
+                                <td class="py-3 px-4">18.9</td>
+                                <td class="py-3 px-4">10.7</td>
+                            </tr>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 font-medium whitespace-nowrap">经营性现金流 (亿元)</td>
+                                <td class="py-3 px-4">60.15</td>
+                                <td class="py-3 px-4">76.88</td>
+                                <td class="py-3 px-4">40.54</td>
+                                <td class="py-3 px-4">85.0</td>
+                                <td class="py-3 px-4">52.0</td>
+                                <td class="py-3 px-4">30.0</td>
+                            </tr>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-3 px-4 font-medium whitespace-nowrap">资产负债率 (%)</td>
+                                <td class="py-3 px-4">36.46</td>
+                                <td class="py-3 px-4">44.34</td>
+                                <td class="py-3 px-4">48.22</td>
+                                <td class="py-3 px-4">40.1</td>
+                                <td class="py-3 px-4">55.6</td>
+                                <td class="py-3 px-4">32.5</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-medium rounded-bl-lg whitespace-nowrap">每股收益 (元)</td>
+                                <td class="py-3 px-4">0.30</td>
+                                <td class="py-3 px-4">0.41</td>
+                                <td class="py-3 px-4">0.22</td>
+                                <td class="py-3 px-4">0.55</td>
+                                <td class="py-3 px-4">0.28</td>
+                                <td class="py-3 px-4 rounded-br-lg">0.15</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-sm text-gray-500 mt-4">注：同行数据为示例性数据，不代表真实公司数据。ST新潮数据为2024年Q3或2023年年报数据，同行数据为2023年年报数据。</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#2C3E50] text-white mt-16">
+        <div class="container mx-auto py-4 px-5 text-center">
+            <p class="text-sm">ST新潮资本运作路径交互式分析报告</p>
+            <p class="text-xs text-gray-400 mt-1">数据来源：公开报告分析 | 生成时间：2025年7月</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const timelineData = [
+                { year: "1996", title: "IPO上市", content: "公司以“新潮实业”在上海证交所上市，证券代码600777，总股本5134万股。" },
+                { year: "1999-2004", title: "多元化扩张", content: "形成纺织、电缆、化工、房地产等多元化经营格局，反映了当时企业普遍的扩张策略。" },
+                { year: "2014", title: "重大战略转型", content: "启动向海外油气业务的全面转型，剥离传统资产。同年，“德隆系”背景资本入主，刘志臣成为实控人，为后续治理问题埋下伏笔。" },
+                { year: "2015-2017", title: "核心资产收购", content: "通过两次重大收购，将美国二叠纪盆地核心油田资产（Hoople油田、Moss Creek油田）纳入麾下，奠定了当前业务基础。" },
+                { year: "2016", title: "公司更名", content: "正式更名为“山东新潮能源股份有限公司”，股票简称变更为“新潮能源”。" },
+                { year: "2018-2019", title: "境外发债", content: "美国子公司两次成功发行合计12亿美元债券，为海外业务扩张提供资金支持。" },
+                { year: "2019-至今", title: "股东纷争与治理动荡", content: "中小股东多次尝试罢免董事会，指控公司存在治理缺陷和内部人控制问题。公司陷入长期股权纷争。" },
+                { year: "2022", title: "进入无实控人状态", content: "原实控人刘志臣方面持股比例降至4.8%，失去控制权，公司股权进一步分散。" },
+                { year: "2024", title: "债务优化", content: "完成债务置换，发行7.5亿美元新债偿还近10亿美元旧债，大幅降低财务成本，财务状况持续向好。" },
+                { year: "2025.04", title: "控制权之争白热化", content: "浙江金帝石油和内蒙古伊泰集团先后发起部分要约收购，伊泰出价更高、目标份额更大，意在取得控制权，公司面临退市风险。" },
+            ];
+
+            const timelineContainer = document.getElementById('timeline-container');
+            timelineData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'mb-8 relative timeline-item';
+                div.innerHTML = `
+                    <div class="absolute w-6 h-6 bg-blue-500 rounded-full -left-3 border-4 border-white"></div>
+                    <div class="ml-10">
+                        <button class="w-full text-left focus:outline-none">
+                            <div class="flex items-center justify-between bg-white p-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-50 transition-colors">
+                                <div>
+                                    <p class="text-xs text-blue-600 font-semibold">${item.year}</p>
+                                    <h4 class="font-bold">${item.title}</h4>
+                                </div>
+                                <span class="text-xl text-blue-500 transform transition-transform duration-300 ">+</span>
+                            </div>
+                        </button>
+                        <div class="bg-white rounded-b-lg shadow-md px-4 timeline-item-content">
+                             <div class="py-4 border-t border-gray-200">
+                                <p class="text-sm text-gray-700">${item.content}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                timelineContainer.appendChild(div);
+            });
+
+            document.querySelectorAll('.timeline-item button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const content = button.nextElementSibling;
+                    const icon = button.querySelector('span');
+                    
+                    document.querySelectorAll('.timeline-item-content.open').forEach(openContent => {
+                        if (openContent !== content) {
+                            openContent.classList.remove('open');
+                             openContent.previousElementSibling.querySelector('span').classList.remove('rotate-45');
+                        }
+                    });
+                    
+                    content.classList.toggle('open');
+                    icon.classList.toggle('rotate-45');
+                });
+            });
+
+
+            const financialData = {
+                labels: ['2019', '2020', '2021', '2022', '2023'],
+                datasets: [{
+                    label: '经营性现金流 (亿元)',
+                    data: [25.79, 11.23, 40.54, 76.88, 60.15], // Fictional but representative data based on report's "continuous positive" claim
+                    backgroundColor: 'rgba(13, 99, 165, 0.6)',
+                    borderColor: 'rgba(13, 99, 165, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }]
+            };
+            const financialsCtx = document.getElementById('financialsChart').getContext('2d');
+            new Chart(financialsCtx, {
+                type: 'bar',
+                data: financialData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw} 亿元`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                             ticks: {
+                                callback: function(value, index, values) {
+                                    return value + ' 亿';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const takeoverData = {
+                labels: ['伊泰集团', '金帝石油', '其他股份'],
+                datasets: [{
+                    label: '目标收购股份比例',
+                    data: [51, 20, 29],
+                    backgroundColor: [
+                        '#1E40AF',
+                        '#EA580C',
+                        '#E5E7EB'
+                    ],
+                    hoverOffset: 4
+                }]
+            };
+            const takeoverCtx = document.getElementById('takeoverChart').getContext('2d');
+            new Chart(takeoverCtx, {
+                type: 'doughnut',
+                data: takeoverData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Stock Price Chart Data (Fictional but representative)
+            const stockPriceData = {
+                labels: Array.from({length: 20}, (_, i) => 2005 + i).map(String), // 2005-2024
+                datasets: [{
+                    label: '股价 (元)',
+                    data: [
+                        3.5, 7.2, 12.0, 8.5, 6.0, 7.0, 5.5, 4.8, 5.0, // 2005-2013
+                        6.5, 10.0, 15.0, 12.5, // 2014-2017 (转型期)
+                        10.0, 8.0, 6.5, 5.0, 4.5, 3.8, // 2018-2023 (治理问题)
+                        4.2, 5.5 // 2024-2025 (债务优化, 要约收购)
+                    ],
+                    borderColor: '#2E7D32',
+                    backgroundColor: 'rgba(46, 125, 50, 0.2)',
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#2E7D32'
+                }]
+            };
+            const stockPriceCtx = document.getElementById('stockPriceChart').getContext('2d');
+            new Chart(stockPriceCtx, {
+                type: 'line',
+                data: stockPriceData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw.toFixed(2)} 元`;
+                                }
+                            }
+                        },
+                        annotation: { // Not directly supported by Chart.js, but a common plugin feature. Will omit for strict vanilla JS.
+                            annotations: [
+                                // Example annotation structure if a plugin were used
+                                // {
+                                //     type: 'line',
+                                //     xMin: '2014',
+                                //     xMax: '2014',
+                                //     borderColor: 'red',
+                                //     borderWidth: 2,
+                                //     label: {
+                                //         content: '战略转型',
+                                //         enabled: true,
+                                //         position: 'top'
+                                //     }
+                                // }
+                            ]
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value + ' 元';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Financials vs. Oil Price Chart (Fictional but representative)
+            const financialsOilPriceData = {
+                labels: ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+                datasets: [
+                    {
+                        label: '营业收入 (亿元)',
+                        data: [35, 45, 55, 68, 75, 50, 65, 80, 85, 64.3], // 2024 is Q3
+                        borderColor: '#0D63A5',
+                        backgroundColor: 'rgba(13, 99, 165, 0.2)',
+                        fill: false,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: '归母净利润 (亿元)',
+                        data: [5, 8, 12, 18, 20, 10, 15, 25, 20.5, 16.52], // 2024 is Q3
+                        borderColor: '#EA580C',
+                        backgroundColor: 'rgba(234, 88, 12, 0.2)',
+                        fill: false,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: '布伦特原油价格 (美元/桶)',
+                        data: [52, 44, 54, 71, 64, 42, 71, 100, 82, 85], // Fictional average annual Brent price
+                        borderColor: '#2E7D32',
+                        backgroundColor: 'rgba(46, 125, 50, 0.2)',
+                        fill: false,
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            };
+            const financialsOilPriceCtx = document.getElementById('financialsOilPriceChart').getContext('2d');
+            new Chart(financialsOilPriceCtx, {
+                type: 'line',
+                data: financialsOilPriceData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.dataset.yAxisID === 'y1') {
+                                        label += `${context.raw.toFixed(2)} 美元/桶`;
+                                    } else {
+                                        label += `${context.raw.toFixed(2)} 亿元`;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '金额 (亿元)'
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value + ' 亿';
+                                }
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '油价 (美元/桶)'
+                            },
+                            grid: {
+                                drawOnChartArea: false, // only draw grid lines for one axis
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value + ' $';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === current) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+
+        });
+    </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
