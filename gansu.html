@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新能源重卡运营网络 - 交互式战略规划</title>
+    <style>
+        /* --- 全局样式 --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #005f73, #0a9396);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+        main {
+            padding: 20px 30px 30px 30px;
+        }
+
+        /* --- 地图样式 --- */
+        #map-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            background-image: linear-gradient(to right, #e9f5f6 0%, #fdfdfd 50%, #e9f5f6 100%);
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease-in-out;
+        }
+        .node, .ash-yard {
+            position: absolute;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            border: 2px solid;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .hub {
+            background-color: #fff;
+            border-color: #0077b6;
+            color: #0077b6;
+        }
+        .supply {
+            background-color: #fff;
+            border-color: #fca311;
+            color: #fca311;
+            border-style: dashed;
+            font-size: 13px;
+        }
+        .ash-yard {
+            background-color: #f1faee;
+            border-color: #6c757d;
+            color: #6c757d;
+        }
+
+        /* 节点位置 */
+        #anbei { top: 70px; left: 3%; }
+        #changle { top: 160px; left: 5%; }
+        #jiuquan { top: 70px; left: 30%; }
+        #jiayuguan { top: 70px; left: 45%; }
+        #zhangye { top: 70px; left: 65%; }
+        #jinchang { top: 70px; left: 85%; }
+        #jinchang2 { top: 160px; left: 87%; }
+        #wuwei { top: 70px; right: 3%; left: auto; }
+        #ash-yard-node { top: 210px; left: 5%; }
+
+        /* 路线样式 */
+        .route {
+            position: absolute;
+            background-color: #adb5bd;
+            z-index: 5;
+            transition: all 0.3s ease;
+        }
+        .h-route { height: 3px; }
+        .v-route { width: 3px; }
+        #route-anbei-jiuquan { top: 82px; left: 11%; width: 19%; }
+        #route-jiuquan-jiayuguan { top: 82px; left: 37%; width: 8%; }
+        #route-jiayuguan-zhangye { top: 82px; left: 54%; width: 11%; }
+        #route-zhangye-jinchang { top: 82px; left: 74%; width: 11%; }
+        #route-jinchang-wuwei { top: 82px; left: 94%; width: 3%; }
+        #route-anbei-changle { top: 108px; left: 6.5%; height: 52px; }
+        #route-changle-ash { top: 198px; left: 8.5%; height: 12px; }
+        #route-jinchang-jinchang2 { top: 108px; left: 88.5%; height: 52px; }
+
+        /* --- 交互高亮样式 --- */
+        .node, .route { opacity: 0.3; }
+        .highlight {
+            opacity: 1;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px 5px #fca311;
+        }
+        .highlight.route {
+            background: linear-gradient(90deg, #ee9b00, #ffbe0b);
+            height: 5px;
+            width: calc(var(--original-width) + 2px); /* JS will set --original-width */
+        }
+        .highlight.v-route {
+            background: linear-gradient(180deg, #ee9b00, #ffbe0b);
+            width: 5px;
+            height: calc(var(--original-height) + 2px); /* JS will set --original-height */
+        }
+
+        /* --- Tab 选项卡样式 --- */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .tab-button {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background-color: transparent;
+            font-size: 1.1em;
+            font-weight: 500;
+            color: #495057;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            color: #0077b6;
+        }
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #0077b6;
+            border-radius: 3px;
+        }
+        .phase-pane {
+            display: none;
+            padding: 25px 10px;
+            animation: fadeIn 0.5s;
+        }
+        .phase-pane.active {
+            display: block;
+        }
+        .phase-pane h2 {
+            color: #005f73;
+            border-bottom: 2px solid #94d2bd;
+            padding-bottom: 10px;
+        }
+        .phase-pane ul {
+            list-style-type: '✓ ';
+            padding-left: 20px;
+        }
+        .phase-pane li {
+            margin-bottom: 12px;
+        }
+        .phase-pane strong {
+            color: #0a9396;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>新能源重卡运营网络三步走战略规划</h1>
+            <p>点击下方阶段按钮，查看交互式路线图</p>
+        </header>
+        <main>
+            <div id="map-container">
+                <div class="node hub phase-1" id="anbei">安北站</div>
+                <div class="node hub phase-1" id="changle">常乐电厂</div>
+                <div class="ash-yard phase-1" id="ash-yard-node">灰渣场</div>
+                
+                <div class="node supply phase-2" id="jiuquan">酒泉东(补给)</div>
+                <div class="node supply phase-2" id="jiayuguan">嘉峪关西(补给)</div>
+                <div class="node hub phase-2" id="zhangye">张掖电厂</div>
+                <div class="node hub phase-2" id="jinchang">金昌1厂</div>
+                <div class="node hub phase-2" id="jinchang2">金昌2厂</div>
+
+                <div class="node hub phase-3" id="wuwei">武威电厂</div>
+
+                <div class="route v-route phase-1" id="route-anbei-changle"></div>
+                <div class="route v-route phase-1" id="route-changle-ash"></div>
+                
+                <div class="route h-route phase-2" id="route-anbei-jiuquan"></div>
+                <div class="route h-route phase-2" id="route-jiuquan-jiayuguan"></div>
+                <div class="route h-route phase-2" id="route-jiayuguan-zhangye"></div>
+                <div class="route h-route phase-2" id="route-zhangye-jinchang"></div>
+                <div class="route v-route phase-2" id="route-jinchang-jinchang2"></div>
+                
+                <div class="route h-route phase-3" id="route-jinchang-wuwei"></div>
+            </div>
+
+            <div id="phases-container">
+                <div class="tabs">
+                    <button class="tab-button" data-phase="1">第一步：试点启动</button>
+                    <button class="tab-button" data-phase="2">第二步：主干线扩张</button>
+                    <button class="tab-button" data-phase="3">第三步：全网贯通</button>
+                </div>
+                <div class="phases-content">
+                    <div class="phase-pane" id="phase-1-content">
+                        <h2>Phase 1: 试点启动与基础模型验证 (安北-常乐区域)</h2>
+                        <ul>
+                            <li><strong>核心目标:</strong> 聚焦 <strong>安北站-常乐电厂</strong> 业务闭环，验证电动重卡在短途、高频、重载场景下的经济性和可靠性。</li>
+                            <li><strong>基建任务:</strong> 在 <strong>安北站</strong> 和 <strong>常乐电厂</strong> 建设两个核心枢纽充电站。这是整个项目启动的基石。</li>
+                            <li><strong>运营线路:</strong>
+                                <ul>
+                                    <li><strong>煤运线 (31km):</strong> 开通 `安北站` 直达 `常乐电厂` 的运输，取代原有低效模式。</li>
+                                    <li><strong>灰渣线 (7km):</strong> 开通 `常乐电厂` 至 `灰渣场` 的运输，这是电动自卸车的理想应用场景。</li>
+                                </ul>
+                            </li>
+                            <li><strong>预期成果:</strong> 形成稳定现金流，验证车辆与充电设施性能，为后续扩张积累宝贵的运营经验。</li>
+                        </ul>
+                    </div>
+                    <div class="phase-pane" id="phase-2-content">
+                        <h2>Phase 2: 主干线打通与网络扩张 (延伸至张掖、金昌)</h2>
+                        <ul>
+                            <li><strong>核心目标:</strong> 向东打通长途干线，将业务网络延伸至张掖和金昌两个主要市场，形成网络骨干。</li>
+                            <li><strong>基建任务:</strong>
+                                <ul>
+                                    <li>建设 <strong>酒泉东</strong> 和 <strong>嘉峪关西</strong> 两个干线补给站，保障长途运输。</li>
+                                    <li>在 <strong>张掖电厂</strong> 和 <strong>金昌1厂</strong> 建立新的枢纽站。</li>
+                                </ul>
+                            </li>
+                            <li><strong>运营线路:</strong>
+                                <ul>
+                                    <li><strong>安北-张掖线 (480km):</strong> 启动核心长途业务，考验车队与补能网络的综合能力。</li>
+                                    <li><strong>安北-金昌线:</strong> 利用新建成的网络，将业务覆盖至金昌。</li>
+                                    <li><strong>金昌内部倒短 (28km):</strong> 作为补充业务，提高车辆在金昌区域的利用率。</li>
+                                </ul>
+                            </li>
+                            <li><strong>预期成果:</strong> 建成贯穿河西走廊西段的充电网络，证明长途运营能力，抢占核心市场份额。</li>
+                        </ul>
+                    </div>
+                    <div class="phase-pane" id="phase-3-content">
+                        <h2>Phase 3: 网络加密与全线贯通 (覆盖武威及全网优化)</h2>
+                        <ul>
+                            <li><strong>核心目标:</strong> 完成网络最后一块拼图，覆盖至武威，并对全网进行智能化、精细化运营。</li>
+                             <li><strong>基建任务:</strong> 在 <strong>武威电厂</strong> 建立最后一个枢纽充电站，完成全网络布局。</li>
+                            <li><strong>运营线路:</strong>
+                                <ul>
+                                    <li><strong>金昌-武威线 (100km):</strong> 开通至武威的运输业务，此路程友好，可高效并入现有网络。</li>
+                                </ul>
+                            </li>
+                            <li><strong>运营优化:</strong>
+                                <ul>
+                                    <li>建立<strong>智能调度中心</strong>，对全网车辆、路况、充电站状态进行统一管理。</li>
+                                    <li>与电厂及电网深度合作，争取<strong>夜间谷电充电</strong>等优惠，最大化降低成本。</li>
+                                    <li>评估开通“疆煤入甘”等更长途线路的可行性。</li>
+                                </ul>
+                            </li>
+                            <li><strong>预期成果:</strong> 形成强大且有韧性的新能源物流网络，成为区域标杆，具备强大的市场竞争力和未来扩张潜力。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab-button');
+            const panes = document.querySelectorAll('.phase-pane');
+            const mapElements = document.querySelectorAll('.node, .route, .ash-yard');
+
+            function activatePhase(phaseNumber) {
+                // Activate Tab
+                tabs.forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.phase === phaseNumber);
+                });
+
+                // Activate Content Pane
+                panes.forEach(pane => {
+                    pane.classList.toggle('active', pane.id === `phase-${phaseNumber}-content`);
+                });
+
+                // Highlight Map Elements
+                mapElements.forEach(el => {
+                    el.classList.toggle('highlight', el.classList.contains(`phase-${phaseNumber}`));
+                    
+                    // Store original size for route highlighting effect
+                    if (el.classList.contains('route')) {
+                        if(el.classList.contains('h-route')) {
+                            el.style.setProperty('--original-width', el.style.width);
+                        }
+                        if(el.classList.contains('v-route')) {
+                           el.style.setProperty('--original-height', el.style.height);
+                        }
+                    }
+                });
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    activatePhase(tab.dataset.phase);
+                });
+            });
+
+            // Initial state: Activate Phase 1
+            activatePhase('1');
+        });
+    </script>
+
+</body>
+</html>
