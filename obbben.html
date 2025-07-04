@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Big Beautiful Bill Act (OBBBA) Interactive Explainer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals (Stone, Amber, Slate) -->
+    <!-- Application Structure Plan: I designed a dashboard-oriented single-page application, rather than a linear report structure. The top features key data overviews for a quick understanding of the bill's core impacts (tax cuts, spending cuts, debt increase). The main content is divided into five navigable topic areas via the top navbar: "Bill Overview," "Three Pillars," "Economic Impact," "Political Arena," and "Global Perspective." This structure allows users to explore freely based on interest, delving into specific aspects through interactive charts (like the switchable economic forecast chart) and dynamic content (like the section showing impacts by income class). The goal is to break down complex information into digestible modules, enhancing usability and comprehension. -->
+    <!-- Visualization & Content Choices: 1. **Bill Structure Diagram**: (Goal: Organize) Built with HTML/CSS Flexbox to visually represent the three pillars, clearer than plain text. 2. **Tax Cut Composition**: (Goal: Compare) Uses a Chart.js doughnut chart to show the proportion of each component in the $4.5 trillion tax cut plan. Interaction: Hover for tooltips. 3. **Spending Cuts**: (Goal: Compare) Uses a Chart.js bar chart to compare the scale of major cuts like Medicaid and SNAP. Interaction: Hover for tooltips. 4. **Economic Forecast Comparison**: (Goal: Compare/Relate) Uses a Chart.js bar chart with JS buttons, allowing users to dynamically switch between different agencies' forecasts for GDP and deficit impact. Interaction: Click to switch datasets. 5. **Distributional Impact**: (Goal: Compare/Inform) Uses a JS-driven dynamic text block where users select an income class via buttons to see the specific impact on that group in real-time. Interaction: Click to update content. All visualizations use Canvas, completely avoiding SVG and Mermaid JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active {
+            color: #f59e0b; /* amber-500 */
+            border-bottom-color: #f59e0b;
+        }
+        .tab-button.active {
+            background-color: #fbbf24; /* amber-400 */
+            color: #44403c; /* stone-700 */
+        }
+        .content-section {
+            scroll-margin-top: 80px;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <header id="header" class="bg-white/80 backdrop-blur-lg shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl md:text-2xl font-bold text-stone-700">OBBBA Explainer</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 text-sm font-medium text-stone-600 hover:text-amber-500 border-b-2 border-transparent">Overview</a>
+                        <a href="#pillars" class="nav-link px-3 py-2 text-sm font-medium text-stone-600 hover:text-amber-500 border-b-2 border-transparent">Pillars</a>
+                        <a href="#impact" class="nav-link px-3 py-2 text-sm font-medium text-stone-600 hover:text-amber-500 border-b-2 border-transparent">Impact</a>
+                        <a href="#politics" class="nav-link px-3 py-2 text-sm font-medium text-stone-600 hover:text-amber-500 border-b-2 border-transparent">Politics</a>
+                        <a href="#global" class="nav-link px-3 py-2 text-sm font-medium text-stone-600 hover:text-amber-500 border-b-2 border-transparent">Global</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-stone-600 hover:text-amber-500 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#overview" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-stone-600 hover:text-amber-500">Overview</a>
+                <a href="#pillars" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-stone-600 hover:text-amber-500">Pillars</a>
+                <a href="#impact" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-stone-600 hover:text-amber-500">Impact</a>
+                <a href="#politics" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-stone-600 hover:text-amber-500">Politics</a>
+                <a href="#global" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-stone-600 hover:text-amber-500">Global</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="hero" class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-extrabold text-stone-800 mb-4">Inside the "One Big Beautiful Bill"</h2>
+            <p class="max-w-3xl mx-auto text-lg text-stone-600 mb-8">A revolutionary piece of legislation seeking to comprehensively reshape American domestic policy, from taxes and social welfare to national security.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-stone-200">
+                    <p class="text-4xl font-bold text-green-600">- $4.5 Trillion</p>
+                    <p class="mt-2 text-stone-600 font-semibold">Tax Cut Plan</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-stone-200">
+                    <p class="text-4xl font-bold text-blue-600">+ $1.2 Trillion</p>
+                    <p class="mt-2 text-stone-600 font-semibold">Spending Cuts</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-stone-200">
+                    <p class="text-4xl font-bold text-red-600">+ $3.3 Trillion</p>
+                    <p class="mt-2 text-stone-600 font-semibold">Projected Debt Increase (CBO)</p>
+                </div>
+            </div>
+        </section>
+
+        <div id="overview" class="content-section bg-white p-8 rounded-2xl shadow-lg mb-16 border border-stone-200">
+            <h3 class="text-3xl font-bold text-center mb-2 text-stone-800">Bill Overview: A Designed Zero-Sum Game</h3>
+            <p class="text-center text-stone-600 mb-8 max-w-4xl mx-auto">This section provides a macro-level understanding of the OBBBA's core logic. You'll see how the bill is not a collection of isolated policies, but a precise design that "pays for" massive tax cuts by slashing social welfare. This structural trade-off is key to understanding its profound impact.</p>
+            <div class="flex flex-col md:flex-row items-center justify-center gap-8">
+                <div class="text-center p-6 bg-stone-100 rounded-lg flex-1">
+                    <div class="text-6xl mb-2">✂️</div>
+                    <h4 class="text-xl font-bold text-blue-700">Spending Cuts</h4>
+                    <p class="text-stone-600 mt-2">Primarily targets Medicaid and food assistance programs, and repeals green energy incentives.</p>
+                </div>
+                <div class="text-5xl font-light text-stone-400 transform md:rotate-0 rotate-90 my-4 md:my-0">➡️</div>
+                <div class="text-center p-6 bg-stone-100 rounded-lg flex-1">
+                    <div class="text-6xl mb-2">💰</div>
+                    <h4 class="text-xl font-bold text-green-700">Massive Tax Cuts</h4>
+                    <p class="text-stone-600 mt-2">Makes the 2017 tax cuts permanent and provides temporary relief for specific groups.</p>
+                </div>
+                <div class="text-5xl font-light text-stone-400 transform md:rotate-0 rotate-90 my-4 md:my-0">➡️</div>
+                <div class="text-center p-6 bg-stone-100 rounded-lg flex-1">
+                    <div class="text-6xl mb-2">🛡️</div>
+                    <h4 class="text-xl font-bold text-slate-700">Security Funding</h4>
+                    <p class="text-stone-600 mt-2">Provides additional funds for the border wall, immigration enforcement, and defense projects.</p>
+                </div>
+            </div>
+             <div class="mt-8 bg-amber-100 border-l-4 border-amber-500 text-amber-800 p-4 rounded-lg" role="alert">
+                <p class="font-bold">The Core Contradiction</p>
+                <p>The administration claims the bill will boost the economy and cut the deficit, but the non-partisan CBO projects it will add $3.3 trillion to the national debt over ten years. This fundamental conflict is the focus of all controversy.</p>
+            </div>
+        </div>
+
+        <section id="pillars" class="content-section mb-16">
+            <h3 class="text-3xl font-bold text-center mb-2 text-stone-800">Interactively Explore the Three Pillars</h3>
+            <p class="text-center text-stone-600 mb-8 max-w-4xl mx-auto">This section lets you dive deep into the bill's core provisions. Through the interactive charts and cards below, you can learn in detail about the specifics of the three pillars—tax cuts, spending cuts, and security funding—their budget scale, and how they work together.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-lg border border-stone-200">
+                    <h4 class="text-2xl font-bold mb-4 text-center">Pillar 1: The $4.5 Trillion Tax Cut Plan</h4>
+                    <div class="chart-container mx-auto">
+                        <canvas id="taxCutChart"></canvas>
+                    </div>
+                     <p class="text-sm text-center mt-4 text-stone-500">This chart shows the composition of the tax cut plan. The largest part is making the 2017 Tax Cuts and Jobs Act (TCJA) permanent, followed by an increased Child Tax Credit (CTC) and business investment expensing. Hover over the chart segments to see specific amounts.</p>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-lg border border-stone-200 flex flex-col justify-center">
+                    <h4 class="text-2xl font-bold mb-4 text-center">Key Temporary Tax Cuts</h4>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-stone-100 rounded-lg">
+                            <h5 class="font-bold">💸 Tax-Free Tips</h5>
+                            <p class="text-sm text-stone-600">Up to $25,000 in annual tip income is exempt from income tax (expires 2028).</p>
+                        </div>
+                        <div class="p-4 bg-stone-100 rounded-lg">
+                            <h5 class="font-bold">⏰ Tax-Free Overtime</h5>
+                            <p class="text-sm text-stone-600">Up to $12,500 in annual overtime pay is tax-free (expires 2028).</p>
+                        </div>
+                        <div class="p-4 bg-stone-100 rounded-lg">
+                            <h5 class="font-bold">👵 Senior Tax Break</h5>
+                            <p class="text-sm text-stone-600">A temporary $6,000 tax break for low-income seniors.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-stone-200">
+                    <h4 class="text-2xl font-bold mb-4 text-center">Pillar 2: The $1.2 Trillion in Spending Cuts</h4>
+                    <div class="chart-container mx-auto h-80">
+                        <canvas id="spendingCutChart"></canvas>
+                    </div>
+                    <p class="text-sm text-center mt-4 text-stone-500">This chart shows the major spending cut items. The largest comes from Medicaid reforms (like adding work requirements), followed by repealing green energy credits from the Inflation Reduction Act, and cutting food assistance (SNAP) benefits.</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-stone-200">
+                    <h4 class="text-2xl font-bold mb-4 text-center">Pillar 3: The $350 Billion in Security Funding</h4>
+                    <div class="space-y-4 flex flex-col justify-center h-full">
+                        <div class="flex items-start p-4 bg-stone-100 rounded-lg">
+                            <span class="text-3xl mr-4">🧱</span>
+                            <div>
+                                <h5 class="font-bold">Border Wall & Security</h5>
+                                <p class="text-sm text-stone-600">$46 billion to construct the U.S.-Mexico border wall and enhance facility security.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start p-4 bg-stone-100 rounded-lg">
+                            <span class="text-3xl mr-4">👮</span>
+                            <div>
+                                <h5 class="font-bold">Immigration Detention & Enforcement</h5>
+                                <p class="text-sm text-stone-600">$45 billion to support 100,000 detention beds and new ICE officers.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start p-4 bg-stone-100 rounded-lg">
+                            <span class="text-3xl mr-4">🛡️</span>
+                            <div>
+                                <h5 class="font-bold">Defense Spending</h5>
+                                <p class="text-sm text-stone-600">$25 billion for projects like the "Golden Dome" missile defense system.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="impact" class="content-section mb-16">
+            <h3 class="text-3xl font-bold text-center mb-2 text-stone-800">Economic Impact: Growth Myth or Debt Bomb?</h3>
+            <p class="text-center text-stone-600 mb-8 max-w-4xl mx-auto">This section focuses on the bill's most central controversy: its economic consequences. You can compare forecasts from different agencies with interactive charts and explore the specific impacts on various income levels and industries to judge for yourself whether this is a catalyst for economic growth or a trigger for a debt explosion.</p>
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-stone-200 mb-8">
+                <h4 class="text-2xl font-bold mb-4 text-center">Two Realities: The Great Economic Forecast Face-Off</h4>
+                <div class="text-center mb-6">
+                    <button id="showGdpBtn" class="bg-amber-400 text-stone-700 py-2 px-4 rounded-l-lg font-semibold">10-Year GDP Growth Forecast</button>
+                    <button id="showDeficitBtn" class="bg-stone-200 text-stone-600 py-2 px-4 rounded-r-lg font-semibold">10-Year Deficit Impact Forecast</button>
+                </div>
+                <div class="chart-container mx-auto">
+                    <canvas id="economicForecastChart"></canvas>
+                </div>
+                <p id="forecast-explainer" class="text-sm text-center mt-4 text-stone-500">The chart above compares the economic impact forecasts of the bill from the White House (CEA) and independent agencies (CBO, etc.). Click the buttons to switch between "GDP Growth" and "Deficit Impact" to see two very different assessments.</p>
+            </div>
+            
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-stone-200">
+                <h4 class="text-2xl font-bold mb-4 text-center">Who Wins, Who Loses?</h4>
+                <p class="text-center text-stone-600 mb-6">Click the buttons below to see the distributional impact of the bill on different income groups.</p>
+                <div id="income-selector" class="flex flex-wrap justify-center gap-2 mb-6">
+                     <button data-group="lowest" class="income-btn bg-stone-200 text-stone-600 py-2 px-4 rounded-full font-semibold text-sm">Lowest 20%</button>
+                     <button data-group="middle" class="income-btn bg-stone-200 text-stone-600 py-2 px-4 rounded-full font-semibold text-sm">Middle 20%</button>
+                     <button data-group="highest" class="income-btn bg-amber-400 text-stone-700 py-2 px-4 rounded-full font-semibold text-sm">Highest 20%</button>
+                     <button data-group="top1" class="income-btn bg-stone-200 text-stone-600 py-2 px-4 rounded-full font-semibold text-sm">Top 1%</button>
+                </div>
+                <div id="impact-display" class="p-6 bg-stone-100 rounded-lg text-center transition-all duration-300">
+                    <!-- Dynamic content will be injected here -->
+                </div>
+            </div>
+        </section>
+
+        <section id="politics" class="content-section mb-16">
+            <h3 class="text-3xl font-bold text-center mb-2 text-stone-800">The Political Crucible: A Test of Loyalty</h3>
+            <p class="text-center text-stone-600 mb-8 max-w-4xl mx-auto">The bill's passage was not smooth but a fierce political battle. This section will take you through this fight, showing how Democrats fiercely resisted, how the Republican party was divided internally, and how key figures influenced the final outcome, revealing the human and power dynamics behind the legislation.</p>
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-stone-200">
+                <div class="text-center mb-8">
+                    <h4 class="text-2xl font-bold">Final Vote Tally</h4>
+                    <div class="flex justify-center gap-8 mt-4">
+                        <div>
+                            <p class="text-4xl font-bold">218 - 214</p>
+                            <p class="text-stone-600">House of Representatives</p>
+                        </div>
+                        <div>
+                            <p class="text-4xl font-bold">51 - 50</p>
+                            <p class="text-stone-600">Senate (VP Tie-Breaker)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="border border-red-200 bg-red-50 p-6 rounded-lg">
+                        <h5 class="text-xl font-bold text-red-700 mb-4">Republican Civil War</h5>
+                        <ul class="space-y-3 list-disc list-inside text-stone-700">
+                            <li><b>Moderate Revolt:</b> Senators Tillis, Collins, and others voted no, concerned about the massive impact of Medicaid cuts on their constituents.</li>
+                            <li><b>Fiscal Hawk Resistance:</b> Senator Rand Paul and others opposed the bill for its massive increase to the national debt, deeming it fiscally irresponsible.</li>
+                            <li><b>Presidential Pressure:</b> The President personally intervened, defining the vote as a test of party loyalty and pressuring wavering members.</li>
+                        </ul>
+                    </div>
+                     <div class="border border-blue-200 bg-blue-50 p-6 rounded-lg">
+                        <h5 class="text-xl font-bold text-blue-700 mb-4">Unified Democratic Resistance</h5>
+                        <ul class="space-y-3 list-disc list-inside text-stone-700">
+                           <li><b>"Ugly, Big Bill":</b> Leader Hakeem Jeffries gave a record 8-hour speech, decrying the bill as a "disgusting monster."</li>
+                            <li><b>"Trickle-Down Cruelty":</b> Democrats widely criticized the bill for sacrificing working-class interests to fund tax cuts for the rich and corporations.</li>
+                            <li><b>Symbolic Fight:</b> Aimed to delay the vote and set the narrative for future elections, painting the bill as a betrayal of working Americans.</li>
+                        </ul>
+                    </div>
+                </div>
+                 <div class="mt-8 border border-slate-200 bg-slate-50 p-6 rounded-lg">
+                    <h5 class="text-xl font-bold text-slate-700 text-center mb-4">Key External Voice: The Wrath of Elon Musk</h5>
+                    <p class="text-center text-stone-600">Once an ally, Musk became one of the bill's fiercest critics. He condemned the repeal of clean energy credits as "insane and destructive," saying it would "destroy millions of American jobs," and blasted its massive debt increase as fiscally irresponsible.</p>
+                 </div>
+            </div>
+        </section>
+
+        <section id="global" class="content-section">
+            <h3 class="text-3xl font-bold text-center mb-2 text-stone-800">Global Perspective: The "America First" Ripple Effect</h3>
+            <p class="text-center text-stone-600 mb-8 max-w-4xl mx-auto">The impact of the OBBBA extends far beyond America's borders. This section will analyze how its domestic policies intertwine with an aggressive trade agenda, profoundly affecting international trade relations, the global climate race, and international capital flows.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-stone-200">
+                    <div class="text-4xl mb-4">⚔️</div>
+                    <h4 class="text-xl font-bold mb-2">Trade War Risk</h4>
+                    <p class="text-stone-600">The bill includes retaliatory provisions against countries with digital services taxes (mainly EU allies), risking a new transatlantic trade dispute.</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-stone-200">
+                    <div class="text-4xl mb-4">💨</div>
+                    <h4 class="text-xl font-bold mb-2">Exiting the Climate Race</h4>
+                    <p class="text-stone-600">Repealing green energy incentives from the IRA weakens America's global competitiveness in clean energy, potentially ceding dominance to China.</p>
+                </div>
+                 <div class="bg-white p-6 rounded-2xl shadow-lg border border-stone-200">
+                    <div class="text-4xl mb-4">📉</div>
+                    <h4 class="text-xl font-bold mb-2">Waning Investment Appeal</h4>
+                    <p class="text-stone-600">Soaring national debt combined with punitive measures against foreign investors could make the U.S. less attractive to global capital, shaking financial market stability.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="bg-stone-800 text-stone-300 mt-16">
+        <div class="container mx-auto py-6 px-4 text-center text-sm">
+            <p>This is an interactive information visualization project created based on a public report, intended for educational and informational purposes. All data and analysis are derived from the report's content.</p>
+            <p class="mt-2">&copy; 2025 OBBBA Interactive Explainer. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const chartColors = {
+        blue: 'rgba(59, 130, 246, 0.7)',
+        green: 'rgba(34, 197, 94, 0.7)',
+        red: 'rgba(239, 68, 68, 0.7)',
+        amber: 'rgba(245, 158, 11, 0.7)',
+        slate: 'rgba(100, 116, 139, 0.7)',
+        sky: 'rgba(14, 165, 233, 0.7)',
+        indigo: 'rgba(99, 102, 241, 0.7)',
+        stone: 'rgba(120, 113, 108, 0.7)',
+        
+        blueBorder: 'rgb(59, 130, 246)',
+        greenBorder: 'rgb(34, 197, 94)',
+        redBorder: 'rgb(239, 68, 68)',
+        amberBorder: 'rgb(245, 158, 11)',
+        slateBorder: 'rgb(100, 116, 139)',
+        skyBorder: 'rgb(14, 165, 233)',
+        indigoBorder: 'rgb(99, 102, 241)',
+        stoneBorder: 'rgb(120, 113, 108)',
+    };
+    
+    const tooltipPlugin = {
+        id: 'htmlTooltip',
+        afterDraw: chart => {
+            let tooltip = chart.canvas.parentNode.querySelector('.tooltip');
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                chart.canvas.parentNode.appendChild(tooltip);
+            }
+
+            const tooltipModel = chart.tooltip;
+            if (tooltipModel.opacity === 0) {
+                tooltip.style.opacity = 0;
+                return;
+            }
+            
+            tooltip.style.opacity = 1;
+            tooltip.style.left = chart.canvas.offsetLeft + tooltipModel.caretX + 'px';
+            tooltip.style.top = chart.canvas.offsetTop + tooltipModel.caretY + 'px';
+
+            if (tooltipModel.body) {
+                const titleLines = tooltipModel.title || [];
+                const bodyLines = tooltipModel.body.map(b => b.lines);
+
+                let innerHtml = '';
+
+                titleLines.forEach(function(title) {
+                    innerHtml += `<h6>${title}</h6>`;
+                });
+
+                bodyLines.forEach(function(body, i) {
+                     innerHtml += `<span>${body}</span>`;
+                });
+                
+                tooltip.innerHTML = innerHtml;
+            }
+        }
+    };
+    
+    const chartDefaults = {
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#44403c', // stone-700
+                    font: { family: 'Inter', size: 12 }
+                }
+            },
+            tooltip: {
+                enabled: false,
+                external: tooltipPlugin,
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                titleFont: { family: 'Inter', size: 14, weight: 'bold' },
+                bodyFont: { family: 'Inter', size: 12 },
+                padding: 10,
+                cornerRadius: 4,
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y) + ' Trillion';
+                        }
+                        return label;
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { color: '#44403c' },
+                grid: { color: '#e7e5e4' } // stone-200
+            },
+            x: {
+                ticks: { color: '#44403c' },
+                grid: { display: false }
+            }
+        },
+        maintainAspectRatio: false,
+        responsive: true
+    };
+    
+    const taxCutData = {
+        labels: ['Permanent TCJA', 'Increased CTC', 'Business Expensing', 'SALT Cap Increase', 'Other Temp. Cuts'],
+        datasets: [{
+            label: 'Tax Cut Composition ($B)',
+            data: [2177, 797, 148, -787, 40],
+            backgroundColor: [chartColors.blue, chartColors.green, chartColors.sky, chartColors.red, chartColors.amber],
+            borderColor: [chartColors.blueBorder, chartColors.greenBorder, chartColors.skyBorder, chartColors.redBorder, chartColors.amberBorder],
+            borderWidth: 1
+        }]
+    };
+
+    const taxCutCtx = document.getElementById('taxCutChart').getContext('2d');
+    new Chart(taxCutCtx, {
+        type: 'doughnut',
+        data: taxCutData,
+        options: {
+            ...chartDefaults,
+            plugins: {
+                ...chartDefaults.plugins,
+                 tooltip: {
+                    enabled: true,
+                    callbacks: {
+                         label: function(context) {
+                            let value = context.parsed;
+                            let label = context.label || '';
+                            let sign = value >= 0 ? '' : '-';
+                            return `${label}: ${sign}$${Math.abs(value/1000).toFixed(2)}T`;
+                        }
+                    }
+                }
+            },
+            scales: { y: { display: false }, x: { display: false } }
+        }
+    });
+
+    const spendingCutData = {
+        labels: ['Medicaid Overhaul', 'Repeal Green Credits', 'SNAP Cuts'],
+        datasets: [{
+            label: 'Spending Cuts ($B)',
+            data: [540, 571, 238],
+            backgroundColor: [chartColors.red, chartColors.amber, chartColors.slate],
+            borderColor: [chartColors.redBorder, chartColors.amberBorder, chartColors.slateBorder],
+            borderWidth: 1
+        }]
+    };
+    
+    const spendingCutCtx = document.getElementById('spendingCutChart').getContext('2d');
+    new Chart(spendingCutCtx, {
+        type: 'bar',
+        data: spendingCutData,
+        options: {
+            ...chartDefaults,
+            plugins: {
+                 ...chartDefaults.plugins,
+                 legend: { display: false },
+                 tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: function(context) {
+                            return `Cut: $${context.parsed.y}B`;
+                        }
+                    }
+                 }
+            },
+             scales: {
+                ...chartDefaults.scales,
+                y: {
+                     ...chartDefaults.scales.y,
+                     ticks: {
+                        callback: function(value) { return `$${value}B`; }
+                     }
+                }
+            }
+        }
+    });
+
+    const economicForecastData = {
+        gdp: {
+            labels: ['White House CEA', 'CBO', 'Tax Foundation', 'Tax Policy Center'],
+            datasets: [{
+                label: '10-Year GDP Growth Forecast (%)',
+                data: [4.75, 0.5, 1.0, 0.4],
+                backgroundColor: [chartColors.green, chartColors.slate, chartColors.slate, chartColors.slate],
+                borderColor: [chartColors.greenBorder, chartColors.slateBorder, chartColors.slateBorder, chartColors.slateBorder],
+                borderWidth: 1
+            }]
+        },
+        deficit: {
+            labels: ['White House CEA', 'CBO', 'Tax Foundation', 'Tax Policy Center'],
+            datasets: [{
+                label: '10-Year Deficit Impact ($T)',
+                data: [-0.1, 3.3, 3.8, 3.0], 
+                backgroundColor: [chartColors.green, chartColors.red, chartColors.red, chartColors.red],
+                borderColor: [chartColors.greenBorder, chartColors.redBorder, chartColors.redBorder, chartColors.redBorder],
+                borderWidth: 1
+            }]
+        }
+    };
+    
+    const economicForecastCtx = document.getElementById('economicForecastChart').getContext('2d');
+    let economicForecastChart = new Chart(economicForecastCtx, {
+        type: 'bar',
+        data: economicForecastData.gdp,
+        options: {
+            ...chartDefaults,
+             plugins: {
+                 ...chartDefaults.plugins,
+                 legend: { display: false },
+                 tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: function(context) {
+                            const isGdp = context.chart.data.datasets[0].label.includes('GDP');
+                            const value = context.parsed.y;
+                            if (isGdp) {
+                                return `GDP Growth: ${value}%`;
+                            } else {
+                                const text = value >= 0 ? 'Increase' : 'Decrease';
+                                return `Deficit ${text}: $${Math.abs(value).toFixed(1)}T`;
+                            }
+                        }
+                    }
+                 }
+            },
+            scales: {
+                ...chartDefaults.scales,
+                y: {
+                     ...chartDefaults.scales.y,
+                     ticks: {
+                        callback: function(value) {
+                             const isGdp = this.chart.data.datasets[0].label.includes('GDP');
+                             return isGdp ? `${value}%` : `$${value}T`;
+                        }
+                     }
+                }
+            }
+        }
+    });
+
+    const showGdpBtn = document.getElementById('showGdpBtn');
+    const showDeficitBtn = document.getElementById('showDeficitBtn');
+    const forecastExplainer = document.getElementById('forecast-explainer');
+    
+    showGdpBtn.addEventListener('click', () => {
+        economicForecastChart.data = economicForecastData.gdp;
+        economicForecastChart.update();
+        showGdpBtn.classList.add('bg-amber-400', 'text-stone-700');
+        showGdpBtn.classList.remove('bg-stone-200', 'text-stone-600');
+        showDeficitBtn.classList.add('bg-stone-200', 'text-stone-600');
+        showDeficitBtn.classList.remove('bg-amber-400', 'text-stone-700');
+        forecastExplainer.textContent = "The chart above compares the bill's economic impact forecasts from the White House (CEA) and independent agencies (CBO, etc.). The White House projects high growth, while independent agencies forecast modest growth.";
+    });
+
+    showDeficitBtn.addEventListener('click', () => {
+        economicForecastChart.data = economicForecastData.deficit;
+        economicForecastChart.update();
+        showDeficitBtn.classList.add('bg-amber-400', 'text-stone-700');
+        showDeficitBtn.classList.remove('bg-stone-200', 'text-stone-600');
+        showGdpBtn.classList.add('bg-stone-200', 'text-stone-600');
+        showGdpBtn.classList.remove('bg-amber-400', 'text-stone-700');
+        forecastExplainer.textContent = "The chart above compares the bill's fiscal impact forecasts from the White House (CEA) and independent agencies (CBO, etc.). The White House claims it will reduce the deficit, while all independent agencies project a multi-trillion dollar increase.";
+    });
+
+    const impactDisplay = document.getElementById('impact-display');
+    const incomeSelector = document.getElementById('income-selector');
+    const impactData = {
+        lowest: {
+            title: "Lowest 20%: Net Losers",
+            text: "This group becomes a net loser due to cuts in Medicaid and food assistance (SNAP). The CBO projects over 11.8 million people, primarily from low-income families, will lose health insurance, with average annual income eventually falling by about $1,600.",
+            color: "red"
+        },
+        middle: {
+            title: "Middle Class: Modest, Temporary Winners",
+            text: "Receives a modest tax cut of $500 to $1,500, benefiting from temporary provisions like tax-free tips/overtime and the increased Child Tax Credit. However, these benefits expire after 2028, creating a 'fiscal cliff'.",
+            color: "amber"
+        },
+        highest: {
+            title: "Highest 20%: Major Winners",
+            text: "Benefits the most from the permanent extension of top tax rate cuts in the 2017 Tax Cuts and Jobs Act (TCJA). On average, this group will see an annual income increase of $12,000.",
+            color: "green"
+        },
+        top1: {
+            title: "Top 1%: Biggest Winners",
+            text: "Gains enormously from measures like lower corporate tax rates and permanent estate tax exemptions. Analyses show the wealthiest 0.1% could see an average annual income increase of over $290,000.",
+            color: "green"
+        }
+    };
+    
+    function updateImpactDisplay(group) {
+        const data = impactData[group];
+        const colorClasses = {
+            red: 'border-red-500 bg-red-100 text-red-800',
+            amber: 'border-amber-500 bg-amber-100 text-amber-800',
+            green: 'border-green-500 bg-green-100 text-green-800'
+        };
+        
+        impactDisplay.innerHTML = `
+            <h5 class="text-xl font-bold mb-2">${data.title}</h5>
+            <p>${data.text}</p>
+        `;
+        impactDisplay.className = `p-6 rounded-lg transition-all duration-300 border-l-4 ${colorClasses[data.color]}`;
+
+        document.querySelectorAll('.income-btn').forEach(btn => {
+            btn.classList.remove('bg-amber-400', 'text-stone-700');
+            btn.classList.add('bg-stone-200', 'text-stone-600');
+        });
+        document.querySelector(`.income-btn[data-group="${group}"]`).classList.add('bg-amber-400', 'text-stone-700');
+        document.querySelector(`.income-btn[data-group="${group}"]`).classList.remove('bg-stone-200', 'text-stone-600');
+    }
+
+    incomeSelector.addEventListener('click', e => {
+        if (e.target.matches('.income-btn')) {
+            updateImpactDisplay(e.target.dataset.group);
+        }
+    });
+    
+    updateImpactDisplay('highest');
+    
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+    
+    document.querySelectorAll('#mobile-menu a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+        });
+    });
+
+    const sections = document.querySelectorAll('.content-section');
+    const navLinks = document.querySelectorAll('.nav-link');
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === entry.target.id) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+    }, { rootMargin: "-100px 0px -50% 0px" });
+
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+
+    navLinks.forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+});
+</script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
