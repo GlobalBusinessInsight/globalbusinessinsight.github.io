@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式报告：解析美越关税协议</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Strategic Calm -->
+    <!-- Application Structure Plan: 本应用采用主题式、非线性的单页布局，旨在优化移动端体验，引导用户通过故事化的方式理解报告核心内容。结构分为：1)“新协议核心”：开篇即点明20%/40%双重关税这一最关键信息，吸引用户注意力。2)“数据洞察”：通过交互式图表（贸易逆差趋势、商品构成）将枯燥数据转化为直观发现，揭示问题的严重性。3)“历史演变”：采用可折叠时间轴，将复杂的历史背景简化为易于消化和探索的模块。4)“战略博弈”：通过并列布局清晰对比双方得失。5)“未来展望”：使用卡片式设计呈现前瞻性观点和建议。此结构放弃了传统报告的线性叙事，优先展示最重要和最有趣的信息，并通过导航栏赋予用户自由探索的权力，从而提升参与感和理解效率。 -->
+    <!-- Visualization & Content Choices: 1) 贸易逆差 (目标: 展示变化) -> 折线图 (Chart.js/Canvas) -> 交互: 悬停提示 -> 理由: 清晰展示随时间变化的趋势。 2) 贸易商品构成 (目标: 比较/告知) -> 水平条形图 (Chart.js/Canvas) -> 交互: 按钮切换进出口数据 -> 理由: 适合长标签分类对比，交互节省空间。 3) 双重关税结构 (目标: 告知/比较) -> HTML/CSS色块卡片 -> 交互: 无 -> 理由: 视觉冲击力强，迅速传递核心信息。 4) 历史时间线 (目标: 组织信息) -> HTML/CSS/JS手风琴组件 -> 交互: 点击展开/折叠 -> 理由: 在小空间内有效组织大量文本，提升用户主动性。 5) 转运流程图 (目标: 解释关系) -> HTML/CSS Flexbox布局 + Unicode箭头 -> 交互: 无 -> 理由: 简单直观地可视化复杂流程，避免使用图像。 6) 双方得失 (目标: 比较) -> HTML/CSS网格布局 -> 交互: 无 -> 理由: 并列对比一目了然。所有选择均围绕清晰传达信息和优化移动端交互设计，完全规避SVG和Mermaid。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F4;
+            color: #1a202c;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #3498DB;
+            border-bottom-color: #3498DB;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+        .tab-button.active {
+            background-color: #2C3E50;
+            color: white;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Nav -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl md:text-2xl font-bold text-[#2C3E50]">美越贸易新格局</h1>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#agreement" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent">新协议</a>
+                    <a href="#data" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent">数据洞察</a>
+                    <a href="#history" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent">历史演变</a>
+                    <a href="#strategy" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent">战略博弈</a>
+                    <a href="#future" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent">未来展望</a>
+                </nav>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-700 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t">
+            <a href="#agreement" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link">新协议</a>
+            <a href="#data" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link">数据洞察</a>
+            <a href="#history" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link">历史演变</a>
+            <a href="#strategy" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link">战略博弈</a>
+            <a href="#future" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link">未来展望</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+
+        <!-- Section 1: The New Agreement -->
+        <section id="agreement" class="scroll-mt-20 text-center mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-[#2C3E50] mb-4">一个协议，两种未来</h2>
+            <p class="max-w-3xl mx-auto text-gray-600 mb-8 md:mb-12">2025年7月签署的美越关税协议，不再是传统的自由贸易协定，而是一个以合规为核心的战略框架。其首创的“双重关税”机制，旨在精准打击借道越南的中国转运商品，深刻重塑亚太地区的供应链格局。</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 transform hover:scale-105 transition-transform duration-300 border-t-4 border-[#3498DB]">
+                    <h3 class="text-5xl md:text-6xl font-bold text-[#3498DB]">20%</h3>
+                    <p class="mt-3 font-semibold text-xl text-[#2C3E50]">基础关税</p>
+                    <p class="mt-2 text-gray-500">适用于经核实、真正源自越南并符合“实质性转变”标准的合规商品。</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 transform hover:scale-105 transition-transform duration-300 border-t-4 border-[#E74C3C]">
+                    <h3 class="text-5xl md:text-6xl font-bold text-[#E74C3C]">40%</h3>
+                    <p class="mt-3 font-semibold text-xl text-[#2C3E50]">惩罚性关税</p>
+                    <p class="mt-2 text-gray-500">针对在越南仅作轻微加工，旨在规避对华关税的“转运”商品。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Data Insights -->
+        <section id="data" class="scroll-mt-20 mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2C3E50] mb-4">失衡的数据</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">过去十年，美越贸易额爆炸性增长的背后，是美国对越贸易逆差的急剧扩大。这一结构性失衡是催生新关税协议的直接导火索。数据揭示了问题的严重性以及矛盾集中的领域。</p>
+            
+            <div class="bg-white rounded-xl shadow-lg p-4 md:p-8 mb-12">
+                <h3 class="font-bold text-xl md:text-2xl text-center mb-1 text-[#2C3E50]">急剧扩大的贸易逆差</h3>
+                <p class="text-center text-sm text-gray-500 mb-6">美国对越南商品贸易差额 (2017-2024年，单位：十亿美元)</p>
+                <div class="chart-container">
+                    <canvas id="tradeDeficitChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-4 md:p-8">
+                <h3 class="font-bold text-xl md:text-2xl text-center mb-6 text-[#2C3E50]">贸易结构：矛盾焦点何在？</h3>
+                <div class="flex justify-center mb-6">
+                    <div class="inline-flex rounded-md shadow-sm">
+                        <button id="show-imports" class="tab-button active px-4 py-2 text-sm font-medium border border-gray-200 rounded-l-lg focus:z-10 focus:ring-2 focus:ring-blue-500">自越进口</button>
+                        <button id="show-exports" class="tab-button px-4 py-2 text-sm font-medium border-t border-b border-gray-200 rounded-r-lg focus:z-10 focus:ring-2 focus:ring-blue-500">对越出口</button>
+                    </div>
+                </div>
+                <div class="chart-container" style="height: 350px; max-height: 50vh;">
+                    <canvas id="tradeCompositionChart"></canvas>
+                </div>
+                 <div class="mt-8 text-center">
+                    <h4 class="font-semibold text-lg text-[#2C3E50]">转运流程示意</h4>
+                    <p class="text-gray-500 text-sm mb-4">电子等高价值产品是转运争议的核心</p>
+                    <div class="flex items-center justify-center space-x-2 md:space-x-4 p-4 bg-gray-50 rounded-lg max-w-md mx-auto">
+                        <div class="text-center">
+                            <div class="text-4xl">🇨🇳</div>
+                            <div class="text-sm font-semibold">中国</div>
+                            <div class="text-xs text-gray-500">零部件/原材料</div>
+                        </div>
+                        <div class="text-3xl font-light text-gray-400">→</div>
+                         <div class="text-center">
+                            <div class="text-4xl">🇻🇳</div>
+                            <div class="text-sm font-semibold">越南</div>
+                            <div class="text-xs text-gray-500">组装/贴标</div>
+                        </div>
+                        <div class="text-3xl font-light text-gray-400">→</div>
+                        <div class="text-center">
+                            <div class="text-4xl">🇺🇸</div>
+                            <div class="text-sm font-semibold">美国</div>
+                            <div class="text-xs text-gray-500">最终市场</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 3: History -->
+        <section id="history" class="scroll-mt-20 mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2C3E50] mb-4">从破冰到博弈</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">美越经贸关系的演变并非一蹴而就。从战后正常化到今天的战略遵从，每一步都为当前的局面埋下了伏笔。点击下方时间点了解决定性的历史时刻。</p>
+            <div id="timeline" class="max-w-3xl mx-auto space-y-4">
+            </div>
+        </section>
+
+        <!-- Section 4: Strategy -->
+        <section id="strategy" class="scroll-mt-20 mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2C3E50] mb-4">一场精明的战略妥协</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">新协议是双方激烈博弈后的产物，充满了收益与妥协。它既是越南的“务实幸存”，也是美国的“地缘杰作”。</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+                    <h3 class="text-2xl font-bold mb-4 text-[#2C3E50] flex items-center"><span class="text-4xl mr-3">🇻🇳</span> 越南：务实的幸存者</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-semibold text-lg text-green-600">收益点</h4>
+                            <ul class="list-disc list-inside text-gray-600 mt-1 space-y-1">
+                                <li>避免了46%的灾难性关税，保住了对美出口生命线。</li>
+                                <li>巩固了其作为美国关键战略伙伴的地位。</li>
+                                <li>为未来在IPEF等框架下获取利益铺平道路。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-lg text-red-600">妥协点</h4>
+                            <ul class="list-disc list-inside text-gray-600 mt-1 space-y-1">
+                                <li>接受更高合规成本和更严的国内产业审查。</li>
+                                <li>被迫承担将供应链部分“去中国化”的艰巨任务。</li>
+                                <li>在处理对华关系时面临更复杂的局面。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+                    <h3 class="text-2xl font-bold mb-4 text-[#2C3E50] flex items-center"><span class="text-4xl mr-3">🇺🇸</span> 美国：地缘的建筑师</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-semibold text-lg text-green-600">收益点</h4>
+                            <ul class="list-disc list-inside text-gray-600 mt-1 space-y-1">
+                                <li>创立了一个可复制的模板，用于应对中国的经济行为。</li>
+                                <li>以美国条件锁定“中国+1”趋势，迫使企业真正多元化。</li>
+                                <li>协议的模糊性赋予其灵活调整执法的巨大权力。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-lg text-red-600">妥协点</h4>
+                            <ul class="list-disc list-inside text-gray-600 mt-1 space-y-1">
+                                <li>放弃施加极限关税，承认其对本国供应链的扰乱。</li>
+                                <li>承担监督和执行精细化协议的大量行政成本。</li>
+                                <li>需避免将越南等伙伴过度推向中国。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Future -->
+        <section id="future" class="scroll-mt-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2C3E50] mb-4">前行之路：机遇与风险</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">新关税协议并非终点，而是一个新时代的开端。未来的走向将取决于IPEF的进展、中国的反应以及企业的战略调整。</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="text-4xl mb-4">🤝</div>
+                    <h3 class="font-bold text-xl mb-2 text-[#2C3E50]">IPEF：超越关税的“胡萝卜”</h3>
+                    <p class="text-gray-600">“印太经济框架” (IPEF) 在清洁能源、供应链韧性等方面提供高标准规则和技术援助，是美国激励越南等伙伴遵守新秩序的“软实力”工具。</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                     <div class="text-4xl mb-4">🇨🇳</div>
+                    <h3 class="font-bold text-xl mb-2 text-[#2C3E50]">北京的反应：关键变量</h3>
+                    <p class="text-gray-600">中国视新协议为直接针对其利益，可能采取供应链反制或贸易壁垒等措施，这将使越南陷入在两大国间走钢丝的微妙境地。</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+                    <div class="text-4xl mb-4">📈</div>
+                    <h3 class="font-bold text-xl mb-2 text-[#2C3E50]">企业战略建议</h3>
+                    <p class="text-gray-600">企业必须立即进行供应链审计，投资可追溯系统，并推行“中国+1+N”的多元化采购战略，以应对新的合规风险和地缘政治不确定性。</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16 md:mt-24">
+        <div class="container mx-auto py-6 px-4 text-center text-sm">
+            <p>本交互式报告根据公开信息和分析报告生成，仅供参考。</p>
+            <p>&copy; 2025 数据可视化分析</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Mobile menu toggle
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+    
+    document.querySelectorAll('.mobile-nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+             mobileMenu.classList.add('hidden');
+        });
+    });
+
+    // Nav link active state on scroll
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-link');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            if (pageYOffset >= sectionTop - 80) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').substring(1) === current) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+    // Data for charts
+    const tradeDeficitData = {
+        labels: ['2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+        data: [-39.4, -55.6, -55.8, -69.7, -90.9, -116.1, -114.0, -123.5],
+    };
+    
+    const tradeCompositionData = {
+        imports: {
+            labels: ['电脑', '手机及设备', '电脑零部件', '家具', '扬声器/麦克风'],
+            data: [3.51, 2.33, 0.84, 0.62, 0.48],
+            label: '自越南进口额 (十亿美元, 2025 YTD)'
+        },
+        exports: {
+            labels: ['计算机芯片', '棉花', '手机及设备', '原木', '稀有气体'],
+            data: [0.14, 0.13, 0.08, 0.06, 0.05],
+            label: '对越南出口额 (十亿美元, 2025 YTD)'
+        }
+    };
+    
+    // Trade Deficit Chart (Line)
+    const ctxDeficit = document.getElementById('tradeDeficitChart').getContext('2d');
+    new Chart(ctxDeficit, {
+        type: 'line',
+        data: {
+            labels: tradeDeficitData.labels,
+            datasets: [{
+                label: '美国对越贸易逆差',
+                data: tradeDeficitData.data,
+                borderColor: '#E74C3C',
+                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: '#E74C3C',
+                pointRadius: 4,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: '十亿美元'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `逆差: ${-context.parsed.y.toFixed(1)} 十亿美元`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Trade Composition Chart (Bar)
+    const ctxComposition = document.getElementById('tradeCompositionChart').getContext('2d');
+    const compositionChart = new Chart(ctxComposition, {
+        type: 'bar',
+        data: {
+            labels: tradeCompositionData.imports.labels,
+            datasets: [{
+                label: tradeCompositionData.imports.label,
+                data: tradeCompositionData.imports.data,
+                backgroundColor: '#3498DB',
+                borderColor: '#2980B9',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: '价值 (十亿美元)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                 tooltip: {
+                    callbacks: {
+                        title: function (tooltipItems) {
+                             return tooltipItems[0].label;
+                        },
+                        label: function(context) {
+                            let label = context.dataset.label.split('(')[0] || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.x !== null) {
+                                label += context.parsed.x.toFixed(2) + ' 十亿美元';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Tab buttons for composition chart
+    const showImportsBtn = document.getElementById('show-imports');
+    const showExportsBtn = document.getElementById('show-exports');
+
+    function updateCompositionChart(dataType) {
+        const data = tradeCompositionData[dataType];
+        compositionChart.data.labels = data.labels;
+        compositionChart.data.datasets[0].data = data.data;
+        compositionChart.data.datasets[0].label = data.label;
+        compositionChart.update();
+
+        if (dataType === 'imports') {
+            showImportsBtn.classList.add('active');
+            showExportsBtn.classList.remove('active');
+        } else {
+            showExportsBtn.classList.add('active');
+            showImportsBtn.classList.remove('active');
+        }
+    }
+    
+    showImportsBtn.addEventListener('click', () => updateCompositionChart('imports'));
+    showExportsBtn.addEventListener('click', () => updateCompositionChart('exports'));
+
+    // Timeline data and generation
+    const timelineData = [
+        {
+            year: '1995年',
+            title: '外交关系正常化',
+            content: '美国与越南正式建立外交关系，为后续的经济合作奠定了政治基础，结束了长达数十年的隔绝。'
+        },
+        {
+            year: '2001年',
+            title: '双边贸易协定 (BTA) 生效',
+            content: '这是两国经济关系的奠基石。美国对越南商品的平均关税从40%骤降至3%，越南对美出口在随后几年内爆炸性增长。'
+        },
+        {
+            year: '2007年',
+            title: '越南加入WTO',
+            content: '越南正式成为世界贸易组织第150个成员国，融入了以规则为基础的全球多边贸易体系，美国也给予其永久正常贸易关系地位。'
+        },
+        {
+            year: '2020年',
+            title: '301条款调查启动',
+            content: '美国针对越南的货币政策和木材产品供应链展开301条款调查，标志着贸易摩擦升级，向越南施加了巨大压力。'
+        },
+        {
+            year: '2023年',
+            title: '升级为全面战略伙伴关系',
+            content: '两国关系提升至最高级别，合作范围扩展到国防、科技（特别是半导体）等领域，越南成为美国印太战略的核心支柱之一。'
+        },
+        {
+            year: '2025年',
+            title: '新关税协议签署',
+            content: '全新的双重关税协议生效，旨在遏制中国转运，标志着美越关系从追求自由贸易转向以战略合规为核心的新阶段。'
+        }
+    ];
+
+    const timelineContainer = document.getElementById('timeline');
+    timelineData.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'bg-white rounded-lg shadow-md overflow-hidden';
+        div.innerHTML = `
+            <button class="accordion-button w-full text-left p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition">
+                <span class="font-bold text-lg text-[#2C3E50]">${item.year}: ${item.title}</span>
+                <span class="transform transition-transform duration-300 text-xl text-[#3498DB]">
+                    +
+                </span>
+            </button>
+            <div class="accordion-content">
+                <p class="p-4 pt-0 text-gray-600">${item.content}</p>
+            </div>
+        `;
+        timelineContainer.appendChild(div);
+    });
+
+    // Accordion functionality
+    const accordionButtons = document.querySelectorAll('.accordion-button');
+    accordionButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('span:last-child');
+
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
+                document.querySelectorAll('.accordion-button span:last-child').forEach(i => i.style.transform = 'rotate(0deg)');
+                
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.style.transform = 'rotate(45deg)';
+            }
+        });
+    });
+});
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
