@@ -8,14 +8,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Strategic Calm -->
     <!-- Application Structure Plan: 本应用采用主题式、非线性的单页布局，旨在优化移动端体验，引导用户通过故事化的方式理解报告核心内容。结构分为：1)“新协议核心”：开篇即点明20%/40%双重关税这一最关键信息，吸引用户注意力。2)“数据洞察”：通过交互式图表（贸易逆差趋势、商品构成）将枯燥数据转化为直观发现，揭示问题的严重性。3)“历史演变”：采用可折叠时间轴，将复杂的历史背景简化为易于消化和探索的模块。4)“战略博弈”：通过并列布局清晰对比双方得失。5)“未来展望”：使用卡片式设计呈现前瞻性观点和建议。此结构放弃了传统报告的线性叙事，优先展示最重要和最有趣的信息，并通过导航栏赋予用户自由探索的权力，从而提升参与感和理解效率。 -->
     <!-- Visualization & Content Choices: 1) 贸易逆差 (目标: 展示变化) -> 折线图 (Chart.js/Canvas) -> 交互: 悬停提示 -> 理由: 清晰展示随时间变化的趋势。 2) 贸易商品构成 (目标: 比较/告知) -> 水平条形图 (Chart.js/Canvas) -> 交互: 按钮切换进出口数据 -> 理由: 适合长标签分类对比，交互节省空间。 3) 双重关税结构 (目标: 告知/比较) -> HTML/CSS色块卡片 -> 交互: 无 -> 理由: 视觉冲击力强，迅速传递核心信息。 4) 历史时间线 (目标: 组织信息) -> HTML/CSS/JS手风琴组件 -> 交互: 点击展开/折叠 -> 理由: 在小空间内有效组织大量文本，提升用户主动性。 5) 转运流程图 (目标: 解释关系) -> HTML/CSS Flexbox布局 + Unicode箭头 -> 交互: 无 -> 理由: 简单直观地可视化复杂流程，避免使用图像。 6) 双方得失 (目标: 比较) -> HTML/CSS网格布局 -> 交互: 无 -> 理由: 并列对比一目了然。所有选择均围绕清晰传达信息和优化移动端交互设计，完全规避SVG和Mermaid。 -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
-            font-family: 'Noto Sans SC', sans-serif;
+            font-family: 'Roboto', 'Noto Sans SC', sans-serif;
             background-color: #F8F7F4;
             color: #1a202c;
         }
@@ -49,6 +49,10 @@
             background-color: #2C3E50;
             color: white;
         }
+        .lang-switcher button.active {
+            font-weight: bold;
+            color: #3498DB;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -57,13 +61,18 @@
     <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <div class="container mx-auto px-4">
             <div class="flex items-center justify-between h-16">
-                <h1 class="text-xl md:text-2xl font-bold text-[#2C3E50]">美越贸易新格局</h1>
-                <nav class="hidden md:flex space-x-6">
-                    <a href="#agreement" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent">新协议</a>
-                    <a href="#data" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent">数据洞察</a>
-                    <a href="#history" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent">历史演变</a>
-                    <a href="#strategy" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent">战略博弈</a>
-                    <a href="#future" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent">未来展望</a>
+                <h1 class="text-xl md:text-2xl font-bold text-[#2C3E50]" data-lang-key="headerTitle">美越贸易新格局</h1>
+                <nav class="hidden md:flex items-center space-x-6">
+                    <a href="#agreement" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent" data-lang-key="navAgreement">新协议</a>
+                    <a href="#data" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent" data-lang-key="navData">数据洞察</a>
+                    <a href="#history" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent" data-lang-key="navHistory">历史演变</a>
+                    <a href="#strategy" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent" data-lang-key="navStrategy">战略博弈</a>
+                    <a href="#future" class="nav-link font-medium text-gray-600 pb-1 border-b-2 border-transparent" data-lang-key="navFuture">未来展望</a>
+                    <div class="lang-switcher flex space-x-2 text-sm border-l pl-4">
+                        <button data-lang="zh" class="active">中文</button>
+                        <button data-lang="en">EN</button>
+                        <button data-lang="fr">FR</button>
+                    </div>
                 </nav>
                 <div class="md:hidden">
                     <button id="mobile-menu-button" class="text-gray-700 focus:outline-none">
@@ -74,11 +83,16 @@
         </div>
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="md:hidden hidden bg-white border-t">
-            <a href="#agreement" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link">新协议</a>
-            <a href="#data" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link">数据洞察</a>
-            <a href="#history" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link">历史演变</a>
-            <a href="#strategy" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link">战略博弈</a>
-            <a href="#future" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link">未来展望</a>
+            <a href="#agreement" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link" data-lang-key="navAgreementMobile">新协议</a>
+            <a href="#data" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link" data-lang-key="navDataMobile">数据洞察</a>
+            <a href="#history" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link" data-lang-key="navHistoryMobile">历史演变</a>
+            <a href="#strategy" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link" data-lang-key="navStrategyMobile">战略博弈</a>
+            <a href="#future" class="block py-3 px-4 text-gray-700 hover:bg-gray-100 mobile-nav-link" data-lang-key="navFutureMobile">未来展望</a>
+            <div class="lang-switcher flex justify-center space-x-4 py-3 border-t">
+                <button data-lang="zh" class="active">中文</button>
+                <button data-lang="en">EN</button>
+                <button data-lang="fr">FR</button>
+            </div>
         </div>
     </header>
 
@@ -86,66 +100,66 @@
 
         <!-- Section 1: The New Agreement -->
         <section id="agreement" class="scroll-mt-20 text-center mb-16 md:mb-24">
-            <h2 class="text-3xl md:text-4xl font-bold text-[#2C3E50] mb-4">一个协议，两种未来</h2>
-            <p class="max-w-3xl mx-auto text-gray-600 mb-8 md:mb-12">2025年7月签署的美越关税协议，不再是传统的自由贸易协定，而是一个以合规为核心的战略框架。其首创的“双重关税”机制，旨在精准打击借道越南的中国转运商品，深刻重塑亚太地区的供应链格局。</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-[#2C3E50] mb-4" data-lang-key="agreementTitle">一个协议，两种未来</h2>
+            <p class="max-w-3xl mx-auto text-gray-600 mb-8 md:mb-12" data-lang-key="agreementDesc">2025年7月签署的美越关税协议，不再是传统的自由贸易协定，而是一个以合规为核心的战略框架。其首创的“双重关税”机制，旨在精准打击借道越南的中国转运商品，深刻重塑亚太地区的供应链格局。</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
                 <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 transform hover:scale-105 transition-transform duration-300 border-t-4 border-[#3498DB]">
                     <h3 class="text-5xl md:text-6xl font-bold text-[#3498DB]">20%</h3>
-                    <p class="mt-3 font-semibold text-xl text-[#2C3E50]">基础关税</p>
-                    <p class="mt-2 text-gray-500">适用于经核实、真正源自越南并符合“实质性转变”标准的合规商品。</p>
+                    <p class="mt-3 font-semibold text-xl text-[#2C3E50]" data-lang-key="baseTariff">基础关税</p>
+                    <p class="mt-2 text-gray-500" data-lang-key="baseTariffDesc">适用于经核实、真正源自越南并符合“实质性转变”标准的合规商品。</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 transform hover:scale-105 transition-transform duration-300 border-t-4 border-[#E74C3C]">
                     <h3 class="text-5xl md:text-6xl font-bold text-[#E74C3C]">40%</h3>
-                    <p class="mt-3 font-semibold text-xl text-[#2C3E50]">惩罚性关税</p>
-                    <p class="mt-2 text-gray-500">针对在越南仅作轻微加工，旨在规避对华关税的“转运”商品。</p>
+                    <p class="mt-3 font-semibold text-xl text-[#2C3E50]" data-lang-key="punitiveTariff">惩罚性关税</p>
+                    <p class="mt-2 text-gray-500" data-lang-key="punitiveTariffDesc">针对在越南仅作轻微加工，旨在规避对华关税的“转运”商品。</p>
                 </div>
             </div>
         </section>
 
         <!-- Section 2: Data Insights -->
         <section id="data" class="scroll-mt-20 mb-16 md:mb-24">
-            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2C3E50] mb-4">失衡的数据</h2>
-            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">过去十年，美越贸易额爆炸性增长的背后，是美国对越贸易逆差的急剧扩大。这一结构性失衡是催生新关税协议的直接导火索。数据揭示了问题的严重性以及矛盾集中的领域。</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2C3E50] mb-4" data-lang-key="dataTitle">失衡的数据</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12" data-lang-key="dataDesc">过去十年，美越贸易额爆炸性增长的背后，是美国对越贸易逆差的急剧扩大。这一结构性失衡是催生新关税协议的直接导火索。数据揭示了问题的严重性以及矛盾集中的领域。</p>
             
             <div class="bg-white rounded-xl shadow-lg p-4 md:p-8 mb-12">
-                <h3 class="font-bold text-xl md:text-2xl text-center mb-1 text-[#2C3E50]">急剧扩大的贸易逆差</h3>
-                <p class="text-center text-sm text-gray-500 mb-6">美国对越南商品贸易差额 (2017-2024年，单位：十亿美元)</p>
+                <h3 class="font-bold text-xl md:text-2xl text-center mb-1 text-[#2C3E50]" data-lang-key="deficitChartTitle">急剧扩大的贸易逆差</h3>
+                <p class="text-center text-sm text-gray-500 mb-6" data-lang-key="deficitChartSubtitle">美国对越南商品贸易差额 (2017-2024年，单位：十亿美元)</p>
                 <div class="chart-container">
                     <canvas id="tradeDeficitChart"></canvas>
                 </div>
             </div>
 
             <div class="bg-white rounded-xl shadow-lg p-4 md:p-8">
-                <h3 class="font-bold text-xl md:text-2xl text-center mb-6 text-[#2C3E50]">贸易结构：矛盾焦点何在？</h3>
+                <h3 class="font-bold text-xl md:text-2xl text-center mb-6 text-[#2C3E50]" data-lang-key="compositionChartTitle">贸易结构：矛盾焦点何在？</h3>
                 <div class="flex justify-center mb-6">
                     <div class="inline-flex rounded-md shadow-sm">
-                        <button id="show-imports" class="tab-button active px-4 py-2 text-sm font-medium border border-gray-200 rounded-l-lg focus:z-10 focus:ring-2 focus:ring-blue-500">自越进口</button>
-                        <button id="show-exports" class="tab-button px-4 py-2 text-sm font-medium border-t border-b border-gray-200 rounded-r-lg focus:z-10 focus:ring-2 focus:ring-blue-500">对越出口</button>
+                        <button id="show-imports" class="tab-button active px-4 py-2 text-sm font-medium border border-gray-200 rounded-l-lg focus:z-10 focus:ring-2 focus:ring-blue-500" data-lang-key="importsButton">自越进口</button>
+                        <button id="show-exports" class="tab-button px-4 py-2 text-sm font-medium border-t border-b border-gray-200 rounded-r-lg focus:z-10 focus:ring-2 focus:ring-blue-500" data-lang-key="exportsButton">对越出口</button>
                     </div>
                 </div>
                 <div class="chart-container" style="height: 350px; max-height: 50vh;">
                     <canvas id="tradeCompositionChart"></canvas>
                 </div>
                  <div class="mt-8 text-center">
-                    <h4 class="font-semibold text-lg text-[#2C3E50]">转运流程示意</h4>
-                    <p class="text-gray-500 text-sm mb-4">电子等高价值产品是转运争议的核心</p>
+                    <h4 class="font-semibold text-lg text-[#2C3E50]" data-lang-key="transshipmentTitle">转运流程示意</h4>
+                    <p class="text-gray-500 text-sm mb-4" data-lang-key="transshipmentDesc">电子等高价值产品是转运争议的核心</p>
                     <div class="flex items-center justify-center space-x-2 md:space-x-4 p-4 bg-gray-50 rounded-lg max-w-md mx-auto">
                         <div class="text-center">
                             <div class="text-4xl">🇨🇳</div>
-                            <div class="text-sm font-semibold">中国</div>
-                            <div class="text-xs text-gray-500">零部件/原材料</div>
+                            <div class="text-sm font-semibold" data-lang-key="countryChina">中国</div>
+                            <div class="text-xs text-gray-500" data-lang-key="roleParts">零部件/原材料</div>
                         </div>
                         <div class="text-3xl font-light text-gray-400">→</div>
                          <div class="text-center">
                             <div class="text-4xl">🇻🇳</div>
-                            <div class="text-sm font-semibold">越南</div>
-                            <div class="text-xs text-gray-500">组装/贴标</div>
+                            <div class="text-sm font-semibold" data-lang-key="countryVietnam">越南</div>
+                            <div class="text-xs text-gray-500" data-lang-key="roleAssembly">组装/贴标</div>
                         </div>
                         <div class="text-3xl font-light text-gray-400">→</div>
                         <div class="text-center">
                             <div class="text-4xl">🇺🇸</div>
-                            <div class="text-sm font-semibold">美国</div>
-                            <div class="text-xs text-gray-500">最终市场</div>
+                            <div class="text-sm font-semibold" data-lang-key="countryUSA">美国</div>
+                            <div class="text-xs text-gray-500" data-lang-key="roleMarket">最终市场</div>
                         </div>
                     </div>
                 </div>
@@ -154,31 +168,31 @@
         
         <!-- Section 3: History -->
         <section id="history" class="scroll-mt-20 mb-16 md:mb-24">
-            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2C3E50] mb-4">从破冰到博弈</h2>
-            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">美越经贸关系的演变并非一蹴而就。从战后正常化到今天的战略遵从，每一步都为当前的局面埋下了伏笔。点击下方时间点了解决定性的历史时刻。</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2C3E50] mb-4" data-lang-key="historyTitle">从破冰到博弈</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12" data-lang-key="historyDesc">美越经贸关系的演变并非一蹴而就。从战后正常化到今天的战略遵从，每一步都为当前的局面埋下了伏笔。点击下方时间点了解决定性的历史时刻。</p>
             <div id="timeline" class="max-w-3xl mx-auto space-y-4">
             </div>
         </section>
 
         <!-- Section 4: Strategy -->
         <section id="strategy" class="scroll-mt-20 mb-16 md:mb-24">
-            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2C3E50] mb-4">一场精明的战略妥协</h2>
-            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">新协议是双方激烈博弈后的产物，充满了收益与妥协。它既是越南的“务实幸存”，也是美国的“地缘杰作”。</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2C3E50] mb-4" data-lang-key="strategyTitle">一场精明的战略妥协</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12" data-lang-key="strategyDesc">新协议是双方激烈博弈后的产物，充满了收益与妥协。它既是越南的“务实幸存”，也是美国的“地缘杰作”。</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                 <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
-                    <h3 class="text-2xl font-bold mb-4 text-[#2C3E50] flex items-center"><span class="text-4xl mr-3">🇻🇳</span> 越南：务实的幸存者</h3>
+                    <h3 class="text-2xl font-bold mb-4 text-[#2C3E50] flex items-center"><span class="text-4xl mr-3">🇻🇳</span> <span data-lang-key="vietnamTitle">越南：务实的幸存者</span></h3>
                     <div class="space-y-4">
                         <div>
-                            <h4 class="font-semibold text-lg text-green-600">收益点</h4>
-                            <ul class="list-disc list-inside text-gray-600 mt-1 space-y-1">
+                            <h4 class="font-semibold text-lg text-green-600" data-lang-key="gainsTitle">收益点</h4>
+                            <ul class="list-disc list-inside text-gray-600 mt-1 space-y-1" data-lang-key="vietnamGains">
                                 <li>避免了46%的灾难性关税，保住了对美出口生命线。</li>
                                 <li>巩固了其作为美国关键战略伙伴的地位。</li>
                                 <li>为未来在IPEF等框架下获取利益铺平道路。</li>
                             </ul>
                         </div>
                         <div>
-                            <h4 class="font-semibold text-lg text-red-600">妥协点</h4>
-                            <ul class="list-disc list-inside text-gray-600 mt-1 space-y-1">
+                            <h4 class="font-semibold text-lg text-red-600" data-lang-key="compromisesTitle">妥协点</h4>
+                            <ul class="list-disc list-inside text-gray-600 mt-1 space-y-1" data-lang-key="vietnamCompromises">
                                 <li>接受更高合规成本和更严的国内产业审查。</li>
                                 <li>被迫承担将供应链部分“去中国化”的艰巨任务。</li>
                                 <li>在处理对华关系时面临更复杂的局面。</li>
@@ -187,19 +201,19 @@
                     </div>
                 </div>
                 <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
-                    <h3 class="text-2xl font-bold mb-4 text-[#2C3E50] flex items-center"><span class="text-4xl mr-3">🇺🇸</span> 美国：地缘的建筑师</h3>
+                    <h3 class="text-2xl font-bold mb-4 text-[#2C3E50] flex items-center"><span class="text-4xl mr-3">🇺🇸</span> <span data-lang-key="usaTitle">美国：地缘的建筑师</span></h3>
                     <div class="space-y-4">
                         <div>
-                            <h4 class="font-semibold text-lg text-green-600">收益点</h4>
-                            <ul class="list-disc list-inside text-gray-600 mt-1 space-y-1">
+                            <h4 class="font-semibold text-lg text-green-600" data-lang-key="gainsTitle2">收益点</h4>
+                            <ul class="list-disc list-inside text-gray-600 mt-1 space-y-1" data-lang-key="usaGains">
                                 <li>创立了一个可复制的模板，用于应对中国的经济行为。</li>
                                 <li>以美国条件锁定“中国+1”趋势，迫使企业真正多元化。</li>
                                 <li>协议的模糊性赋予其灵活调整执法的巨大权力。</li>
                             </ul>
                         </div>
                         <div>
-                            <h4 class="font-semibold text-lg text-red-600">妥协点</h4>
-                            <ul class="list-disc list-inside text-gray-600 mt-1 space-y-1">
+                            <h4 class="font-semibold text-lg text-red-600" data-lang-key="compromisesTitle2">妥协点</h4>
+                            <ul class="list-disc list-inside text-gray-600 mt-1 space-y-1" data-lang-key="usaCompromises">
                                 <li>放弃施加极限关税，承认其对本国供应链的扰乱。</li>
                                 <li>承担监督和执行精细化协议的大量行政成本。</li>
                                 <li>需避免将越南等伙伴过度推向中国。</li>
@@ -212,23 +226,23 @@
 
         <!-- Section 5: Future -->
         <section id="future" class="scroll-mt-20">
-            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2C3E50] mb-4">前行之路：机遇与风险</h2>
-            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">新关税协议并非终点，而是一个新时代的开端。未来的走向将取决于IPEF的进展、中国的反应以及企业的战略调整。</p>
+            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2C3E50] mb-4" data-lang-key="futureTitle">前行之路：机遇与风险</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12" data-lang-key="futureDesc">新关税协议并非终点，而是一个新时代的开端。未来的走向将取决于IPEF的进展、中国的反应以及企业的战略调整。</p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
                 <div class="bg-white rounded-xl shadow-lg p-6 text-center">
                     <div class="text-4xl mb-4">🤝</div>
-                    <h3 class="font-bold text-xl mb-2 text-[#2C3E50]">IPEF：超越关税的“胡萝卜”</h3>
-                    <p class="text-gray-600">“印太经济框架” (IPEF) 在清洁能源、供应链韧性等方面提供高标准规则和技术援助，是美国激励越南等伙伴遵守新秩序的“软实力”工具。</p>
+                    <h3 class="font-bold text-xl mb-2 text-[#2C3E50]" data-lang-key="ipefTitle">IPEF：超越关税的“胡萝卜”</h3>
+                    <p class="text-gray-600" data-lang-key="ipefDesc">“印太经济框架” (IPEF) 在清洁能源、供应链韧性等方面提供高标准规则和技术援助，是美国激励越南等伙伴遵守新秩序的“软实力”工具。</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-lg p-6 text-center">
                      <div class="text-4xl mb-4">🇨🇳</div>
-                    <h3 class="font-bold text-xl mb-2 text-[#2C3E50]">北京的反应：关键变量</h3>
-                    <p class="text-gray-600">中国视新协议为直接针对其利益，可能采取供应链反制或贸易壁垒等措施，这将使越南陷入在两大国间走钢丝的微妙境地。</p>
+                    <h3 class="font-bold text-xl mb-2 text-[#2C3E50]" data-lang-key="chinaReactionTitle">北京的反应：关键变量</h3>
+                    <p class="text-gray-600" data-lang-key="chinaReactionDesc">中国视新协议为直接针对其利益，可能采取供应链反制或贸易壁垒等措施，这将使越南陷入在两大国间走钢丝的微妙境地。</p>
                 </div>
                 <div class="bg-white rounded-xl shadow-lg p-6 text-center">
                     <div class="text-4xl mb-4">📈</div>
-                    <h3 class="font-bold text-xl mb-2 text-[#2C3E50]">企业战略建议</h3>
-                    <p class="text-gray-600">企业必须立即进行供应链审计，投资可追溯系统，并推行“中国+1+N”的多元化采购战略，以应对新的合规风险和地缘政治不确定性。</p>
+                    <h3 class="font-bold text-xl mb-2 text-[#2C3E50]" data-lang-key="corpStrategyTitle">企业战略建议</h3>
+                    <p class="text-gray-600" data-lang-key="corpStrategyDesc">企业必须立即进行供应链审计，投资可追溯系统，并推行“中国+1+N”的多元化采购战略，以应对新的合规风险和地缘政治不确定性。</p>
                 </div>
             </div>
         </section>
@@ -237,256 +251,382 @@
 
     <footer class="bg-gray-800 text-white mt-16 md:mt-24">
         <div class="container mx-auto py-6 px-4 text-center text-sm">
-            <p>本交互式报告根据公开信息和分析报告生成，仅供参考。</p>
-            <p>&copy; 2025 数据可视化分析</p>
+            <p data-lang-key="footerDisclaimer">本交互式报告根据公开信息和分析报告生成，仅供参考。</p>
+            <p data-lang-key="footerCopyright">&copy; 2025 数据可视化分析</p>
         </div>
     </footer>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Mobile menu toggle
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mobileMenu = document.getElementById('mobile-menu');
-    mobileMenuButton.addEventListener('click', () => {
-        mobileMenu.classList.toggle('hidden');
+    const langData = {
+        zh: {
+            headerTitle: '美越贸易新格局',
+            navAgreement: '新协议', navData: '数据洞察', navHistory: '历史演变', navStrategy: '战略博弈', navFuture: '未来展望',
+            navAgreementMobile: '新协议', navDataMobile: '数据洞察', navHistoryMobile: '历史演变', navStrategyMobile: '战略博弈', navFutureMobile: '未来展望',
+            agreementTitle: '一个协议，两种未来',
+            agreementDesc: '2025年7月签署的美越关税协议，不再是传统的自由贸易协定，而是一个以合规为核心的战略框架。其首创的“双重关税”机制，旨在精准打击借道越南的中国转运商品，深刻重塑亚太地区的供应链格局。',
+            baseTariff: '基础关税',
+            baseTariffDesc: '适用于经核实、真正源自越南并符合“实质性转变”标准的合规商品。',
+            punitiveTariff: '惩罚性关税',
+            punitiveTariffDesc: '针对在越南仅作轻微加工，旨在规避对华关税的“转运”商品。',
+            dataTitle: '失衡的数据',
+            dataDesc: '过去十年，美越贸易额爆炸性增长的背后，是美国对越贸易逆差的急剧扩大。这一结构性失衡是催生新关税协议的直接导火索。数据揭示了问题的严重性以及矛盾集中的领域。',
+            deficitChartTitle: '急剧扩大的贸易逆差',
+            deficitChartSubtitle: '美国对越南商品贸易差额 (2017-2024年，单位：十亿美元)',
+            deficitChartYLabel: '十亿美元',
+            deficitChartTooltip: '逆差',
+            compositionChartTitle: '贸易结构：矛盾焦点何在？',
+            importsButton: '自越进口',
+            exportsButton: '对越出口',
+            compositionChartXLabel: '价值 (十亿美元)',
+            importsLabel: '自越南进口额 (十亿美元, 2025 YTD)',
+            exportsLabel: '对越南出口额 (十亿美元, 2025 YTD)',
+            importCategories: ['电脑', '手机及设备', '电脑零部件', '家具', '扬声器/麦克风'],
+            exportCategories: ['计算机芯片', '棉花', '手机及设备', '原木', '稀有气体'],
+            transshipmentTitle: '转运流程示意',
+            transshipmentDesc: '电子等高价值产品是转运争议的核心',
+            countryChina: '中国', roleParts: '零部件/原材料',
+            countryVietnam: '越南', roleAssembly: '组装/贴标',
+            countryUSA: '美国', roleMarket: '最终市场',
+            historyTitle: '从破冰到博弈',
+            historyDesc: '美越经贸关系的演变并非一蹴而就。从战后正常化到今天的战略遵从，每一步都为当前的局面埋下了伏笔。点击下方时间点了解决定性的历史时刻。',
+            timeline: [
+                { year: '1995年', title: '外交关系正常化', content: '美国与越南正式建立外交关系，为后续的经济合作奠定了政治基础，结束了长达数十年的隔绝。' },
+                { year: '2001年', title: '双边贸易协定 (BTA) 生效', content: '这是两国经济关系的奠基石。美国对越南商品的平均关税从40%骤降至3%，越南对美出口在随后几年内爆炸性增长。' },
+                { year: '2007年', title: '越南加入WTO', content: '越南正式成为世界贸易组织第150个成员国，融入了以规则为基础的全球多边贸易体系，美国也给予其永久正常贸易关系地位。' },
+                { year: '2020年', title: '301条款调查启动', content: '美国针对越南的货币政策和木材产品供应链展开301条款调查，标志着贸易摩擦升级，向越南施加了巨大压力。' },
+                { year: '2023年', title: '升级为全面战略伙伴关系', content: '两国关系提升至最高级别，合作范围扩展到国防、科技（特别是半导体）等领域，越南成为美国印太战略的核心支柱之一。' },
+                { year: '2025年', title: '新关税协议签署', content: '全新的双重关税协议生效，旨在遏制中国转运，标志着美越关系从追求自由贸易转向以战略合规为核心的新阶段。' }
+            ],
+            strategyTitle: '一场精明的战略妥协',
+            strategyDesc: '新协议是双方激烈博弈后的产物，充满了收益与妥协。它既是越南的“务实幸存”，也是美国的“地缘杰作”。',
+            vietnamTitle: '越南：务实的幸存者',
+            gainsTitle: '收益点',
+            vietnamGains: '<li>避免了46%的灾难性关税，保住了对美出口生命线。</li><li>巩固了其作为美国关键战略伙伴的地位。</li><li>为未来在IPEF等框架下获取利益铺平道路。</li>',
+            compromisesTitle: '妥协点',
+            vietnamCompromises: '<li>接受更高合规成本和更严的国内产业审查。</li><li>被迫承担将供应链部分“去中国化”的艰巨任务。</li><li>在处理对华关系时面临更复杂的局面。</li>',
+            usaTitle: '美国：地缘的建筑师',
+            gainsTitle2: '收益点',
+            usaGains: '<li>创立了一个可复制的模板，用于应对中国的经济行为。</li><li>以美国条件锁定“中国+1”趋势，迫使企业真正多元化。</li><li>协议的模糊性赋予其灵活调整执法的巨大权力。</li>',
+            compromisesTitle2: '妥协点',
+            usaCompromises: '<li>放弃施加极限关税，承认其对本国供应链的扰乱。</li><li>承担监督和执行精细化协议的大量行政成本。</li><li>需避免将越南等伙伴过度推向中国。</li>',
+            futureTitle: '前行之路：机遇与风险',
+            futureDesc: '新关税协议并非终点，而是一个新时代的开端。未来的走向将取决于IPEF的进展、中国的反应以及企业的战略调整。',
+            ipefTitle: 'IPEF：超越关税的“胡萝卜”',
+            ipefDesc: '“印太经济框架” (IPEF) 在清洁能源、供应链韧性等方面提供高标准规则和技术援助，是美国激励越南等伙伴遵守新秩序的“软实力”工具。',
+            chinaReactionTitle: '北京的反应：关键变量',
+            chinaReactionDesc: '中国视新协议为直接针对其利益，可能采取供应链反制或贸易壁垒等措施，这将使越南陷入在两大国间走钢丝的微妙境地。',
+            corpStrategyTitle: '企业战略建议',
+            corpStrategyDesc: '企业必须立即进行供应链审计，投资可追溯系统，并推行“中国+1+N”的多元化采购战略，以应对新的合规风险和地缘政治不确定性。',
+            footerDisclaimer: '本交互式报告根据公开信息和分析报告生成，仅供参考。',
+            footerCopyright: '&copy; 2025 数据可视化分析'
+        },
+        en: {
+            headerTitle: 'US-Vietnam Trade: A New Paradigm',
+            navAgreement: 'New Deal', navData: 'Data Insights', navHistory: 'History', navStrategy: 'Strategy', navFuture: 'Future',
+            navAgreementMobile: 'New Deal', navDataMobile: 'Data Insights', navHistoryMobile: 'History', navStrategyMobile: 'Strategy', navFutureMobile: 'Future',
+            agreementTitle: 'One Deal, Two Futures',
+            agreementDesc: 'The US-Vietnam tariff agreement signed in July 2025 is not a traditional free trade agreement, but a compliance-centric strategic framework. Its pioneering "dual-tariff" mechanism aims to precisely target Chinese transshipment goods via Vietnam, profoundly reshaping the supply chain landscape in the Asia-Pacific.',
+            baseTariff: 'Base Tariff',
+            baseTariffDesc: 'Applies to compliant goods verified as genuinely originating from Vietnam and meeting "substantial transformation" standards.',
+            punitiveTariff: 'Punitive Tariff',
+            punitiveTariffDesc: 'Targets "transshipped" goods that undergo only minor processing in Vietnam to circumvent tariffs on China.',
+            dataTitle: 'The Unbalanced Data',
+            dataDesc: 'Behind the explosive growth in US-Vietnam trade over the past decade lies a sharp widening of the US trade deficit with Vietnam. This structural imbalance was the direct catalyst for the new tariff agreement. The data reveals the severity of the problem and the areas of concentrated conflict.',
+            deficitChartTitle: 'Sharply Widening Trade Deficit',
+            deficitChartSubtitle: 'U.S. Goods Trade Balance with Vietnam (2017-2024, in billions of USD)',
+            deficitChartYLabel: 'Billions of USD',
+            deficitChartTooltip: 'Deficit',
+            compositionChartTitle: 'Trade Structure: Where Are the Friction Points?',
+            importsButton: 'Imports from Vietnam',
+            exportsButton: 'Exports to Vietnam',
+            compositionChartXLabel: 'Value (Billions of USD)',
+            importsLabel: 'Imports from Vietnam (Billions of USD, 2025 YTD)',
+            exportsLabel: 'Exports to Vietnam (Billions of USD, 2025 YTD)',
+            importCategories: ['Computers', 'Phones & Equipment', 'Computer Parts', 'Furniture', 'Speakers/Mics'],
+            exportCategories: ['Computer Chips', 'Cotton', 'Phones & Equipment', 'Logs', 'Inert Gases'],
+            transshipmentTitle: 'Transshipment Flow',
+            transshipmentDesc: 'High-value products like electronics are at the core of the transshipment dispute.',
+            countryChina: 'China', roleParts: 'Parts/Materials',
+            countryVietnam: 'Vietnam', roleAssembly: 'Assembly/Labeling',
+            countryUSA: 'USA', roleMarket: 'Final Market',
+            historyTitle: 'From Ice-Breaking to Power Play',
+            historyDesc: 'The evolution of US-Vietnam economic relations was not a single event. From post-war normalization to today\'s strategic compliance, each step has set the stage for the current situation. Click the timeline below to understand the decisive historical moments.',
+            timeline: [
+                { year: '1995', title: 'Normalization of Diplomatic Relations', content: 'The US and Vietnam formally established diplomatic relations, laying the political foundation for subsequent economic cooperation and ending decades of isolation.' },
+                { year: '2001', title: 'Bilateral Trade Agreement (BTA) Takes Effect', content: 'This was the cornerstone of the economic relationship. The average US tariff on Vietnamese goods dropped from 40% to 3%, leading to an explosion in Vietnamese exports to the US in the following years.' },
+                { year: '2007', title: 'Vietnam Joins the WTO', content: 'Vietnam officially became the 150th member of the WTO, integrating into the rules-based global multilateral trading system. The US granted it Permanent Normal Trade Relations status.' },
+                { year: '2020', title: 'Section 301 Investigations Launched', content: 'The US launched Section 301 investigations into Vietnam\'s currency practices and timber supply chain, marking an escalation in trade friction and placing immense pressure on Vietnam.' },
+                { year: '2023', title: 'Upgrade to Comprehensive Strategic Partnership', content: 'The relationship was elevated to the highest level, expanding cooperation to defense, technology (especially semiconductors), and other areas, making Vietnam a core pillar of the US Indo-Pacific Strategy.' },
+                { year: '2025', title: 'New Tariff Agreement Signed', content: 'The new dual-tariff agreement takes effect, aiming to curb Chinese transshipment and marking a shift in US-Vietnam relations from free trade to strategic compliance.' }
+            ],
+            strategyTitle: 'A Savvy Strategic Compromise',
+            strategyDesc: 'The new agreement is the product of intense bilateral maneuvering, full of gains and compromises. It is both Vietnam\'s "pragmatic survival" and America\'s "geopolitical masterpiece."',
+            vietnamTitle: 'Vietnam: The Pragmatic Survivor',
+            gainsTitle: 'Gains',
+            vietnamGains: '<li>Avoided a catastrophic 46% tariff, preserving its export lifeline to the US.</li><li>Solidified its status as a key US strategic partner.</li><li>Paved the way for future benefits under frameworks like IPEF.</li>',
+            compromisesTitle: 'Compromises',
+            vietnamCompromises: '<li>Accepted higher compliance costs and stricter domestic industry scrutiny.</li><li>Forced to undertake the difficult task of partially "de-Sinicizing" its supply chain.</li><li>Faces a more complex situation in managing its relationship with China.</li>',
+            usaTitle: 'USA: The Geopolitical Architect',
+            gainsTitle2: 'Gains',
+            usaGains: '<li>Created a replicable template for addressing China\'s economic practices.</li><li>Locked in the "China+1" trend on US terms, forcing genuine supply chain diversification.</li><li>The agreement\'s ambiguity grants it significant power to flexibly adjust enforcement.</li>',
+            compromisesTitle2: 'Compromises',
+            usaCompromises: '<li>Forwent imposing maximum tariffs, acknowledging the disruption to its own supply chains.</li><li>Assumes the significant administrative costs of monitoring and enforcing this detailed agreement.</li><li>Must avoid pushing partners like Vietnam too far towards China.</li>',
+            futureTitle: 'The Road Ahead: Opportunities & Risks',
+            futureDesc: 'The new tariff agreement is not an endpoint, but the beginning of a new era. The future trajectory will depend on the progress of IPEF, China\'s reaction, and corporate strategic adjustments.',
+            ipefTitle: 'IPEF: The "Carrot" Beyond Tariffs',
+            ipefDesc: 'The Indo-Pacific Economic Framework (IPEF) provides high-standard rules and technical assistance in areas like clean energy and supply chain resilience, serving as a "soft power" tool to incentivize partners like Vietnam to align with the new order.',
+            chinaReactionTitle: 'Beijing\'s Reaction: The Key Variable',
+            chinaReactionDesc: 'China views the new agreement as directly targeting its interests and may take countermeasures like supply chain restrictions or trade barriers, putting Vietnam in a delicate balancing act between the two superpowers.',
+            corpStrategyTitle: 'Corporate Strategic Advice',
+            corpStrategyDesc: 'Companies must immediately conduct supply chain audits, invest in traceability systems, and pursue a "China+1+N" diversification strategy to manage new compliance risks and geopolitical uncertainties.',
+            footerDisclaimer: 'This interactive report is generated based on public information and analysis for reference purposes only.',
+            footerCopyright: '&copy; 2025 Data Visualization Analytics'
+        },
+        fr: {
+            headerTitle: 'Commerce US-Vietnam : Un Nouveau Paradigme',
+            navAgreement: 'Nouvel Accord', navData: 'Données', navHistory: 'Histoire', navStrategy: 'Stratégie', navFuture: 'Avenir',
+            navAgreementMobile: 'Nouvel Accord', navDataMobile: 'Données', navHistoryMobile: 'Histoire', navStrategyMobile: 'Stratégie', navFutureMobile: 'Avenir',
+            agreementTitle: 'Un Accord, Deux Avenirs',
+            agreementDesc: "L'accord tarifaire américano-vietnamien signé en juillet 2025 n'est pas un accord de libre-échange traditionnel, mais un cadre stratégique axé sur la conformité. Son mécanisme pionnier de 'double tarif' vise à cibler précisément les marchandises chinoises en transbordement via le Vietnam, remodelant profondément le paysage de la chaîne d'approvisionnement en Asie-Pacifique.",
+            baseTariff: 'Tarif de Base',
+            baseTariffDesc: "S'applique aux marchandises conformes, vérifiées comme provenant réellement du Vietnam et répondant aux normes de 'transformation substantielle'.",
+            punitiveTariff: 'Tarif Punitif',
+            punitiveTariffDesc: "Cible les marchandises 'transbordées' qui ne subissent qu'une transformation mineure au Vietnam pour contourner les tarifs douaniers sur la Chine.",
+            dataTitle: 'Les Données Déséquilibrées',
+            dataDesc: "Derrière la croissance explosive du commerce américano-vietnamien de la dernière décennie se cache un creusement brutal du déficit commercial américain avec le Vietnam. Ce déséquilibre structurel a été le catalyseur direct du nouvel accord tarifaire. Les données révèlent la gravité du problème et les zones de conflit.",
+            deficitChartTitle: "Creusement Brutal du Déficit Commercial",
+            deficitChartSubtitle: "Balance commerciale des biens des États-Unis avec le Vietnam (2017-2024, en milliards de dollars)",
+            deficitChartYLabel: 'Milliards de $US',
+            deficitChartTooltip: 'Déficit',
+            compositionChartTitle: 'Structure Commerciale : Où sont les Points de Friction ?',
+            importsButton: 'Importations du Vietnam',
+            exportsButton: 'Exportations vers le Vietnam',
+            compositionChartXLabel: 'Valeur (Milliards de $US)',
+            importsLabel: 'Importations du Vietnam (Milliards de $US, 2025 YTD)',
+            exportsLabel: 'Exportations vers le Vietnam (Milliards de $US, 2025 YTD)',
+            importCategories: ['Ordinateurs', 'Téléphones', 'Pièces d\'ordinateur', 'Meubles', 'Haut-parleurs'],
+            exportCategories: ['Puces', 'Coton', 'Téléphones', 'Bois', 'Gaz inertes'],
+            transshipmentTitle: 'Schéma du Transbordement',
+            transshipmentDesc: "Les produits de haute valeur comme l'électronique sont au cœur du litige sur le transbordement.",
+            countryChina: 'Chine', roleParts: 'Pièces/Matériaux',
+            countryVietnam: 'Vietnam', roleAssembly: 'Assemblage/Étiquetage',
+            countryUSA: 'États-Unis', roleMarket: 'Marché Final',
+            historyTitle: 'Du Dégel au Jeu de Puissance',
+            historyDesc: "L'évolution des relations économiques américano-vietnamiennes ne s'est pas faite en un jour. De la normalisation d'après-guerre à la conformité stratégique d'aujourd'hui, chaque étape a préparé le terrain pour la situation actuelle. Cliquez sur la chronologie ci-dessous pour comprendre les moments historiques décisifs.",
+            timeline: [
+                { year: '1995', title: 'Normalisation des Relations Diplomatiques', content: "Les États-Unis et le Vietnam ont officiellement établi des relations diplomatiques, jetant les bases politiques de la coopération économique future et mettant fin à des décennies d'isolement." },
+                { year: '2001', title: 'Entrée en Vigueur de l\'Accord Commercial Bilatéral (BTA)', content: "Ce fut la pierre angulaire de la relation économique. Le tarif douanier moyen américain sur les produits vietnamiens a chuté de 40 % à 3 %, entraînant une explosion des exportations vietnamiennes vers les États-Unis." },
+                { year: '2007', title: 'Le Vietnam rejoint l\'OMC', content: "Le Vietnam est devenu officiellement le 150e membre de l'OMC, s'intégrant au système commercial multilatéral mondial fondé sur des règles. Les États-Unis lui ont accordé le statut de relations commerciales normales et permanentes." },
+                { year: '2020', title: 'Lancement des Enquêtes au titre de l\'Article 301', content: "Les États-Unis ont lancé des enquêtes au titre de l'article 301 sur les pratiques monétaires et la chaîne d'approvisionnement du bois du Vietnam, marquant une escalade des frictions commerciales." },
+                { year: '2023', title: 'Élévation au rang de Partenariat Stratégique Global', content: "La relation a été élevée au plus haut niveau, étendant la coopération à la défense, la technologie (en particulier les semi-conducteurs), faisant du Vietnam un pilier central de la stratégie indo-pacifique des États-Unis." },
+                { year: '2025', title: 'Signature du Nouvel Accord Tarifaire', content: "Le nouvel accord de double tarif entre en vigueur, visant à freiner le transbordement chinois et marquant un tournant dans les relations américano-vietnamiennes, passant du libre-échange à la conformité stratégique." }
+            ],
+            strategyTitle: 'Un Compromis Stratégique Habile',
+            strategyDesc: "Le nouvel accord est le produit de manœuvres bilatérales intenses, plein de gains et de compromis. C'est à la fois la 'survie pragmatique' du Vietnam et le 'chef-d'œuvre géopolitique' de l'Amérique.",
+            vietnamTitle: 'Vietnam : Le Survivant Pragmatique',
+            gainsTitle: 'Gains',
+            vietnamGains: "<li>A évité un tarif catastrophique de 46%, préservant sa ligne de vie à l'exportation vers les États-Unis.</li><li>A consolidé son statut de partenaire stratégique clé des États-Unis.</li><li>A ouvert la voie à de futurs avantages dans des cadres comme l'IPEF.</li>",
+            compromisesTitle: 'Compromis',
+            vietnamCompromises: "<li>A accepté des coûts de conformité plus élevés et un contrôle industriel national plus strict.</li><li>Est contraint d'entreprendre la tâche difficile de 'dé-siniser' partiellement sa chaîne d'approvisionnement.</li><li>Fait face à une situation plus complexe dans la gestion de ses relations avec la Chine.</li>",
+            usaTitle: 'États-Unis : L\'Architecte Géopolitique',
+            gainsTitle2: 'Gains',
+            usaGains: "<li>A créé un modèle reproductible pour répondre aux pratiques économiques de la Chine.</li><li>A verrouillé la tendance 'Chine+1' selon les conditions américaines, forçant une véritable diversification.</li><li>L'ambiguïté de l'accord lui confère un pouvoir important pour ajuster l'application de manière flexible.</li>",
+            compromisesTitle2: 'Compromis',
+            usaCompromises: "<li>A renoncé à imposer des tarifs maximaux, reconnaissant la perturbation de ses propres chaînes d'approvisionnement.</li><li>Assume les coûts administratifs importants de la surveillance et de l'application de cet accord détaillé.</li><li>Doit éviter de pousser des partenaires comme le Vietnam trop loin vers la Chine.</li>",
+            futureTitle: "La Voie à Suivre : Opportunités et Risques",
+            futureDesc: "Le nouvel accord tarifaire n'est pas une fin en soi, mais le début d'une nouvelle ère. La trajectoire future dépendra des progrès de l'IPEF, de la réaction de la Chine et des ajustements stratégiques des entreprises.",
+            ipefTitle: "IPEF : La 'Carotte' au-delà des Tarifs",
+            ipefDesc: "Le Cadre Économique Indo-Pacifique (IPEF) fournit des règles de haut niveau et une assistance technique dans des domaines comme l'énergie propre et la résilience des chaînes d'approvisionnement, servant d'outil de 'soft power' pour inciter des partenaires comme le Vietnam à s'aligner.",
+            chinaReactionTitle: "La Réaction de Pékin : La Variable Clé",
+            chinaReactionDesc: "La Chine considère que le nouvel accord cible directement ses intérêts et pourrait prendre des contre-mesures, plaçant le Vietnam dans un délicat exercice d'équilibriste entre les deux superpuissances.",
+            corpStrategyTitle: 'Conseil Stratégique pour les Entreprises',
+            corpStrategyDesc: "Les entreprises doivent immédiatement auditer leurs chaînes d'approvisionnement, investir dans des systèmes de traçabilité et poursuivre une stratégie de diversification 'Chine+1+N' pour gérer les nouveaux risques.",
+            footerDisclaimer: "Ce rapport interactif est généré sur la base d'informations publiques et d'analyses à titre de référence uniquement.",
+            footerCopyright: '&copy; 2025 Analyse et Visualisation de Données'
+        }
+    };
+
+    let currentLang = 'zh';
+    let tradeDeficitChart, tradeCompositionChart;
+
+    function createTradeDeficitChart() {
+        if (tradeDeficitChart) tradeDeficitChart.destroy();
+        const ctx = document.getElementById('tradeDeficitChart').getContext('2d');
+        const tradeDeficitData = {
+            labels: ['2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+            data: [-39.4, -55.6, -55.8, -69.7, -90.9, -116.1, -114.0, -123.5],
+        };
+        tradeDeficitChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: tradeDeficitData.labels,
+                datasets: [{
+                    label: langData[currentLang].deficitChartTitle,
+                    data: tradeDeficitData.data,
+                    borderColor: '#E74C3C', backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    fill: true, tension: 0.3, pointBackgroundColor: '#E74C3C', pointRadius: 4, pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { y: { title: { display: true, text: langData[currentLang].deficitChartYLabel } } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${langData[currentLang].deficitChartTooltip}: ${-context.parsed.y.toFixed(1)} ${langData[currentLang].deficitChartYLabel}`
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function createTradeCompositionChart() {
+        if (tradeCompositionChart) tradeCompositionChart.destroy();
+        const ctx = document.getElementById('tradeCompositionChart').getContext('2d');
+        tradeCompositionChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: langData[currentLang].importCategories,
+                datasets: [{
+                    label: langData[currentLang].importsLabel,
+                    data: [3.51, 2.33, 0.84, 0.62, 0.48],
+                    backgroundColor: '#3498DB', borderColor: '#2980B9', borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                scales: { x: { title: { display: true, text: langData[currentLang].compositionChartXLabel } } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: (tooltipItems) => tooltipItems[0].label,
+                            label: (context) => {
+                                let label = context.dataset.label.split('(')[0] || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.x !== null) { label += context.parsed.x.toFixed(2); }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateCompositionChart(dataType) {
+        const isImport = dataType === 'imports';
+        tradeCompositionChart.data.labels = isImport ? langData[currentLang].importCategories : langData[currentLang].exportCategories;
+        tradeCompositionChart.data.datasets[0].data = isImport ? [3.51, 2.33, 0.84, 0.62, 0.48] : [0.14, 0.13, 0.08, 0.06, 0.05];
+        tradeCompositionChart.data.datasets[0].label = isImport ? langData[currentLang].importsLabel : langData[currentLang].exportsLabel;
+        tradeCompositionChart.update();
+        document.getElementById('show-imports').classList.toggle('active', isImport);
+        document.getElementById('show-exports').classList.toggle('active', !isImport);
+    }
+
+    function updateTimeline() {
+        const timelineContainer = document.getElementById('timeline');
+        timelineContainer.innerHTML = '';
+        langData[currentLang].timeline.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'bg-white rounded-lg shadow-md overflow-hidden';
+            div.innerHTML = `
+                <button class="accordion-button w-full text-left p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition">
+                    <span class="font-bold text-lg text-[#2C3E50]">${item.year}: ${item.title}</span>
+                    <span class="transform transition-transform duration-300 text-xl text-[#3498DB]">+</span>
+                </button>
+                <div class="accordion-content">
+                    <p class="p-4 pt-0 text-gray-600">${item.content}</p>
+                </div>
+            `;
+            timelineContainer.appendChild(div);
+        });
+        addAccordionListeners();
+    }
+
+    function updateLanguage(lang) {
+        if (!langData[lang]) return;
+        currentLang = lang;
+        document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang;
+
+        document.querySelectorAll('[data-lang-key]').forEach(el => {
+            const key = el.getAttribute('data-lang-key');
+            if (langData[lang][key]) {
+                if (el.tagName === 'UL') {
+                    el.innerHTML = langData[lang][key];
+                } else {
+                    el.textContent = langData[lang][key];
+                }
+            }
+        });
+        
+        document.querySelectorAll('.lang-switcher button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.lang === lang);
+        });
+
+        createTradeDeficitChart();
+        createTradeCompositionChart();
+        updateCompositionChart('imports'); // Reset to imports view
+        updateTimeline();
+    }
+
+    function addAccordionListeners() {
+        document.querySelectorAll('.accordion-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.nextElementSibling;
+                const icon = button.querySelector('span:last-child');
+                const isOpening = !content.style.maxHeight;
+
+                document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
+                document.querySelectorAll('.accordion-button span:last-child').forEach(i => i.style.transform = 'rotate(0deg)');
+                
+                if (isOpening) {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    icon.style.transform = 'rotate(45deg)';
+                }
+            });
+        });
+    }
+
+    // Initial setup
+    updateLanguage('zh');
+
+    // Event Listeners
+    document.querySelectorAll('.lang-switcher button').forEach(button => {
+        button.addEventListener('click', () => updateLanguage(button.dataset.lang));
+    });
+
+    document.getElementById('mobile-menu-button').addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
     });
     
     document.querySelectorAll('.mobile-nav-link').forEach(link => {
         link.addEventListener('click', () => {
-             mobileMenu.classList.add('hidden');
+             document.getElementById('mobile-menu').classList.add('hidden');
         });
     });
 
-    // Nav link active state on scroll
-    const sections = document.querySelectorAll('section');
-    const navLinks = document.querySelectorAll('.nav-link');
+    document.getElementById('show-imports').addEventListener('click', () => updateCompositionChart('imports'));
+    document.getElementById('show-exports').addEventListener('click', () => updateCompositionChart('exports'));
+
     window.addEventListener('scroll', () => {
         let current = '';
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            if (pageYOffset >= sectionTop - 80) {
+        document.querySelectorAll('section').forEach(section => {
+            if (pageYOffset >= section.offsetTop - 80) {
                 current = section.getAttribute('id');
             }
         });
-
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href').substring(1) === current) {
-                link.classList.add('active');
-            }
-        });
-    });
-
-    // Data for charts
-    const tradeDeficitData = {
-        labels: ['2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'],
-        data: [-39.4, -55.6, -55.8, -69.7, -90.9, -116.1, -114.0, -123.5],
-    };
-    
-    const tradeCompositionData = {
-        imports: {
-            labels: ['电脑', '手机及设备', '电脑零部件', '家具', '扬声器/麦克风'],
-            data: [3.51, 2.33, 0.84, 0.62, 0.48],
-            label: '自越南进口额 (十亿美元, 2025 YTD)'
-        },
-        exports: {
-            labels: ['计算机芯片', '棉花', '手机及设备', '原木', '稀有气体'],
-            data: [0.14, 0.13, 0.08, 0.06, 0.05],
-            label: '对越南出口额 (十亿美元, 2025 YTD)'
-        }
-    };
-    
-    // Trade Deficit Chart (Line)
-    const ctxDeficit = document.getElementById('tradeDeficitChart').getContext('2d');
-    new Chart(ctxDeficit, {
-        type: 'line',
-        data: {
-            labels: tradeDeficitData.labels,
-            datasets: [{
-                label: '美国对越贸易逆差',
-                data: tradeDeficitData.data,
-                borderColor: '#E74C3C',
-                backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                fill: true,
-                tension: 0.3,
-                pointBackgroundColor: '#E74C3C',
-                pointRadius: 4,
-                pointHoverRadius: 7
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    title: {
-                        display: true,
-                        text: '十亿美元'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `逆差: ${-context.parsed.y.toFixed(1)} 十亿美元`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // Trade Composition Chart (Bar)
-    const ctxComposition = document.getElementById('tradeCompositionChart').getContext('2d');
-    const compositionChart = new Chart(ctxComposition, {
-        type: 'bar',
-        data: {
-            labels: tradeCompositionData.imports.labels,
-            datasets: [{
-                label: tradeCompositionData.imports.label,
-                data: tradeCompositionData.imports.data,
-                backgroundColor: '#3498DB',
-                borderColor: '#2980B9',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: '价值 (十亿美元)'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                 tooltip: {
-                    callbacks: {
-                        title: function (tooltipItems) {
-                             return tooltipItems[0].label;
-                        },
-                        label: function(context) {
-                            let label = context.dataset.label.split('(')[0] || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            if (context.parsed.x !== null) {
-                                label += context.parsed.x.toFixed(2) + ' 十亿美元';
-                            }
-                            return label;
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // Tab buttons for composition chart
-    const showImportsBtn = document.getElementById('show-imports');
-    const showExportsBtn = document.getElementById('show-exports');
-
-    function updateCompositionChart(dataType) {
-        const data = tradeCompositionData[dataType];
-        compositionChart.data.labels = data.labels;
-        compositionChart.data.datasets[0].data = data.data;
-        compositionChart.data.datasets[0].label = data.label;
-        compositionChart.update();
-
-        if (dataType === 'imports') {
-            showImportsBtn.classList.add('active');
-            showExportsBtn.classList.remove('active');
-        } else {
-            showExportsBtn.classList.add('active');
-            showImportsBtn.classList.remove('active');
-        }
-    }
-    
-    showImportsBtn.addEventListener('click', () => updateCompositionChart('imports'));
-    showExportsBtn.addEventListener('click', () => updateCompositionChart('exports'));
-
-    // Timeline data and generation
-    const timelineData = [
-        {
-            year: '1995年',
-            title: '外交关系正常化',
-            content: '美国与越南正式建立外交关系，为后续的经济合作奠定了政治基础，结束了长达数十年的隔绝。'
-        },
-        {
-            year: '2001年',
-            title: '双边贸易协定 (BTA) 生效',
-            content: '这是两国经济关系的奠基石。美国对越南商品的平均关税从40%骤降至3%，越南对美出口在随后几年内爆炸性增长。'
-        },
-        {
-            year: '2007年',
-            title: '越南加入WTO',
-            content: '越南正式成为世界贸易组织第150个成员国，融入了以规则为基础的全球多边贸易体系，美国也给予其永久正常贸易关系地位。'
-        },
-        {
-            year: '2020年',
-            title: '301条款调查启动',
-            content: '美国针对越南的货币政策和木材产品供应链展开301条款调查，标志着贸易摩擦升级，向越南施加了巨大压力。'
-        },
-        {
-            year: '2023年',
-            title: '升级为全面战略伙伴关系',
-            content: '两国关系提升至最高级别，合作范围扩展到国防、科技（特别是半导体）等领域，越南成为美国印太战略的核心支柱之一。'
-        },
-        {
-            year: '2025年',
-            title: '新关税协议签署',
-            content: '全新的双重关税协议生效，旨在遏制中国转运，标志着美越关系从追求自由贸易转向以战略合规为核心的新阶段。'
-        }
-    ];
-
-    const timelineContainer = document.getElementById('timeline');
-    timelineData.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'bg-white rounded-lg shadow-md overflow-hidden';
-        div.innerHTML = `
-            <button class="accordion-button w-full text-left p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition">
-                <span class="font-bold text-lg text-[#2C3E50]">${item.year}: ${item.title}</span>
-                <span class="transform transition-transform duration-300 text-xl text-[#3498DB]">
-                    +
-                </span>
-            </button>
-            <div class="accordion-content">
-                <p class="p-4 pt-0 text-gray-600">${item.content}</p>
-            </div>
-        `;
-        timelineContainer.appendChild(div);
-    });
-
-    // Accordion functionality
-    const accordionButtons = document.querySelectorAll('.accordion-button');
-    accordionButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const content = button.nextElementSibling;
-            const icon = button.querySelector('span:last-child');
-
-            if (content.style.maxHeight) {
-                content.style.maxHeight = null;
-                icon.style.transform = 'rotate(0deg)';
-            } else {
-                document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
-                document.querySelectorAll('.accordion-button span:last-child').forEach(i => i.style.transform = 'rotate(0deg)');
-                
-                content.style.maxHeight = content.scrollHeight + 'px';
-                icon.style.transform = 'rotate(45deg)';
-            }
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href').substring(1) === current);
         });
     });
 });
 </script>
+
+
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
      crossorigin="anonymous"></script>
 <ins class="adsbygoogle"
