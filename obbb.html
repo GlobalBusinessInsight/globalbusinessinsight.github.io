@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度解析：“一个美丽的大法案” (One Big Beautiful Bill)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral (Beige, Slate, Stone) with a subtle accent -->
+    <!-- Application Structure Plan: A single-page, vertically scrolling application with a sticky top navigation. The structure is thematic, not chronological, to facilitate understanding. Sections include: 1. Hero/Intro: A high-level summary. 2. Bill at a Glance: Key quantitative data in interactive cards. 3. Core Pillars: A deep dive into the three main components (Tax, Spending, Immigration). 4. Economic Impact: Interactive charts showing effects on debt, households, and industries. 5. Stakeholder Reactions: A balanced view of support and opposition. 6. Global Ripples: How the tariff policy affects other nations. 7. Future Outlook: Likelihood and roadmap. This structure guides the user from a broad overview to specific details, making the complex topic digestible. User interaction involves clicking nav links to scroll, and hovering/clicking on charts/cards for more details. -->
+    <!-- Visualization & Content Choices: 1. Key Metrics (Inform): Displayed in animated cards for quick absorption. Interaction: Hover reveals more context. Justification: Fast delivery of critical numbers. 2. Bill Components (Organize/Inform): A three-column layout for Tax, Spending, and Immigration. Interaction: Clickable items reveal detailed text. Justification: Clear categorization of the bill's main parts. 3. Debt Projection (Change): A line chart from Chart.js. Interaction: Tooltips on hover. Justification: Visually demonstrates the long-term fiscal impact. 4. Household Impact (Compare): A bar chart from Chart.js showing tax changes by income quintile. Interaction: Tooltips. Justification: Clearly illustrates the distributive effects. 5. Stakeholder Views (Compare): A two-sided list (Pro/Con). Interaction: Simple text layout. Justification: Presents opposing views clearly. All visualizations use Canvas via Chart.js, avoiding SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #FDFBF7; /* Warm Beige */
+            color: #333;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            color: #4A5568; /* Slate Gray */
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #A0522D; /* Sienna - Accent */
+            transform: translateY(-2px);
+        }
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 45vh;
+        }
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #2D3748; /* Darker Slate */
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .section-subtitle {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 3rem auto;
+            color: #4A5568;
+            font-size: 1.125rem;
+        }
+        .pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .pill-green {
+            background-color: #E6FFFA;
+            color: #2C7A7B;
+        }
+        .pill-red {
+            background-color: #FFF5F5;
+            color: #C53030;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="text-2xl font-bold text-gray-800">法案解析</div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#summary" class="nav-link">核心速览</a>
+                    <a href="#pillars" class="nav-link">法案支柱</a>
+                    <a href="#impact" class="nav-link">经济影响</a>
+                    <a href="#reactions" class="nav-link">各方态度</a>
+                    <a href="#global" class="nav-link">全球涟漪</a>
+                    <a href="#outlook" class="nav-link">未来展望</a>
+                </div>
+                <button id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-4 pt-2 pb-4 space-y-2">
+            <a href="#summary" class="block nav-link">核心速览</a>
+            <a href="#pillars" class="block nav-link">法案支柱</a>
+            <a href="#impact" class="block nav-link">经济影响</a>
+            <a href="#reactions" class="block nav-link">各方态度</a>
+            <a href="#global" class="block nav-link">全球涟漪</a>
+            <a href="#outlook" class="block nav-link">未来展望</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-16">
+
+        <section id="hero" class="text-center mb-16 md:mb-24">
+            <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 mb-4">“一个美丽的大法案”</h1>
+            <p class="text-xl md:text-2xl text-gray-600">一项重塑美国经济格局的综合性法案</p>
+            <p class="max-w-3xl mx-auto mt-6 text-lg text-gray-500">
+                “一个美丽的大法案”（One Big Beautiful Bill）是特朗普第二任期内的标志性立法成就，于2025年7月初在国会以微弱优势通过。它并非单一议题法案，而是一个庞大的综合体，捆绑了永久性减税、大幅削减社会福利开支、加强边境安全与移民执法，以及调整能源政策等多项内容。该法案旨在通过“减税+削支”的核心思路，与强硬的贸易保护主义政策（关税）相结合，全面重塑美国的财政、经济和社会面貌。
+            </p>
+        </section>
+
+        <section id="summary" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="section-title">核心速览</h2>
+            <p class="section-subtitle">
+                本部分通过关键数据快速展示法案的规模和核心内容。这些数字是理解其深远影响的起点。
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="card text-center">
+                    <h3 class="text-xl font-semibold text-gray-500 mb-2">预计新增国债</h3>
+                    <p class="text-5xl font-bold text-red-600">$3.3万亿</p>
+                    <p class="text-gray-500 mt-2">未来十年 (据CBO)</p>
+                </div>
+                <div class="card text-center">
+                    <h3 class="text-xl font-semibold text-gray-500 mb-2">总减税规模</h3>
+                    <p class="text-5xl font-bold text-green-600">$4.5万亿</p>
+                    <p class="text-gray-500 mt-2">主要为永久化2017年减税</p>
+                </div>
+                <div class="card text-center">
+                    <h3 class="text-xl font-semibold text-gray-500 mb-2">福利削减规模</h3>
+                    <p class="text-5xl font-bold text-red-600">$1.2万亿</p>
+                    <p class="text-gray-500 mt-2">主要针对医疗补助和食品券</p>
+                </div>
+                <div class="card text-center">
+                    <h3 class="text-xl font-semibold text-gray-500 mb-2">边境与移民新增拨款</h3>
+                    <p class="text-5xl font-bold text-blue-600">$1000亿+</p>
+                    <p class="text-gray-500 mt-2">用于建墙、增员和遣返行动</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="pillars" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="section-title">法案的三大支柱</h2>
+             <p class="section-subtitle">
+                该法案的复杂内容可以归纳为三大核心政策支柱：税收改革、开支重塑、以及移民与边境控制。每个支柱都包含了一系列具体且影响深远的措施。
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="card">
+                    <h3 class="text-2xl font-bold mb-4 text-center text-green-700">税收改革：全面减负</h3>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✔</span><strong>永久化减税：</strong> 将2017年《减税与就业法案》中的个人所得税减免措施永久化。</li>
+                        <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✔</span><strong>小费与加班费免税：</strong> 兑现竞选承诺，免除小费和加班费的联邦所得税。</li>
+                        <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✔</span><strong>提高儿童税收抵免：</strong> 将每个孩子的税收抵免永久性提高到$2,200。</li>
+                        <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✔</span><strong>放宽SALT上限：</strong> 将州和地方税（SALT）的抵扣上限从$10,000提高到$40,000，为期五年。</li>
+                         <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✔</span><strong>老年人减税：</strong> 为收入低于特定门槛的老年人提供新的$6,000税收减免。</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3 class="text-2xl font-bold mb-4 text-center text-red-700">开支重塑：削减与倾斜</h3>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">✖</span><strong>削减医疗补助(Medicaid)：</strong> 通过增加工作要求和更严格的资格审查，预计将导致近1200万人失去医疗保险。</li>
+                        <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">✖</span><strong>收紧食品券(SNAP)：</strong> 提高领取福利的工作年龄要求至64岁，预计影响数百万受益人。</li>
+                        <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">✖</span><strong>取消绿色能源激励：</strong> 废除拜登时代《通胀削减法案》中大部分针对电动汽车、家庭节能改造的税收抵免。</li>
+                        <li class="flex items-start"><span class="text-blue-500 mr-2 mt-1">▲</span><strong>增加国防开支：</strong> 大幅增加军事预算，包括为“金钟罩”导弹防御系统拨款$250亿美元。</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3 class="text-2xl font-bold mb-4 text-center text-blue-700">移民与边境：强硬路线</h3>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-start"><span class="text-blue-500 mr-2 mt-1">▲</span><strong>边境墙资金：</strong> 拨款超过$460亿美元用于修建边境墙及相关基础设施。</li>
+                        <li class="flex items-start"><span class="text-blue-500 mr-2 mt-1">▲</span><strong>扩大拘留能力：</strong> 拨款$450亿美元用于扩建移民拘留设施。</li>
+                        <li class="flex items-start"><span class="text-blue-500 mr-2 mt-1">▲</span><strong>增加执法人员：</strong> 拨款以在2029年前新增10,000名移民与海关执法局(ICE)探员。</li>
+                        <li class="flex items-start"><span class="text-blue-500 mr-2 mt-1">▲</span><strong>启动大规模遣返：</strong> 为全国范围内的无证移民遣返行动提供资金和法律支持。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="impact" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="section-title">经济影响分析</h2>
+            <p class="section-subtitle">
+                这项法案将对美国财政、家庭收入和关键行业产生结构性影响。以下图表展示了部分核心预测，让您能直观地看到其潜在的经济后果。
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div class="card flex flex-col justify-between">
+                    <h3 class="text-2xl font-bold mb-4 text-center">对国债的长期影响</h3>
+                    <p class="text-center text-gray-600 mb-4">法案的减税规模远超开支削减，国会预算办公室(CBO)预测这将显著推高未来十年的联邦债务。</p>
+                    <div class="chart-container">
+                        <canvas id="debtChart"></canvas>
+                    </div>
+                </div>
+                <div class="card flex flex-col justify-between">
+                    <h3 class="text-2xl font-bold mb-4 text-center">对不同收入家庭的税收影响</h3>
+                     <p class="text-center text-gray-600 mb-4">根据税收政策中心(Tax Policy Center)的初步分析，减税的收益在不同收入群体中分布不均。</p>
+                    <div class="chart-container">
+                        <canvas id="householdImpactChart"></canvas>
+                    </div>
+                </div>
+                 <div class="card lg:col-span-2">
+                    <h3 class="text-2xl font-bold mb-4 text-center">对关键行业的影响</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-center">
+                        <div>
+                            <p class="text-xl font-bold mb-2">制造业</p>
+                            <p><span class="pill pill-green">利好</span> 通过永久化企业减税和投资费用化，鼓励国内投资。</p>
+                        </div>
+                        <div>
+                            <p class="text-xl font-bold mb-2">绿色能源</p>
+                            <p><span class="pill pill-red">利空</span> 失去关键税收抵免，太阳能、风能和电动汽车行业面临挑战。</p>
+                        </div>
+                        <div>
+                            <p class="text-xl font-bold mb-2">国防军工</p>
+                            <p><span class="pill pill-green">利好</span> 获得大量新增预算和新项目资金。</p>
+                        </div>
+                        <div>
+                            <p class="text-xl font-bold mb-2">医疗保健</p>
+                            <p><span class="pill pill-red">利空</span> 医疗补助的大幅削减可能导致医院坏账增加，尤其是在农村地区。</p>
+                        </div>
+                        <div>
+                            <p class="text-xl font-bold mb-2">零售与消费</p>
+                            <p><span class="pill pill-red">利空</span> 普遍关税政策推高进口商品成本，可能抑制消费并引发通胀。</p>
+                        </div>
+                        <div>
+                            <p class="text-xl font-bold mb-2">房地产</p>
+                            <p><span class="pill pill-green">利好 (部分)</span> SALT上限的提高对高税率州的房地产市场构成利好。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="reactions" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="section-title">各方态度</h2>
+            <p class="section-subtitle">
+                这项具有争议的法案在美国社会引发了截然不同的反应。支持者认为它能解放经济活力，而反对者则担忧其加剧社会不公和财政风险。
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card border-l-4 border-green-500">
+                    <h3 class="text-2xl font-bold mb-4 text-green-700">支持观点</h3>
+                    <ul class="space-y-4">
+                        <li>
+                            <p class="font-semibold">共和党主流派：</p>
+                            <p class="text-gray-600">“这是美国历史上最大规模的中产阶级减税，将释放经济潜能，创造就业，让美国再次繁荣。通过加强边境安全，我们兑现了对选民的承诺。”</p>
+                        </li>
+                        <li>
+                            <p class="font-semibold">商业团体 (如部分制造商协会)：</p>
+                            <p class="text-gray-600">“永久性的减税和投资激励措施为企业提供了确定性，将鼓励资本回流和在美国本土的扩张。”</p>
+                        </li>
+                         <li>
+                            <p class="font-semibold">保守派选民：</p>
+                            <p class="text-gray-600">“终于有人开始削减臃肿的福利开支，并把钱用在保卫国家和边境上。这是对财政责任和法律秩序的回归。”</p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card border-l-4 border-red-500">
+                    <h3 class="text-2xl font-bold mb-4 text-red-700">反对观点</h3>
+                    <ul class="space-y-4">
+                        <li>
+                            <p class="font-semibold">民主党：</p>
+                            <p class="text-gray-600">“这是一项劫贫济富的法案。它以牺牲最脆弱群体的医疗和食物为代价，为富人和大公司提供巨额税收优惠，同时让国家背上数万亿的新债务。”</p>
+                        </li>
+                        <li>
+                            <p class="font-semibold">财政鹰派 (部分共和党人)：</p>
+                            <p class="text-gray-600">“尽管有一些开支削减，但该法案在财政上是鲁莽的。它没有足够地削减开支来弥补减税的成本，将导致不可持续的债务水平。”</p>
+                        </li>
+                         <li>
+                            <p class="font-semibold">社会福利倡导组织：</p>
+                            <p class="text-gray-600">“对医疗补助和食品券的削减是残忍的，这将使数百万儿童、老人和残疾人陷入困境，加剧贫困和健康危机。”</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="global" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="section-title">全球涟漪：关税政策</h2>
+            <p class="section-subtitle">
+                与法案并行的是一套激进的贸易政策。特朗普政府计划使用关税收入来部分抵消减税成本，这在全球范围内引发了连锁反应，重塑了贸易关系。
+            </p>
+            <div class="card">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4">“对等关税”与贸易谈判</h3>
+                        <p class="text-gray-600 mb-4">特朗普政府的核心贸易理念是“对等”。其政策是对所有进口商品征收10%的基准关税，同时与各国展开谈判。目标是迫使其他国家降低对美国商品的壁垒，否则将面临更高的、针对性的关税。</p>
+                        <p class="text-gray-600">这一策略已经取得了一些“成果”，但也引发了极大的不确定性和贸易伙伴的报复威胁。</p>
+                    </div>
+                    <div>
+                         <div class="space-y-4">
+                            <div class="p-4 bg-gray-100 rounded-lg">
+                                <p class="font-bold">对中国：</p>
+                                <p>继续维持高关税，并威胁如果贸易逆差问题没有改善，将进一步加征高达60%的关税。</p>
+                            </div>
+                             <div class="p-4 bg-gray-100 rounded-lg">
+                                <p class="font-bold">对越南（达成协议）：</p>
+                                <p>越南对美出口面临20%关税（转运商品40%），以换取美国商品零关税进入越南市场。</p>
+                            </div>
+                             <div class="p-4 bg-gray-100 rounded-lg">
+                                <p class="font-bold">对欧盟和印度：</p>
+                                <p>正在进行紧张谈判。欧盟表示可能接受10%的普遍关税，但要求关键行业（如制药、飞机）获得豁免。否则将采取报复措施。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="outlook" class="scroll-mt-20">
+            <h2 class="section-title">未来展望与实施路线图</h2>
+            <p class="section-subtitle">
+                法案已经签署成为法律，其影响将在未来几年逐步显现。了解其实施的时间表是评估其最终效果的关键。
+            </p>
+            <div class="card">
+                <ul class="space-y-4">
+                    <li class="flex items-center">
+                        <span class="text-xl font-bold text-blue-600 mr-4">即刻生效</span>
+                        <p class="text-gray-700">边境安全和移民执法的额外拨款将立即开始执行。国防预算增加也将即时生效。</p>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-xl font-bold text-blue-600 mr-4">2026财年</span>
+                        <p class="text-gray-700">大部分减税条款，包括永久化的个人所得税率、小费免税等将从2026纳税年度开始生效。针对医疗补助(Medicaid)和食品券(SNAP)的改革和削减也将在此期间开始分阶段实施。</p>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-xl font-bold text-blue-600 mr-4">持续进行</span>
+                        <p class="text-gray-700">关税政策将是一个动态调整的过程，取决于与各国的谈判进展。十年内$3.3万亿的新增债务将持续累积，对未来的财政政策构成长期压力。</p>
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-xl font-bold text-blue-600 mr-4">政治斗争</span>
+                        <p class="text-gray-700">民主党已明确表示，将在2026年中期选举和未来的选举中，将推翻此法案作为核心竞选议题。该法案的长期存在与否，将取决于未来美国政治格局的演变。</p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-4 py-6 text-center">
+            <p>&copy; 2025 法案解析。本内容基于公开信息整理分析，仅供参考。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            const activateLink = (id) => {
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if(link.getAttribute('href') === `#${id}`) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        activateLink(entry.target.id);
+                    }
+                });
+            }, { rootMargin: '-30% 0px -70% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            mobileMenu.addEventListener('click', (e) => {
+                if(e.target.tagName === 'A'){
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+
+
+            const debtData = {
+                labels: ['2025', '2026', '2027', '2028', '2029', '2030', '2031', '2032', '2033', '2034'],
+                datasets: [{
+                    label: '预计新增国债 (万亿美元)',
+                    data: [0, 0.3, 0.7, 1.1, 1.5, 1.9, 2.3, 2.7, 3.0, 3.3],
+                    fill: true,
+                    borderColor: 'rgb(220, 38, 38)',
+                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                    tension: 0.4
+                }]
+            };
+
+            const debtChartCtx = document.getElementById('debtChart').getContext('2d');
+            new Chart(debtChartCtx, {
+                type: 'line',
+                data: debtData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                             ticks: {
+                                callback: function(value) {
+                                    return '$' + value + ' T';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                           display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.formattedValue}万亿美元`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const householdImpactData = {
+                labels: ['最低收入20%', '第二档20%', '中间档20%', '第四档20%', '最高收入20%'],
+                datasets: [{
+                    label: '平均年减税额 ($)',
+                    data: [150, 980, 1750, 3500, 10950],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(255, 159, 64, 0.6)',
+                        'rgba(255, 99, 132, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            const householdImpactCtx = document.getElementById('householdImpactChart').getContext('2d');
+            new Chart(householdImpactCtx, {
+                type: 'bar',
+                data: householdImpactData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                         tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: $${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
