@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式报告：马斯克的“美国党”豪赌</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Analyst's Desk -->
+    <!-- Application Structure Plan: The application is designed as a single-page, thematic narrative, guiding the user from the "Why" (The Spark) to the "How" (The Arsenal), "What If" (The Battlefield & Players), and "So What" (The Fallout & Verdict). This non-linear, dashboard-like structure replaces the report's linear chapters, using interactive cards, charts, and toggles to make complex information digestible and engaging. The goal is to facilitate exploration and understanding by allowing users to drill into topics of interest, rather than reading a static document, which is better for web-based consumption. -->
+    <!-- Visualization & Content Choices: Report data is presented through various interactive methods. The Musk/Trump conflict is a side-by-side text comparison for clarity. Musk's assets are interactive HTML cards (Goal: Organize). Voter potential is a Chart.js doughnut chart to visualize proportions (Goal: Compare). Tesla's sales decline is a Chart.js bar chart for quantifiable impact (Goal: Change). Historical barriers are presented as informational cards (Goal: Inform). Future scenarios are managed by a JS-powered toggle to compare outcomes (Goal: Organize). This mix of text, data viz, and interactive HTML elements provides a rich, multi-faceted view of the report's content. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F4;
+            color: #2c3e50;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 300px;
+            width: 100%;
+            max-width: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-width: 500px;
+            }
+        }
+        .scenario-button.active {
+            background-color: #34495e;
+            color: white;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800">马斯克的政治豪赌</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#spark" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">导火索</a>
+                        <a href="#arsenal" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">武器库</a>
+                        <a href="#battlefield" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">战场</a>
+                        <a href="#players" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">玩家</a>
+                        <a href="#fallout" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">代价</a>
+                        <a href="#verdict" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">终局</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        <option value="#spark">导火索</option>
+                        <option value="#arsenal">武器库</option>
+                        <option value="#battlefield">战场</option>
+                        <option value="#players">玩家</option>
+                        <option value="#fallout">代价</option>
+                        <option value="#verdict">终局</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="intro" class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">“美国党”：玩笑，还是革命？</h2>
+            <p class="max-w-3xl mx-auto text-gray-600">2025年7月，埃隆·马斯克宣布成立“美国党”，此举震惊全球。这究竟是一场深思熟虑的政治革命，还是一位亿万富翁一时冲动的“行为艺术”？本交互式报告将深入剖析这场豪赌背后的动因、资本、风险与可能的终局。</p>
+        </section>
+
+        <section id="spark" class="py-16 bg-white rounded-2xl shadow-lg mb-16">
+            <div class="max-w-5xl mx-auto px-6">
+                <h3 class="text-center text-3xl font-bold mb-2 text-gray-800">导火索</h3>
+                <p class="text-center text-gray-600 mb-12">一切始于一场决裂。马斯克成立“美国党”的直接诱因，是与时任总统特朗普围绕一项巨额开支法案——“大而美法案”（One Big Beautiful Bill Act）的激烈冲突。这不仅是盟友的背叛，更是两种民粹主义叙事的正面碰撞。</p>
+                <div class="grid md:grid-cols-2 gap-8 items-start">
+                    <div class="border-l-4 border-red-500 pl-6">
+                        <h4 class="text-2xl font-bold mb-3 text-red-700">特朗普的“大而美法案”</h4>
+                        <p class="mb-4 text-gray-700">一项庞大的综合立法，其核心是“减税”，但代价是未来十年增加超过<strong class="text-red-600 font-semibold">3.3万亿美元</strong>的国债。法案同时大幅削减了对特斯拉等电动汽车公司的补贴。</p>
+                        <ul class="list-none space-y-2 text-gray-600">
+                            <li><span class="font-bold text-red-600">▶ 目标：</span>巩固政治基本盘，以赤字为政治利益买单。</li>
+                            <li><span class="font-bold text-red-600">▶ 手段：</span>交易性的政治民粹主义。</li>
+                        </ul>
+                    </div>
+                    <div class="border-l-4 border-blue-500 pl-6">
+                        <h4 class="text-2xl font-bold mb-3 text-blue-700">马斯克的激烈反击</h4>
+                        <p class="mb-4 text-gray-700">马斯克怒斥该法案为“令人作呕的怪物”，指责共和党是贪婪挥霍的“小猪佩奇党”，并以成立“美国党”作为最后通牒。他宣称自己的原则是“全部砍掉”（CUT IT ALL）。</p>
+                        <ul class="list-none space-y-2 text-gray-600">
+                            <li><span class="font-bold text-blue-600">▶ 目标：</span>占据财政保守的道德高地，揭露政治虚伪。</li>
+                            <li><span class="font-bold text-blue-600">▶ 手段：</span>原则性的自由意志主义。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="arsenal" class="py-16">
+            <h3 class="text-center text-3xl font-bold mb-2 text-gray-800">马斯克的武器库</h3>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">马斯克敢于挑战根深蒂固的两党制，其底气来自任何传统政客都无法比拟的独特资源组合。这些“武器”让他能以非传统方式发动一场政治颠覆。点击卡片查看其伴随的风险。</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="arsenal-card glass-card p-6 rounded-2xl shadow-md cursor-pointer transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-4xl mb-4">💰</div>
+                    <h4 class="text-xl font-bold mb-2">无与伦比的财富</h4>
+                    <p class="text-sm text-gray-700 description">作为全球首富，他能自掏腰包发动政治运动，摆脱传统筹款体系的束缚，对目标议员发起可信的初选挑战。</p>
+                    <div class="risk hidden mt-4 pt-4 border-t border-gray-300">
+                        <h5 class="font-bold text-red-600">风险</h5>
+                        <p class="text-sm text-red-700">容易成为“亿万富翁的政治游戏”的攻击靶子，加剧公众对金钱政治的反感。</p>
+                    </div>
+                </div>
+                <div class="arsenal-card glass-card p-6 rounded-2xl shadow-md cursor-pointer transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-4xl mb-4">📢</div>
+                    <h4 class="text-xl font-bold mb-2">私人全球广播X</h4>
+                    <p class="text-sm text-gray-700 description">拥有超过2.2亿关注者，X平台是他的私人指挥中心，能绕开媒体直接设置议程、控制叙事并动员支持者。</p>
+                    <div class="risk hidden mt-4 pt-4 border-t border-gray-300">
+                        <h5 class="font-bold text-red-600">风险</h5>
+                        <p class="text-sm text-red-700">平台可能成为虚假信息温床，其算法和内容审核策略面临监管审查和公众不信任。</p>
+                    </div>
+                </div>
+                <div class="arsenal-card glass-card p-6 rounded-2xl shadow-md cursor-pointer transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-4xl mb-4">🚀</div>
+                    <h4 class="text-xl font-bold mb-2">产业帝国</h4>
+                    <p class="text-sm text-gray-700 description">SpaceX和特斯拉是美国关键战略资产，与政府深度捆绑，形成“重要到不能倒”的政治保护层，可作为博弈筹码。</p>
+                    <div class="risk hidden mt-4 pt-4 border-t border-gray-300">
+                        <h5 class="font-bold text-red-600">风险</h5>
+                        <p class="text-sm text-red-700">对政府合同和补贴的依赖是其最大弱点，极易受到政治报复性的监管或合同取消威胁。</p>
+                    </div>
+                </div>
+                <div class="arsenal-card glass-card p-6 rounded-2xl shadow-md cursor-pointer transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-4xl mb-4">🎭</div>
+                    <h4 class="text-xl font-bold mb-2">个人品牌</h4>
+                    <p class="text-sm text-gray-700 description">“颠覆者”和“科技先知”的光环，对厌倦传统政治的选民具有强大吸引力。民调显示<strong class="text-blue-600">37%</strong>美国人持正面看法。</p>
+                    <div class="risk hidden mt-4 pt-4 border-t border-gray-300">
+                        <h5 class="font-bold text-red-600">风险</h5>
+                        <p class="text-sm text-red-700">高达<strong class="text-red-600">55%</strong>的负面民意，高度极化的形象疏远了大量主流选民，损害其作为稳定领导者的信誉。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="battlefield" class="py-16 bg-white rounded-2xl shadow-lg mb-16">
+            <div class="max-w-5xl mx-auto px-6">
+                <h3 class="text-center text-3xl font-bold mb-2 text-gray-800">历史与现实的战场</h3>
+                <p class="text-center text-gray-600 mb-12">“美国党”虽新，但面临的挑战却由来已久。任何第三方势力都必须面对美国政治中几乎不可逾越的结构性障碍和历史魔咒。</p>
+                <div class="grid md:grid-cols-2 gap-8 mb-12">
+                    <div>
+                        <h4 class="text-2xl font-semibold mb-4 text-gray-700">历史的幽灵</h4>
+                        <div class="space-y-6">
+                            <div class="p-4 border rounded-lg">
+                                <h5 class="font-bold">罗斯福的“公麋党” (1912)</h5>
+                                <p class="text-sm text-gray-600"><strong>教训：</strong>分裂了共和党选票，导致对手获胜。过度依赖个人领袖，领袖一退，政党即亡。</p>
+                            </div>
+                            <div class="p-4 border rounded-lg">
+                                <h5 class="font-bold">佩罗的“改革党” (1992)</h5>
+                                <p class="text-sm text-gray-600"><strong>教训：</strong>虽获近19%普选票，但被主流政党吸纳议题后迅速衰落，并被排除在总统辩论外，凸显制度性排斥。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-2xl font-semibold mb-4 text-gray-700">制度的枷锁</h4>
+                        <div class="space-y-4 text-gray-700">
+                           <p><strong>“赢者通吃”制度:</strong> 在单一选区制下，选民为免浪费选票，倾向于投给两党之一，扼杀第三方空间。</p>
+                           <p><strong>严苛的选票准入法:</strong> 两党制定的法律为新竞争者设置了极高的签名和法律门槛。</p>
+                           <p><strong>“搅局者”负面标签:</strong> 参选即被攻击为“帮助另一方获胜”，劝退大量潜在支持者。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-100 p-6 rounded-lg text-center">
+                    <h4 class="text-xl font-bold text-blue-800 mb-2">马斯克的破局之策？</h4>
+                    <p class="text-gray-700">马斯克似乎吸取了教训。他提出的<strong class="text-blue-600">“激光聚焦”</strong>策略，并非问鼎白宫，而是集中资源在少数几个国会选区，打造一个虽小但能决定法案命运的“关键少数”党团，从而获得巨大的政治杠杆。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="players" class="py-16">
+            <h3 class="text-center text-3xl font-bold mb-2 text-gray-800">棋盘上的玩家</h3>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">“美国党”的成败，取决于它能否动员一个忠诚的选民基础，并应对来自各方的反应。这不仅是一场民意之争，更是多方势力的复杂博弈。</p>
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h4 class="text-2xl font-semibold text-center mb-4">谁会是信徒？</h4>
+                    <p class="text-center text-sm text-gray-500 mb-4">民调显示，高达40%的选民会考虑支持马斯克的政党。</p>
+                    <div class="chart-container">
+                        <canvas id="voterBaseChart"></canvas>
+                    </div>
+                     <p class="text-xs text-center text-gray-400 mt-2">数据来源：报告引用的Quantus Insights民调及分析。</p>
+                </div>
+                <div>
+                    <h4 class="text-2xl font-semibold text-center mb-4">各方反应</h4>
+                    <div class="space-y-4">
+                        <div class="p-4 rounded-lg bg-red-100 border border-red-200">
+                            <h5 class="font-bold text-red-800">特朗普 & 共和党：愤怒与恐惧</h5>
+                            <p class="text-sm text-red-700">特朗普发出个人化威胁（审查合同、甚至驱逐出境），共和党则恐惧历史重演，担心其分裂选票导致选举失败。</p>
+                        </div>
+                        <div class="p-4 rounded-lg bg-blue-100 border border-blue-200">
+                            <h5 class="font-bold text-blue-800">民主党：机遇与诱惑</h5>
+                            <p class="text-sm text-blue-700">党内分裂：务实派视其为潜在盟友和金主，试图拉拢；进步派则因其反工会、支持特朗普等历史而深恶痛绝，视其为魔鬼。</p>
+                        </div>
+                        <div class="p-4 rounded-lg bg-gray-200 border border-gray-300">
+                            <h5 class="font-bold text-gray-800">反对者 & 观望者</h5>
+                            <p class="text-sm text-gray-700">坚决反对者包括民主党核心、MAGA忠粉和两党建制派。温和共和党人及商界则持观望态度，担忧其不确定性。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="fallout" class="py-16 bg-white rounded-2xl shadow-lg mb-16">
+            <div class="max-w-5xl mx-auto px-6">
+                <h3 class="text-center text-3xl font-bold mb-2 text-gray-800">代价：商业帝国的风险</h3>
+                <p class="text-center text-gray-600 mb-12">马斯克的政治野心正在以可量化的方式侵蚀他一手打造的商业价值。这场豪赌最直接的代价，由他的商业帝国承担。其核心矛盾在于，他是一位<strong class="text-red-600">“被补贴的自由意志主义者”</strong>。</p>
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h4 class="text-xl font-semibold text-center mb-4">特斯拉销量遭遇重创</h4>
+                         <div class="chart-container h-64 md:h-80">
+                            <canvas id="teslaSalesChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-600 mt-4">马斯克的政治化疏远了特斯拉的核心客户群，导致品牌忠诚度和销量双双下滑，与增长的电动汽车市场形成鲜明对比。</p>
+                    </div>
+                    <div class="space-y-6">
+                         <div>
+                            <h5 class="font-bold text-lg">品牌形象受损</h5>
+                            <p class="text-gray-600">“我是在埃隆发疯前买的这辆车”——类似的负面情绪在车主中蔓延，损害了品牌与消费者间的情感联系。</p>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-lg text-red-700">监管与合同风险</h5>
+                            <p class="text-gray-600">特朗普威胁审查SpaceX和特斯拉获得的数十亿美元政府合同与补贴，这是悬在头顶最致命的剑。</p>
+                        </div>
+                         <div>
+                            <h5 class="font-bold text-lg">个人信誉损耗</h5>
+                            <p class="text-gray-600">反复无常的言论和行为，让投资者对其作为上市公司CEO的稳定性和专注度产生严重质疑。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="verdict" class="py-16 text-center">
+            <h3 class="text-3xl font-bold mb-2 text-gray-800">终局预测</h3>
+            <p class="text-center text-gray-600 max-w-3xl mx-auto mb-12">这场政治实验，究竟是一时兴起的玩票，还是会逐步走向舞台中央？我们预测了三种可能的情景。点击按钮查看不同结局。</p>
+            <div class="flex justify-center space-x-2 md:space-x-4 mb-8">
+                <button class="scenario-button active px-4 py-2 md:px-6 md:py-3 text-sm md:text-base font-semibold rounded-full shadow transition-all duration-300" data-scenario="kingmaker">“造王者”路线</button>
+                <button class="scenario-button px-4 py-2 md:px-6 md:py-3 text-sm md:text-base font-semibold rounded-full shadow transition-all duration-300" data-scenario="flameout">昙花一现</button>
+                <button class="scenario-button px-4 py-2 md:px-6 md:py-3 text-sm md:text-base font-semibold rounded-full shadow transition-all duration-300" data-scenario="insurgency">长期演变</button>
+            </div>
+            <div id="scenario-content" class="max-w-2xl mx-auto p-8 rounded-2xl bg-white shadow-xl transition-all duration-500">
+                <!-- Content will be injected by JS -->
+            </div>
+             <div class="mt-12 pt-8 border-t border-gray-200">
+                <h4 class="text-2xl font-bold mb-4 text-blue-800">最终观点：一场以政党为名的杠杆收购</h4>
+                <p class="text-gray-700 max-w-3xl mx-auto">
+                    “美国党”既非玩笑，也非传统革命。它本质上是一次<strong class="text-blue-600">政治杠杆操作</strong>。马斯克正将商业领域的逻辑应用于政治：用最小的“股本”（实际组织和选票），撬动最大的“资产”（对国家立法议程的影响力）。其核心功能是制造一个足够可信的威胁，迫使建制派屈服，最大化其个人政治投资的回报率。
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-8 py-4 text-center text-sm">
+            <p>&copy; 2025 交互式政治分析报告。内容根据公开报告生成，仅供研究参考。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const voterBaseData = {
+                labels: ['非常可能支持 (14%)', '有点可能支持 (26%)', '可能反对/不确定 (60%)'],
+                datasets: [{
+                    label: '选民基础潜力',
+                    data: [14, 26, 60],
+                    backgroundColor: [
+                        '#2980b9',
+                        '#3498db',
+                        '#ecf0f1'
+                    ],
+                    borderColor: '#F8F7F4',
+                    borderWidth: 4,
+                    hoverOffset: 4
+                }]
+            };
+
+            const voterBaseConfig = {
+                type: 'doughnut',
+                data: voterBaseData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#2c3e50',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    cutout: '60%'
+                }
+            };
+            
+            const voterCtx = document.getElementById('voterBaseChart')?.getContext('2d');
+            if (voterCtx) {
+                new Chart(voterCtx, voterBaseConfig);
+            }
+
+
+            const teslaSalesData = {
+                labels: ['2024 Q2', '2025 Q2'],
+                datasets: [{
+                    label: '特斯拉全球季度销量同比',
+                    data: [100, 87], 
+                    backgroundColor: [
+                        'rgba(52, 152, 219, 0.6)',
+                        'rgba(231, 76, 60, 0.6)',
+                    ],
+                    borderColor: [
+                        '#3498db',
+                        '#e74c3c',
+                    ],
+                    borderWidth: 2
+                }]
+            };
+
+            const teslaSalesConfig = {
+                type: 'bar',
+                data: teslaSalesData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value + '%'; 
+                                },
+                                color: '#2c3e50'
+                            },
+                             title: {
+                                display: true,
+                                text: '销量（以2024 Q2为基准100%）',
+                                color: '#2c3e50'
+                            }
+                        },
+                        y: {
+                             ticks: { color: '#2c3e50' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if(context.dataIndex === 1) {
+                                        return '销量同比下降 13%';
+                                    }
+                                    return '基准销量';
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            const teslaCtx = document.getElementById('teslaSalesChart')?.getContext('2d');
+            if(teslaCtx) {
+                new Chart(teslaCtx, teslaSalesConfig);
+            }
+            
+            const arsenalCards = document.querySelectorAll('.arsenal-card');
+            arsenalCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const risk = card.querySelector('.risk');
+                    const description = card.querySelector('.description');
+                    risk.classList.toggle('hidden');
+                    description.classList.toggle('hidden');
+                });
+            });
+
+            const scenarios = {
+                kingmaker: {
+                    title: '情景二：有限的颠覆者——“造王者”路线 (最可能)',
+                    content: '这是最现实、也最可能产生实质影响的路径。马斯克执行“激光聚焦”战略，集中资源在少数几个国会选区，成功帮助几位“美国党”候选人当选。在势均力敌的国会中，这个小党团足以成为决定性的“造王者”，在关键法案上左右结果，从而为马斯克赢得直接的立法影响力。'
+                },
+                flameout: {
+                    title: '情景一：昙花一现',
+                    content: '最符合传统第三方政治宿命的结局。马斯克发现建立政党的障碍远超想象，法律、组织、财务问题层出不穷。当最初的愤怒消退后，他的注意力被商业帝国吸引。最终，“美国党”沦为X平台上的一个历史话题，成为一场代价高昂的政治玩票。'
+                },
+                insurgency: {
+                    title: '情景三：长期演变',
+                    content: '可能性较低，但最具颠覆性的情景。如果对两党制幻灭的“政治无家可归者”持续扩大，尤其在年轻一代中，“美国党”可能在马斯克持续支持下，演变为一个拥有真正组织基础的永久性第三方势力，长期在美国政治中扮演影响议题和选举结果的“第三极”。'
+                }
+            };
+            const scenarioContentEl = document.getElementById('scenario-content');
+            const scenarioButtons = document.querySelectorAll('.scenario-button');
+
+            function updateScenario(scenarioKey) {
+                const scenario = scenarios[scenarioKey];
+                scenarioContentEl.innerHTML = `
+                    <h5 class="text-xl font-bold mb-3 text-gray-800">${scenario.title}</h5>
+                    <p class="text-gray-600">${scenario.content}</p>
+                `;
+                scenarioButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if(btn.dataset.scenario === scenarioKey) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+
+            scenarioButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    updateScenario(button.dataset.scenario);
+                });
+            });
+
+            updateScenario('kingmaker');
+            
+            const mobileNav = document.getElementById('mobile-nav');
+            mobileNav.addEventListener('change', (e) => {
+                window.location.href = e.target.value;
+            });
+        });
+    </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
