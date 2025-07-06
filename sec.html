@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沙特电力行业深度分析报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Desert Modern -->
+    <!-- Application Structure Plan: 本次重大更新在原六模块基础上，新增了第七个核心模块“SEC组织与运营”，并将原“SEC解析”模块更名为“SEC绩效概览”。新的结构为：1. 行业全景, 2. 产业图谱, 3. SEC绩效概览, 4. (新增) SEC组织与运营, 5. SEC业务挑战, 6. 数字化战略, 7. 2030愿景。这个新模块专门用于深入展示SEC的组织架构、IT系统和业务流程，响应了用户对更深度、更精细化信息的需求。这种结构将SEC的分析提升到“绩效-组织-挑战-战略”四个维度，逻辑层次更丰富，信息架构更完整。 -->
+    <!-- Visualization & Content Choices: 
+        - (新增) SEC组织与运营 -> 目标: 详细阐述内部运作 -> 方式: HTML/CSS 流程图/卡片网格 -> 交互: 无，重点是信息清晰呈现 -> 理由: 使用HTML/CSS构建的组织架构图和IT系统卡片网格，能以结构化、可视化的方式清晰呈现复杂的内部信息，比纯文本更易于理解和消化。
+        - SEC绩效概览 (原SEC解析) -> 目标: 对比分析关键绩效 -> 方式: Bar Chart, Line Chart (Chart.js) + HTML/CSS选项卡 -> 交互: 点击选项卡切换图表和内容 -> 理由: 保留原有设计，图表用于量化比较财务和运营数据。
+        - SEC业务挑战 -> 目标: 阐明核心困境 -> 方式: HTML/CSS信息卡片网格 -> 交互: 无 -> 理由: 文本卡片清晰列出关键挑战。
+        - 数字化战略 -> 目标: 展示技术路径 -> 方式: HTML/CSS信息卡片 + Line Chart -> 交互: 无 -> 理由: 卡片分点介绍核心举措，折线图展示数字化KPI进展。
+        - 确认: 所有可视化均使用Chart.js Canvas实现，或使用纯HTML/CSS构建。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans SC', sans-serif; background-color: #f7f4f0; color: #3d3a36; }
+        .bg-base { background-color: #f7f4f0; }
+        .bg-surface { background-color: #ffffff; }
+        .text-heading { color: #1a3a3a; }
+        .text-body { color: #3d3a36; }
+        .text-accent { color: #8c6a46; }
+        .border-accent { border-color: #8c6a46; }
+        .bg-accent { background-color: #8c6a46; }
+        .bg-accent-light { background-color: #e3dcd2; }
+        .shadow-custom { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+        .nav-link { transition: color 0.3s, border-bottom-color 0.3s; padding-bottom: 4px; border-bottom: 2px solid transparent; }
+        .nav-link:hover, .nav-link.active { color: #8c6a46; border-bottom-color: #8c6a46; }
+        .tab-button { transition: all 0.3s; border-bottom: 2px solid transparent; }
+        .tab-button.active { color: #8c6a46; border-bottom-color: #8c6a46; font-weight: 500; }
+        .chart-container { position: relative; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; height: 320px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        html { scroll-behavior: smooth; }
+        .org-chart-item { border: 1px solid #e3dcd2; padding: 0.75rem; border-radius: 0.5rem; background-color: white; text-align: center; }
+        .org-chart-connector { width: 1px; background-color: #d1c7b8; margin: 0 auto; }
+    </style>
+</head>
+<body class="bg-base">
+
+    <header id="header" class="bg-surface/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-heading">沙特电力行业洞察</h1>
+            <div class="hidden lg:flex space-x-5">
+                <a href="#overview" class="nav-link text-body">行业全景</a>
+                <a href="#players" class="nav-link text-body">产业图谱</a>
+                <a href="#sec-performance" class="nav-link text-body">SEC绩效</a>
+                <a href="#sec-org" class="nav-link text-body">SEC组织与运营</a>
+                <a href="#sec-challenges" class="nav-link text-body">SEC挑战</a>
+                <a href="#digital-strategy" class="nav-link text-body">数字化战略</a>
+                <a href="#vision2030" class="nav-link text-body">2030愿景</a>
+            </div>
+            <div class="lg:hidden">
+                <select id="mobile-nav" class="bg-accent-light border border-accent/20 text-heading rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-accent">
+                    <option value="#overview">行业全景</option>
+                    <option value="#players">产业图谱</option>
+                    <option value="#sec-performance">SEC绩效</option>
+                    <option value="#sec-org">SEC组织与运营</option>
+                    <option value="#sec-challenges">SEC挑战</option>
+                    <option value="#digital-strategy">数字化战略</option>
+                    <option value="#vision2030">2030愿景</option>
+                </select>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 md:px-6 py-8 md:py-12">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-5xl font-bold text-heading">重塑能源未来</h2>
+            <p class="mt-4 text-lg md:text-xl text-body max-w-3xl mx-auto">
+                在“2030愿景”驱动下，沙特阿拉伯正从传统石油王国，向全球可持续能源强国进行一场史无前例的战略转型。本报告将交互式地为您解析这场变革的核心。
+            </p>
+        </div>
+
+        <section id="overview" class="py-12 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">行业全景：现状与基本面</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-10">
+                沙特电力行业是中东最大的电力市场，目前仍高度依赖化石燃料。为减少碳排放并降低成本，沙特正积极推动“油改气”，利用贾富拉等大型气田的天然气替代原油发电。随着能源需求的持续增长和脱碳战略的推进，其能源结构正处在深刻变革的起点。
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 items-center">
+                <div class="bg-surface rounded-xl p-6 shadow-custom">
+                    <h4 class="text-xl font-semibold text-heading mb-4 text-center">当前发电结构 (2023)</h4>
+                    <div class="chart-container">
+                        <canvas id="energyMixChart"></canvas>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
+                        <p class="text-3xl font-bold text-accent">453 <span class="text-lg font-normal text-body">TWh</span></p>
+                        <p class="text-body mt-1">2023年总发电量</p>
+                    </div>
+                    <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
+                        <p class="text-3xl font-bold text-accent">99%</p>
+                        <p class="text-body mt-1">化石燃料发电占比</p>
+                    </div>
+                    <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
+                        <p class="text-3xl font-bold text-accent">5.8%</p>
+                        <p class="text-body mt-1">装机容量年增长率 (CAGR)</p>
+                    </div>
+                    <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
+                        <p class="text-3xl font-bold text-accent">74.8 <span class="text-lg font-normal text-body">GW</span></p>
+                        <p class="text-body mt-1">2024年历史峰值负荷</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="players" class="py-12 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">产业图谱：核心参与者</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-12">
+                沙特的电力市场呈现出“国家资本主义”模式：由能源部顶层设计，以SEC为电网保障，ACWA Power等“国家队”为核心执行力量，同时引入国际资本作为补充。将鼠标悬停在下方卡片上，可以了解各主要参与者在价值链中的位置和核心角色。
+            </p>
+            <div class="relative w-full p-8 bg-surface rounded-xl shadow-custom">
+                 <div class="flex justify-center items-center mb-8">
+                    <div class="p-4 bg-accent-light rounded-lg text-center shadow-md">
+                        <p class="font-bold text-heading">能源部 / 电力监管局</p>
+                        <p class="text-sm text-body">顶层设计、政策制定与行业监管</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center relative">
+                    <div class="absolute top-1/2 left-0 w-full h-0.5 bg-accent/20 -translate-y-1/2"></div>
+                    <div class="relative group p-4 bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer z-10">
+                        <span class="text-lg font-semibold text-heading">发电侧</span>
+                        <div class="absolute bottom-full mb-3 w-72 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 bg-gray-800 text-white rounded-lg shadow-lg z-20">
+                            <p class="font-bold">主要玩家</p>
+                            <p class="text-sm">ACWA Power (国家冠军), 沙特阿美 (能源巨头), Badeel (主权基金), 国际IPP (EDF等)。通过竞标开发大型可再生能源项目。</p>
+                        </div>
+                    </div>
+                    <div class="relative group p-4 bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer z-10">
+                         <span class="text-lg font-semibold text-heading">输配电侧</span>
+                         <div class="absolute bottom-full mb-3 w-72 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 bg-gray-800 text-white rounded-lg shadow-lg z-20">
+                            <p class="font-bold">核心垄断者</p>
+                            <p class="text-sm">沙特电力公司 (SEC) 及其子公司国家电网公司 (National Grid SA)，负责全国电网的投资、运营和维护。</p>
+                        </div>
+                    </div>
+                    <div class="relative group p-4 bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer z-10">
+                         <span class="text-lg font-semibold text-heading">用户侧</span>
+                         <div class="absolute bottom-full mb-3 w-72 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 bg-gray-800 text-white rounded-lg shadow-lg z-20">
+                            <p class="font-bold">主要消费者</p>
+                            <p class="text-sm">居民部门 (44.5%) 和商业及公共服务部门 (39.1%) 是消费主力。空调制冷是驱动夏季峰值负荷的核心因素。</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="flex justify-center items-center mt-8">
+                    <div class="p-4 bg-accent-light rounded-lg text-center shadow-md">
+                        <p class="font-bold text-heading">设备与技术供应商</p>
+                        <p class="text-sm text-body">施耐德、GE、日立、西门子能源等</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-performance" class="py-12 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">SEC 绩效概览：转型的基石</h3>
+             <p class="text-center text-body max-w-3xl mx-auto mb-10">
+                沙特电力公司 (SEC) 是该国能源转型的核心执行者，资产规模庞大。本节通过交互式选项卡，从财务、资产和运营效率三个维度，展示这家公用事业巨头的核心绩效指标。
+            </p>
+            <div class="bg-surface rounded-xl p-6 md:p-8 shadow-custom">
+                <div class="border-b border-gray-200 mb-6">
+                    <nav class="flex space-x-4 -mb-px" id="sec-tabs">
+                        <button data-target="sec-finance" class="tab-button text-body py-3 px-4 active">财务与规模</button>
+                        <button data-target="sec-assets" class="tab-button text-body py-3 px-4">电网资产与扩张</button>
+                        <button data-target="sec-ops" class="tab-button text-body py-3 px-4">运营与效率</button>
+                    </nav>
+                </div>
+                <div id="sec-content">
+                    <div id="sec-finance" class="sec-tab-content grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h4 class="text-xl font-semibold text-heading mb-2">大规模投资下的财务表现</h4>
+                            <p class="text-body mb-4">SEC正处于高速增长和巨额投资并存的阶段。为支持“2030愿景”，公司资本支出（Capex）猛增，对短期盈利造成压力，但其庞大的受监管资产基础（RAB）和主权信用评级提供了稳定保障。</p>
+                             <div class="space-y-3">
+                                <div class="flex justify-between"><span class="font-medium text-body">总资产 (2023)</span> <span class="font-bold text-accent">~1335 亿美元</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body">2024年营收</span> <span class="font-bold text-accent">887 亿里亚尔 (+17.7%)</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body">2024年净利润</span> <span class="font-bold text-accent">69 亿里亚尔 (-33%)</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body">2024年资本支出</span> <span class="font-bold text-accent">598 亿里亚尔 (+43.8%)</span></div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="secFinanceChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="sec-assets" class="sec-tab-content grid grid-cols-1 lg:grid-cols-2 gap-8 items-center hidden">
+                        <div>
+                             <h4 class="text-xl font-semibold text-heading mb-2">宏大的电网扩张计划</h4>
+                            <p class="text-body mb-4">为接纳大规模可再生能源，SEC正以前所未有的速度扩张电网。计划到2030年，输电线路长度增加60%，并大力投资高压直流（HVDC）和电池储能（BESS）等现代化技术。</p>
+                             <div class="space-y-3">
+                                <div class="flex justify-between"><span class="font-medium text-body">输电线路 (当前)</span> <span class="font-bold text-accent">~10万 c.km</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body">输电线路 (2030目标)</span> <span class="font-bold text-accent">~16万 c.km</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body">在建新能源并网容量</span> <span class="font-bold text-accent">34.4 GW</span></div>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-accent-light rounded-lg">
+                            <h5 class="font-semibold text-heading mb-3 text-center">关键技术升级</h5>
+                            <ul class="space-y-2 list-disc list-inside text-body">
+                                <li><b>高压直流输电 (HVDC):</b> 新建9条线路，用于长距离、大容量电力传输。</li>
+                                <li><b>电池储能 (BESS):</b> 接入48GWh储能以平滑新能源波动，应对峰值负荷。</li>
+                                <li><b>ESG目标:</b> 2050年实现运营净零排放，S&P ESG评分提升至50分。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="sec-ops" class="sec-tab-content grid grid-cols-1 lg:grid-cols-2 gap-8 items-center hidden">
+                        <div>
+                            <h4 class="text-xl font-semibold text-heading mb-2">运营效率与本土化</h4>
+                            <p class="text-body mb-4">通过数字化转型，SEC的供电可靠性持续改善。同时，公司大力推动本土化，员工本土化率已达94%，并力争在2025年实现60%的本地内容采购目标。</p>
+                            <div class="space-y-3">
+                                <div class="flex justify-between"><span class="font-medium text-body">员工本土化率</span> <span class="font-bold text-accent">94%</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body">客户满意度</span> <span class="font-bold text-accent">82.3%</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body">电厂可用率</span> <span class="font-bold text-accent">87.6%</span></div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="secOpsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-org" class="py-12 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">SEC 组织与运营：内部结构剖析</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-10">
+                本节内容基于对SEC年报、投资者报告及公开合作信息的交叉验证。SEC采用垂直一体化与专业子公司并行的复合模式，以提升运营效率。其IT架构正全面升级，以支撑数字化转型。
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-surface p-6 rounded-lg shadow-custom">
+                    <h4 class="text-xl font-semibold text-heading mb-4">组织架构与核心子公司</h4>
+                    <div class="space-y-4">
+                        <div class="org-chart-item bg-accent-light shadow-md">
+                            <p class="font-bold text-heading">沙特电力公司 (SEC) - 母公司</p>
+                            <p class="text-sm text-body">战略规划、投资管理、集团监督</p>
+                        </div>
+                        <div class="h-6 org-chart-connector"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="org-chart-item">
+                                <p class="font-semibold text-heading">国家电网公司 (National Grid SA)</p>
+                                <p class="text-xs text-body mt-1">100%控股。负责全国输电网络(>380kV)的运营、控制和维护，是电网的“中枢神经”。</p>
+                            </div>
+                            <div class="org-chart-item">
+                                <p class="font-semibold text-heading">沙特能源生产公司</p>
+                                <p class="text-xs text-body mt-1">负责SEC自有发电资产的运营和管理，推动“油改气”和效率提升。</p>
+                            </div>
+                            <div class="org-chart-item">
+                                <p class="font-semibold text-heading">沙特电力项目开发公司 (SEPDC)</p>
+                                <p class="text-xs text-body mt-1">作为工程部门，负责大型电网扩张和并网项目的设计、管理和监督。</p>
+                            </div>
+                            <div class="org-chart-item">
+                                <p class="font-semibold text-heading">Dawiyat 电信公司</p>
+                                <p class="text-xs text-body mt-1">利用电力光纤网络资源，开展电信和数据业务，是资产多元化经营的尝试。</p>
+                            </div>
+                        </div>
+                    </div>
+                     <h4 class="text-xl font-semibold text-heading mt-8 mb-4">管控模式与核心业务流程</h4>
+                     <p class="text-body text-sm">SEC的管控模式是典型的“集中管控、专业运营”。母公司负责战略和资本分配，各子公司作为利润中心专业化运营。核心业务流程包括：<br>
+                        • <b>发电：</b>自有电厂运营+向IPP购电。<br>
+                        • <b>输电：</b>由National Grid SA统一调度和维护，保障全国电力平衡。<br>
+                        • <b>配电：</b>区域分公司负责本地配网运维和客户服务。<br>
+                        • <b>客户服务：</b>通过数字化渠道（如AlKahraba App）和线下网点提供服务。
+                     </p>
+                </div>
+
+                <div class="bg-surface p-6 rounded-lg shadow-custom">
+                    <h4 class="text-xl font-semibold text-heading mb-4">IT架构与核心应用系统</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-accent-light/50 p-4 rounded-lg">
+                            <p class="font-semibold text-heading">SCADA/EMS</p>
+                            <p class="text-xs text-body mt-1">电网的“大脑”，用于输电网的实时监控和能量管理。与日立能源等合作升级国家级控制中心。</p>
+                        </div>
+                        <div class="bg-accent-light/50 p-4 rounded-lg">
+                            <p class="font-semibold text-heading">DMS/ADMS</p>
+                            <p class="text-xs text-body mt-1">配电网的“大脑”，实现高级配电自动化(DA)和故障处理(FDIR)。与施耐德电气等合作部署。</p>
+                        </div>
+                        <div class="bg-accent-light/50 p-4 rounded-lg">
+                            <p class="font-semibold text-heading">AMI 系统</p>
+                            <p class="text-xs text-body mt-1">高级计量设施，核心是覆盖全国的1100万台智能电表，提供海量用电数据。</p>
+                        </div>
+                        <div class="bg-accent-light/50 p-4 rounded-lg">
+                            <p class="font-semibold text-heading">ERP 系统 (SAP)</p>
+                            <p class="text-xs text-body mt-1">企业资源计划系统，用于管理财务、人力资源、采购和供应链等核心后台业务。</p>
+                        </div>
+                        <div class="bg-accent-light/50 p-4 rounded-lg">
+                            <p class="font-semibold text-heading">GIS 系统</p>
+                            <p class="text-xs text-body mt-1">地理信息系统，用于电网资产的可视化管理、规划和分析。</p>
+                        </div>
+                        <div class="bg-accent-light/50 p-4 rounded-lg">
+                            <p class="font-semibold text-heading">AlKahraba App</p>
+                            <p class="text-xs text-body mt-1">面向终端客户的移动应用，提供账单查询、支付、服务申请等数字化服务。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-challenges" class="py-12 scroll-mt-20 bg-accent-light rounded-xl">
+            <div class="container mx-auto px-4">
+                <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">SEC 业务挑战：在转型中寻求平衡</h3>
+                <p class="text-center text-body max-w-3xl mx-auto mb-10">
+                    作为转型的核心，SEC面临着巨大的“执行三难困境”，即必须在转型速度、经济成本和产业本土化这三个相互制约的目标之间取得精妙平衡。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-surface p-6 rounded-lg shadow-custom">
+                        <h4 class="text-xl font-semibold text-heading mb-3">财务压力与投资回报</h4>
+                        <p class="text-body">为实现电网扩张和现代化，公司需要进行史无前例的巨额资本投资，这直接导致短期盈利能力承压。如何在满足国家战略需求与保障股东回报之间找到平衡点，是其核心财务挑战。</p>
+                    </div>
+                    <div class="bg-surface p-6 rounded-lg shadow-custom">
+                        <h4 class="text-xl font-semibold text-heading mb-3">技术复杂性与系统集成</h4>
+                        <p class="text-body">将高达数十吉瓦的间歇性可再生能源并入现有电网，是一项极其复杂的系统工程。这不仅要求电网具备极高的灵活性，还需解决新旧设备兼容、系统稳定性等一系列技术难题。</p>
+                    </div>
+                    <div class="bg-surface p-6 rounded-lg shadow-custom">
+                        <h4 class="text-xl font-semibold text-heading mb-3">网络安全与地缘政治风险</h4>
+                        <p class="text-body">IT与OT的深度融合使电网面临的网络攻击面急剧扩大，网络安全已成为事关国家安全的战略性风险。同时，中东地区复杂的地缘政治局势也为供应链安全和长期投资带来了不确定性。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="digital-strategy" class="py-12 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">SEC 数字化战略：构建智能电网</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-10">
+                为应对挑战并抓住机遇，SEC制定了清晰的数字化战略，旨在构建一个可靠、高效、智能的数字电网。该战略围绕三大核心技术举措展开，并已取得显著成果。
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="space-y-4">
+                    <div class="bg-surface p-4 rounded-lg shadow-custom">
+                        <h4 class="font-semibold text-heading">1. 电网控制中心系统 (SCADA/EMS/DMS)</h4>
+                        <p class="text-sm text-body mt-1">升级电网的“大脑”和“中枢神经”，与全球领先供应商合作，引入更强大的计算平台和高级应用软件，实现对复杂电网的实时监控、精准预测和优化调度。</p>
+                    </div>
+                    <div class="bg-surface p-4 rounded-lg shadow-custom">
+                        <h4 class="font-semibold text-heading">2. 高级计量设施 (AMI)</h4>
+                        <p class="text-sm text-body mt-1">已在全国范围内部署超1100万台智能电表，实现100%覆盖。这为需求侧响应、精细化负荷管理和提升客户服务奠定了坚实的数据基础。</p>
+                    </div>
+                    <div class="bg-surface p-4 rounded-lg shadow-custom">
+                        <h4 class="font-semibold text-heading">3. 配电自动化 (DA)</h4>
+                        <p class="text-sm text-body mt-1">通过广泛部署传感器和智能开关，实现对配电网故障的快速定位、隔离和恢复，将停电影响降至最低，极大提升供电可靠性。</p>
+                    </div>
+                </div>
+                <div class="bg-surface rounded-xl p-6 shadow-custom">
+                     <h4 class="text-xl font-semibold text-heading mb-4 text-center">数字化关键指标 (KPI) 进展</h4>
+                    <div class="chart-container">
+                        <canvas id="digitalizationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="vision2030" class="py-12 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">“2030愿景”：雄心勃勃的能源蓝图</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-10">
+                “2030愿景”下的国家可再生能源计划（NREP）为沙特电力行业设定了颠覆性目标。其核心是在十年内实现发电结构的根本性转变，并大力发展储能与绿氢，同时通过NEOM等旗舰项目展示未来能源城市的形态。
+            </p>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
+                <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
+                    <p class="text-3xl font-bold text-accent">50%</p>
+                    <p class="text-body mt-1">可再生能源发电占比</p>
+                </div>
+                <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
+                    <p class="text-3xl font-bold text-accent">130 <span class="text-lg font-normal text-body">GW</span></p>
+                    <p class="text-body mt-1">新增可再生能源装机</p>
+                </div>
+                <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
+                    <p class="text-3xl font-bold text-accent">48 <span class="text-lg font-normal text-body">GWh</span></p>
+                    <p class="text-body mt-1">电池储能装机目标</p>
+                </div>
+                <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
+                    <p class="text-3xl font-bold text-accent">400 <span class="text-lg font-normal text-body">万吨</span></p>
+                    <p class="text-body mt-1">绿氢年产量目标</p>
+                </div>
+            </div>
+             <div class="bg-surface rounded-xl p-6 md:p-8 shadow-custom">
+                <h4 class="text-xl font-semibold text-heading mb-4 text-center">能源结构转型：2023 vs 2030</h4>
+                <div class="chart-container" style="max-width: 700px; height: 350px;">
+                    <canvas id="vision2030Chart"></canvas>
+                </div>
+             </div>
+        </section>
+    </main>
+
+    <footer class="bg-surface mt-12 py-6">
+        <div class="container mx-auto text-center text-body text-sm">
+            <p>&copy; 2025 沙特电力行业深度分析报告。根据公开信息编制，仅供参考。</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const chartColors = {
+        gas: 'rgba(74, 144, 226, 0.8)', // Blue
+        oil: 'rgba(61, 58, 54, 0.8)',   // Dark Gray
+        renewable: 'rgba(106, 179, 104, 0.8)', // Green
+        other: 'rgba(216, 216, 216, 0.8)',  // Light Gray
+        accent: 'rgba(140, 106, 70, 0.9)',
+        accentLight: 'rgba(227, 220, 210, 0.9)',
+        capex: 'rgba(217, 95, 95, 0.8)' // Redish
+    };
+
+    const ctxEnergyMix = document.getElementById('energyMixChart').getContext('2d');
+    new Chart(ctxEnergyMix, {
+        type: 'doughnut',
+        data: {
+            labels: ['天然气发电', '石油发电', '可再生能源'],
+            datasets: [{
+                data: [62, 37, 1],
+                backgroundColor: [chartColors.gas, chartColors.oil, chartColors.renewable],
+                borderColor: '#ffffff',
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw}%` } }
+            }
+        }
+    });
+
+    const secTabs = document.getElementById('sec-tabs');
+    const secContents = document.querySelectorAll('.sec-tab-content');
+    secTabs.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON') {
+            secTabs.querySelector('.active').classList.remove('active');
+e.target.classList.add('active');
+
+            secContents.forEach(content => content.classList.add('hidden'));
+            document.getElementById(e.target.dataset.target).classList.remove('hidden');
+        }
+    });
+
+    const ctxSecFinance = document.getElementById('secFinanceChart').getContext('2d');
+    new Chart(ctxSecFinance, {
+        type: 'bar',
+        data: {
+            labels: ['2023', '2024'],
+            datasets: [{
+                label: '营收 (亿里亚尔)',
+                data: [753.6, 887],
+                backgroundColor: chartColors.accent,
+            }, {
+                label: '资本支出 (亿里亚尔)',
+                data: [415.8, 598],
+                backgroundColor: chartColors.capex,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    const ctxSecOps = document.getElementById('secOpsChart').getContext('2d');
+    new Chart(ctxSecOps, {
+        type: 'line',
+        data: {
+            labels: ['2020', '2021', '2022', '2023', '2024'],
+            datasets: [{
+                label: 'SAIDI (年均停电分钟)',
+                data: [112.6, 95, 85, 78.6, 68.5],
+                borderColor: chartColors.accent,
+                backgroundColor: chartColors.accent,
+                tension: 0.1
+            },
+            {
+                label: 'SAIFI (年均停电次数)',
+                data: [2.61, 2.2, 1.9, 1.71, 1.47],
+                borderColor: chartColors.gas,
+                backgroundColor: chartColors.gas,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: false } },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+    
+    const ctxVision2030 = document.getElementById('vision2030Chart').getContext('2d');
+    new Chart(ctxVision2030, {
+        type: 'bar',
+        data: {
+            labels: ['2023 现状', '2030 目标'],
+            datasets: [
+                {
+                    label: '石油',
+                    data: [37, 0],
+                    backgroundColor: chartColors.oil,
+                },
+                {
+                    label: '天然气',
+                    data: [62, 50],
+                    backgroundColor: chartColors.gas,
+                },
+                {
+                    label: '可再生能源',
+                    data: [1, 50],
+                    backgroundColor: chartColors.renewable,
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { stacked: true, max: 100, ticks: { callback: (value) => value + '%' } },
+                y: { stacked: true }
+            },
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.raw}%` } }
+            }
+        }
+    });
+
+    const ctxDigitalization = document.getElementById('digitalizationChart').getContext('2d');
+    new Chart(ctxDigitalization, {
+        type: 'line',
+        data: {
+            labels: ['2020', '2021', '2022', '2023', '2024'],
+            datasets: [{
+                label: '配电自动化率 (%)',
+                data: [4.0, 15, 20, 24.5, 36.4],
+                borderColor: chartColors.accent,
+                backgroundColor: chartColors.accent,
+                tension: 0.1,
+            },
+            {
+                label: '数字化成熟度指数 (%)',
+                data: [71, 74, 76, 77, 82.3],
+                borderColor: chartColors.gas,
+                backgroundColor: chartColors.gas,
+                tension: 0.1,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, max: 100 } },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+    
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('main section');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            if (pageYOffset >= sectionTop - 100) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').substring(1) === current) {
+                link.classList.add('active');
+            }
+        });
+        
+        const mobileNav = document.getElementById('mobile-nav');
+        if (mobileNav.options[mobileNav.selectedIndex].value !== `#${current}`) {
+            for (let i = 0; i < mobileNav.options.length; i++) {
+                if (mobileNav.options[i].value === `#${current}`) {
+                    mobileNav.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    });
+
+    document.getElementById('mobile-nav').addEventListener('change', function() {
+        const sectionId = this.value;
+        document.querySelector(sectionId).scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
+
+});
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-format="fluid"
+     data-ad-layout-key="-fy+4+18-27-l"
+     data-ad-client="ca-pub-6214772877334340"
+     data-ad-slot="1537824208"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</body>
+</html>
