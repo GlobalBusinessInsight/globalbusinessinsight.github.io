@@ -3,23 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>沙特电力行业深度分析报告</title>
+    <title>沙特电力行业深度分析报告 | Saudi Power Sector Deep Dive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Desert Modern -->
-    <!-- Application Structure Plan: 本次重大更新在原六模块基础上，新增了第七个核心模块“SEC组织与运营”，并将原“SEC解析”模块更名为“SEC绩效概览”。新的结构为：1. 行业全景, 2. 产业图谱, 3. SEC绩效概览, 4. (新增) SEC组织与运营, 5. SEC业务挑战, 6. 数字化战略, 7. 2030愿景。这个新模块专门用于深入展示SEC的组织架构、IT系统和业务流程，响应了用户对更深度、更精细化信息的需求。这种结构将SEC的分析提升到“绩效-组织-挑战-战略”四个维度，逻辑层次更丰富，信息架构更完整。 -->
-    <!-- Visualization & Content Choices: 
-        - (新增) SEC组织与运营 -> 目标: 详细阐述内部运作 -> 方式: HTML/CSS 流程图/卡片网格 -> 交互: 无，重点是信息清晰呈现 -> 理由: 使用HTML/CSS构建的组织架构图和IT系统卡片网格，能以结构化、可视化的方式清晰呈现复杂的内部信息，比纯文本更易于理解和消化。
-        - SEC绩效概览 (原SEC解析) -> 目标: 对比分析关键绩效 -> 方式: Bar Chart, Line Chart (Chart.js) + HTML/CSS选项卡 -> 交互: 点击选项卡切换图表和内容 -> 理由: 保留原有设计，图表用于量化比较财务和运营数据。
-        - SEC业务挑战 -> 目标: 阐明核心困境 -> 方式: HTML/CSS信息卡片网格 -> 交互: 无 -> 理由: 文本卡片清晰列出关键挑战。
-        - 数字化战略 -> 目标: 展示技术路径 -> 方式: HTML/CSS信息卡片 + Line Chart -> 交互: 无 -> 理由: 卡片分点介绍核心举措，折线图展示数字化KPI进展。
-        - 确认: 所有可视化均使用Chart.js Canvas实现，或使用纯HTML/CSS构建。 -->
+    <!-- Application Structure Plan: This update introduces a bilingual functionality (Chinese/English). The entire application structure remains the same (11 modules), but all text content is now managed by a JavaScript translation object. A language switcher in the header allows users to dynamically toggle between languages, updating all text nodes and chart labels without a page reload. This significantly enhances accessibility for an international audience. -->
+    <!-- Visualization & Content Choices: All visualizations remain the same. The key change is that all chart labels, titles, and tooltips are now dynamically generated from a central translation object based on the selected language. When the language is switched, all Chart.js instances are destroyed and redrawn with the new language data, ensuring full localization of the visual elements. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
-        body { font-family: 'Noto Sans SC', sans-serif; background-color: #f7f4f0; color: #3d3a36; }
+        body { font-family: 'Inter', 'Noto Sans SC', sans-serif; background-color: #f7f4f0; color: #3d3a36; }
         .bg-base { background-color: #f7f4f0; }
         .bg-surface { background-color: #ffffff; }
         .text-heading { color: #1a3a3a; }
@@ -29,7 +24,7 @@
         .bg-accent { background-color: #8c6a46; }
         .bg-accent-light { background-color: #e3dcd2; }
         .shadow-custom { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
-        .nav-link { transition: color 0.3s, border-bottom-color 0.3s; padding-bottom: 4px; border-bottom: 2px solid transparent; }
+        .nav-link { transition: color 0.3s, border-bottom-color 0.3s; padding-bottom: 4px; border-bottom: 2px solid transparent; white-space: nowrap; }
         .nav-link:hover, .nav-link.active { color: #8c6a46; border-bottom-color: #8c6a46; }
         .tab-button { transition: all 0.3s; border-bottom: 2px solid transparent; }
         .tab-button.active { color: #8c6a46; border-bottom-color: #8c6a46; font-weight: 500; }
@@ -38,52 +33,54 @@
         html { scroll-behavior: smooth; }
         .org-chart-item { border: 1px solid #e3dcd2; padding: 0.75rem; border-radius: 0.5rem; background-color: white; text-align: center; }
         .org-chart-connector { width: 1px; background-color: #d1c7b8; margin: 0 auto; }
+        .flow-step { position: relative; text-align: center; }
+        .flow-arrow::after { content: '→'; font-size: 1.5rem; color: #8c6a46; position: absolute; top: 50%; right: -20px; transform: translateY(-50%); }
     </style>
 </head>
 <body class="bg-base">
 
     <header id="header" class="bg-surface/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <nav class="container mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
-            <h1 class="text-xl md:text-2xl font-bold text-heading">沙特电力行业洞察</h1>
-            <div class="hidden lg:flex space-x-5">
-                <a href="#overview" class="nav-link text-body">行业全景</a>
-                <a href="#players" class="nav-link text-body">产业图谱</a>
-                <a href="#sec-performance" class="nav-link text-body">SEC绩效</a>
-                <a href="#sec-org" class="nav-link text-body">SEC组织与运营</a>
-                <a href="#sec-challenges" class="nav-link text-body">SEC挑战</a>
-                <a href="#digital-strategy" class="nav-link text-body">数字化战略</a>
-                <a href="#vision2030" class="nav-link text-body">2030愿景</a>
+            <h1 class="text-lg md:text-2xl font-bold text-heading" data-lang-key="header_title">沙特电力行业洞察</h1>
+            <div class="hidden lg:flex flex-wrap items-center space-x-2 text-xs xl:space-x-3 xl:text-sm">
+                <a href="#overview" class="nav-link text-body" data-lang-key="nav_overview">行业全景</a>
+                <a href="#players" class="nav-link text-body" data-lang-key="nav_players">产业图谱</a>
+                <a href="#sec-performance" class="nav-link text-body" data-lang-key="nav_sec_performance">SEC绩效</a>
+                <a href="#sec-org" class="nav-link text-body" data-lang-key="nav_sec_org">SEC组织</a>
+                <a href="#sec-finance-treasury" class="nav-link text-body" data-lang-key="nav_sec_finance">SEC财务</a>
+                <a href="#sec-asset-dispatch" class="nav-link text-body" data-lang-key="nav_sec_asset">SEC资产与调度</a>
+                <a href="#sec-supply-chain" class="nav-link text-body" data-lang-key="nav_sec_supply">SEC供应链</a>
+                <a href="#sec-investment-engineering" class="nav-link text-body" data-lang-key="nav_sec_investment">SEC投资与工程</a>
+                <a href="#sec-challenges" class="nav-link text-body" data-lang-key="nav_sec_challenges">SEC挑战</a>
+                <a href="#digital-strategy" class="nav-link text-body" data-lang-key="nav_digital_strategy">数字化战略</a>
+                <a href="#vision2030" class="nav-link text-body" data-lang-key="nav_vision2030">2030愿景</a>
             </div>
-            <div class="lg:hidden">
-                <select id="mobile-nav" class="bg-accent-light border border-accent/20 text-heading rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-accent">
-                    <option value="#overview">行业全景</option>
-                    <option value="#players">产业图谱</option>
-                    <option value="#sec-performance">SEC绩效</option>
-                    <option value="#sec-org">SEC组织与运营</option>
-                    <option value="#sec-challenges">SEC挑战</option>
-                    <option value="#digital-strategy">数字化战略</option>
-                    <option value="#vision2030">2030愿景</option>
-                </select>
+            <div class="flex items-center">
+                <button id="lang-switcher" class="bg-accent-light text-heading font-semibold py-2 px-4 rounded-md hover:bg-accent/20 transition-colors">EN</button>
+                <div class="lg:hidden ml-4">
+                    <select id="mobile-nav" class="bg-accent-light border border-accent/20 text-heading rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-accent">
+                    </select>
+                </div>
             </div>
         </nav>
     </header>
 
     <main class="container mx-auto px-4 md:px-6 py-8 md:py-12">
         <div class="text-center mb-12">
-            <h2 class="text-3xl md:text-5xl font-bold text-heading">重塑能源未来</h2>
-            <p class="mt-4 text-lg md:text-xl text-body max-w-3xl mx-auto">
+            <h2 class="text-3xl md:text-5xl font-bold text-heading" data-lang-key="main_title">重塑能源未来</h2>
+            <p class="mt-4 text-lg md:text-xl text-body max-w-3xl mx-auto" data-lang-key="main_subtitle">
                 在“2030愿景”驱动下，沙特阿拉伯正从传统石油王国，向全球可持续能源强国进行一场史无前例的战略转型。本报告将交互式地为您解析这场变革的核心。
             </p>
         </div>
 
         <section id="overview" class="py-12 scroll-mt-20">
-            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">行业全景：现状与基本面</h3>
-            <p class="text-center text-body max-w-3xl mx-auto mb-10">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8" data-lang-key="overview_title">行业全景：现状与基本面</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-10" data-lang-key="overview_desc">
                 沙特电力行业是中东最大的电力市场，目前仍高度依赖化石燃料。为减少碳排放并降低成本，沙特正积极推动“油改气”，利用贾富拉等大型气田的天然气替代原油发电。随着能源需求的持续增长和脱碳战略的推进，其能源结构正处在深刻变革的起点。
             </p>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 items-center">
                 <div class="bg-surface rounded-xl p-6 shadow-custom">
-                    <h4 class="text-xl font-semibold text-heading mb-4 text-center">当前发电结构 (2023)</h4>
+                    <h4 class="text-xl font-semibold text-heading mb-4 text-center" data-lang-key="overview_chart_title">当前发电结构 (2023)</h4>
                     <div class="chart-container">
                         <canvas id="energyMixChart"></canvas>
                     </div>
@@ -91,92 +88,92 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
                         <p class="text-3xl font-bold text-accent">453 <span class="text-lg font-normal text-body">TWh</span></p>
-                        <p class="text-body mt-1">2023年总发电量</p>
+                        <p class="text-body mt-1" data-lang-key="overview_kpi1">2023年总发电量</p>
                     </div>
                     <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
                         <p class="text-3xl font-bold text-accent">99%</p>
-                        <p class="text-body mt-1">化石燃料发电占比</p>
+                        <p class="text-body mt-1" data-lang-key="overview_kpi2">化石燃料发电占比</p>
                     </div>
                     <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
                         <p class="text-3xl font-bold text-accent">5.8%</p>
-                        <p class="text-body mt-1">装机容量年增长率 (CAGR)</p>
+                        <p class="text-body mt-1" data-lang-key="overview_kpi3">装机容量年增长率 (CAGR)</p>
                     </div>
                     <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
                         <p class="text-3xl font-bold text-accent">74.8 <span class="text-lg font-normal text-body">GW</span></p>
-                        <p class="text-body mt-1">2024年历史峰值负荷</p>
+                        <p class="text-body mt-1" data-lang-key="overview_kpi4">2024年历史峰值负荷</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <section id="players" class="py-12 scroll-mt-20">
-            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">产业图谱：核心参与者</h3>
-            <p class="text-center text-body max-w-3xl mx-auto mb-12">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8" data-lang-key="players_title">产业图谱：核心参与者</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-12" data-lang-key="players_desc">
                 沙特的电力市场呈现出“国家资本主义”模式：由能源部顶层设计，以SEC为电网保障，ACWA Power等“国家队”为核心执行力量，同时引入国际资本作为补充。将鼠标悬停在下方卡片上，可以了解各主要参与者在价值链中的位置和核心角色。
             </p>
             <div class="relative w-full p-8 bg-surface rounded-xl shadow-custom">
                  <div class="flex justify-center items-center mb-8">
                     <div class="p-4 bg-accent-light rounded-lg text-center shadow-md">
-                        <p class="font-bold text-heading">能源部 / 电力监管局</p>
-                        <p class="text-sm text-body">顶层设计、政策制定与行业监管</p>
+                        <p class="font-bold text-heading" data-lang-key="players_regulator_title">能源部 / 电力监管局</p>
+                        <p class="text-sm text-body" data-lang-key="players_regulator_desc">顶层设计、政策制定与行业监管</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center relative">
                     <div class="absolute top-1/2 left-0 w-full h-0.5 bg-accent/20 -translate-y-1/2"></div>
                     <div class="relative group p-4 bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer z-10">
-                        <span class="text-lg font-semibold text-heading">发电侧</span>
+                        <span class="text-lg font-semibold text-heading" data-lang-key="players_generation_title">发电侧</span>
                         <div class="absolute bottom-full mb-3 w-72 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 bg-gray-800 text-white rounded-lg shadow-lg z-20">
-                            <p class="font-bold">主要玩家</p>
-                            <p class="text-sm">ACWA Power (国家冠军), 沙特阿美 (能源巨头), Badeel (主权基金), 国际IPP (EDF等)。通过竞标开发大型可再生能源项目。</p>
+                            <p class="font-bold" data-lang-key="players_generation_tip_title">主要玩家</p>
+                            <p class="text-sm" data-lang-key="players_generation_tip_desc">ACWA Power (国家冠军), 沙特阿美 (能源巨头), Badeel (主权基金), 国际IPP (EDF等)。通过竞标开发大型可再生能源项目。</p>
                         </div>
                     </div>
                     <div class="relative group p-4 bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer z-10">
-                         <span class="text-lg font-semibold text-heading">输配电侧</span>
+                         <span class="text-lg font-semibold text-heading" data-lang-key="players_tn_title">输配电侧</span>
                          <div class="absolute bottom-full mb-3 w-72 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 bg-gray-800 text-white rounded-lg shadow-lg z-20">
-                            <p class="font-bold">核心垄断者</p>
-                            <p class="text-sm">沙特电力公司 (SEC) 及其子公司国家电网公司 (National Grid SA)，负责全国电网的投资、运营和维护。</p>
+                            <p class="font-bold" data-lang-key="players_tn_tip_title">核心垄断者</p>
+                            <p class="text-sm" data-lang-key="players_tn_tip_desc">沙特电力公司 (SEC) 及其子公司国家电网公司 (National Grid SA)，负责全国电网的投资、运营和维护。</p>
                         </div>
                     </div>
                     <div class="relative group p-4 bg-white border border-gray-200 rounded-lg shadow-sm cursor-pointer z-10">
-                         <span class="text-lg font-semibold text-heading">用户侧</span>
+                         <span class="text-lg font-semibold text-heading" data-lang-key="players_user_title">用户侧</span>
                          <div class="absolute bottom-full mb-3 w-72 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 bg-gray-800 text-white rounded-lg shadow-lg z-20">
-                            <p class="font-bold">主要消费者</p>
-                            <p class="text-sm">居民部门 (44.5%) 和商业及公共服务部门 (39.1%) 是消费主力。空调制冷是驱动夏季峰值负荷的核心因素。</p>
+                            <p class="font-bold" data-lang-key="players_user_tip_title">主要消费者</p>
+                            <p class="text-sm" data-lang-key="players_user_tip_desc">居民部门 (44.5%) 和商业及公共服务部门 (39.1%) 是消费主力。空调制冷是驱动夏季峰值负荷的核心因素。</p>
                         </div>
                     </div>
                 </div>
                  <div class="flex justify-center items-center mt-8">
                     <div class="p-4 bg-accent-light rounded-lg text-center shadow-md">
-                        <p class="font-bold text-heading">设备与技术供应商</p>
-                        <p class="text-sm text-body">施耐德、GE、日立、西门子能源等</p>
+                        <p class="font-bold text-heading" data-lang-key="players_supplier_title">设备与技术供应商</p>
+                        <p class="text-sm text-body" data-lang-key="players_supplier_desc">施耐德、GE、日立、西门子能源等</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <section id="sec-performance" class="py-12 scroll-mt-20">
-            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">SEC 绩效概览：转型的基石</h3>
-             <p class="text-center text-body max-w-3xl mx-auto mb-10">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8" data-lang-key="sec_performance_title">SEC 绩效概览：转型的基石</h3>
+             <p class="text-center text-body max-w-3xl mx-auto mb-10" data-lang-key="sec_performance_desc">
                 沙特电力公司 (SEC) 是该国能源转型的核心执行者，资产规模庞大。本节通过交互式选项卡，从财务、资产和运营效率三个维度，展示这家公用事业巨头的核心绩效指标。
             </p>
             <div class="bg-surface rounded-xl p-6 md:p-8 shadow-custom">
                 <div class="border-b border-gray-200 mb-6">
                     <nav class="flex space-x-4 -mb-px" id="sec-tabs">
-                        <button data-target="sec-finance" class="tab-button text-body py-3 px-4 active">财务与规模</button>
-                        <button data-target="sec-assets" class="tab-button text-body py-3 px-4">电网资产与扩张</button>
-                        <button data-target="sec-ops" class="tab-button text-body py-3 px-4">运营与效率</button>
+                        <button data-target="sec-finance" class="tab-button text-body py-3 px-4 active" data-lang-key="sec_tab_finance">财务与规模</button>
+                        <button data-target="sec-assets" class="tab-button text-body py-3 px-4" data-lang-key="sec_tab_assets">电网资产与扩张</button>
+                        <button data-target="sec-ops" class="tab-button text-body py-3 px-4" data-lang-key="sec_tab_ops">运营与效率</button>
                     </nav>
                 </div>
                 <div id="sec-content">
                     <div id="sec-finance" class="sec-tab-content grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                         <div>
-                            <h4 class="text-xl font-semibold text-heading mb-2">大规模投资下的财务表现</h4>
-                            <p class="text-body mb-4">SEC正处于高速增长和巨额投资并存的阶段。为支持“2030愿景”，公司资本支出（Capex）猛增，对短期盈利造成压力，但其庞大的受监管资产基础（RAB）和主权信用评级提供了稳定保障。</p>
+                            <h4 class="text-xl font-semibold text-heading mb-2" data-lang-key="sec_finance_title">大规模投资下的财务表现</h4>
+                            <p class="text-body mb-4" data-lang-key="sec_finance_desc">SEC正处于高速增长和巨额投资并存的阶段。为支持“2030愿景”，公司资本支出（Capex）猛增，对短期盈利造成压力，但其庞大的受监管资产基础（RAB）和主权信用评级提供了稳定保障。</p>
                              <div class="space-y-3">
-                                <div class="flex justify-between"><span class="font-medium text-body">总资产 (2023)</span> <span class="font-bold text-accent">~1335 亿美元</span></div>
-                                <div class="flex justify-between"><span class="font-medium text-body">2024年营收</span> <span class="font-bold text-accent">887 亿里亚尔 (+17.7%)</span></div>
-                                <div class="flex justify-between"><span class="font-medium text-body">2024年净利润</span> <span class="font-bold text-accent">69 亿里亚尔 (-33%)</span></div>
-                                <div class="flex justify-between"><span class="font-medium text-body">2024年资本支出</span> <span class="font-bold text-accent">598 亿里亚尔 (+43.8%)</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body" data-lang-key="sec_finance_kpi1_label">总资产 (2023)</span> <span class="font-bold text-accent">~1335 亿美元</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body" data-lang-key="sec_finance_kpi2_label">2024年营收</span> <span class="font-bold text-accent">887 亿里亚尔 (+17.7%)</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body" data-lang-key="sec_finance_kpi3_label">2024年净利润</span> <span class="font-bold text-accent">69 亿里亚尔 (-33%)</span></div>
+                                <div class="flex justify-between"><span class="font-bold text-accent" data-lang-key="sec_finance_kpi4_label">2024年资本支出</span> <span class="font-bold text-accent">598 亿里亚尔 (+43.8%)</span></div>
                             </div>
                         </div>
                         <div class="chart-container">
@@ -185,31 +182,31 @@
                     </div>
                     <div id="sec-assets" class="sec-tab-content grid grid-cols-1 lg:grid-cols-2 gap-8 items-center hidden">
                         <div>
-                             <h4 class="text-xl font-semibold text-heading mb-2">宏大的电网扩张计划</h4>
-                            <p class="text-body mb-4">为接纳大规模可再生能源，SEC正以前所未有的速度扩张电网。计划到2030年，输电线路长度增加60%，并大力投资高压直流（HVDC）和电池储能（BESS）等现代化技术。</p>
+                             <h4 class="text-xl font-semibold text-heading mb-2" data-lang-key="sec_assets_title">宏大的电网扩张计划</h4>
+                            <p class="text-body mb-4" data-lang-key="sec_assets_desc">为接纳大规模可再生能源，SEC正以前所未有的速度扩张电网。计划到2030年，输电线路长度增加60%，并大力投资高压直流（HVDC）和电池储能（BESS）等现代化技术。</p>
                              <div class="space-y-3">
-                                <div class="flex justify-between"><span class="font-medium text-body">输电线路 (当前)</span> <span class="font-bold text-accent">~10万 c.km</span></div>
-                                <div class="flex justify-between"><span class="font-medium text-body">输电线路 (2030目标)</span> <span class="font-bold text-accent">~16万 c.km</span></div>
-                                <div class="flex justify-between"><span class="font-medium text-body">在建新能源并网容量</span> <span class="font-bold text-accent">34.4 GW</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body" data-lang-key="sec_assets_kpi1_label">输电线路 (当前)</span> <span class="font-bold text-accent">~10万 c.km</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body" data-lang-key="sec_assets_kpi2_label">输电线路 (2030目标)</span> <span class="font-bold text-accent">~16万 c.km</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body" data-lang-key="sec_assets_kpi3_label">在建新能源并网容量</span> <span class="font-bold text-accent">34.4 GW</span></div>
                             </div>
                         </div>
                         <div class="p-6 bg-accent-light rounded-lg">
-                            <h5 class="font-semibold text-heading mb-3 text-center">关键技术升级</h5>
+                            <h5 class="font-semibold text-heading mb-3 text-center" data-lang-key="sec_assets_tech_title">关键技术升级</h5>
                             <ul class="space-y-2 list-disc list-inside text-body">
-                                <li><b>高压直流输电 (HVDC):</b> 新建9条线路，用于长距离、大容量电力传输。</li>
-                                <li><b>电池储能 (BESS):</b> 接入48GWh储能以平滑新能源波动，应对峰值负荷。</li>
-                                <li><b>ESG目标:</b> 2050年实现运营净零排放，S&P ESG评分提升至50分。</li>
+                                <li data-lang-key="sec_assets_tech1"><b>高压直流输电 (HVDC):</b> 新建9条线路，用于长距离、大容量电力传输。</li>
+                                <li data-lang-key="sec_assets_tech2"><b>电池储能 (BESS):</b> 接入48GWh储能以平滑新能源波动，应对峰值负荷。</li>
+                                <li data-lang-key="sec_assets_tech3"><b>ESG目标:</b> 2050年实现运营净零排放，S&P ESG评分提升至50分。</li>
                             </ul>
                         </div>
                     </div>
                     <div id="sec-ops" class="sec-tab-content grid grid-cols-1 lg:grid-cols-2 gap-8 items-center hidden">
                         <div>
-                            <h4 class="text-xl font-semibold text-heading mb-2">运营效率与本土化</h4>
-                            <p class="text-body mb-4">通过数字化转型，SEC的供电可靠性持续改善。同时，公司大力推动本土化，员工本土化率已达94%，并力争在2025年实现60%的本地内容采购目标。</p>
+                            <h4 class="text-xl font-semibold text-heading mb-2" data-lang-key="sec_ops_title">运营效率与本土化</h4>
+                            <p class="text-body mb-4" data-lang-key="sec_ops_desc">通过数字化转型，SEC的供电可靠性持续改善。同时，公司大力推动本土化，员工本土化率已达94%，并力争在2025年实现60%的本地内容采购目标。</p>
                             <div class="space-y-3">
-                                <div class="flex justify-between"><span class="font-medium text-body">员工本土化率</span> <span class="font-bold text-accent">94%</span></div>
-                                <div class="flex justify-between"><span class="font-medium text-body">客户满意度</span> <span class="font-bold text-accent">82.3%</span></div>
-                                <div class="flex justify-between"><span class="font-medium text-body">电厂可用率</span> <span class="font-bold text-accent">87.6%</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body" data-lang-key="sec_ops_kpi1_label">员工本土化率</span> <span class="font-bold text-accent">94%</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body" data-lang-key="sec_ops_kpi2_label">客户满意度</span> <span class="font-bold text-accent">82.3%</span></div>
+                                <div class="flex justify-between"><span class="font-medium text-body" data-lang-key="sec_ops_kpi3_label">电厂可用率</span> <span class="font-bold text-accent">87.6%</span></div>
                             </div>
                         </div>
                         <div class="chart-container">
@@ -221,73 +218,261 @@
         </section>
 
         <section id="sec-org" class="py-12 scroll-mt-20">
-            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">SEC 组织与运营：内部结构剖析</h3>
-            <p class="text-center text-body max-w-3xl mx-auto mb-10">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8" data-lang-key="sec_org_title">SEC 组织与运营：内部结构剖析</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-10" data-lang-key="sec_org_desc">
                 本节内容基于对SEC年报、投资者报告及公开合作信息的交叉验证。SEC采用垂直一体化与专业子公司并行的复合模式，以提升运营效率。其IT架构正全面升级，以支撑数字化转型。
             </p>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div class="bg-surface p-6 rounded-lg shadow-custom">
-                    <h4 class="text-xl font-semibold text-heading mb-4">组织架构与核心子公司</h4>
+                    <h4 class="text-xl font-semibold text-heading mb-4" data-lang-key="sec_org_structure_title">组织架构与核心子公司</h4>
                     <div class="space-y-4">
                         <div class="org-chart-item bg-accent-light shadow-md">
-                            <p class="font-bold text-heading">沙特电力公司 (SEC) - 母公司</p>
-                            <p class="text-sm text-body">战略规划、投资管理、集团监督</p>
+                            <p class="font-bold text-heading" data-lang-key="sec_org_parent_title">沙特电力公司 (SEC) - 母公司</p>
+                            <p class="text-sm text-body" data-lang-key="sec_org_parent_desc">战略规划、投资管理、集团监督</p>
                         </div>
                         <div class="h-6 org-chart-connector"></div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="org-chart-item">
-                                <p class="font-semibold text-heading">国家电网公司 (National Grid SA)</p>
-                                <p class="text-xs text-body mt-1">100%控股。负责全国输电网络(>380kV)的运营、控制和维护，是电网的“中枢神经”。</p>
+                                <p class="font-semibold text-heading" data-lang-key="sec_org_sub1_title">国家电网公司 (National Grid SA)</p>
+                                <p class="text-xs text-body mt-1" data-lang-key="sec_org_sub1_desc">100%控股。负责全国输电网络(>380kV)的运营、控制和维护，是电网的“中枢神经”。</p>
                             </div>
                             <div class="org-chart-item">
-                                <p class="font-semibold text-heading">沙特能源生产公司</p>
-                                <p class="text-xs text-body mt-1">负责SEC自有发电资产的运营和管理，推动“油改气”和效率提升。</p>
+                                <p class="font-semibold text-heading" data-lang-key="sec_org_sub2_title">沙特能源生产公司</p>
+                                <p class="text-xs text-body mt-1" data-lang-key="sec_org_sub2_desc">负责SEC自有发电资产的运营和管理，推动“油改气”和效率提升。</p>
                             </div>
                             <div class="org-chart-item">
-                                <p class="font-semibold text-heading">沙特电力项目开发公司 (SEPDC)</p>
-                                <p class="text-xs text-body mt-1">作为工程部门，负责大型电网扩张和并网项目的设计、管理和监督。</p>
+                                <p class="font-semibold text-heading" data-lang-key="sec_org_sub3_title">沙特电力项目开发公司 (SEPDC)</p>
+                                <p class="text-xs text-body mt-1" data-lang-key="sec_org_sub3_desc">作为工程部门，负责大型电网扩张和并网项目的设计、管理和监督。</p>
                             </div>
                             <div class="org-chart-item">
-                                <p class="font-semibold text-heading">Dawiyat 电信公司</p>
-                                <p class="text-xs text-body mt-1">利用电力光纤网络资源，开展电信和数据业务，是资产多元化经营的尝试。</p>
+                                <p class="font-semibold text-heading" data-lang-key="sec_org_sub4_title">Dawiyat 电信公司</p>
+                                <p class="text-xs text-body mt-1" data-lang-key="sec_org_sub4_desc">利用电力光纤网络资源，开展电信和数据业务，是资产多元化经营的尝试。</p>
                             </div>
                         </div>
                     </div>
-                     <h4 class="text-xl font-semibold text-heading mt-8 mb-4">管控模式与核心业务流程</h4>
-                     <p class="text-body text-sm">SEC的管控模式是典型的“集中管控、专业运营”。母公司负责战略和资本分配，各子公司作为利润中心专业化运营。核心业务流程包括：<br>
-                        • <b>发电：</b>自有电厂运营+向IPP购电。<br>
-                        • <b>输电：</b>由National Grid SA统一调度和维护，保障全国电力平衡。<br>
-                        • <b>配电：</b>区域分公司负责本地配网运维和客户服务。<br>
-                        • <b>客户服务：</b>通过数字化渠道（如AlKahraba App）和线下网点提供服务。
+                     <h4 class="text-xl font-semibold text-heading mt-8 mb-4" data-lang-key="sec_org_model_title">管控模式与核心业务流程</h4>
+                     <p class="text-body text-sm" data-lang-key="sec_org_model_desc">SEC的管控模式是典型的“集中管控、专业运营”。母公司负责战略和资本分配，各子公司作为利润中心专业化运营。核心业务流程包括：<br>
+                        • <b><span data-lang-key="sec_org_flow1">发电</span>:</b> <span data-lang-key="sec_org_flow1_desc">自有电厂运营+向IPP购电。</span><br>
+                        • <b><span data-lang-key="sec_org_flow2">输电</span>:</b> <span data-lang-key="sec_org_flow2_desc">由National Grid SA统一调度和维护，保障全国电力平衡。</span><br>
+                        • <b><span data-lang-key="sec_org_flow3">配电</span>:</b> <span data-lang-key="sec_org_flow3_desc">区域分公司负责本地配网运维和客户服务。</span><br>
+                        • <b><span data-lang-key="sec_org_flow4">客户服务</span>:</b> <span data-lang-key="sec_org_flow4_desc">通过数字化渠道（如AlKahraba App）和线下网点提供服务。</span>
                      </p>
                 </div>
 
                 <div class="bg-surface p-6 rounded-lg shadow-custom">
-                    <h4 class="text-xl font-semibold text-heading mb-4">IT架构与核心应用系统</h4>
+                    <h4 class="text-xl font-semibold text-heading mb-4" data-lang-key="sec_org_it_title">IT架构与核心应用系统</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-accent-light/50 p-4 rounded-lg">
                             <p class="font-semibold text-heading">SCADA/EMS</p>
-                            <p class="text-xs text-body mt-1">电网的“大脑”，用于输电网的实时监控和能量管理。与日立能源等合作升级国家级控制中心。</p>
+                            <p class="text-xs text-body mt-1" data-lang-key="sec_org_it1_desc">电网的“大脑”，用于输电网的实时监控和能量管理。与日立能源等合作升级国家级控制中心。</p>
                         </div>
                         <div class="bg-accent-light/50 p-4 rounded-lg">
                             <p class="font-semibold text-heading">DMS/ADMS</p>
-                            <p class="text-xs text-body mt-1">配电网的“大脑”，实现高级配电自动化(DA)和故障处理(FDIR)。与施耐德电气等合作部署。</p>
+                            <p class="text-xs text-body mt-1" data-lang-key="sec_org_it2_desc">配电网的“大脑”，实现高级配电自动化(DA)和故障处理(FDIR)。与施耐德电气等合作部署。</p>
                         </div>
                         <div class="bg-accent-light/50 p-4 rounded-lg">
                             <p class="font-semibold text-heading">AMI 系统</p>
-                            <p class="text-xs text-body mt-1">高级计量设施，核心是覆盖全国的1100万台智能电表，提供海量用电数据。</p>
+                            <p class="text-xs text-body mt-1" data-lang-key="sec_org_it3_desc">高级计量设施，核心是覆盖全国的1100万台智能电表，提供海量用电数据。</p>
                         </div>
                         <div class="bg-accent-light/50 p-4 rounded-lg">
                             <p class="font-semibold text-heading">ERP 系统 (SAP)</p>
-                            <p class="text-xs text-body mt-1">企业资源计划系统，用于管理财务、人力资源、采购和供应链等核心后台业务。</p>
+                            <p class="text-xs text-body mt-1" data-lang-key="sec_org_it4_desc">企业资源计划系统，用于管理财务、人力资源、采购和供应链等核心后台业务。</p>
                         </div>
                         <div class="bg-accent-light/50 p-4 rounded-lg">
                             <p class="font-semibold text-heading">GIS 系统</p>
-                            <p class="text-xs text-body mt-1">地理信息系统，用于电网资产的可视化管理、规划和分析。</p>
+                            <p class="text-xs text-body mt-1" data-lang-key="sec_org_it5_desc">地理信息系统，用于电网资产的可视化管理、规划和分析。</p>
                         </div>
                         <div class="bg-accent-light/50 p-4 rounded-lg">
                             <p class="font-semibold text-heading">AlKahraba App</p>
-                            <p class="text-xs text-body mt-1">面向终端客户的移动应用，提供账单查询、支付、服务申请等数字化服务。</p>
+                            <p class="text-xs text-body mt-1" data-lang-key="sec_org_it6_desc">面向终端客户的移动应用，提供账单查询、支付、服务申请等数字化服务。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="sec-finance-treasury" class="py-12 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8" data-lang-key="sec_finance_treasury_title">SEC 财务与资金管理：支撑转型的金融中枢</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-10" data-lang-key="sec_finance_treasury_desc">
+                为支撑数千亿里亚尔的庞大投资，SEC建立了一套成熟的财务与资金管理体系。该体系以集中化、标准化和数字化为特征，旨在提升效率、控制风险，并为公司的战略扩张提供坚实的金融保障。
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-surface p-6 rounded-lg shadow-custom space-y-6">
+                    <div>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_finance_arch_title">财务管理架构与共享服务</h4>
+                        <p class="text-body text-sm" data-lang-key="sec_finance_arch_desc">SEC的财务管理采用“集团CFO-职能部门-共享服务中心”的现代化组织架构。基于其深度应用的SAP ERP系统，SEC极有可能已实施了财务共享服务中心（FSSC），以处理大量、重复性的交易。
+                        </p>
+                        <div class="mt-4 p-4 bg-accent-light/40 rounded-lg">
+                            <p class="font-semibold text-heading" data-lang-key="sec_finance_fssc_title">财务共享服务框架 (推断)</p>
+                            <ul class="list-disc list-inside text-body text-sm mt-2 space-y-1">
+                                <li data-lang-key="sec_finance_fssc1"><b>应付账款 (P2P):</b> 集中处理供应商发票、付款和对账，实现采购到付款流程的自动化。</li>
+                                <li data-lang-key="sec_finance_fssc2"><b>应收账款 (O2C):</b> 统一管理客户账单、收款和信用控制，加速现金回流。</li>
+                                <li data-lang-key="sec_finance_fssc3"><b>总账与报告 (R2R):</b> 负责会计核算、结账、合并报表和税务遵从，确保财务数据的一致性和准确性。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_finance_process_title">核心财务流程与指标</h4>
+                        <p class="text-body text-sm" data-lang-key="sec_finance_process_desc">核心财务流程围绕预算、核算、报告和分析展开。关键管理指标包括：</p>
+                         <ul class="list-disc list-inside text-body text-sm mt-2 space-y-1">
+                            <li data-lang-key="sec_finance_kpi1"><b>盈利能力指标:</b> EBITDA利润率、净资产收益率(ROE)。</li>
+                            <li data-lang-key="sec_finance_kpi2"><b>偿债能力指标:</b> 资产负债率、利息保障倍数。</li>
+                            <li data-lang-key="sec_finance_kpi3"><b>运营效率指标:</b> 应收账款周转天数(DSO)、总资产周转率。</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="bg-surface p-6 rounded-lg shadow-custom space-y-6">
+                    <div>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_treasury_system_title">资金管理体系与挑战</h4>
+                        <p class="text-body text-sm" data-lang-key="sec_treasury_system_desc">资金管理由集团司库部门（Treasury Department）集中负责，核心职能是确保公司资金的流动性、安全性与效益性。</p>
+                        <p class="text-body text-sm mt-2"><b data-lang-key="sec_treasury_process_label">核心流程：</b></p>
+                        <ol class="list-decimal list-inside text-body text-sm mt-2 space-y-1">
+                           <li data-lang-key="sec_treasury_process1"><b>现金流预测与管理：</b>建立短期和长期的现金流预测模型，通过现金池等工具集中管理集团资金。</li>
+                           <li data-lang-key="sec_treasury_process2"><b>融资管理：</b>根据资本支出计划，通过发行债券/伊斯兰债券(Sukuk)、银团贷款等方式在全球市场进行大规模融资。</li>
+                           <li data-lang-key="sec_treasury_process3"><b>风险管理：</b>管理利率风险和外汇风险（因大量进口设备采购产生）。</li>
+                        </ol>
+                        <p class="text-body text-sm mt-4"><b data-lang-key="sec_treasury_challenges_label">主要挑战：</b></p>
+                         <ul class="list-disc list-inside text-body text-sm mt-2 space-y-1">
+                           <li data-lang-key="sec_treasury_challenge1"><b>巨额融资需求：</b>如何以最优成本、在合适的窗口期完成每年数百亿里亚尔的融资，是最大的挑战。</li>
+                           <li data-lang-key="sec_treasury_challenge2"><b>复杂的风险敞口：</b>全球利率波动和汇率变化给融资成本和项目成本带来不确定性。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="sec-asset-dispatch" class="py-12 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8" data-lang-key="sec_asset_dispatch_title">SEC 电网资产与调度：保障可靠运行的核心</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-10" data-lang-key="sec_asset_dispatch_desc">
+                管理和运营着覆盖全国的庞大电网资产，是SEC最核心的职责。公司建立了一套覆盖资产全生命周期的管理体系和高度集中的调度体系，以确保国家能源大动脉的安全、稳定与高效。
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-surface p-6 rounded-lg shadow-custom space-y-6">
+                    <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_asset_lifecycle_title">电网设备全生命周期管理</h4>
+                    <div class="space-y-4">
+                        <div class="p-4 bg-accent-light/40 rounded-lg">
+                            <p class="font-semibold text-heading" data-lang-key="sec_asset_transmission_title">输电网资产管理 (高价值、高风险)</p>
+                            <p class="text-xs text-body mt-1" data-lang-key="sec_asset_transmission_desc">采用“状态修”(Condition-Based Maintenance)为主的策略。通过在线监测、定期巡检和诊断测试，评估变压器、断路器等关键设备健康状况，精确安排维修和技改，最大限度延长资产生命周期并避免非计划停运。</p>
+                        </div>
+                        <div class="p-4 bg-accent-light/40 rounded-lg">
+                            <p class="font-semibold text-heading" data-lang-key="sec_asset_distribution_title">配电网资产管理 (海量、分散)</p>
+                            <p class="text-xs text-body mt-1" data-lang-key="sec_asset_distribution_desc">采用“计划修”(Time-Based Maintenance)与“故障修”相结合的策略。对海量设备（如配电变压器、开关）进行周期性、程序化的维护和更换。同时，通过配电自动化系统(DA)快速响应和处理故障。</p>
+                        </div>
+                         <div class="p-4 bg-accent-light/40 rounded-lg">
+                            <p class="font-semibold text-heading" data-lang-key="sec_asset_mro_title">MRO物资管理</p>
+                            <p class="text-xs text-body mt-1" data-lang-key="sec_asset_mro_desc">维修、修理和运营(MRO)物资，特别是关键备品备件，是保障设备可用率的核心。SEC通过其中央和区域仓库网络，对关键备件（如大型变压器套管、断路器组件）维持较高的安全库存，以应对突发故障和长采购周期。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-surface p-6 rounded-lg shadow-custom space-y-6">
+                     <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_dispatch_system_title">电网调度体系与挑战</h4>
+                     <p class="text-body text-sm" data-lang-key="sec_dispatch_system_desc">SEC的电网调度采用典型的三级调度架构，由子公司National Grid SA统一负责，确保了对全国电网的高度集中控制。</p>
+                     <div class="mt-4 p-4 bg-accent-light/40 rounded-lg">
+                            <p class="font-semibold text-heading" data-lang-key="sec_dispatch_arch_title">三级调度架构</p>
+                            <ol class="list-decimal list-inside text-body text-sm mt-2 space-y-1">
+                                <li data-lang-key="sec_dispatch_arch1"><b>国家调度中心 (NCC):</b> 最高层级，负责全国电力平衡、超高压电网运行和跨区域电力交换。</li>
+                                <li data-lang-key="sec_dispatch_arch2"><b>区域调度中心 (RCC):</b> 负责各自区域内高压电网的运行监控和调度执行。</li>
+                                <li data-lang-key="sec_dispatch_arch3"><b>地方调度/变电站控制:</b> 负责本地电网和具体设备的实时操作。</li>
+                            </ol>
+                     </div>
+                     <p class="text-body text-sm mt-4"><b data-lang-key="sec_dispatch_challenges_label">主要挑战：</b></p>
+                      <ul class="list-disc list-inside text-body text-sm mt-2 space-y-1">
+                        <li data-lang-key="sec_dispatch_challenge1"><b>可再生能源的波动性：</b>大规模太阳能和风能的间歇性和不确定性，对调度员的预测能力和实时平衡能力提出了前所未有的挑战。</li>
+                        <li data-lang-key="sec_dispatch_challenge2"><b>系统惯量下降：</b>传统旋转发电机组的减少导致电网惯性降低，使电网在遭受扰动时频率更易发生剧烈波动，对调度系统的快速响应能力要求极高。</li>
+                      </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-supply-chain" class="py-12 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8" data-lang-key="sec_supply_chain_title">SEC 物资供应链：保障转型的生命线</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-10" data-lang-key="sec_supply_chain_desc">
+                一个强大而有韧性的供应链是SEC执行其庞大资本项目和维持日常运营的生命线。面对全球性的供应链中断和本土化压力，SEC正在对其供应链战略进行系统性重塑。
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-surface p-6 rounded-lg shadow-custom space-y-6">
+                    <div>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_supply_procurement_title">采购规模与类别</h4>
+                        <p class="text-body text-sm" data-lang-key="sec_supply_procurement_desc">SEC是沙特最大的采购实体之一。其年度采购额与资本支出高度相关，2024年资本支出高达598亿里亚尔，其中物资采购是主要构成部分。主要采购类别包括：</p>
+                        <ul class="list-disc list-inside text-body text-sm mt-2 space-y-1">
+                            <li data-lang-key="sec_supply_cat1"><b>核心电力设备：</b>变压器、开关设备、高压电缆、燃气轮机。</li>
+                            <li data-lang-key="sec_supply_cat2"><b>数字化设备：</b>智能电表、传感器、通信模块、控制系统硬件。</li>
+                            <li data-lang-key="sec_supply_cat3"><b>可再生能源相关：</b>光伏组件、逆变器、风力涡轮机部件（通常由IPP采购，但SEC负责并网物资）。</li>
+                            <li data-lang-key="sec_supply_cat4"><b>日常运维物资：</b>备品备件、绝缘子、铁塔等。</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_supply_sourcing_title">采购来源与本土化</h4>
+                        <p class="text-body text-sm" data-lang-key="sec_supply_sourcing_desc">目前，高端和技术密集型设备（如大型变压器、HVDC系统、燃气轮机）仍高度依赖进口，主要来源国包括德国(西门子)、瑞士/日本(日立能源)、法国(施耐德)、美国(GE)等。为响应国家战略，SEC正大力推动本土化，目标到2025年实现<span class="font-bold text-accent">60%</span>的本地内容采购，这要求培育和认证更多本土供应商。</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_supply_warehouse_title">仓储网络与库存策略</h4>
+                        <p class="text-body text-sm" data-lang-key="sec_supply_warehouse_desc">SEC运营着一个全国性的仓储网络，采用“中央-区域”两级布局。在利雅得、吉达、达曼等核心城市设有大型中央仓库，负责大宗物资的存储和调拨；在各运营区域则设有区域仓库，以保障本地项目的及时供应和日常运维需求。这种布局旨在平衡规模经济与响应速度。为应对供应链不确定性，SEC近年来可能采取了提高战略物资安全库存的策略，这虽然会增加库存持有成本，但对于保障项目进度至关重要。其年平均存货金额预计呈上升趋势，以支持庞大的在建项目。</p>
+                    </div>
+                </div>
+                <div class="bg-surface p-6 rounded-lg shadow-custom space-y-6">
+                    <div>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_supply_inventory_title">库存周转率对标分析</h4>
+                        <p class="text-body text-sm mb-4" data-lang-key="sec_supply_inventory_desc">库存周转率是衡量供应链效率的核心指标。虽然SEC具体数值未公开，但与国际领先电力公司（通常在2-4次/年）相比，SEC可能因其庞大的项目储备和地缘政治风险，而维持一个相对较低的周转率（即更高的库存水平），以优先保障供应安全而非极致的运营效率。</p>
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="inventoryTurnoverChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_supply_challenges_title">供应链核心挑战</h4>
+                         <ul class="space-y-2 text-body text-sm">
+                            <li class="p-3 bg-accent-light/40 rounded-md" data-lang-key="sec_supply_challenge1"><b>价格波动与长交货期：</b>全球大宗商品价格波动和核心电力设备（如变压器）长达数年的交货周期，对项目成本和进度构成严重威胁。</li>
+                            <li class="p-3 bg-accent-light/40 rounded-md" data-lang-key="sec_supply_challenge2"><b>本土化压力与质量控制：</b>在快速提升本土采购比例的同时，确保本土供应商的产品质量、技术标准和交付能力达到要求，是一项艰巨任务。</li>
+                            <li class="p-3 bg-accent-light/40 rounded-md" data-lang-key="sec_supply_challenge3"><b>供应链韧性不足：</b>地缘政治冲突和全球性的物流瓶颈，可能随时中断关键物资的供应，对高度依赖进口的高端设备构成风险。</li>
+                            <li class="p-3 bg-accent-light/40 rounded-md" data-lang-key="sec_supply_challenge4"><b>人才短缺：</b>缺乏具备国际视野和专业能力的现代供应链管理人才，制约了供应链数字化和战略优化的进程。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-investment-engineering" class="py-12 scroll-mt-20">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8" data-lang-key="sec_investment_title">SEC 投资与工程：建设能源帝国的引擎</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-10" data-lang-key="sec_investment_desc">
+                SEC庞大的资本支出背后，是一套复杂的投资决策与工程管理体系。该体系旨在将国家的宏伟蓝图转化为具体的电网资产，是推动“2030愿景”落地执行的核心引擎。
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-surface p-6 rounded-lg shadow-custom space-y-6">
+                    <div>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_investment_decision_title">投资决策流程与预算</h4>
+                        <p class="text-body text-sm" data-lang-key="sec_investment_decision_desc">SEC的投资决策是一个自上而下与自下而上相结合的战略过程：</p>
+                        <ol class="list-decimal list-inside text-body text-sm mt-2 space-y-1">
+                            <li data-lang-key="sec_investment_step1"><b>战略驱动：</b>所有投资规划的最高指引源自沙特“2030愿景”和国家可再生能源计划（NREP）。</li>
+                            <li data-lang-key="sec_investment_step2"><b>规划与预测：</b>由专门的规划部门基于长期负荷预测、新能源并网需求和电网可靠性标准，制定5-10年的电网发展总体规划。</li>
+                            <li data-lang-key="sec_investment_step3"><b>项目立项与预算：</b>各业务部门（输电、配电等）根据总体规划提出具体的年度项目建议和预算申请。年度CAPEX预算（如2024年的598亿里亚尔）由公司高层管理和董事会下属的投资委员会审批，并最终由董事会批准。</li>
+                            <li data-lang-key="sec_investment_step4"><b>分级授权：</b>投资决策根据项目金额和重要性进行分级授权，重大战略性投资需董事会批准。</li>
+                        </ol>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_investment_eng_title">工程管理体系</h4>
+                        <p class="text-body text-sm" data-lang-key="sec_investment_eng_desc">SEC的工程管理主要由其子公司<span class="font-bold text-accent">沙特电力项目开发公司 (SEPDC)</span> 负责，采用矩阵式管理模式，确保对大型复杂项目的有效控制。</p>
+                        <ul class="list-disc list-inside text-body text-sm mt-2 space-y-1">
+                            <li data-lang-key="sec_investment_eng_cat"><b>工程分类：</b>项目按业务领域分为输电、配电、发电和并网四大类。内部再按电压等级（如500kV, 380kV, 132kV）和项目性质（新建、扩建、改造）进行细分管理。</li>
+                            <li data-lang-key="sec_investment_eng_sys"><b>管理系统：</b>广泛应用企业级的项目管理信息系统（PMIS），如Oracle Primavera或SAP PPM，对项目进度、成本、资源和风险进行全生命周期管理。</li>
+                            <li data-lang-key="sec_investment_eng_chal"><b>工程挑战：</b>主要挑战在于多项目、跨区域的协同管理复杂性；确保庞大的承包商生态系统遵循统一的质量和安全标准；以及应对因供应链延迟导致的项目进度风险。</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="bg-surface p-6 rounded-lg shadow-custom space-y-6">
+                    <div>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_investment_eco_title">工程生态伙伴与分工</h4>
+                        <p class="text-body text-sm mb-4" data-lang-key="sec_investment_eco_desc">SEC的工程建设严重依赖于一个庞大的国内外承包商生态系统，形成金字塔式分工：</p>
+                         <ul class="space-y-2 text-body text-sm">
+                            <li class="p-3 bg-accent-light/40 rounded-md" data-lang-key="sec_investment_eco1"><b>国际EPC总包商：</b>如现代工程建设(Hyundai E&C)、拉森特博洛(L&T)、通用电气(GE)，通常负责技术最复杂、规模最大的项目，如HVDC换流站、大型联合循环电厂。</li>
+                            <li class="p-3 bg-accent-light/40 rounded-md" data-lang-key="sec_investment_eco2"><b>区域/本地大型承包商：</b>如Al-Sharif Group, National Contracting Co. (NCC)，承担大量的输变电站和线路工程，是项目执行的主力军。</li>
+                             <li class="p-3 bg-accent-light/40 rounded-md" data-lang-key="sec_investment_eco3"><b>专业分包商与供应商：</b>负责土建、安装、测试等具体环节，或提供单一设备。</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_investment_cost_title">超高压输电项目成本构成 (示例)</h4>
+                        <p class="text-body text-sm mb-4" data-lang-key="sec_investment_cost_desc">以一个典型的380kV超高压输电项目为例，其成本构成大致如下。设备采购（特别是变压器和开关设备）是成本的最主要部分。</p>
+                        <div class="chart-container" style="height: 280px;">
+                            <canvas id="UHVProjectCostChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -296,49 +481,49 @@
 
         <section id="sec-challenges" class="py-12 scroll-mt-20 bg-accent-light rounded-xl">
             <div class="container mx-auto px-4">
-                <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">SEC 业务挑战：在转型中寻求平衡</h3>
-                <p class="text-center text-body max-w-3xl mx-auto mb-10">
+                <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8" data-lang-key="sec_challenges_title">SEC 业务挑战：在转型中寻求平衡</h3>
+                <p class="text-center text-body max-w-3xl mx-auto mb-10" data-lang-key="sec_challenges_desc">
                     作为转型的核心，SEC面临着巨大的“执行三难困境”，即必须在转型速度、经济成本和产业本土化这三个相互制约的目标之间取得精妙平衡。
                 </p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-surface p-6 rounded-lg shadow-custom">
-                        <h4 class="text-xl font-semibold text-heading mb-3">财务压力与投资回报</h4>
-                        <p class="text-body">为实现电网扩张和现代化，公司需要进行史无前例的巨额资本投资，这直接导致短期盈利能力承压。如何在满足国家战略需求与保障股东回报之间找到平衡点，是其核心财务挑战。</p>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_challenge1_title">财务压力与投资回报</h4>
+                        <p class="text-body" data-lang-key="sec_challenge1_desc">为实现电网扩张和现代化，公司需要进行史无前例的巨额资本投资，这直接导致短期盈利能力承压。如何在满足国家战略需求与保障股东回报之间找到平衡点，是其核心财务挑战。</p>
                     </div>
                     <div class="bg-surface p-6 rounded-lg shadow-custom">
-                        <h4 class="text-xl font-semibold text-heading mb-3">技术复杂性与系统集成</h4>
-                        <p class="text-body">将高达数十吉瓦的间歇性可再生能源并入现有电网，是一项极其复杂的系统工程。这不仅要求电网具备极高的灵活性，还需解决新旧设备兼容、系统稳定性等一系列技术难题。</p>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_challenge2_title">技术复杂性与系统集成</h4>
+                        <p class="text-body" data-lang-key="sec_challenge2_desc">将高达数十吉瓦的间歇性可再生能源并入现有电网，是一项极其复杂的系统工程。这不仅要求电网具备极高的灵活性，还需解决新旧设备兼容、系统稳定性等一系列技术难题。</p>
                     </div>
                     <div class="bg-surface p-6 rounded-lg shadow-custom">
-                        <h4 class="text-xl font-semibold text-heading mb-3">网络安全与地缘政治风险</h4>
-                        <p class="text-body">IT与OT的深度融合使电网面临的网络攻击面急剧扩大，网络安全已成为事关国家安全的战略性风险。同时，中东地区复杂的地缘政治局势也为供应链安全和长期投资带来了不确定性。</p>
+                        <h4 class="text-xl font-semibold text-heading mb-3" data-lang-key="sec_challenge3_title">网络安全与地缘政治风险</h4>
+                        <p class="text-body" data-lang-key="sec_challenge3_desc">IT与OT的深度融合使电网面临的网络攻击面急剧扩大，网络安全已成为事关国家安全的战略性风险。同时，中东地区复杂的地缘政治局势也为供应链安全和长期投资带来了不确定性。</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <section id="digital-strategy" class="py-12 scroll-mt-20">
-            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">SEC 数字化战略：构建智能电网</h3>
-            <p class="text-center text-body max-w-3xl mx-auto mb-10">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8" data-lang-key="digital_strategy_title">SEC 数字化战略：构建智能电网</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-10" data-lang-key="digital_strategy_desc">
                 为应对挑战并抓住机遇，SEC制定了清晰的数字化战略，旨在构建一个可靠、高效、智能的数字电网。该战略围绕三大核心技术举措展开，并已取得显著成果。
             </p>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div class="space-y-4">
                     <div class="bg-surface p-4 rounded-lg shadow-custom">
-                        <h4 class="font-semibold text-heading">1. 电网控制中心系统 (SCADA/EMS/DMS)</h4>
-                        <p class="text-sm text-body mt-1">升级电网的“大脑”和“中枢神经”，与全球领先供应商合作，引入更强大的计算平台和高级应用软件，实现对复杂电网的实时监控、精准预测和优化调度。</p>
+                        <h4 class="font-semibold text-heading" data-lang-key="digital_strategy_item1_title">1. 电网控制中心系统 (SCADA/EMS/DMS)</h4>
+                        <p class="text-sm text-body mt-1" data-lang-key="digital_strategy_item1_desc">升级电网的“大脑”和“中枢神经”，与全球领先供应商合作，引入更强大的计算平台和高级应用软件，实现对复杂电网的实时监控、精准预测和优化调度。</p>
                     </div>
                     <div class="bg-surface p-4 rounded-lg shadow-custom">
-                        <h4 class="font-semibold text-heading">2. 高级计量设施 (AMI)</h4>
-                        <p class="text-sm text-body mt-1">已在全国范围内部署超1100万台智能电表，实现100%覆盖。这为需求侧响应、精细化负荷管理和提升客户服务奠定了坚实的数据基础。</p>
+                        <h4 class="font-semibold text-heading" data-lang-key="digital_strategy_item2_title">2. 高级计量设施 (AMI)</h4>
+                        <p class="text-sm text-body mt-1" data-lang-key="digital_strategy_item2_desc">已在全国范围内部署超1100万台智能电表，实现100%覆盖。这为需求侧响应、精细化负荷管理和提升客户服务奠定了坚实的数据基础。</p>
                     </div>
                     <div class="bg-surface p-4 rounded-lg shadow-custom">
-                        <h4 class="font-semibold text-heading">3. 配电自动化 (DA)</h4>
-                        <p class="text-sm text-body mt-1">通过广泛部署传感器和智能开关，实现对配电网故障的快速定位、隔离和恢复，将停电影响降至最低，极大提升供电可靠性。</p>
+                        <h4 class="font-semibold text-heading" data-lang-key="digital_strategy_item3_title">3. 配电自动化 (DA)</h4>
+                        <p class="text-sm text-body mt-1" data-lang-key="digital_strategy_item3_desc">通过广泛部署传感器和智能开关，实现对配电网故障的快速定位、隔离和恢复，将停电影响降至最低，极大提升供电可靠性。</p>
                     </div>
                 </div>
                 <div class="bg-surface rounded-xl p-6 shadow-custom">
-                     <h4 class="text-xl font-semibold text-heading mb-4 text-center">数字化关键指标 (KPI) 进展</h4>
+                     <h4 class="text-xl font-semibold text-heading mb-4 text-center" data-lang-key="digital_strategy_kpi_title">数字化关键指标 (KPI) 进展</h4>
                     <div class="chart-container">
                         <canvas id="digitalizationChart"></canvas>
                     </div>
@@ -347,30 +532,30 @@
         </section>
 
         <section id="vision2030" class="py-12 scroll-mt-20">
-            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8">“2030愿景”：雄心勃勃的能源蓝图</h3>
-            <p class="text-center text-body max-w-3xl mx-auto mb-10">
+            <h3 class="text-2xl md:text-3xl font-bold text-center text-heading mb-8" data-lang-key="vision2030_title">“2030愿景”：雄心勃勃的能源蓝图</h3>
+            <p class="text-center text-body max-w-3xl mx-auto mb-10" data-lang-key="vision2030_desc">
                 “2030愿景”下的国家可再生能源计划（NREP）为沙特电力行业设定了颠覆性目标。其核心是在十年内实现发电结构的根本性转变，并大力发展储能与绿氢，同时通过NEOM等旗舰项目展示未来能源城市的形态。
             </p>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
                 <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
                     <p class="text-3xl font-bold text-accent">50%</p>
-                    <p class="text-body mt-1">可再生能源发电占比</p>
+                    <p class="text-body mt-1" data-lang-key="vision2030_kpi1">可再生能源发电占比</p>
                 </div>
                 <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
                     <p class="text-3xl font-bold text-accent">130 <span class="text-lg font-normal text-body">GW</span></p>
-                    <p class="text-body mt-1">新增可再生能源装机</p>
+                    <p class="text-body mt-1" data-lang-key="vision2030_kpi2">新增可再生能源装机</p>
                 </div>
                 <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
                     <p class="text-3xl font-bold text-accent">48 <span class="text-lg font-normal text-body">GWh</span></p>
-                    <p class="text-body mt-1">电池储能装机目标</p>
+                    <p class="text-body mt-1" data-lang-key="vision2030_kpi3">电池储能装机目标</p>
                 </div>
                 <div class="bg-surface rounded-xl p-4 shadow-custom text-center">
                     <p class="text-3xl font-bold text-accent">400 <span class="text-lg font-normal text-body">万吨</span></p>
-                    <p class="text-body mt-1">绿氢年产量目标</p>
+                    <p class="text-body mt-1" data-lang-key="vision2030_kpi4">绿氢年产量目标</p>
                 </div>
             </div>
              <div class="bg-surface rounded-xl p-6 md:p-8 shadow-custom">
-                <h4 class="text-xl font-semibold text-heading mb-4 text-center">能源结构转型：2023 vs 2030</h4>
+                <h4 class="text-xl font-semibold text-heading mb-4 text-center" data-lang-key="vision2030_chart_title">能源结构转型：2023 vs 2030</h4>
                 <div class="chart-container" style="max-width: 700px; height: 350px;">
                     <canvas id="vision2030Chart"></canvas>
                 </div>
@@ -380,173 +565,570 @@
 
     <footer class="bg-surface mt-12 py-6">
         <div class="container mx-auto text-center text-body text-sm">
-            <p>&copy; 2025 沙特电力行业深度分析报告。根据公开信息编制，仅供参考。</p>
+            <p data-lang-key="footer_text">&copy; 2025 沙特电力行业深度分析报告。根据公开信息编制，仅供参考。</p>
         </div>
     </footer>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const chartColors = {
-        gas: 'rgba(74, 144, 226, 0.8)', // Blue
-        oil: 'rgba(61, 58, 54, 0.8)',   // Dark Gray
-        renewable: 'rgba(106, 179, 104, 0.8)', // Green
-        other: 'rgba(216, 216, 216, 0.8)',  // Light Gray
-        accent: 'rgba(140, 106, 70, 0.9)',
-        accentLight: 'rgba(227, 220, 210, 0.9)',
-        capex: 'rgba(217, 95, 95, 0.8)' // Redish
+    const translations = {
+        zh: {
+            header_title: "沙特电力行业洞察",
+            nav_overview: "行业全景",
+            nav_players: "产业图谱",
+            nav_sec_performance: "SEC绩效",
+            nav_sec_org: "SEC组织",
+            nav_sec_finance: "SEC财务",
+            nav_sec_asset: "SEC资产与调度",
+            nav_sec_supply: "SEC供应链",
+            nav_sec_investment: "SEC投资与工程",
+            nav_sec_challenges: "SEC挑战",
+            nav_digital_strategy: "数字化战略",
+            nav_vision2030: "2030愿景",
+            main_title: "重塑能源未来",
+            main_subtitle: "在“2030愿景”驱动下，沙特阿拉伯正从传统石油王国，向全球可持续能源强国进行一场史无前例的战略转型。本报告将交互式地为您解析这场变革的核心。",
+            overview_title: "行业全景：现状与基本面",
+            overview_desc: "沙特电力行业是中东最大的电力市场，目前仍高度依赖化石燃料。为减少碳排放并降低成本，沙特正积极推动“油改气”，利用贾富拉等大型气田的天然气替代原油发电。随着能源需求的持续增长和脱碳战略的推进，其能源结构正处在深刻变革的起点。",
+            overview_chart_title: "当前发电结构 (2023)",
+            overview_kpi1: "2023年总发电量",
+            overview_kpi2: "化石燃料发电占比",
+            overview_kpi3: "装机容量年增长率 (CAGR)",
+            overview_kpi4: "2024年历史峰值负荷",
+            chart_energy_mix_labels: ['天然气发电', '石油发电', '可再生能源'],
+            players_title: "产业图谱：核心参与者",
+            players_desc: "沙特的电力市场呈现出“国家资本主义”模式：由能源部顶层设计，以SEC为电网保障，ACWA Power等“国家队”为核心执行力量，同时引入国际资本作为补充。将鼠标悬停在下方卡片上，可以了解各主要参与者在价值链中的位置和核心角色。",
+            players_regulator_title: "能源部 / 电力监管局",
+            players_regulator_desc: "顶层设计、政策制定与行业监管",
+            players_generation_title: "发电侧",
+            players_generation_tip_title: "主要玩家",
+            players_generation_tip_desc: "ACWA Power (国家冠军), 沙特阿美 (能源巨头), Badeel (主权基金), 国际IPP (EDF等)。通过竞标开发大型可再生能源项目。",
+            players_tn_title: "输配电侧",
+            players_tn_tip_title: "核心垄断者",
+            players_tn_tip_desc: "沙特电力公司 (SEC) 及其子公司国家电网公司 (National Grid SA)，负责全国电网的投资、运营和维护。",
+            players_user_title: "用户侧",
+            players_user_tip_title: "主要消费者",
+            players_user_tip_desc: "居民部门 (44.5%) 和商业及公共服务部门 (39.1%) 是消费主力。空调制冷是驱动夏季峰值负荷的核心因素。",
+            players_supplier_title: "设备与技术供应商",
+            players_supplier_desc: "施耐德、GE、日立、西门子能源等",
+            sec_performance_title: "SEC 绩效概览：转型的基石",
+            sec_performance_desc: "沙特电力公司 (SEC) 是该国能源转型的核心执行者，资产规模庞大。本节通过交互式选项卡，从财务、资产和运营效率三个维度，展示这家公用事业巨头的核心绩效指标。",
+            sec_tab_finance: "财务与规模",
+            sec_tab_assets: "电网资产与扩张",
+            sec_tab_ops: "运营与效率",
+            sec_finance_title: "大规模投资下的财务表现",
+            sec_finance_desc: "SEC正处于高速增长和巨额投资并存的阶段。为支持“2030愿景”，公司资本支出（Capex）猛增，对短期盈利造成压力，但其庞大的受监管资产基础（RAB）和主权信用评级提供了稳定保障。",
+            sec_finance_kpi1_label: "总资产 (2023)",
+            sec_finance_kpi2_label: "2024年营收",
+            sec_finance_kpi3_label: "2024年净利润",
+            sec_finance_kpi4_label: "2024年资本支出",
+            chart_sec_finance_label1: "营收 (亿里亚尔)",
+            chart_sec_finance_label2: "资本支出 (亿里亚尔)",
+            sec_assets_title: "宏大的电网扩张计划",
+            sec_assets_desc: "为接纳大规模可再生能源，SEC正以前所未有的速度扩张电网。计划到2030年，输电线路长度增加60%，并大力投资高压直流（HVDC）和电池储能（BESS）等现代化技术。",
+            sec_assets_kpi1_label: "输电线路 (当前)",
+            sec_assets_kpi2_label: "输电线路 (2030目标)",
+            sec_assets_kpi3_label: "在建新能源并网容量",
+            sec_assets_tech_title: "关键技术升级",
+            sec_assets_tech1: "<b>高压直流输电 (HVDC):</b> 新建9条线路，用于长距离、大容量电力传输。",
+            sec_assets_tech2: "<b>电池储能 (BESS):</b> 接入48GWh储能以平滑新能源波动，应对峰值负荷。",
+            sec_assets_tech3: "<b>ESG目标:</b> 2050年实现运营净零排放，S&P ESG评分提升至50分。",
+            sec_ops_title: "运营效率与本土化",
+            sec_ops_desc: "通过数字化转型，SEC的供电可靠性持续改善。同时，公司大力推动本土化，员工本土化率已达94%，并力争在2025年实现60%的本地内容采购目标。",
+            sec_ops_kpi1_label: "员工本土化率",
+            sec_ops_kpi2_label: "客户满意度",
+            sec_ops_kpi3_label: "电厂可用率",
+            chart_sec_ops_label1: "SAIDI (年均停电分钟)",
+            chart_sec_ops_label2: "SAIFI (年均停电次数)",
+            sec_org_title: "SEC 组织与运营：内部结构剖析",
+            sec_org_desc: "本节内容基于对SEC年报、投资者报告及公开合作信息的交叉验证。SEC采用垂直一体化与专业子公司并行的复合模式，以提升运营效率。其IT架构正全面升级，以支撑数字化转型。",
+            sec_org_structure_title: "组织架构与核心子公司",
+            sec_org_parent_title: "沙特电力公司 (SEC) - 母公司",
+            sec_org_parent_desc: "战略规划、投资管理、集团监督",
+            sec_org_sub1_title: "国家电网公司 (National Grid SA)",
+            sec_org_sub1_desc: "100%控股。负责全国输电网络(>380kV)的运营、控制和维护，是电网的“中枢神经”。",
+            sec_org_sub2_title: "沙特能源生产公司",
+            sec_org_sub2_desc: "负责SEC自有发电资产的运营和管理，推动“油改气”和效率提升。",
+            sec_org_sub3_title: "沙特电力项目开发公司 (SEPDC)",
+            sec_org_sub3_desc: "作为工程部门，负责大型电网扩张和并网项目的设计、管理和监督。",
+            sec_org_sub4_title: "Dawiyat 电信公司",
+            sec_org_sub4_desc: "利用电力光纤网络资源，开展电信和数据业务，是资产多元化经营的尝试。",
+            sec_org_model_title: "管控模式与核心业务流程",
+            sec_org_model_desc: "SEC的管控模式是典型的“集中管控、专业运营”。母公司负责战略和资本分配，各子公司作为利润中心专业化运营。核心业务流程包括：<br>• <b><span data-lang-key='sec_org_flow1'>发电</span>:</b> <span data-lang-key='sec_org_flow1_desc'>自有电厂运营+向IPP购电。</span><br>• <b><span data-lang-key='sec_org_flow2'>输电</span>:</b> <span data-lang-key='sec_org_flow2_desc'>由National Grid SA统一调度和维护，保障全国电力平衡。</span><br>• <b><span data-lang-key='sec_org_flow3'>配电</span>:</b> <span data-lang-key='sec_org_flow3_desc'>区域分公司负责本地配网运维和客户服务。</span><br>• <b><span data-lang-key='sec_org_flow4'>客户服务</span>:</b> <span data-lang-key='sec_org_flow4_desc'>通过数字化渠道（如AlKahraba App）和线下网点提供服务。</span>",
+            sec_org_flow1: "发电",
+            sec_org_flow1_desc: "自有电厂运营+向IPP购电。",
+            sec_org_flow2: "输电",
+            sec_org_flow2_desc: "由National Grid SA统一调度和维护，保障全国电力平衡。",
+            sec_org_flow3: "配电",
+            sec_org_flow3_desc: "区域分公司负责本地配网运维和客户服务。",
+            sec_org_flow4: "客户服务",
+            sec_org_flow4_desc: "通过数字化渠道（如AlKahraba App）和线下网点提供服务。",
+            sec_org_it_title: "IT架构与核心应用系统",
+            sec_org_it1_desc: "电网的“大脑”，用于输电网的实时监控和能量管理。与日立能源等合作升级国家级控制中心。",
+            sec_org_it2_desc: "配电网的“大脑”，实现高级配电自动化(DA)和故障处理(FDIR)。与施耐德电气等合作部署。",
+            sec_org_it3_desc: "高级计量设施，核心是覆盖全国的1100万台智能电表，提供海量用电数据。",
+            sec_org_it4_desc: "企业资源计划系统，用于管理财务、人力资源、采购和供应链等核心后台业务。",
+            sec_org_it5_desc: "地理信息系统，用于电网资产的可视化管理、规划和分析。",
+            sec_org_it6_desc: "面向终端客户的移动应用，提供账单查询、支付、服务申请等数字化服务。",
+            sec_finance_treasury_title: "SEC 财务与资金管理：支撑转型的金融中枢",
+            sec_finance_treasury_desc: "为支撑数千亿里亚尔的庞大投资，SEC建立了一套成熟的财务与资金管理体系。该体系以集中化、标准化和数字化为特征，旨在提升效率、控制风险，并为公司的战略扩张提供坚实的金融保障。",
+            sec_finance_arch_title: "财务管理架构与共享服务",
+            sec_finance_arch_desc: "SEC的财务管理采用“集团CFO-职能部门-共享服务中心”的现代化组织架构。基于其深度应用的SAP ERP系统，SEC极有可能已实施了财务共享服务中心（FSSC），以处理大量、重复性的交易。",
+            sec_finance_fssc_title: "财务共享服务框架 (推断)",
+            sec_finance_fssc1: "<b>应付账款 (P2P):</b> 集中处理供应商发票、付款和对账，实现采购到付款流程的自动化。",
+            sec_finance_fssc2: "<b>应收账款 (O2C):</b> 统一管理客户账单、收款和信用控制，加速现金回流。",
+            sec_finance_fssc3: "<b>总账与报告 (R2R):</b> 负责会计核算、结账、合并报表和税务遵从，确保财务数据的一致性和准确性。",
+            sec_finance_process_title: "核心财务流程与指标",
+            sec_finance_process_desc: "核心财务流程围绕预算、核算、报告和分析展开。关键管理指标包括：",
+            sec_finance_kpi1: "<b>盈利能力指标:</b> EBITDA利润率、净资产收益率(ROE)。",
+            sec_finance_kpi2: "<b>偿债能力指标:</b> 资产负债率、利息保障倍数。",
+            sec_finance_kpi3: "<b>运营效率指标:</b> 应收账款周转天数(DSO)、总资产周转率。",
+            sec_treasury_system_title: "资金管理体系与挑战",
+            sec_treasury_system_desc: "资金管理由集团司库部门（Treasury Department）集中负责，核心职能是确保公司资金的流动性、安全性与效益性。",
+            sec_treasury_process_label: "核心流程：",
+            sec_treasury_process1: "<b>现金流预测与管理：</b>建立短期和长期的现金流预测模型，通过现金池等工具集中管理集团资金。",
+            sec_treasury_process2: "<b>融资管理：</b>根据资本支出计划，通过发行债券/伊斯兰债券(Sukuk)、银团贷款等方式在全球市场进行大规模融资。",
+            sec_treasury_process3: "<b>风险管理：</b>管理利率风险和外汇风险（因大量进口设备采购产生）。",
+            sec_treasury_challenges_label: "主要挑战：",
+            sec_treasury_challenge1: "<b>巨额融资需求：</b>如何以最优成本、在合适的窗口期完成每年数百亿里亚尔的融资，是最大的挑战。",
+            sec_treasury_challenge2: "<b>复杂的风险敞口：</b>全球利率波动和汇率变化给融资成本和项目成本带来不确定性。",
+            sec_asset_dispatch_title: "SEC 电网资产与调度：保障可靠运行的核心",
+            sec_asset_dispatch_desc: "管理和运营着覆盖全国的庞大电网资产，是SEC最核心的职责。公司建立了一套覆盖资产全生命周期的管理体系和高度集中的调度体系，以确保国家能源大动脉的安全、稳定与高效。",
+            sec_asset_lifecycle_title: "电网设备全生命周期管理",
+            sec_asset_transmission_title: "输电网资产管理 (高价值、高风险)",
+            sec_asset_transmission_desc: "采用“状态修”(Condition-Based Maintenance)为主的策略。通过在线监测、定期巡检和诊断测试，评估变压器、断路器等关键设备健康状况，精确安排维修和技改，最大限度延长资产生命周期并避免非计划停运。",
+            sec_asset_distribution_title: "配电网资产管理 (海量、分散)",
+            sec_asset_distribution_desc: "采用“计划修”(Time-Based Maintenance)与“故障修”相结合的策略。对海量设备（如配电变压器、开关）进行周期性、程序化的维护和更换。同时，通过配电自动化系统(DA)快速响应和处理故障。",
+            sec_asset_mro_title: "MRO物资管理",
+            sec_asset_mro_desc: "维修、修理和运营(MRO)物资，特别是关键备品备件，是保障设备可用率的核心。SEC通过其中央和区域仓库网络，对关键备件（如大型变压器套管、断路器组件）维持较高的安全库存，以应对突发故障和长采购周期。",
+            sec_dispatch_system_title: "电网调度体系与挑战",
+            sec_dispatch_system_desc: "SEC的电网调度采用典型的三级调度架构，由子公司National Grid SA统一负责，确保了对全国电网的高度集中控制。",
+            sec_dispatch_arch_title: "三级调度架构",
+            sec_dispatch_arch1: "<b>国家调度中心 (NCC):</b> 最高层级，负责全国电力平衡、超高压电网运行和跨区域电力交换。",
+            sec_dispatch_arch2: "<b>区域调度中心 (RCC):</b> 负责各自区域内高压电网的运行监控和调度执行。",
+            sec_dispatch_arch3: "<b>地方调度/变电站控制:</b> 负责本地电网和具体设备的实时操作。",
+            sec_dispatch_challenges_label: "主要挑战：",
+            sec_dispatch_challenge1: "<b>可再生能源的波动性：</b>大规模太阳能和风能的间歇性和不确定性，对调度员的预测能力和实时平衡能力提出了前所未有的挑战。",
+            sec_dispatch_challenge2: "<b>系统惯量下降：</b>传统旋转发电机组的减少导致电网惯性降低，使电网在遭受扰动时频率更易发生剧烈波动，对调度系统的快速响应能力要求极高。",
+            sec_supply_chain_title: "SEC 物资供应链：保障转型的生命线",
+            sec_supply_chain_desc: "一个强大而有韧性的供应链是SEC执行其庞大资本项目和维持日常运营的生命线。面对全球性的供应链中断和本土化压力，SEC正在对其供应链战略进行系统性重塑。",
+            sec_supply_procurement_title: "采购规模与类别",
+            sec_supply_procurement_desc: "SEC是沙特最大的采购实体之一。其年度采购额与资本支出高度相关，2024年资本支出高达598亿里亚尔，其中物资采购是主要构成部分。主要采购类别包括：",
+            sec_supply_cat1: "<b>核心电力设备：</b>变压器、开关设备、高压电缆、燃气轮机。",
+            sec_supply_cat2: "<b>数字化设备：</b>智能电表、传感器、通信模块、控制系统硬件。",
+            sec_supply_cat3: "<b>可再生能源相关：</b>光伏组件、逆变器、风力涡轮机部件（通常由IPP采购，但SEC负责并网物资）。",
+            sec_supply_cat4: "<b>日常运维物资：</b>备品备件、绝缘子、铁塔等。",
+            sec_supply_sourcing_title: "采购来源与本土化",
+            sec_supply_sourcing_desc: "目前，高端和技术密集型设备（如大型变压器、HVDC系统、燃气轮机）仍高度依赖进口，主要来源国包括德国(西门子)、瑞士/日本(日立能源)、法国(施耐德)、美国(GE)等。为响应国家战略，SEC正大力推动本土化，目标到2025年实现<span class=\"font-bold text-accent\">60%</span>的本地内容采购，这要求培育和认证更多本土供应商。",
+            sec_supply_warehouse_title: "仓储网络与库存策略",
+            sec_supply_warehouse_desc: "SEC运营着一个全国性的仓储网络，采用“中央-区域”两级布局。在利雅得、吉达、达曼等核心城市设有大型中央仓库，负责大宗物资的存储和调拨；在各运营区域则设有区域仓库，以保障本地项目的及时供应和日常运维需求。这种布局旨在平衡规模经济与响应速度。为应对供应链不确定性，SEC近年来可能采取了提高战略物资安全库存的策略，这虽然会增加库存持有成本，但对于保障项目进度至关重要。其年平均存货金额预计呈上升趋势，以支持庞大的在建项目。",
+            sec_supply_inventory_title: "库存周转率对标分析",
+            sec_supply_inventory_desc: "库存周转率是衡量供应链效率的核心指标。虽然SEC具体数值未公开，但与国际领先电力公司（通常在2-4次/年）相比，SEC可能因其庞大的项目储备和地缘政治风险，而维持一个相对较低的周转率（即更高的库存水平），以优先保障供应安全而非极致的运营效率。",
+            chart_inventory_turnover_title: "库存周转率 (次/年)",
+            chart_inventory_turnover_labels: ['SEC (估算)', '国际标杆 (高效)', '国际标杆 (平均)'],
+            sec_supply_challenges_title: "供应链核心挑战",
+            sec_supply_challenge1: "<b>价格波动与长交货期：</b>全球大宗商品价格波动和核心电力设备（如变压器）长达数年的交货周期，对项目成本和进度构成严重威胁。",
+            sec_supply_challenge2: "<b>本土化压力与质量控制：</b>在快速提升本土采购比例的同时，确保本土供应商的产品质量、技术标准和交付能力达到要求，是一项艰巨任务。",
+            sec_supply_challenge3: "<b>供应链韧性不足：</b>地缘政治冲突和全球性的物流瓶颈，可能随时中断关键物资的供应，对高度依赖进口的高端设备构成风险。",
+            sec_supply_challenge4: "<b>人才短缺：</b>缺乏具备国际视野和专业能力的现代供应链管理人才，制约了供应链数字化和战略优化的进程。",
+            sec_investment_title: "SEC 投资与工程：建设能源帝国的引擎",
+            sec_investment_desc: "SEC庞大的资本支出背后，是一套复杂的投资决策与工程管理体系。该体系旨在将国家的宏伟蓝图转化为具体的电网资产，是推动“2030愿景”落地执行的核心引擎。",
+            sec_investment_decision_title: "投资决策流程与预算",
+            sec_investment_decision_desc: "SEC的投资决策是一个自上而下与自下而上相结合的战略过程：",
+            sec_investment_step1: "<b>战略驱动：</b>所有投资规划的最高指引源自沙特“2030愿景”和国家可再生能源计划（NREP）。",
+            sec_investment_step2: "<b>规划与预测：</b>由专门的规划部门基于长期负荷预测、新能源并网需求和电网可靠性标准，制定5-10年的电网发展总体规划。",
+            sec_investment_step3: "<b>项目立项与预算：</b>各业务部门（输电、配电等）根据总体规划提出具体的年度项目建议和预算申请。年度CAPEX预算（如2024年的598亿里亚尔）由公司高层管理和董事会下属的投资委员会审批，并最终由董事会批准。",
+            sec_investment_step4: "<b>分级授权：</b>投资决策根据项目金额和重要性进行分级授权，重大战略性投资需董事会批准。",
+            sec_investment_eng_title: "工程管理体系",
+            sec_investment_eng_desc: "SEC的工程管理主要由其子公司<span class=\"font-bold text-accent\">沙特电力项目开发公司 (SEPDC)</span> 负责，采用矩阵式管理模式，确保对大型复杂项目的有效控制。",
+            sec_investment_eng_cat: "<b>工程分类：</b>项目按业务领域分为输电、配电、发电和并网四大类。内部再按电压等级（如500kV, 380kV, 132kV）和项目性质（新建、扩建、改造）进行细分管理。",
+            sec_investment_eng_sys: "<b>管理系统：</b>广泛应用企业级的项目管理信息系统（PMIS），如Oracle Primavera或SAP PPM，对项目进度、成本、资源和风险进行全生命周期管理。",
+            sec_investment_eng_chal: "<b>工程挑战：</b>主要挑战在于多项目、跨区域的协同管理复杂性；确保庞大的承包商生态系统遵循统一的质量和安全标准；以及应对因供应链延迟导致的项目进度风险。",
+            sec_investment_eco_title: "工程生态伙伴与分工",
+            sec_investment_eco_desc: "SEC的工程建设严重依赖于一个庞大的国内外承包商生态系统，形成金字塔式分工：",
+            sec_investment_eco1: "<b>国际EPC总包商：</b>如现代工程建设(Hyundai E&C)、拉森特博洛(L&T)、通用电气(GE)，通常负责技术最复杂、规模最大的项目，如HVDC换流站、大型联合循环电厂。",
+            sec_investment_eco2: "<b>区域/本地大型承包商：</b>如Al-Sharif Group, National Contracting Co. (NCC)，承担大量的输变电站和线路工程，是项目执行的主力军。",
+            sec_investment_eco3: "<b>专业分包商与供应商：</b>负责土建、安装、测试等具体环节，或提供单一设备。",
+            sec_investment_cost_title: "超高压输电项目成本构成 (示例)",
+            sec_investment_cost_desc: "以一个典型的380kV超高压输电项目为例，其成本构成大致如下。设备采购（特别是变压器和开关设备）是成本的最主要部分。",
+            chart_uhv_cost_labels: ['设备采购(变压器/开关)', '线路工程(铁塔/导线)', '土建与征地', '工程管理与其他'],
+            sec_challenges_title: "SEC 业务挑战：在转型中寻求平衡",
+            sec_challenges_desc: "作为转型的核心，SEC面临着巨大的“执行三难困境”，即必须在转型速度、经济成本和产业本土化这三个相互制约的目标之间取得精妙平衡。",
+            sec_challenge1_title: "财务压力与投资回报",
+            sec_challenge1_desc: "为实现电网扩张和现代化，公司需要进行史无前例的巨额资本投资，这直接导致短期盈利能力承压。如何在满足国家战略需求与保障股东回报之间找到平衡点，是其核心财务挑战。",
+            sec_challenge2_title: "技术复杂性与系统集成",
+            sec_challenge2_desc: "将高达数十吉瓦的间歇性可再生能源并入现有电网，是一项极其复杂的系统工程。这不仅要求电网具备极高的灵活性，还需解决新旧设备兼容、系统稳定性等一系列技术难题。",
+            sec_challenge3_title: "网络安全与地缘政治风险",
+            sec_challenge3_desc: "IT与OT的深度融合使电网面临的网络攻击面急剧扩大，网络安全已成为事关国家安全的战略性风险。同时，中东地区复杂的地缘政治局势也为供应链安全和长期投资带来了不确定性。",
+            digital_strategy_title: "SEC 数字化战略：构建智能电网",
+            digital_strategy_desc: "为应对挑战并抓住机遇，SEC制定了清晰的数字化战略，旨在构建一个可靠、高效、智能的数字电网。该战略围绕三大核心技术举措展开，并已取得显著成果。",
+            digital_strategy_item1_title: "1. 电网控制中心系统 (SCADA/EMS/DMS)",
+            digital_strategy_item1_desc: "升级电网的“大脑”和“中枢神经”，与全球领先供应商合作，引入更强大的计算平台和高级应用软件，实现对复杂电网的实时监控、精准预测和优化调度。",
+            digital_strategy_item2_title: "2. 高级计量设施 (AMI)",
+            digital_strategy_item2_desc: "已在全国范围内部署超1100万台智能电表，实现100%覆盖。这为需求侧响应、精细化负荷管理和提升客户服务奠定了坚实的数据基础。",
+            digital_strategy_item3_title: "3. 配电自动化 (DA)",
+            digital_strategy_item3_desc: "通过广泛部署传感器和智能开关，实现对配电网故障的快速定位、隔离和恢复，将停电影响降至最低，极大提升供电可靠性。",
+            digital_strategy_kpi_title: "数字化关键指标 (KPI) 进展",
+            chart_digital_kpi_label1: "配电自动化率 (%)",
+            chart_digital_kpi_label2: "数字化成熟度指数 (%)",
+            vision2030_title: "“2030愿景”：雄心勃勃的能源蓝图",
+            vision2030_desc: "“2030愿景”下的国家可再生能源计划（NREP）为沙特电力行业设定了颠覆性目标。其核心是在十年内实现发电结构的根本性转变，并大力发展储能与绿氢，同时通过NEOM等旗舰项目展示未来能源城市的形态。",
+            vision2030_kpi1: "可再生能源发电占比",
+            vision2030_kpi2: "新增可再生能源装机",
+            vision2030_kpi3: "电池储能装机目标",
+            vision2030_kpi4: "绿氢年产量目标",
+            vision2030_chart_title: "能源结构转型：2023 vs 2030",
+            chart_vision2030_labels: ['2023 现状', '2030 目标'],
+            chart_vision2030_dataset_labels: ['石油', '天然气', '可再生能源'],
+            footer_text: "© 2025 沙特电力行业深度分析报告。根据公开信息编制，仅供参考。",
+            lang_switcher_text: "EN"
+        },
+        en: {
+            header_title: "Saudi Power Sector Insights",
+            nav_overview: "Sector Overview",
+            nav_players: "Industry Map",
+            nav_sec_performance: "SEC Performance",
+            nav_sec_org: "SEC Organization",
+            nav_sec_finance: "SEC Finance",
+            nav_sec_asset: "SEC Assets & Dispatch",
+            nav_sec_supply: "SEC Supply Chain",
+            nav_sec_investment: "SEC Investment & Engineering",
+            nav_sec_challenges: "SEC Challenges",
+            nav_digital_strategy: "Digital Strategy",
+            nav_vision2030: "Vision 2030",
+            main_title: "Reshaping the Future of Energy",
+            main_subtitle: "Driven by Vision 2030, Saudi Arabia is undergoing an unprecedented strategic transformation from a traditional oil kingdom to a global sustainable energy powerhouse. This interactive report will guide you through the core of this revolution.",
+            overview_title: "Sector Overview: Current State & Fundamentals",
+            overview_desc: "The Saudi power sector is the largest in the Middle East, currently highly dependent on fossil fuels. To reduce carbon emissions and costs, Saudi Arabia is actively promoting a 'gas for oil' substitution, using natural gas from large fields like Jafurah to replace crude oil in power generation. With continuously growing energy demand and decarbonization strategies, its energy mix is at the starting point of a profound transformation.",
+            overview_chart_title: "Current Generation Mix (2023)",
+            overview_kpi1: "Total Generation in 2023",
+            overview_kpi2: "Fossil Fuel Generation Share",
+            overview_kpi3: "Installed Capacity Growth (CAGR)",
+            overview_kpi4: "Historical Peak Load in 2024",
+            chart_energy_mix_labels: ['Natural Gas', 'Oil', 'Renewables'],
+            players_title: "Industry Map: Key Players",
+            players_desc: "The Saudi electricity market exhibits a 'state capitalism' model: top-level design by the Ministry of Energy, grid assurance by SEC, and core execution by 'national champions' like ACWA Power, supplemented by international capital. Hover over the cards below to understand the position and core role of each major player in the value chain.",
+            players_regulator_title: "Ministry of Energy / SERA",
+            players_regulator_desc: "Top-level design, policy-making, and industry regulation",
+            players_generation_title: "Generation",
+            players_generation_tip_title: "Key Players",
+            players_generation_tip_desc: "ACWA Power (national champion), Saudi Aramco (energy giant), Badeel (sovereign wealth fund), international IPPs (e.g., EDF). They develop large-scale renewable projects through competitive bidding.",
+            players_tn_title: "Transmission & Distribution",
+            players_tn_tip_title: "Core Monopolist",
+            players_tn_tip_desc: "Saudi Electricity Company (SEC) and its subsidiary National Grid SA are responsible for the investment, operation, and maintenance of the national grid.",
+            players_user_title: "End Users",
+            players_user_tip_title: "Main Consumers",
+            players_user_tip_desc: "The residential sector (44.5%) and the commercial & public services sector (39.1%) are the main consumers. Air conditioning is the key driver of summer peak load.",
+            players_supplier_title: "Equipment & Technology Suppliers",
+            players_supplier_desc: "Schneider Electric, GE, Hitachi, Siemens Energy, etc.",
+            sec_performance_title: "SEC Performance Overview: Cornerstone of Transformation",
+            sec_performance_desc: "Saudi Electricity Company (SEC) is the core executor of the country's energy transformation, with a massive asset base. This section uses interactive tabs to display the utility giant's key performance indicators from three dimensions: finance, assets, and operational efficiency.",
+            sec_tab_finance: "Finance & Scale",
+            sec_tab_assets: "Grid Assets & Expansion",
+            sec_tab_ops: "Operations & Efficiency",
+            sec_finance_title: "Financial Performance Amidst Massive Investment",
+            sec_finance_desc: "SEC is in a phase of high growth and huge investment. To support Vision 2030, the company's Capital Expenditure (Capex) has surged, pressuring short-term profitability. However, its large Regulated Asset Base (RAB) and sovereign credit rating provide stability.",
+            sec_finance_kpi1_label: "Total Assets (2023)",
+            sec_finance_kpi2_label: "2024 Revenue",
+            sec_finance_kpi3_label: "2024 Net Profit",
+            sec_finance_kpi4_label: "2024 Capex",
+            chart_sec_finance_label1: "Revenue (SAR bn)",
+            chart_sec_finance_label2: "Capex (SAR bn)",
+            sec_assets_title: "Ambitious Grid Expansion Plan",
+            sec_assets_desc: "To accommodate large-scale renewable energy, SEC is expanding its grid at an unprecedented rate. The plan is to increase transmission line length by 60% by 2030 and invest heavily in modern technologies like HVDC and BESS.",
+            sec_assets_kpi1_label: "Transmission Lines (Current)",
+            sec_assets_kpi2_label: "Transmission Lines (2030 Target)",
+            sec_assets_kpi3_label: "Renewables Grid Connection (Under Const.)",
+            sec_assets_tech_title: "Key Technology Upgrades",
+            sec_assets_tech1: "<b>HVDC:</b> Building 9 new lines for long-distance, high-capacity power transmission.",
+            sec_assets_tech2: "<b>BESS:</b> Integrating 48 GWh of energy storage to smooth renewable fluctuations and meet peak loads.",
+            sec_assets_tech3: "<b>ESG Goals:</b> Achieve operational net-zero by 2050 and raise S&P ESG score to 50.",
+            sec_ops_title: "Operational Efficiency & Localization",
+            sec_ops_desc: "Through digital transformation, SEC's supply reliability has continuously improved. The company is also strongly promoting localization, with an employee localization rate of 94% and a target of 60% local content in procurement by 2025.",
+            sec_ops_kpi1_label: "Employee Localization Rate",
+            sec_ops_kpi2_label: "Customer Satisfaction",
+            sec_ops_kpi3_label: "Power Plant Availability",
+            chart_sec_ops_label1: "SAIDI (Annual outage minutes)",
+            chart_sec_ops_label2: "SAIFI (Annual outage frequency)",
+            sec_org_title: "SEC Organization & Operations: An Internal Analysis",
+            sec_org_desc: "This section is based on cross-validation of SEC's annual reports, investor presentations, and public partnership information. SEC employs a composite model of vertical integration and specialized subsidiaries to enhance operational efficiency. Its IT architecture is undergoing a comprehensive upgrade to support digital transformation.",
+            sec_org_structure_title: "Organizational Structure & Core Subsidiaries",
+            sec_org_parent_title: "Saudi Electricity Company (SEC) - Holding",
+            sec_org_parent_desc: "Strategic planning, investment management, group oversight",
+            sec_org_sub1_title: "National Grid SA",
+            sec_org_sub1_desc: "100% owned. Operates, controls, and maintains the national transmission network (>380kV), acting as the grid's 'central nervous system'.",
+            sec_org_sub2_title: "Saudi Energy Production Co.",
+            sec_org_sub2_desc: "Manages and operates SEC's own generation assets, driving 'gas for oil' substitution and efficiency improvements.",
+            sec_org_sub3_title: "Saudi Electricity Projects Development Co. (SEPDC)",
+            sec_org_sub3_desc: "As the engineering arm, it designs, manages, and supervises large-scale grid expansion and interconnection projects.",
+            sec_org_sub4_title: "Dawiyat Telecom Co.",
+            sec_org_sub4_desc: "Leverages power fiber optic network resources for telecom and data services, an attempt at asset diversification.",
+            sec_org_model_title: "Control Model & Core Business Processes",
+            sec_org_model_desc: "SEC's control model is a typical 'centralized control, specialized operation'. The parent company handles strategy and capital allocation, while subsidiaries operate as specialized profit centers. Core processes include:<br>• <b><span data-lang-key='sec_org_flow1'>Generation</span>:</b> <span data-lang-key='sec_org_flow1_desc'>Own power plant operation + PPA with IPPs.</span><br>• <b><span data-lang-key='sec_org_flow2'>Transmission</span>:</b> <span data-lang-key='sec_org_flow2_desc'>Unified dispatch and maintenance by National Grid SA to ensure national power balance.</span><br>• <b><span data-lang-key='sec_org_flow3'>Distribution</span>:</b> <span data-lang-key='sec_org_flow3_desc'>Regional branches are responsible for local distribution network O&M and customer service.</span><br>• <b><span data-lang-key='sec_org_flow4'>Customer Service</span>:</b> <span data-lang-key='sec_org_flow4_desc'>Services provided through digital channels (e.g., AlKahraba App) and physical offices.</span>",
+            sec_org_flow1: "Generation",
+            sec_org_flow1_desc: "Own power plant operation + PPA with IPPs.",
+            sec_org_flow2: "Transmission",
+            sec_org_flow2_desc: "Unified dispatch and maintenance by National Grid SA to ensure national power balance.",
+            sec_org_flow3: "Distribution",
+            sec_org_flow3_desc: "Regional branches are responsible for local distribution network O&M and customer service.",
+            sec_org_flow4: "Customer Service",
+            sec_org_flow4_desc: "Services provided through digital channels (e.g., AlKahraba App) and physical offices.",
+            sec_org_it_title: "IT Architecture & Core Application Systems",
+            sec_org_it1_desc: "The 'brain' of the grid, used for real-time monitoring and energy management of the transmission network. Upgrading the national control center in partnership with Hitachi Energy.",
+            sec_org_it2_desc: "The 'brain' of the distribution network, enabling advanced distribution automation (DA) and fault detection (FDIR). Deployed in partnership with Schneider Electric.",
+            sec_org_it3_desc: "Advanced Metering Infrastructure, with over 11 million smart meters nationwide providing massive electricity consumption data.",
+            sec_org_it4_desc: "Enterprise Resource Planning system, used to manage core back-office functions like finance, HR, procurement, and supply chain.",
+            sec_org_it5_desc: "Geographic Information System, used for visual management, planning, and analysis of grid assets.",
+            sec_org_it6_desc: "A mobile application for end customers, providing digital services like bill inquiry, payment, and service requests.",
+            sec_finance_treasury_title: "SEC Finance & Treasury Management: The Financial Hub for Transformation",
+            sec_finance_treasury_desc: "To support massive investments worth hundreds of billions of riyals, SEC has established a mature finance and treasury management system. Characterized by centralization, standardization, and digitalization, this system aims to enhance efficiency, control risks, and provide solid financial backing for the company's strategic expansion.",
+            sec_finance_arch_title: "Financial Management Architecture & Shared Services",
+            sec_finance_arch_desc: "SEC's financial management adopts a modern organizational structure of 'Group CFO - Functional Departments - Shared Service Center'. Based on its extensive use of the SAP ERP system, it is highly likely that SEC has implemented a Financial Shared Service Center (FSSC) to handle high-volume, repetitive transactions.",
+            sec_finance_fssc_title: "Financial Shared Services Framework (Inferred)",
+            sec_finance_fssc1: "<b>Procure-to-Pay (P2P):</b> Centralized processing of supplier invoices, payments, and reconciliations to automate the procurement-to-payment process.",
+            sec_finance_fssc2: "<b>Order-to-Cash (O2C):</b> Unified management of customer billing, collections, and credit control to accelerate cash flow.",
+            sec_finance_fssc3: "<b>Record-to-Report (R2R):</b> Responsible for accounting, closing, consolidation, and tax compliance to ensure data consistency and accuracy.",
+            sec_finance_process_title: "Core Financial Processes & KPIs",
+            sec_finance_process_desc: "Core financial processes revolve around budgeting, accounting, reporting, and analysis. Key management indicators include:",
+            sec_finance_kpi1: "<b>Profitability Ratios:</b> EBITDA Margin, Return on Equity (ROE).",
+            sec_finance_kpi2: "<b>Solvency Ratios:</b> Debt-to-Asset Ratio, Interest Coverage Ratio.",
+            sec_finance_kpi3: "<b>Efficiency Ratios:</b> Days Sales Outstanding (DSO), Total Asset Turnover.",
+            sec_treasury_system_title: "Treasury Management System & Challenges",
+            sec_treasury_system_desc: "Treasury management is centrally handled by the Group Treasury Department, with the core function of ensuring the company's liquidity, security, and profitability of funds.",
+            sec_treasury_process_label: "Core Processes:",
+            sec_treasury_process1: "<b>Cash Flow Forecasting & Management:</b> Establishing short and long-term cash flow forecasting models and centrally managing group funds through tools like cash pooling.",
+            sec_treasury_process2: "<b>Financing Management:</b> Securing large-scale financing from global markets through bonds/Sukuk, syndicated loans, etc., based on capital expenditure plans.",
+            sec_treasury_process3: "<b>Risk Management:</b> Managing interest rate and foreign exchange risks (arising from large-scale imports of equipment).",
+            sec_treasury_challenges_label: "Key Challenges:",
+            sec_treasury_challenge1: "<b>Huge Financing Needs:</b> The biggest challenge is completing annual financing of tens of billions of riyals at optimal cost and within the right window.",
+            sec_treasury_challenge2: "<b>Complex Risk Exposure:</b> Global interest rate and exchange rate fluctuations create uncertainty for financing and project costs.",
+            sec_asset_dispatch_title: "SEC Grid Assets & Dispatch: The Core of Reliable Operation",
+            sec_asset_dispatch_desc: "Managing and operating the vast, nationwide grid assets is SEC's most critical responsibility. The company has established a full lifecycle asset management system and a highly centralized dispatch system to ensure the safety, stability, and efficiency of the nation's energy artery.",
+            sec_asset_lifecycle_title: "Grid Asset Lifecycle Management",
+            sec_asset_transmission_title: "Transmission Asset Management (High-Value, High-Risk)",
+            sec_asset_transmission_desc: "Primarily adopts a Condition-Based Maintenance strategy. Through online monitoring, regular inspections, and diagnostic tests, it assesses the health of key assets like transformers and circuit breakers to precisely schedule maintenance and retrofits, maximizing asset life and avoiding unplanned outages.",
+            sec_asset_distribution_title: "Distribution Asset Management (High-Volume, Dispersed)",
+            sec_asset_distribution_desc: "Employs a combination of Time-Based Maintenance and Corrective Maintenance. It involves periodic, programmed maintenance and replacement of numerous assets (e.g., distribution transformers, switches). Distribution Automation (DA) systems are used for rapid fault response and handling.",
+            sec_asset_mro_title: "MRO Materials Management",
+            sec_asset_mro_desc: "Maintenance, Repair, and Operations (MRO) materials, especially critical spare parts, are key to ensuring equipment availability. SEC maintains high safety stocks of critical spares (e.g., large transformer bushings, circuit breaker components) in its central and regional warehouse network to cope with sudden failures and long procurement lead times.",
+            sec_dispatch_system_title: "Grid Dispatch System & Challenges",
+            sec_dispatch_system_desc: "SEC's grid dispatch uses a typical three-tiered architecture, uniformly managed by its subsidiary National Grid SA, ensuring highly centralized control over the national grid.",
+            sec_dispatch_arch_title: "Three-Tiered Dispatch Architecture",
+            sec_dispatch_arch1: "<b>National Control Center (NCC):</b> The highest level, responsible for national power balance, EHV grid operation, and inter-regional power exchange.",
+            sec_dispatch_arch2: "<b>Regional Control Centers (RCC):</b> Responsible for monitoring and dispatch execution of the HV grid within their respective regions.",
+            sec_dispatch_arch3: "<b>Local Dispatch/Substation Control:</b> Responsible for real-time operation of local grids and specific equipment.",
+            sec_dispatch_challenges_label: "Key Challenges:",
+            sec_dispatch_challenge1: "<b>Volatility of Renewables:</b> The intermittency and uncertainty of large-scale solar and wind power pose unprecedented challenges to dispatchers' forecasting and real-time balancing capabilities.",
+            sec_dispatch_challenge2: "<b>Decreased System Inertia:</b> The reduction of traditional rotating generators lowers grid inertia, making the grid more susceptible to sharp frequency fluctuations during disturbances, demanding extremely fast response from the dispatch system.",
+            sec_supply_chain_title: "SEC Supply Chain: The Lifeline of Transformation",
+            sec_supply_chain_desc: "A strong and resilient supply chain is the lifeline for SEC to execute its vast capital projects and maintain daily operations. Facing global supply chain disruptions and localization pressures, SEC is systematically reshaping its supply chain strategy.",
+            sec_supply_procurement_title: "Procurement Scale & Categories",
+            sec_supply_procurement_desc: "SEC is one of the largest procurement entities in Saudi Arabia. Its annual procurement value is highly correlated with capital expenditure, which reached SAR 59.8 billion in 2024, with material procurement being a major component. Key categories include:",
+            sec_supply_cat1: "<b>Core Power Equipment:</b> Transformers, switchgear, high-voltage cables, gas turbines.",
+            sec_supply_cat2: "<b>Digital Equipment:</b> Smart meters, sensors, communication modules, control system hardware.",
+            sec_supply_cat3: "<b>Renewable Energy Related:</b> PV modules, inverters, wind turbine components (usually procured by IPPs, but SEC handles grid connection materials).",
+            sec_supply_cat4: "<b>Daily O&M Materials:</b> Spare parts, insulators, towers, etc.",
+            sec_supply_sourcing_title: "Sourcing & Localization",
+            sec_supply_sourcing_desc: "Currently, high-end and technology-intensive equipment (e.g., large transformers, HVDC systems, gas turbines) are still highly dependent on imports, with main source countries including Germany (Siemens), Switzerland/Japan (Hitachi Energy), France (Schneider), and the USA (GE). In response to national strategy, SEC is vigorously promoting localization, aiming for <span class=\"font-bold text-accent\">60%</span> local content in procurement by 2025, which requires cultivating and certifying more local suppliers.",
+            sec_supply_warehouse_title: "Warehouse Network & Inventory Strategy",
+            sec_supply_warehouse_desc: "SEC operates a nationwide warehouse network with a 'central-regional' two-tier layout. Large central warehouses in key cities like Riyadh, Jeddah, and Dammam handle bulk material storage and allocation, while regional warehouses supply local projects and daily O&M needs. This layout aims to balance economies of scale with responsiveness. To cope with supply chain uncertainty, SEC has likely adopted a strategy of increasing safety stocks for strategic materials in recent years. While this increases holding costs, it is crucial for ensuring project timelines. Its average annual inventory value is expected to trend upwards to support the massive projects under construction.",
+            sec_supply_inventory_title: "Inventory Turnover Benchmarking",
+            sec_supply_inventory_desc: "Inventory turnover is a key metric for supply chain efficiency. Although SEC's specific figures are not public, compared to leading international power companies (typically 2-4 times/year), SEC may maintain a relatively low turnover rate (i.e., higher inventory levels) due to its large project pipeline and geopolitical risks, prioritizing supply security over ultimate operational efficiency.",
+            chart_inventory_turnover_title: "Inventory Turnover (Times/Year)",
+            chart_inventory_turnover_labels: ['SEC (Est.)', 'Global Benchmark (High)', 'Global Benchmark (Avg)'],
+            sec_supply_challenges_title: "Core Supply Chain Challenges",
+            sec_supply_challenge1: "<b>Price Volatility & Long Lead Times:</b> Global commodity price fluctuations and lead times of several years for core power equipment (like transformers) pose a serious threat to project costs and schedules.",
+            sec_supply_challenge2: "<b>Localization Pressure & Quality Control:</b> Ensuring that local suppliers meet quality, technical, and delivery standards while rapidly increasing local procurement is a daunting task.",
+            sec_supply_challenge3: "<b>Lack of Supply Chain Resilience:</b> Geopolitical conflicts and global logistics bottlenecks can disrupt the supply of critical materials at any time, posing a risk to high-end equipment that is heavily reliant on imports.",
+            sec_supply_challenge4: "<b>Talent Shortage:</b> A lack of modern supply chain management talent with an international perspective and professional skills hinders the progress of supply chain digitalization and strategic optimization.",
+            sec_investment_title: "SEC Investment & Engineering: The Engine for Building an Energy Empire",
+            sec_investment_desc: "Behind SEC's massive capital expenditure lies a complex system of investment decision-making and engineering management. This system is designed to translate the nation's grand blueprint into tangible grid assets and is the core engine driving the execution of Vision 2030.",
+            sec_investment_decision_title: "Investment Decision Process & Budget",
+            sec_investment_decision_desc: "SEC's investment decision-making is a strategic process combining top-down and bottom-up approaches:",
+            sec_investment_step1: "<b>Strategy-Driven:</b> The highest guidance for all investment planning comes from Saudi Vision 2030 and the National Renewable Energy Program (NREP).",
+            sec_investment_step2: "<b>Planning & Forecasting:</b> A dedicated planning department develops a 5-10 year grid development master plan based on long-term load forecasts, renewable integration needs, and grid reliability standards.",
+            sec_investment_step3: "<b>Project Initiation & Budgeting:</b> Business units (e.g., transmission, distribution) propose specific annual project proposals and budget requests based on the master plan. The annual CAPEX budget (e.g., SAR 59.8 billion in 2024) is reviewed by senior management and the board's investment committee, and finally approved by the board.",
+            sec_investment_step4: "<b>Delegation of Authority:</b> Investment decisions are authorized at different levels based on project value and importance, with major strategic investments requiring board approval.",
+            sec_investment_eng_title: "Engineering Management System",
+            sec_investment_eng_desc: "SEC's engineering management is primarily handled by its subsidiary, the <span class=\"font-bold text-accent\">Saudi Electricity Projects Development Company (SEPDC)</span>, using a matrix management model to ensure effective control over large, complex projects.",
+            sec_investment_eng_cat: "<b>Project Classification:</b> Projects are categorized by business area into transmission, distribution, generation, and interconnection. They are further subdivided by voltage level (e.g., 500kV, 380kV, 132kV) and project type (new, expansion, refurbishment).",
+            sec_investment_eng_sys: "<b>Management Systems:</b> Extensive use of enterprise-level Project Management Information Systems (PMIS), such as Oracle Primavera or SAP PPM, for full lifecycle management of project schedule, cost, resources, and risks.",
+            sec_investment_eng_chal: "<b>Engineering Challenges:</b> Key challenges include the complexity of coordinating multiple projects across different regions, ensuring the vast ecosystem of contractors adheres to uniform quality and safety standards, and managing project schedule risks caused by supply chain delays.",
+            sec_investment_eco_title: "Engineering Ecosystem & Division of Labor",
+            sec_investment_eco_desc: "SEC's construction relies heavily on a vast ecosystem of domestic and international contractors, forming a pyramidal division of labor:",
+            sec_investment_eco1: "<b>International EPC Contractors:</b> Such as Hyundai E&C, Larsen & Toubro (L&T), and General Electric (GE), typically handle the most technically complex and largest projects, like HVDC converter stations and large combined-cycle power plants.",
+            sec_investment_eco2: "<b>Regional/Local Large Contractors:</b> Such as Al-Sharif Group and National Contracting Co. (NCC), undertake a large number of transmission substation and line projects and are the main force in project execution.",
+            sec_investment_eco3: "<b>Specialized Subcontractors & Suppliers:</b> Responsible for specific tasks like civil works, installation, and testing, or providing single pieces of equipment.",
+            sec_investment_cost_title: "EHV Transmission Project Cost Breakdown (Example)",
+            sec_investment_cost_desc: "For a typical 380kV EHV transmission project, the cost breakdown is roughly as follows. Equipment procurement (especially transformers and switchgear) is the largest cost component.",
+            chart_uhv_cost_labels: ['Equipment (Transformers/Switchgear)', 'Line Works (Towers/Conductors)', 'Civil Works & Land', 'Engineering & Others'],
+            sec_challenges_title: "SEC's Business Challenges: Seeking Balance in Transformation",
+            sec_challenges_desc: "As the core of the transformation, SEC faces a significant 'Execution Trilemma', needing to strike a delicate balance between the speed of transformation, economic costs, and industrial localization.",
+            sec_challenge1_title: "Financial Pressure & Investment Returns",
+            sec_challenge1_desc: "To achieve grid expansion and modernization, the company needs to make unprecedentedly large capital investments, which directly pressures short-term profitability. Finding a balance between meeting national strategic needs and ensuring shareholder returns is a core financial challenge.",
+            sec_challenge2_title: "Technical Complexity & System Integration",
+            sec_challenge2_desc: "Integrating tens of gigawatts of intermittent renewable energy into the existing grid is an extremely complex engineering task. This requires not only high grid flexibility but also solutions for compatibility between old and new equipment and system stability issues.",
+            sec_challenge3_title: "Cybersecurity & Geopolitical Risks",
+            sec_challenge3_desc: "The deep integration of IT and OT dramatically expands the grid's attack surface, making cybersecurity a strategic risk concerning national security. Meanwhile, the complex geopolitical situation in the Middle East brings uncertainty to supply chain security and long-term investment.",
+            digital_strategy_title: "SEC's Digital Strategy: Building the Smart Grid",
+            digital_strategy_desc: "To address challenges and seize opportunities, SEC has formulated a clear digital strategy aimed at building a reliable, efficient, and intelligent digital grid. This strategy revolves around three core technological initiatives and has already achieved significant results.",
+            digital_strategy_item1_title: "1. Grid Control Center Systems (SCADA/EMS/DMS)",
+            digital_strategy_item1_desc: "Upgrading the grid's 'brain' and 'central nervous system' by partnering with leading global suppliers to introduce more powerful computing platforms and advanced application software for real-time monitoring, accurate forecasting, and optimized dispatch of the complex grid.",
+            digital_strategy_item2_title: "2. Advanced Metering Infrastructure (AMI)",
+            digital_strategy_item2_desc: "Over 11 million smart meters have been deployed nationwide, achieving 100% coverage. This provides a solid data foundation for demand-side response, refined load management, and enhanced customer services.",
+            digital_strategy_item3_title: "3. Distribution Automation (DA)",
+            digital_strategy_item3_desc: "By widely deploying sensors and smart switches, it enables rapid fault location, isolation, and service restoration, minimizing the impact of outages and significantly improving supply reliability.",
+            digital_strategy_kpi_title: "Digitalization Key Performance Indicators (KPIs) Progress",
+            chart_digital_kpi_label1: "Distribution Automation Rate (%)",
+            chart_digital_kpi_label2: "Digital Maturity Index (%)",
+            vision2030_title: "Vision 2030: An Ambitious Energy Blueprint",
+            vision2030_desc: "The National Renewable Energy Program (NREP) under Vision 2030 sets disruptive goals for the Saudi power sector. Its core is to achieve a fundamental shift in the generation mix within a decade, vigorously develop energy storage and green hydrogen, and showcase future energy cities through flagship projects like NEOM.",
+            vision2030_kpi1: "Renewable Energy Generation Share",
+            vision2030_kpi2: "New Renewable Energy Capacity",
+            vision2030_kpi3: "Battery Storage Target",
+            vision2030_kpi4: "Green Hydrogen Annual Production Target",
+            vision2030_chart_title: "Energy Mix Transformation: 2023 vs 2030",
+            chart_vision2030_labels: ['2023 Status', '2030 Target'],
+            chart_vision2030_dataset_labels: ['Oil', 'Natural Gas', 'Renewables'],
+            footer_text: "© 2025 Saudi Power Sector Deep Dive. Compiled from public information for reference only.",
+            lang_switcher_text: "CN"
+        }
     };
 
-    const ctxEnergyMix = document.getElementById('energyMixChart').getContext('2d');
-    new Chart(ctxEnergyMix, {
-        type: 'doughnut',
-        data: {
-            labels: ['天然气发电', '石油发电', '可再生能源'],
-            datasets: [{
-                data: [62, 37, 1],
-                backgroundColor: [chartColors.gas, chartColors.oil, chartColors.renewable],
-                borderColor: '#ffffff',
-                borderWidth: 2,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom' },
-                tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw}%` } }
+    let currentLang = 'zh';
+    let charts = {};
+
+    function updateTextContent(lang) {
+        document.querySelectorAll('[data-lang-key]').forEach(el => {
+            const key = el.dataset.langKey;
+            if (translations[lang] && translations[lang][key]) {
+                el.innerHTML = translations[lang][key];
             }
-        }
-    });
+        });
+        document.documentElement.lang = lang;
+        const langSwitcher = document.getElementById('lang-switcher');
+        langSwitcher.textContent = translations[lang].lang_switcher_text;
+    }
 
-    const secTabs = document.getElementById('sec-tabs');
-    const secContents = document.querySelectorAll('.sec-tab-content');
-    secTabs.addEventListener('click', (e) => {
-        if (e.target.tagName === 'BUTTON') {
-            secTabs.querySelector('.active').classList.remove('active');
-e.target.classList.add('active');
+    function populateMobileNav(lang) {
+        const mobileNav = document.getElementById('mobile-nav');
+        mobileNav.innerHTML = '';
+        const navKeys = [
+            'nav_overview', 'nav_players', 'nav_sec_performance', 'nav_sec_org', 'nav_sec_finance', 'nav_sec_asset',
+            'nav_sec_supply', 'nav_sec_investment', 'nav_sec_challenges', 'nav_digital_strategy', 'nav_vision2030'
+        ];
+        const hrefs = [
+            '#overview', '#players', '#sec-performance', '#sec-org', '#sec-finance-treasury', '#sec-asset-dispatch',
+            '#sec-supply-chain', '#sec-investment-engineering', '#sec-challenges', '#digital-strategy', '#vision2030'
+        ];
 
-            secContents.forEach(content => content.classList.add('hidden'));
-            document.getElementById(e.target.dataset.target).classList.remove('hidden');
-        }
-    });
+        navKeys.forEach((key, index) => {
+            const option = document.createElement('option');
+            option.value = hrefs[index];
+            option.textContent = translations[lang][key];
+            mobileNav.appendChild(option);
+        });
+    }
 
-    const ctxSecFinance = document.getElementById('secFinanceChart').getContext('2d');
-    new Chart(ctxSecFinance, {
-        type: 'bar',
-        data: {
-            labels: ['2023', '2024'],
-            datasets: [{
-                label: '营收 (亿里亚尔)',
-                data: [753.6, 887],
-                backgroundColor: chartColors.accent,
-            }, {
-                label: '资本支出 (亿里亚尔)',
-                data: [415.8, 598],
-                backgroundColor: chartColors.capex,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true } },
-            plugins: { legend: { position: 'bottom' } }
-        }
-    });
+    function destroyCharts() {
+        Object.values(charts).forEach(chart => chart.destroy());
+        charts = {};
+    }
 
-    const ctxSecOps = document.getElementById('secOpsChart').getContext('2d');
-    new Chart(ctxSecOps, {
-        type: 'line',
-        data: {
-            labels: ['2020', '2021', '2022', '2023', '2024'],
-            datasets: [{
-                label: 'SAIDI (年均停电分钟)',
-                data: [112.6, 95, 85, 78.6, 68.5],
-                borderColor: chartColors.accent,
-                backgroundColor: chartColors.accent,
-                tension: 0.1
+    function createCharts(lang) {
+        destroyCharts();
+        
+        const chartColors = {
+            gas: 'rgba(74, 144, 226, 0.8)', oil: 'rgba(61, 58, 54, 0.8)', renewable: 'rgba(106, 179, 104, 0.8)',
+            accent: 'rgba(140, 106, 70, 0.9)', capex: 'rgba(217, 95, 95, 0.8)', equipment: 'rgba(192, 114, 60, 0.8)',
+            civil: 'rgba(120, 144, 156, 0.8)', engineering: 'rgba(141, 110, 99, 0.8)'
+        };
+
+        charts.energyMix = new Chart(document.getElementById('energyMixChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: translations[lang].chart_energy_mix_labels,
+                datasets: [{ data: [62, 37, 1], backgroundColor: [chartColors.gas, chartColors.oil, chartColors.renewable], borderColor: '#ffffff', borderWidth: 2 }]
             },
-            {
-                label: 'SAIFI (年均停电次数)',
-                data: [2.61, 2.2, 1.9, 1.71, 1.47],
-                borderColor: chartColors.gas,
-                backgroundColor: chartColors.gas,
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: false } },
-            plugins: { legend: { position: 'bottom' } }
-        }
-    });
-    
-    const ctxVision2030 = document.getElementById('vision2030Chart').getContext('2d');
-    new Chart(ctxVision2030, {
-        type: 'bar',
-        data: {
-            labels: ['2023 现状', '2030 目标'],
-            datasets: [
-                {
-                    label: '石油',
-                    data: [37, 0],
-                    backgroundColor: chartColors.oil,
-                },
-                {
-                    label: '天然气',
-                    data: [62, 50],
-                    backgroundColor: chartColors.gas,
-                },
-                {
-                    label: '可再生能源',
-                    data: [1, 50],
-                    backgroundColor: chartColors.renewable,
-                }
-            ]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: { stacked: true, max: 100, ticks: { callback: (value) => value + '%' } },
-                y: { stacked: true }
-            },
-            plugins: {
-                legend: { position: 'bottom' },
-                tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.raw}%` } }
-            }
-        }
-    });
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (c) => `${c.label}: ${c.raw}%` } } } }
+        });
 
-    const ctxDigitalization = document.getElementById('digitalizationChart').getContext('2d');
-    new Chart(ctxDigitalization, {
-        type: 'line',
-        data: {
-            labels: ['2020', '2021', '2022', '2023', '2024'],
-            datasets: [{
-                label: '配电自动化率 (%)',
-                data: [4.0, 15, 20, 24.5, 36.4],
-                borderColor: chartColors.accent,
-                backgroundColor: chartColors.accent,
-                tension: 0.1,
+        charts.secFinance = new Chart(document.getElementById('secFinanceChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['2023', '2024'],
+                datasets: [
+                    { label: translations[lang].chart_sec_finance_label1, data: [753.6, 887], backgroundColor: chartColors.accent },
+                    { label: translations[lang].chart_sec_finance_label2, data: [415.8, 598], backgroundColor: chartColors.capex }
+                ]
             },
-            {
-                label: '数字化成熟度指数 (%)',
-                data: [71, 74, 76, 77, 82.3],
-                borderColor: chartColors.gas,
-                backgroundColor: chartColors.gas,
-                tension: 0.1,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true, max: 100 } },
-            plugins: { legend: { position: 'bottom' } }
-        }
-    });
-    
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        charts.secOps = new Chart(document.getElementById('secOpsChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['2020', '2021', '2022', '2023', '2024'],
+                datasets: [
+                    { label: translations[lang].chart_sec_ops_label1, data: [112.6, 95, 85, 78.6, 68.5], borderColor: chartColors.accent, backgroundColor: chartColors.accent, tension: 0.1 },
+                    { label: translations[lang].chart_sec_ops_label2, data: [2.61, 2.2, 1.9, 1.71, 1.47], borderColor: chartColors.gas, backgroundColor: chartColors.gas, tension: 0.1 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } }, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        charts.vision2030 = new Chart(document.getElementById('vision2030Chart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: translations[lang].chart_vision2030_labels,
+                datasets: [
+                    { label: translations[lang].chart_vision2030_dataset_labels[0], data: [37, 0], backgroundColor: chartColors.oil },
+                    { label: translations[lang].chart_vision2030_dataset_labels[1], data: [62, 50], backgroundColor: chartColors.gas },
+                    { label: translations[lang].chart_vision2030_dataset_labels[2], data: [1, 50], backgroundColor: chartColors.renewable }
+                ]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true, max: 100, ticks: { callback: (v) => v + '%' } }, y: { stacked: true } }, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.raw}%` } } } }
+        });
+
+        charts.digitalization = new Chart(document.getElementById('digitalizationChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['2020', '2021', '2022', '2023', '2024'],
+                datasets: [
+                    { label: translations[lang].chart_digital_kpi_label1, data: [4.0, 15, 20, 24.5, 36.4], borderColor: chartColors.accent, backgroundColor: chartColors.accent, tension: 0.1 },
+                    { label: translations[lang].chart_digital_kpi_label2, data: [71, 74, 76, 77, 82.3], borderColor: chartColors.gas, backgroundColor: chartColors.gas, tension: 0.1 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        charts.inventoryTurnover = new Chart(document.getElementById('inventoryTurnoverChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: translations[lang].chart_inventory_turnover_labels,
+                datasets: [{ label: translations[lang].chart_inventory_turnover_title, data: [1.8, 4.0, 2.5], backgroundColor: [chartColors.capex, chartColors.renewable, chartColors.accent] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, title: { display: true, text: translations[lang].chart_inventory_turnover_title } } }, plugins: { legend: { display: false } } }
+        });
+
+        charts.UHVProjectCost = new Chart(document.getElementById('UHVProjectCostChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: translations[lang].chart_uhv_cost_labels,
+                datasets: [{ data: [45, 25, 20, 10], backgroundColor: [chartColors.equipment, chartColors.accent, chartColors.civil, chartColors.engineering], borderColor: '#ffffff', borderWidth: 2 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (c) => `${c.label}: ${c.raw}%` } } } }
+        });
+    }
+
+    function switchLanguage() {
+        currentLang = currentLang === 'zh' ? 'en' : 'zh';
+        updateTextContent(currentLang);
+        populateMobileNav(currentLang);
+        createCharts(currentLang);
+    }
+
+    document.getElementById('lang-switcher').addEventListener('click', switchLanguage);
+
     const navLinks = document.querySelectorAll('.nav-link');
     const sections = document.querySelectorAll('main section');
     window.addEventListener('scroll', () => {
@@ -566,7 +1148,7 @@ e.target.classList.add('active');
         });
         
         const mobileNav = document.getElementById('mobile-nav');
-        if (mobileNav.options[mobileNav.selectedIndex].value !== `#${current}`) {
+        if (mobileNav.options.length > 0 && mobileNav.options[mobileNav.selectedIndex].value !== `#${current}`) {
             for (let i = 0; i < mobileNav.options.length; i++) {
                 if (mobileNav.options[i].value === `#${current}`) {
                     mobileNav.selectedIndex = i;
@@ -578,11 +1160,13 @@ e.target.classList.add('active');
 
     document.getElementById('mobile-nav').addEventListener('change', function() {
         const sectionId = this.value;
-        document.querySelector(sectionId).scrollIntoView({
-            behavior: 'smooth'
-        });
+        document.querySelector(sectionId).scrollIntoView({ behavior: 'smooth' });
     });
 
+    // Initial load
+    updateTextContent(currentLang);
+    populateMobileNav(currentLang);
+    createCharts(currentLang);
 });
 </script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
