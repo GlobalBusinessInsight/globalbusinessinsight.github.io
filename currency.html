@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三十年风云：中美宏观经济指标全景透视</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <!-- Chosen Palette: Warm Neutral (Stone) with a professional Slate blue and a contrasting Red accent -->
+    <!-- Application Structure Plan: The application now uses a tabbed interface to manage multiple charts, preventing UI clutter. Tab 1 shows the original interest rate comparison. A new Tab 2, "Exchange Rate & Money Supply," contains three new charts: USD/CNY exchange rate, M1 comparison, and M2 comparison. This structure separates different analytical dimensions (policy rates vs. liquidity/FX) for a clearer, more organized user experience. A language switcher has been added. -->
+    <!-- Visualization & Content Choices: Report Info: Added USD/CNY exchange rate, M1, and M2 data for both countries. -> Goal: Compare liquidity, monetary base, and currency valuation. -> Viz/Presentation: Three new Chart.js line charts are created within a new tab. M1 and M2 charts use a logarithmic Y-axis to accurately represent exponential growth over a long period. -> Interaction: Users switch between chart views using tabs. The interest rate toggle is retained in its tab. Language can be switched via header buttons. -> Justification: Tabs are ideal for managing multiple complex visualizations. A logarithmic scale is essential for comparing money supply data. The language switcher enhances accessibility. -> Library/Method: Chart.js, vanilla JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .lang-button.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .tab-button.active {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        .era-button {
+            transition: all 0.3s ease;
+        }
+        .era-button.active {
+            background-color: #475569; /* slate-600 */
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .content-era {
+            display: none;
+            animation: fadeIn 0.8s;
+        }
+        .content-era.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chart-container {
+            position: relative;
+            height: 45vh;
+            max-height: 450px;
+            width: 100%;
+        }
+        /* Toggle Switch Styles */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #ef4444; /* red-500 */
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #ef4444; /* red-500 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto px-4 py-8 md:py-12">
+        <div class="flex justify-end mb-2">
+            <div id="language-switcher" class="flex space-x-1 bg-white p-1 rounded-lg shadow-sm border">
+                <button data-lang="zh" class="lang-button text-sm font-bold py-1 px-3 rounded-md transition-colors duration-300">ZH</button>
+                <button data-lang="en" class="lang-button text-sm font-bold py-1 px-3 rounded-md transition-colors duration-300">EN</button>
+                <button data-lang="fr" class="lang-button text-sm font-bold py-1 px-3 rounded-md transition-colors duration-300">FR</button>
+            </div>
+        </div>
+        <header class="text-center mb-8 md:mb-12">
+            <h1 id="main-title" class="text-3xl md:text-5xl font-bold text-slate-800"></h1>
+            <p id="main-subtitle" class="mt-4 text-base md:text-lg text-slate-600 max-w-4xl mx-auto"></p>
+        </header>
+
+        <main>
+            <!-- Tabs -->
+            <div class="mb-4 border-b border-gray-200">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="chartTabs">
+                    <li class="mr-2">
+                        <button id="tab-btn-interest" class="tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="interestRateTab"></button>
+                    </li>
+                    <li class="mr-2">
+                        <button id="tab-btn-money" class="tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="moneySupplyTab"></button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tabContent">
+                <!-- Interest Rate Tab -->
+                <div id="interestRateTab" class="tab-panel">
+                    <div class="max-w-6xl mx-auto mb-2 flex justify-between items-center">
+                        <h2 id="interest-chart-title" class="text-xl font-bold text-slate-700"></h2>
+                        <div class="flex items-center justify-center">
+                            <span id="toggle-label-china" class="text-slate-600 mr-3 font-medium"></span>
+                            <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="toggle" id="toggleChinaRate" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                <label for="toggleChinaRate" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container max-w-6xl mx-auto mb-8 p-4 bg-white rounded-xl shadow-lg">
+                        <canvas id="interestRateChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Money Supply & FX Tab -->
+                <div id="moneySupplyTab" class="tab-panel">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="p-4 bg-white rounded-xl shadow-lg">
+                            <h3 id="fx-chart-title" class="text-xl font-bold text-slate-700 text-center mb-2"></h3>
+                            <div class="chart-container">
+                                <canvas id="exchangeRateChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-white rounded-xl shadow-lg">
+                            <h3 id="m1-chart-title" class="text-xl font-bold text-slate-700 text-center mb-2"></h3>
+                            <div class="chart-container">
+                                <canvas id="m1Chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-2 p-4 bg-white rounded-xl shadow-lg">
+                             <h3 id="m2-chart-title" class="text-xl font-bold text-slate-700 text-center mb-2"></h3>
+                            <div class="chart-container">
+                                <canvas id="m2Chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <nav id="era-navigation" class="flex flex-wrap justify-center gap-2 md:gap-4 my-8 md:my-12">
+            </nav>
+
+            <div id="content-container" class="bg-white p-6 md:p-8 rounded-2xl shadow-lg max-w-6xl mx-auto">
+                 <div id="comparative-analysis" class="mb-8 p-6 border-l-4 border-amber-400 bg-amber-50 rounded-lg">
+                 </div>
+            </div>
+        </main>
+        
+        <footer class="text-center mt-12 text-slate-500 text-sm">
+            <p id="footer-text"></p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const translations = {
+                zh: {
+                    mainTitle: "三十年风云：中美宏观经济指标全景透视",
+                    mainSubtitle: "一个交互式仪表盘，带您回顾并对比自1995年以来中美的利率、汇率及货币供应量变化。",
+                    tabInterest: "利率对比",
+                    tabMoney: "汇率与货币供应",
+                    interestChartTitle: "中美利率走势对比 (1995-至今)",
+                    toggleLabelChina: "对比中国利率",
+                    fxChartTitle: "人民币/美元汇率 (USD/CNY)",
+                    m1ChartTitle: "中美M1货币供应量 (对数坐标)",
+                    m2ChartTitle: "中美M2货币供应量 (对数坐标)",
+                    compAnalysisTitle: "宏观指标对比分析",
+                    compAnalysisIntro: "通过对比利率、汇率和货币供应量，可以观察到中美两国在不同发展阶段的宏观经济策略差异。",
+                    compAnalysisPoint1: "<strong>利率周期错位（中国视角）：</strong>与美联储紧盯通胀和就业的双重使命不同，中国央行的利率决策首要目标常是服务于国内经济的稳定增长（“保增长”）。因此，降息通常发生在经济下行压力加大时，旨在刺激投资和消费；而加息或维持利率稳定则多是为了给过热的经济降温、抑制资产（尤其是房地产）泡沫和防范金融风险（如“去杠杆”）。这种以国内经济平衡为核心的决策逻辑，导致了其货币政策周期时常与美国出现显著的“错位”。",
+                    compAnalysisPoint2: "<strong>汇率制度演变（全球视角）：</strong>人民币汇率的变迁是中国融入全球经济的缩影。从1994年至2005年，为稳定出口和吸引外资，人民币严格盯住美元。2005年“汇改”后，人民币开始参考一篮子货币进行有管理的浮动，反映了中国经济实力的增强和国际压力。2008年金融危机期间曾短暂重新盯住美元以求稳定，之后则在“双向波动”中逐步增加弹性，其走势深受中美贸易关系、资本流动和两国经济增长前景差异的影响。",
+                    compAnalysisPoint3: "<strong>货币供应的扩张：</strong>M1和M2图表（使用对数坐标）显示，两国货币供应量在长期均呈指数级增长，尤其在2008年金融危机和2020年新冠疫情后，扩张速度显著加快。这直观地展示了两国为应对危机而向市场注入的巨大流动性。对比两国M2增速，也能洞察其经济增长模式和对信贷的依赖程度。",
+                    compAnalysisPoint4: "<strong>未来货币政策展望：</strong>两国在数字货币领域的路径截然不同。<strong>中国</strong>正积极推进主权数字货币（e-CNY）的广泛试点，旨在提升支付效率和加强货币掌控力。而<strong>美国</strong>对“数字美元”则持更为审慎的研究态度，关注其对隐私和金融体系的潜在影响。在加密货币方面，中国采取严厉禁止政策，而美国则在探索为稳定币建立监管框架。展望未来，中国的货币政策将继续服务于结构性改革和风险防范，而美联储则聚焦于管理通胀预期和应对后疫情时代的经济新常态。",
+                    footerText: `数据整理自公开信息，仅供研究学习使用。应用生成于 ${new Date().toLocaleDateString('zh-CN')}。`,
+                    era1_name: '格林斯潘的“艺术”与繁荣终结 (1995-2001)',
+                    era1_desc: '这一时期由艾伦·格林斯潘掌舵美联储，前期以其“先发制人”的微调和对“新经济”生产率提升的判断，成功缔造了高增长、低通胀的“金发姑娘”经济。但后期，面对互联网泡沫的极度膨胀，其加息举措未能阻止泡沫破裂，为21世纪初的衰退埋下伏笔。',
+                    era1_event1_title: '预防式加息',
+                    era1_event1_reason: '<strong>关键数据/事件:</strong> 经济增长强劲，为防止1994年紧缩周期后的通胀重燃。这是对经济潜力的信心投票，意在实现“软着陆”。',
+                    era1_event1_impact: '<strong>短期:</strong> 市场平稳过渡，经济增长势头得以延续。<br><strong>中长期:</strong> 成功巩固了低通胀环境，开启了90年代后期的持续繁荣，但也助长了市场的乐观情绪和科技股泡沫的萌芽。',
+                    era1_event2_title: '亚洲金融风暴与LTCM危机期间的降息',
+                    era1_event2_reason: '<strong>关键数据/事件:</strong> 亚洲金融危机和俄罗斯债务违约引发全球避险情绪，对冲基金“长期资本管理公司”(LTCM)濒临倒闭，威胁全球金融体系稳定。',
+                    era1_event2_impact: '<strong>短期:</strong> 迅速向市场注入流动性，成功避免了系统性金融危机，稳定了市场信心。被称为“格林斯潘对策”的经典案例。<br><strong>中长期:</strong> 强化了市场的“美联储看跌期权”（Fed Put）预期，即市场相信在危机时美联储总会出手救市，这在一定程度上鼓励了后来的过度冒险行为。',
+                    era1_event3_title: '刺破互联网泡沫的系列加息',
+                    era1_event3_reason: '<strong>关键数据/事件:</strong> 纳斯达克指数飙升，互联网公司估值脱离基本面，经济出现过热迹象，核心通胀压力开始显现。格林斯潘发表了著名的“非理性繁荣”演讲。',
+                    era1_event3_impact: '<strong>短期:</strong> 加息初期市场仍在上涨，但最终加重了科技股的压力，成为刺破泡沫的最后一根稻草。<br><strong>中长期:</strong> 未能阻止泡沫破裂，美国经济在2001年陷入衰退。这一轮紧缩的滞后效应，加上泡沫破裂的冲击，导致了随后的深度降息周期。',
+                    era2_name: '危机应对与非传统政策诞生 (2001-2008)',
+                    era2_desc: '这是美联储应对连续冲击的时期。从互联网泡沫破裂到“9·11”恐怖袭击，再到最终引爆全球的次贷危机，美联储的政策工具箱被前所未有地打开，利率降至零，并开启了量化宽松（QE）的时代。',
+                    era2_event1_title: '“9·11”后的急速降息',
+                    era2_event1_reason: '<strong>关键数据/事件:</strong> 互联网泡沫破裂导致的经济衰退，叠加“9·11”恐怖袭击对经济和信心的巨大冲击。为防止经济陷入深度衰退和通货紧缩。',
+                    era2_event1_impact: '<strong>短期:</strong> 提供了巨大的流动性支持，刺激了消费和投资，特别是房地产市场。<br><strong>中长期:</strong> 极低的利率环境（联邦基金利率一度低至1%）为房地产泡沫的形成创造了完美的温床。这是后来次贷危机的关键背景之一。',
+                    era2_event2_title: '危机前的紧缩与伯南克的登场',
+                    era2_event2_reason: '<strong>关键数据/事件:</strong> 经济从衰退中复苏，房地产市场异常繁荣，通胀压力再现。美联储采取了连续17次、每次25个基点的“可预测”加息路径。',
+                    era2_event2_impact: '<strong>短期:</strong> 提高了借贷成本，试图为过热的房地产市场降温。<br><strong>中长期:</strong> 加息刺破了由次级抵押贷款支撑的巨大房地产泡沫，直接引爆了2007-2008年的全球金融危机。这次紧缩被广泛批评为“为时已晚，力度不足”。',
+                    era2_event3_title: '全球金融危机与零利率时代',
+                    era2_event3_reason: '<strong>关键数据/事件:</strong> 次贷危机全面爆发，雷曼兄弟破产，金融市场陷入瘫痪。GDP急剧萎缩，失业率飙升。这是自“大萧条”以来最严重的金融危机。',
+                    era2_event3_impact: '<strong>短期:</strong> 将利率降至0-0.25%的有效下限，并启动首轮量化宽松（QE1），向金融体系注入天量流动性，成功阻止了全球金融体系的彻底崩溃。<br><strong>中长期:</strong> 开启了长达七年的零利率时代和多轮量化宽松，美联储资产负债表急剧扩张。这深刻改变了全球资产定价，但也引发了对未来通胀和资产泡沫的担忧。',
+                    era3_name: '缓慢的正常化与“缩减恐慌” (2009-2019)',
+                    era3_desc: '金融危机后，美国经济进入漫长的复苏期。在珍妮特·耶伦和杰罗姆·鲍威尔的领导下，美联储小心翼翼地尝试退出非常规货币政策，但每一步都引发市场震动，凸显了后危机时代经济的脆弱性。',
+                    era3_event1_title: '“缩减恐慌”(Taper Tantrum)',
+                    era3_event1_reason: '<strong>关键数据/事件:</strong> 伯南克首次暗示可能放缓（Taper）购债规模，引发市场对流动性收紧的恐慌。这并非一次实际的利率改变，但其影响巨大。',
+                    era3_event1_impact: '<strong>短期:</strong> 全球债券收益率飙升，新兴市场遭遇大规模资本外流，金融市场剧烈动荡。<br><strong>中长期:</strong> 成为美联储沟通策略的转折点，此后Fed在与市场沟通退出策略时变得极为谨慎。它揭示了全球金融体系对美联储宽松政策的深度依赖。',
+                    era3_event2_title: '首次加息与缓慢的正常化',
+                    era3_event2_reason: '<strong>关键数据/事件:</strong> 劳动力市场显著改善，失业率降至历史低位，核心通胀缓慢接近2%的目标。经济基本面支持退出零利率。',
+                    era3_event2_impact: '<strong>短期:</strong> 每次加息都伴随着市场对经济能否承受更高利率的担忧。2018年底的加息，叠加贸易战担忧，引发了股市的大幅回调。<br><strong>中长期:</strong> 利率正常化进程缓慢且坎坷。2019年，由于全球经济放缓和贸易战的影响，美联储被迫转向降息，表明经济的内生增长动力依然不足以支撑利率回到危机前的水平。',
+                    era4_name: '新冠冲击与史上最激进紧缩 (2020-至今)',
+                    era4_desc: '新冠疫情的爆发，迫使美联储以前所未有的速度和规模重启危机模式。然而，随之而来的四十年未见之高通胀，又迫使美联储上演了历史上最快、最猛烈的紧缩周期，全球经济再次面临严峻考验。',
+                    era4_event1_title: '新冠疫情紧急降息',
+                    era4_event1_reason: '<strong>关键数据/事件:</strong> 新冠肺炎全球大流行，各国采取封锁措施，经济活动陷入停滞，金融市场出现流动性危机。',
+                    era4_event1_impact: '<strong>短期:</strong> 两次紧急降息将利率降回零，并启动无限量QE，迅速稳定了金融市场，为后续大规模财政刺激提供了支持。<br><strong>中长期:</strong> 极度宽松的货币政策与财政刺激相结合，叠加供应链中断，为2021-2022年的历史性高通胀埋下了伏笔。',
+                    era4_event2_title: '应对高通胀的激进加息',
+                    era4_event2_reason: '<strong>关键数据/事件:</strong> CPI和PCE通胀率飙升至8%-9%的四十年高位，劳动力市场异常紧张。美联储承认通胀“并非暂时性”，被迫采取激进行动。',
+                    era4_event2_impact: '<strong>短期:</strong> 利率以罕见的50和75个基点的幅度连续上调，显著提高了借贷成本，导致成长性资产暴跌，房地产市场降温，并引发了2023年春季的区域性银行危机。<br><strong>中长期:</strong> 通胀已从高点显著回落，但核心通胀仍具粘性。经济展现出惊人的韧性，但高利率的滞后效应仍是未来经济走向的最大不确定性。',
+                    era4_event3_title: '高利率平台期',
+                    era4_event3_reason: '<strong>关键数据/事件:</strong> 利率维持在二十多年高位。美联储进入“依赖数据”的观望模式，核心任务是在确认通胀持续回归2%目标与避免过度紧缩导致经济衰退之间取得平衡。',
+                    era4_event3_impact: '<strong>短期:</strong> 市场在“更高更久”的预期和对经济数据的敏感反应之间摇摆。<br><strong>中长期:</strong> 持续的高利率环境正在重塑全球经济格局。美联储何时开启降息周期，成为2025年全球市场关注的焦点。',
+                    event_time: '时间',
+                    decision_makers: '核心决策者',
+                    president: '总统',
+                    treasury: '财长',
+                    fed_chair: 'Fed主席',
+                    reason: '主要驱动原因',
+                    impact: '利率改变后的影响',
+                    us_rate_label: '美国联邦基金利率 (%)',
+                    china_rate_label: '中国一年期LPR/基准利率 (%)',
+                    fx_rate_label: 'USD/CNY 汇率',
+                    us_m1_label: '美国 M1 (万亿美元)',
+                    china_m1_label: '中国 M1 (万亿人民币)',
+                    us_m2_label: '美国 M2 (万亿美元)',
+                    china_m2_label: '中国 M2 (万亿人民币)',
+                    year_axis: '年份',
+                    rate_axis: '利率 (%)',
+                    fx_axis: '汇率',
+                    money_supply_axis: '供应量 (对数刻度)',
+                    date_label: '日期',
+                    us_view: '(美国视角)'
+                },
+                en: {
+                    mainTitle: "Thirty Years of Flux: A Panoramic View of US-China Macroeconomic Indicators",
+                    mainSubtitle: "An interactive dashboard to review and compare key interest rate cycles, exchange rates, and money supply changes in the US and China since 1995.",
+                    tabInterest: "Rate Comparison",
+                    tabMoney: "FX & Money Supply",
+                    interestChartTitle: "US-China Interest Rate Trends (1995-Present)",
+                    toggleLabelChina: "Compare China's Rate",
+                    fxChartTitle: "USD/CNY Exchange Rate",
+                    m1ChartTitle: "US-China M1 Money Supply (Logarithmic Scale)",
+                    m2ChartTitle: "US-China M2 Money Supply (Logarithmic Scale)",
+                    compAnalysisTitle: "Macro Indicator Comparative Analysis",
+                    compAnalysisIntro: "By comparing interest rates, exchange rates, and money supply, we can observe the different macroeconomic strategies of the US and China at various stages of development.",
+                    compAnalysisPoint1: "<strong>Divergent Rate Cycles (China's Perspective):</strong> Unlike the Fed's dual mandate of inflation and employment, the PBOC's primary goal is often to serve stable domestic economic growth. Therefore, rate cuts typically occur during downturns to stimulate investment and consumption, while hikes or holds aim to cool an overheating economy, curb asset bubbles (especially real estate), and manage financial risks (e.g., deleveraging). This focus on internal balance is why its policy cycle often diverges from the US.",
+                    compAnalysisPoint2: "<strong>Evolution of FX Regime (Global Perspective):</strong> The RMB's evolution reflects China's integration into the global economy. From 1994-2005, it was strictly pegged to the USD to ensure export stability. The 2005 reform initiated a managed float against a basket of currencies, reflecting growing economic strength and international pressure. It was briefly re-pegged during the 2008 crisis for stability, and has since moved towards a more flexible, 'two-way' fluctuation, influenced by trade relations, capital flows, and growth differentials.",
+                    compAnalysisPoint3: "<strong>Money Supply Expansion:</strong> The M1 and M2 charts (using a log scale) show that both countries' money supplies have grown exponentially, especially after the 2008 financial crisis and the 2020 COVID pandemic. This illustrates the massive liquidity injections to counter crises.",
+                    compAnalysisPoint4: "<strong>Future Monetary Policy Outlook:</strong> The two nations are on divergent paths in digital currency. <strong>China</strong> is actively pushing broad pilots of its sovereign digital currency (e-CNY), aiming to enhance payment efficiency and monetary control. In contrast, the <strong>U.S.</strong> maintains a more cautious, research-focused stance on a 'digital dollar,' concerned about potential impacts on privacy and the financial system. Regarding cryptocurrencies, China has a strict ban, while the U.S. is exploring regulatory frameworks for stablecoins. Looking ahead, China's monetary policy will continue to serve structural reforms and risk prevention, while the Fed focuses on managing inflation expectations and navigating the post-pandemic economic new normal.",
+                    footerText: `Data compiled from public sources for research and educational purposes. Application generated on ${new Date().toLocaleDateString('en-US')}.`,
+                    era1_name: "Greenspan's 'Art' & the End of Prosperity (1995-2001)",
+                    era1_desc: "This period, led by Alan Greenspan, initially saw a 'Goldilocks' economy with high growth and low inflation. However, his subsequent rate hikes failed to prevent the dot-com bubble from bursting, setting the stage for the early 2000s recession.",
+                    era1_event1_title: 'Preemptive Rate Hikes',
+                    era1_event1_reason: '<strong>Key Data/Event:</strong> Strong economic growth, aiming for a "soft landing" and to prevent a resurgence of inflation after the 1994 tightening cycle.',
+                    era1_event1_impact: '<strong>Short-term:</strong> The market transitioned smoothly, and economic momentum continued.<br><strong>Long-term:</strong> Solidified a low-inflation environment and fueled the late-90s boom, but also contributed to the tech stock bubble.',
+                    era1_event2_title: 'Rate Cuts During Asian & LTCM Crises',
+                    era1_event2_reason: '<strong>Key Data/Event:</strong> The Asian Financial Crisis and Russian debt default sparked a global flight to safety, threatening the financial system with the collapse of hedge fund LTCM.',
+                    era1_event2_impact: '<strong>Short-term:</strong> Successfully averted a systemic crisis by injecting liquidity, a classic example of the "Greenspan put."<br><strong>Long-term:</strong> Reinforced market belief in the "Fed Put," potentially encouraging excessive risk-taking in later years.',
+                    era1_event3_title: 'Series of Hikes to Prick the Dot-Com Bubble',
+                    era1_event3_reason: '<strong>Key Data/Event:</strong> Soaring Nasdaq, overvalued tech companies, and signs of an overheating economy, famously described by Greenspan as "irrational exuberance."',
+                    era1_event3_impact: '<strong>Short-term:</strong> Initially failed to cool the market, but eventually became the pin that pricked the bubble.<br><strong>Long-term:</strong> Failed to prevent the bubble from bursting, leading to the 2001 recession and a subsequent deep rate-cutting cycle.',
+                    era2_name: 'Crisis Response & Birth of Unconventional Policy (2001-2008)',
+                    era2_desc: 'This era was defined by responses to successive shocks, from the dot-com bust and 9/11 to the subprime mortgage crisis. The Fed\'s toolkit was expanded unprecedentedly, bringing rates to zero and introducing Quantitative Easing (QE).',
+                    era2_event1_title: 'Rapid Rate Cuts After 9/11',
+                    era2_event1_reason: '<strong>Key Data/Event:</strong> The economic recession from the dot-com bust, compounded by the massive shock to confidence and activity from the 9/11 terrorist attacks. Aimed to prevent a deep recession and deflation.',
+                    era2_event1_impact: '<strong>Short-term:</strong> Provided immense liquidity support, stimulating consumption and investment, especially in the housing market.<br><strong>Long-term:</strong> The extremely low interest rate environment (Fed Funds Rate down to 1%) created a perfect breeding ground for the housing bubble, a key precursor to the subprime mortgage crisis.',
+                    era2_event2_title: "Pre-Crisis Tightening & Bernanke's Arrival",
+                    era2_event2_reason: "<strong>Key Data/Event:</strong> The economy recovered, the housing market was booming, and inflation re-emerged. The Fed began a series of 17 predictable 25-basis-point rate hikes.",
+                    era2_event2_impact: "<strong>Short-term:</strong> Increased borrowing costs in an attempt to cool the overheating housing market.<br><strong>Long-term:</strong> The rate hikes ultimately pricked the massive housing bubble supported by subprime mortgages, directly triggering the 2007-2008 Global Financial Crisis. This tightening is widely criticized as 'too little, too late.'",
+                    era2_event3_title: 'Global Financial Crisis & the Zero-Rate Era',
+                    era2_event3_reason: '<strong>Key Data/Event:</strong> The subprime crisis exploded, leading to the collapse of Lehman Brothers and paralyzing the financial system. GDP contracted sharply, and unemployment soared. It was the most severe financial crisis since the Great Depression.',
+                    era2_event3_impact: '<strong>Short-term:</strong> Cut rates to the zero lower bound (0-0.25%) and launched the first round of Quantitative Easing (QE1), injecting massive liquidity to prevent a total collapse of the global financial system.<br><strong>Long-term:</strong> Ushered in a seven-year era of zero interest rates and multiple rounds of QE. The Fed\'s balance sheet expanded dramatically, profoundly changing global asset pricing and raising concerns about future inflation and asset bubbles.',
+                    era3_name: "Slow Normalization & the 'Taper Tantrum' (2009-2019)",
+                    era3_desc: "After the financial crisis, the U.S. economy entered a long recovery. Under Janet Yellen and Jerome Powell, the Fed cautiously attempted to exit unconventional policies, but each step highlighted the post-crisis economy's fragility.",
+                    era3_event1_title: "'Taper Tantrum'",
+                    era3_event1_reason: "<strong>Key Data/Event:</strong> Bernanke first hinted at the possibility of slowing down (tapering) bond purchases, sparking market panic about a tightening of liquidity. This was not an actual rate change, but its impact was enormous.",
+                    era3_event1_impact: "<strong>Short-term:</strong> Global bond yields soared, and emerging markets experienced massive capital outflows and market turmoil.<br><strong>Long-term:</strong> It became a turning point in the Fed's communication strategy, making it extremely cautious about communicating exit strategies. It revealed the global financial system's deep dependence on the Fed's accommodative policies.",
+                    era3_event2_title: 'First Hike & Slow Normalization',
+                    era3_event2_reason: '<strong>Key Data/Event:</strong> The labor market improved significantly, with the unemployment rate falling to historic lows, and core inflation slowly approaching the 2% target. Economic fundamentals supported an exit from zero rates.',
+                    era3_event2_impact: "<strong>Short-term:</strong> Each rate hike was met with market concern about whether the economy could withstand higher rates. The hike in late 2018, combined with trade war fears, triggered a significant stock market correction.<br><strong>Long-term:</strong> The normalization process was slow and bumpy. In 2019, due to a global economic slowdown and the trade war, the Fed was forced to reverse course and cut rates, indicating that the economy's underlying growth momentum was still insufficient to sustain pre-crisis interest rate levels.",
+                    era4_name: "COVID Shock & The Most Aggressive Tightening (2020-Present)",
+                    era4_desc: "The COVID-19 outbreak forced the Fed back into crisis mode at an unprecedented scale. However, the subsequent 40-year high inflation compelled the Fed to execute its fastest and most aggressive tightening cycle in history.",
+                    era4_event1_title: 'COVID Emergency Rate Cuts',
+                    era4_event1_reason: '<strong>Key Data/Event:</strong> The global COVID-19 pandemic led to widespread lockdowns, bringing economic activity to a standstill and causing a liquidity crisis in financial markets.',
+                    era4_event1_impact: '<strong>Short-term:</strong> Two emergency rate cuts brought rates back to zero, and unlimited QE was launched, quickly stabilizing financial markets and supporting massive fiscal stimulus.<br><strong>Long-term:</strong> The combination of extremely loose monetary policy and fiscal stimulus, along with supply chain disruptions, sowed the seeds for the historic high inflation of 2021-2022.',
+                    era4_event2_title: 'Aggressive Hikes to Combat Inflation',
+                    era4_event2_reason: '<strong>Key Data/Event:</strong> CPI and PCE inflation soared to 40-year highs of 8-9%, and the labor market was extremely tight. The Fed admitted inflation was not "transitory" and was forced to take aggressive action to control inflation expectations.',
+                    era4_event2_impact: '<strong>Short-term:</strong> Rates were raised in rare 50 and 75 basis point increments, significantly increasing borrowing costs, causing a crash in growth assets like tech stocks, cooling the housing market, and triggering a regional banking crisis in spring 2023.<br><strong>Long-term:</strong> Inflation has fallen significantly from its peak, but core inflation remains sticky. The economy has shown surprising resilience, but the lagging effects of high rates remain the biggest uncertainty for the future.',
+                    era4_event3_title: 'High-Rate Plateau',
+                    era4_event3_reason: '<strong>Key Data/Event:</strong> Rates are held at a two-decade high. The Fed enters a "data-dependent" wait-and-see mode, balancing the need to ensure inflation returns to 2% against the risk of causing a recession with excessive tightening.',
+                    era4_event3_impact: '<strong>Short-term:</strong> The market oscillates between "higher for longer" expectations and sensitive reactions to economic data.<br><strong>Long-term:</strong> The sustained high-rate environment is reshaping the global economy. When the Fed will begin its rate-cutting cycle is the key focus for global markets in 2025.',
+                    event_time: 'Time',
+                    decision_makers: 'Key Decision-Makers',
+                    president: 'President',
+                    treasury: 'Treasury Sec.',
+                    fed_chair: 'Fed Chair',
+                    reason: 'Main Drivers',
+                    impact: 'Impact of Rate Change',
+                    us_rate_label: 'US Fed Funds Rate (%)',
+                    china_rate_label: 'China 1Y LPR/Benchmark Rate (%)',
+                    fx_rate_label: 'USD/CNY Exchange Rate',
+                    us_m1_label: 'US M1 (Trillion USD)',
+                    china_m1_label: 'China M1 (Trillion CNY)',
+                    us_m2_label: 'US M2 (Trillion USD)',
+                    china_m2_label: 'China M2 (Trillion CNY)',
+                    year_axis: 'Year',
+                    rate_axis: 'Rate (%)',
+                    fx_axis: 'Exchange Rate',
+                    money_supply_axis: 'Supply (Logarithmic Scale)',
+                    date_label: 'Date',
+                    us_view: '(US Perspective)'
+                },
+                fr: {
+                    mainTitle: "Trente Ans de Changements : Vue Panoramique des Indicateurs Macroéconomiques Sino-Américains",
+                    mainSubtitle: "Un tableau de bord interactif pour examiner et comparer les cycles de taux d'intérêt, les taux de change et la masse monétaire en Chine et aux États-Unis depuis 1995.",
+                    tabInterest: "Taux d'Intérêt",
+                    tabMoney: "Change & Masse Monétaire",
+                    interestChartTitle: "Tendances des Taux d'Intérêt Chine-États-Unis (1995-Présent)",
+                    toggleLabelChina: "Comparer la Chine",
+                    fxChartTitle: "Taux de Change USD/CNY",
+                    m1ChartTitle: "Masse Monétaire M1 Chine-États-Unis (Échelle Logarithmique)",
+                    m2ChartTitle: "Masse Monétaire M2 Chine-États-Unis (Échelle Logarithmique)",
+                    compAnalysisTitle: "Analyse Comparative des Indicateurs Macroéconomiques",
+                    compAnalysisIntro: "En comparant les taux d'intérêt, les taux de change et la masse monétaire, on observe les différentes stratégies macroéconomiques de la Chine et des États-Unis à divers stades de développement.",
+                    compAnalysisPoint1: "<strong>Cycles de taux divergents (Perspective chinoise) :</strong> Contrairement au double mandat de la Fed (inflation/emploi), l'objectif principal de la PBOC est souvent de servir une croissance économique nationale stable. Les baisses de taux visent à stimuler l'investissement lors des ralentissements, tandis que les hausses visent à refroidir une économie en surchauffe ou à gérer les risques financiers. Cette focalisation sur l'équilibre interne explique la divergence fréquente des cycles.",
+                    compAnalysisPoint2: "<strong>Évolution du régime de change (Perspective mondiale) :</strong> L'évolution du RMB reflète l'intégration de la Chine à l'économie mondiale. De 1994 à 2005, il était strictement arrimé au dollar pour la stabilité des exportations. La réforme de 2005 a initié un flottement géré par rapport à un panier de devises, reflétant la puissance économique croissante et la pression internationale. Le taux est maintenant influencé par les relations commerciales, les flux de capitaux et les différentiels de croissance.",
+                    compAnalysisPoint3: "<strong>Expansion de la masse monétaire :</strong> Les graphiques M1 et M2 (échelle log) montrent que la masse monétaire des deux pays a connu une croissance exponentielle, surtout après les crises de 2008 et 2020, illustrant les injections massives de liquidités.",
+                    compAnalysisPoint4: "<strong>Perspectives de Politique Monétaire Future :</strong> Les deux nations suivent des voies divergentes en matière de monnaie numérique. La <strong>Chine</strong> promeut activement des projets pilotes à grande échelle de sa monnaie numérique souveraine (e-CNY), visant à améliorer l'efficacité des paiements et le contrôle monétaire. En revanche, les <strong>États-Unis</strong> adoptent une approche plus prudente et axée sur la recherche concernant un « dollar numérique », préoccupés par les impacts potentiels sur la vie privée et le système financier. Concernant les cryptomonnaies, la Chine applique une interdiction stricte, tandis que les États-Unis explorent des cadres réglementaires pour les stablecoins. À l'avenir, la politique monétaire chinoise continuera de servir les réformes structurelles et la prévention des risques, tandis que la Fed se concentrera sur la gestion des anticipations d'inflation et la navigation dans la nouvelle normalité économique post-pandémique.",
+                    footerText: `Données compilées à partir de sources publiques à des fins de recherche. Application générée le ${new Date().toLocaleDateString('fr-FR')}.`,
+                    era1_name: "L'« Art » de Greenspan et la Fin de la Prospérité (1995-2001)",
+                    era1_desc: "Cette période, dirigée par Alan Greenspan, a d'abord connu une économie idéale. Cependant, ses hausses de taux ultérieures n'ont pas réussi à empêcher l'éclatement de la bulle Internet, préparant le terrain pour la récession du début des années 2000.",
+                    era1_event1_title: 'Hausses de Taux Préventives',
+                    era1_event1_reason: '<strong>Donnée/Événement clé :</strong> Forte croissance économique, visant un « atterrissage en douceur » et à prévenir une résurgence de l\'inflation.',
+                    era1_event1_impact: '<strong>Court terme :</strong> Transition en douceur du marché, poursuite de la dynamique économique.<br><strong>Long terme :</strong> Consolidation d\'un environnement de faible inflation, mais a également alimenté la bulle technologique.',
+                    era1_event2_title: 'Baisses de Taux durant les Crises Asiatique & LTCM',
+                    era1_event2_reason: '<strong>Donnée/Événement clé :</strong> La crise financière asiatique et le défaut de la Russie ont menacé le système financier avec l\'effondrement du fonds spéculatif LTCM.',
+                    era1_event2_impact: '<strong>Court terme :</strong> A évité avec succès une crise systémique en injectant des liquidités, un exemple classique du « Greenspan put ».<br><strong>Long terme :</strong> A renforcé la croyance du marché dans le « Fed Put », encourageant potentiellement une prise de risque excessive par la suite.',
+                    era1_event3_title: 'Série de Hausses pour Crever la Bulle Internet',
+                    era1_event3_reason: '<strong>Donnée/Événement clé :</strong> Envolée du Nasdaq, surévaluation des entreprises technologiques et signes de surchauffe économique, décrits par Greenspan comme une « exubérance irrationnelle ».',
+                    era1_event3_impact: '<strong>Court terme :</strong> A d\'abord échoué à calmer le marché, mais est finalement devenu l\'épingle qui a crevé la bulle.<br><strong>Long terme :</strong> N\'a pas empêché l\'éclatement de la bulle, menant à la récession de 2001 et à un cycle de baisses de taux profondes.',
+                    era2_name: 'Réponse à la Crise et Naissance de la Politique Non Conventionnelle (2001-2008)',
+                    era2_desc: "Cette ère a été définie par les réponses aux chocs successifs, de l'éclatement de la bulle Internet et du 11 septembre à la crise des subprimes. La boîte à outils de la Fed a été élargie de manière sans précédent, amenant les taux à zéro et introduisant l'assouplissement quantitatif (QE).",
+                    era2_event1_title: 'Baisses de taux rapides après le 11 septembre',
+                    era2_event1_reason: "<strong>Donnée/Événement clé :</strong> La récession économique due à l'éclatement de la bulle Internet, aggravée par le choc massif sur la confiance et l'activité des attentats terroristes du 11 septembre. Visait à prévenir une récession profonde et la déflation.",
+                    era2_event1_impact: "<strong>Court terme :</strong> A fourni un soutien massif en liquidités, stimulant la consommation et l'investissement, en particulier sur le marché immobilier.<br><strong>Long terme :</strong> L'environnement de taux d'intérêt extrêmement bas (taux des fonds fédéraux jusqu'à 1%) a créé un terrain fertile pour la bulle immobilière, un précurseur clé de la crise des subprimes.",
+                    era2_event2_title: "Resserrement pré-crise et l'arrivée de Bernanke",
+                    era2_event2_reason: "<strong>Donnée/Événement clé :</strong> L'économie s'est redressée, le marché immobilier était en plein essor et l'inflation a refait surface. La Fed a entamé une série de 17 hausses de taux prévisibles de 25 points de base.",
+                    era2_event2_impact: "<strong>Court terme :</strong> Augmentation des coûts d'emprunt pour tenter de refroidir le marché immobilier en surchauffe.<br><strong>Long terme :</strong> Les hausses de taux ont finalement crevé l'énorme bulle immobilière soutenue par les prêts hypothécaires à risque, déclenchant directement la crise financière mondiale de 2007-2008. Ce resserrement est largement critiqué comme étant « trop peu, trop tard ».",
+                    era2_event3_title: 'Crise financière mondiale et ère du taux zéro',
+                    era2_event3_reason: "<strong>Donnée/Événement clé :</strong> La crise des subprimes a explosé, entraînant la faillite de Lehman Brothers et paralysant le système financier. Le PIB a fortement chuté et le chômage a grimpé en flèche. Ce fut la crise financière la plus grave depuis la Grande Dépression.",
+                    era2_event3_impact: "<strong>Court terme :</strong> A réduit les taux à la borne inférieure de zéro (0-0,25%) et a lancé le premier cycle d'assouplissement quantitatif (QE1), injectant des liquidités massives pour empêcher un effondrement total du système financier mondial.<br><strong>Long terme :</strong> A inauguré une ère de sept ans de taux d'intérêt nuls et de multiples cycles de QE. Le bilan de la Fed s'est considérablement élargi, modifiant profondément la tarification des actifs mondiaux et suscitant des inquiétudes quant à l'inflation future et aux bulles d'actifs.",
+                    era3_name: "Normalisation Lente et le « Taper Tantrum » (2009-2019)",
+                    era3_desc: "Après la crise financière, l'économie américaine est entrée dans une longue reprise. Sous Janet Yellen et Jerome Powell, la Fed a prudemment tenté de sortir des politiques non conventionnelles, mais chaque étape a mis en évidence la fragilité de l'économie post-crise.",
+                    era3_event1_title: "« Taper Tantrum »",
+                    era3_event1_reason: "<strong>Donnée/Événement clé :</strong> Bernanke a laissé entendre pour la première fois la possibilité de ralentir (taper) les achats d'obligations, déclenchant la panique sur le marché à propos d'un resserrement des liquidités. Ce n'était pas un changement de taux réel, mais son impact a été énorme.",
+                    era3_event1_impact: "<strong>Court terme :</strong> Les rendements obligataires mondiaux ont grimpé en flèche, et les marchés émergents ont subi des sorties de capitaux massives et des turbulences sur les marchés.<br><strong>Long terme :</strong> C'est devenu un tournant dans la stratégie de communication de la Fed, la rendant extrêmement prudente dans la communication des stratégies de sortie. Cela a révélé la profonde dépendance du système financier mondial vis-à-vis des politiques accommodantes de la Fed.",
+                    era3_event2_title: 'Première hausse et normalisation lente',
+                    era3_event2_reason: "<strong>Donnée/Événement clé :</strong> Le marché du travail s'est considérablement amélioré, avec un taux de chômage tombant à des niveaux historiquement bas, et l'inflation de base se rapprochant lentement de l'objectif de 2%. Les fondamentaux économiques soutenaient une sortie des taux nuls.",
+                    era3_event2_impact: "<strong>Court terme :</strong> Chaque hausse de taux a été accueillie avec l'inquiétude du marché quant à savoir si l'économie pouvait supporter des taux plus élevés. La hausse de fin 2018, combinée aux craintes de guerre commerciale, a déclenché une correction boursière importante.<br><strong>Long terme :</strong> Le processus de normalisation a été lent et semé d'embûches. En 2019, en raison d'un ralentissement économique mondial et de la guerre commerciale, la Fed a été contrainte de faire marche arrière et de baisser les taux, indiquant que la dynamique de croissance sous-jacente de l'économie était encore insuffisante pour soutenir les niveaux de taux d'intérêt d'avant la crise.",
+                    era4_name: "Choc du COVID et le Resserrement le Plus Agressif (2020-Présent)",
+                    era4_desc: "La pandémie de COVID-19 a forcé la Fed à revenir en mode de crise à une échelle sans précédent. Cependant, l'inflation record qui a suivi a contraint la Fed à exécuter son cycle de resserrement le plus rapide et le plus agressif de l'histoire.",
+                    era4_event1_title: 'Baisses de taux d\'urgence COVID',
+                    era4_event1_reason: "<strong>Donnée/Événement clé :</strong> La pandémie mondiale de COVID-19 a entraîné des confinements généralisés, paralysant l'activité économique et provoquant une crise de liquidité sur les marchés financiers.",
+                    era4_event1_impact: "<strong>Court terme :</strong> Deux baisses de taux d'urgence ont ramené les taux à zéro, et un QE illimité a été lancé, stabilisant rapidement les marchés financiers et soutenant un stimulus budgétaire massif.<br><strong>Long terme :</strong> La combinaison d'une politique monétaire extrêmement souple et d'un stimulus budgétaire, ainsi que des perturbations de la chaîne d'approvisionnement, a semé les graines de l'inflation historique de 2021-2022.",
+                    era4_event2_title: 'Hausses agressives pour combattre l\'inflation',
+                    era4_event2_reason: "<strong>Donnée/Événement clé :</strong> L'inflation CPI et PCE a atteint des sommets de 40 ans à 8-9%, et le marché du travail était extrêmement tendu. La Fed a admis que l'inflation n'était pas « transitoire » et a été contrainte de prendre des mesures agressives pour contrôler les anticipations d'inflation.",
+                    era4_event2_impact: "<strong>Court terme :</strong> Les taux ont été relevés par tranches rares de 50 et 75 points de base, augmentant considérablement les coûts d'emprunt, provoquant un effondrement des actifs de croissance comme les valeurs technologiques, refroidissant le marché immobilier et déclenchant une crise bancaire régionale au printemps 2023.<br><strong>Long terme :</strong> L'inflation a considérablement baissé depuis son sommet, mais l'inflation de base reste tenace. L'économie a fait preuve d'une résilience surprenante, mais les effets décalés des taux élevés restent la plus grande incertitude pour l'avenir.",
+                    era4_event3_title: 'Plateau de taux élevés',
+                    era4_event3_reason: "<strong>Donnée/Événement clé :</strong> Les taux sont maintenus à un sommet de deux décennies. La Fed entre dans un mode d'attente « dépendant des données », équilibrant la nécessité de s'assurer que l'inflation revienne à 2% contre le risque de provoquer une récession avec un resserrement excessif.",
+                    era4_event3_impact: "<strong>Court terme :</strong> Le marché oscille entre les attentes « plus élevées pour plus longtemps » et les réactions sensibles aux données économiques.<br><strong>Long terme :</strong> L'environnement de taux élevés soutenu remodèle l'économie mondiale. Le moment où la Fed commencera son cycle de baisse des taux est le point central pour les marchés mondiaux en 2025.",
+                    event_time: 'Date',
+                    decision_makers: 'Décideurs Clés',
+                    president: 'Président',
+                    treasury: 'Sec. du Trésor',
+                    fed_chair: 'Prés. de la Fed',
+                    reason: 'Raisons Principales',
+                    impact: 'Impact du Changement',
+                    us_rate_label: 'Taux des Fonds Fédéraux US (%)',
+                    china_rate_label: 'Taux Préférentiel (LPR) 1A Chine (%)',
+                    fx_rate_label: 'Taux de Change USD/CNY',
+                    us_m1_label: 'M1 US (Mille milliards USD)',
+                    china_m1_label: 'M1 Chine (Mille milliards CNY)',
+                    us_m2_label: 'M2 US (Mille milliards USD)',
+                    china_m2_label: 'M2 Chine (Mille milliards CNY)',
+                    year_axis: 'Année',
+                    rate_axis: 'Taux (%)',
+                    fx_axis: 'Taux de Change',
+                    money_supply_axis: 'Masse Monétaire (Échelle Log)',
+                    date_label: 'Date',
+                    us_view: '(Perspective US)'
+                }
+            };
+            
+            const fedData = [
+                { id: 'era1', startDate: '1995-02-01', endDate: '2001-01-02', events: [ { time: '1995年2月', people: { president: '克林顿', treasury: '罗伯特·鲁宾', fed: '格林斯潘' } }, { time: '1998年9月-11月', people: { president: '克林顿', treasury: '罗伯特·鲁宾', fed: '格林斯潘' } }, { time: '1999年6月 - 2000年5月', people: { president: '克林顿', treasury: '劳伦斯·萨默斯', fed: '格林斯潘' } } ] },
+                { id: 'era2', startDate: '2001-01-03', endDate: '2008-12-15', events: [ { time: '2001年1月 - 2003年6月', people: { president: '乔治·W·布什', treasury: '保罗·奥尼尔 / 约翰·斯诺', fed: '格林斯潘' } }, { time: '2004年6月 - 2006年6月', people: { president: '乔治·W·布什', treasury: '约翰·斯诺 / 亨利·保尔森', fed: '格林斯潘 / 本·伯南克' } }, { time: '2007年9月 - 2008年12月', people: { president: '布什 / 奥巴马', treasury: '亨利·保尔森 / 蒂莫西·盖特纳', fed: '本·伯南克' } } ] },
+                { id: 'era3', startDate: '2008-12-16', endDate: '2020-03-02', events: [ { time: '2013年5月 (言论)', people: { president: '奥巴马', treasury: '杰克·卢', fed: '本·伯南克' } }, { time: '2015年12月 - 2018年12月', people: { president: '奥巴马 / 特朗普', treasury: '杰克·卢 / 史蒂文·姆努钦', fed: '耶伦 / 鲍威尔' } } ] },
+                { id: 'era4', startDate: '2020-03-03', endDate: '2025-07-07', events: [ { time: '2020年3月', people: { president: '特朗普', treasury: '史蒂文·姆努钦', fed: '杰罗姆·鲍威尔' } }, { time: '2022年3月 - 2023年7月', people: { president: '乔·拜登', treasury: '珍妮特·耶伦', fed: '杰罗姆·鲍威尔' } }, { time: '2023年8月 - 至今', people: { president: '乔·拜登', treasury: '珍妮特·耶伦', fed: '杰罗姆·鲍威尔' } } ] }
+            ];
+
+            const usRateHistory = { '1995-02-01': 6.00, '1995-07-06': 5.75, '1995-12-19': 5.50, '1996-01-31': 5.25, '1997-03-25': 5.50, '1998-09-29': 5.25, '1998-10-15': 5.00, '1998-11-17': 4.75, '1999-06-30': 5.00, '1999-08-24': 5.25, '1999-11-16': 5.50, '2000-02-02': 5.75, '2000-03-21': 6.00, '2000-05-16': 6.50, '2001-01-03': 6.00, '2001-01-31': 5.50, '2001-03-20': 5.00, '2001-04-18': 4.50, '2001-05-15': 4.00, '2001-06-27': 3.75, '2001-08-21': 3.50, '2001-09-17': 3.00, '2001-10-02': 2.50, '2001-11-06': 2.00, '2001-12-11': 1.75, '2002-11-06': 1.25, '2003-06-25': 1.00, '2004-06-30': 1.25, '2004-08-10': 1.50, '2004-09-21': 1.75, '2004-11-10': 2.00, '2004-12-14': 2.25, '2005-02-02': 2.50, '2005-03-22': 2.75, '2005-05-03': 3.00, '2005-06-30': 3.25, '2005-08-09': 3.50, '2005-09-20': 3.75, '2005-11-01': 4.00, '2005-12-13': 4.25, '2006-01-31': 4.50, '2006-03-28': 4.75, '2006-05-10': 5.00, '2006-06-29': 5.25, '2007-09-18': 4.75, '2007-10-31': 4.50, '2007-12-11': 4.25, '2008-01-22': 3.50, '2008-01-30': 3.00, '2008-03-18': 2.25, '2008-04-30': 2.00, '2008-10-08': 1.50, '2008-10-29': 1.00, '2008-12-16': 0.25, '2015-12-17': 0.50, '2016-12-15': 0.75, '2017-03-16': 1.00, '2017-06-15': 1.25, '2017-12-14': 1.50, '2018-03-22': 1.75, '2018-06-14': 2.00, '2018-09-27': 2.25, '2018-12-20': 2.50, '2019-08-01': 2.25, '2019-09-19': 2.00, '2019-10-31': 1.75, '2020-03-03': 1.25, '2020-03-16': 0.25, '2022-03-17': 0.50, '2022-05-05': 1.00, '2022-06-16': 1.75, '2022-07-28': 2.50, '2022-09-22': 3.25, '2022-11-03': 4.00, '2022-12-15': 4.50, '2023-02-02': 4.75, '2023-03-23': 5.00, '2023-05-04': 5.25, '2023-07-27': 5.50 };
+            const chinaRateHistory = { '1995-01-01': 10.98, '1996-05-01': 9.18, '1996-08-23': 7.47, '1997-10-23': 5.67, '1998-03-25': 5.22, '1998-07-01': 4.86, '1998-12-07': 4.77, '1999-06-10': 2.25, '2002-02-21': 1.98, '2004-10-29': 2.25, '2006-04-28': 2.52, '2006-08-19': 2.88, '2007-03-18': 3.06, '2007-05-19': 3.33, '2007-07-21': 3.69, '2007-08-22': 3.87, '2007-09-15': 4.14, '2007-12-21': 4.14, '2008-09-16': 4.14, '2008-10-09': 3.87, '2008-10-30': 3.60, '2008-11-27': 2.52, '2008-12-23': 2.25, '2010-10-20': 2.50, '2010-12-26': 2.75, '2011-02-09': 3.00, '2011-04-06': 3.25, '2011-07-07': 3.50, '2012-06-08': 3.25, '2012-07-06': 3.00, '2014-11-22': 2.75, '2015-03-01': 2.50, '2015-05-11': 2.25, '2015-06-28': 2.00, '2015-08-26': 1.75, '2015-10-24': 1.50, '2019-09-20': 4.20, '2020-02-20': 4.05, '2020-04-20': 3.85, '2021-12-20': 3.80, '2022-01-20': 3.70, '2022-08-22': 3.65, '2023-06-20': 3.55, '2024-02-20': 3.45 };
+            const usdCnyExchangeRate = {'1995-01-01': 8.44, '1996-01-01': 8.31, '1997-01-01': 8.29, '1998-01-01': 8.28, '2005-07-21': 8.11, '2006-01-01': 8.07, '2007-01-01': 7.81, '2008-01-01': 7.30, '2009-01-01': 6.83, '2010-01-01': 6.83, '2011-01-01': 6.62, '2012-01-01': 6.30, '2013-01-01': 6.23, '2014-01-01': 6.05, '2015-01-01': 6.21, '2016-01-01': 6.50, '2017-01-01': 6.94, '2018-01-01': 6.50, '2019-01-01': 6.88, '2020-01-01': 6.96, '2021-01-01': 6.46, '2022-01-01': 6.37, '2023-01-01': 6.78, '2024-01-01': 7.11};
+            const usM1 = {'1995-01-01': 1.15, '2000-01-01': 1.12, '2005-01-01': 1.37, '2008-09-01': 1.4, '2010-01-01': 1.7, '2015-01-01': 2.9, '2020-02-01': 4.0, '2020-05-01': 5.0, '2021-01-01': 18.1, '2022-01-01': 20.6, '2023-01-01': 19.5, '2024-01-01': 18.0};
+            const chinaM1 = {'1995-01-01': 2.4, '2000-01-01': 5.3, '2005-01-01': 10.7, '2008-09-01': 15.5, '2010-01-01': 22.9, '2015-01-01': 34.8, '2020-02-01': 56.2, '2021-01-01': 62.5, '2022-01-01': 63.1, '2023-01-01': 65.5, '2024-01-01': 69.6};
+            const usM2 = {'1995-01-01': 3.49, '2000-01-01': 4.67, '2005-01-01': 6.42, '2008-09-01': 7.9, '2010-01-01': 8.5, '2015-01-01': 11.7, '2020-02-01': 15.5, '2021-01-01': 19.4, '2022-01-01': 21.7, '2023-01-01': 21.3, '2024-01-01': 20.8};
+            const chinaM2 = {'1995-01-01': 6.3, '2000-01-01': 13.5, '2005-01-01': 29.9, '2008-09-01': 45.3, '2010-01-01': 62.5, '2015-01-01': 124.3, '2020-02-01': 203.0, '2021-01-01': 221.3, '2022-01-01': 243.1, '2023-01-01': 273.8, '2024-01-01': 297.4};
+            
+            let state = {
+                lang: 'zh',
+                activeTab: 'interestRateTab',
+                activeEra: 'era1',
+                showChina: false
+            };
+            
+            let charts = {};
+
+            const allDates = [...new Set([...Object.keys(usRateHistory), ...Object.keys(chinaRateHistory), ...Object.keys(usdCnyExchangeRate), ...Object.keys(usM1)])].sort((a, b) => new Date(a) - new Date(b));
+            
+            const generateChartData = (history) => {
+                let lastValue = 0;
+                const dataPoints = [];
+                for (const date of allDates) {
+                    if (history[date] !== undefined) {
+                        lastValue = history[date];
+                    }
+                    dataPoints.push({ x: date, y: lastValue });
+                }
+                return dataPoints;
+            };
+            
+            const usChartData = generateChartData(usRateHistory);
+            const chinaChartData = generateChartData(chinaRateHistory);
+            const exchangeRateData = generateChartData(usdCnyExchangeRate);
+            const usM1Data = generateChartData(usM1);
+            const chinaM1Data = generateChartData(chinaM1);
+            const usM2Data = generateChartData(usM2);
+            const chinaM2Data = generateChartData(chinaM2);
+
+            const T = (key) => getNestedTranslation(state.lang, key);
+
+            function getNestedTranslation(lang, key) {
+                return key.split('.').reduce((obj, k) => (obj && obj[k] !== 'undefined') ? obj[k] : key, translations[lang]);
+            }
+
+            function createChart(chartId, type, datasets, options) {
+                const canvas = document.getElementById(chartId);
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                if (charts[chartId]) {
+                    charts[chartId].destroy();
+                }
+                charts[chartId] = new Chart(ctx, { type, data: { datasets }, options });
+            }
+
+            function updateUI() {
+                // Update language-based text content
+                document.documentElement.lang = state.lang === 'zh' ? 'zh-CN' : state.lang;
+                document.title = T('mainTitle');
+                document.querySelectorAll('[data-lang]').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === state.lang));
+                document.getElementById('main-title').textContent = T('mainTitle');
+                document.getElementById('main-subtitle').textContent = T('mainSubtitle');
+                document.getElementById('tab-btn-interest').textContent = T('tabInterest');
+                document.getElementById('tab-btn-money').textContent = T('tabMoney');
+                document.getElementById('interest-chart-title').textContent = T('interestChartTitle');
+                document.getElementById('toggle-label-china').textContent = T('toggleLabelChina');
+                document.getElementById('fx-chart-title').textContent = T('fxChartTitle');
+                document.getElementById('m1-chart-title').textContent = T('m1ChartTitle');
+                document.getElementById('m2-chart-title').textContent = T('m2ChartTitle');
+                document.getElementById('footer-text').innerHTML = T('footerText');
+                
+                // Update active tab
+                document.querySelectorAll('.tab-button').forEach(tab => tab.classList.toggle('active', tab.dataset.tab === state.activeTab));
+                document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.toggle('active', panel.id === state.activeTab));
+
+                // Update navigation and content
+                updateNavigation();
+                renderContent();
+                
+                // Update charts
+                renderAllCharts();
+            }
+
+            function renderAllCharts() {
+                const highlightedEra = fedData.find(era => era.id === state.activeEra);
+
+                // Interest Rate Chart
+                let interestDatasets = [{ label: T('us_rate_label'), data: usChartData, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 2.5, pointRadius: 0, tension: 0.1, fill: true }];
+                if (state.showChina) {
+                    interestDatasets.push({ label: T('china_rate_label'), data: chinaChartData, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 2.5, pointRadius: 0, tension: 0.1, fill: false });
+                }
+                let interestPlugins = { legend: { display: true, position: 'top' }, tooltip: { mode: 'index', intersect: false, callbacks: { title: (items) => `${T('date_label')}: ${new Date(items[0].parsed.x).toLocaleDateString(state.lang === 'zh' ? 'zh-CN' : 'en-CA')}` } }, annotation: {} };
+                if (highlightedEra && state.activeTab === 'interestRateTab') {
+                    interestPlugins.annotation = { annotations: { box1: { type: 'box', xMin: highlightedEra.startDate, xMax: highlightedEra.endDate, backgroundColor: 'rgba(100, 116, 139, 0.15)', borderColor: 'rgba(100, 116, 139, 0.2)', borderWidth: 1 } } };
+                }
+                createChart('interestRateChart', 'line', interestDatasets, { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'year', tooltipFormat: 'yyyy-MM-dd' }, title: { display: true, text: T('year_axis') } }, y: { beginAtZero: true, title: { display: true, text: T('rate_axis') }, ticks: { callback: (v) => v + '%' } } }, plugins: interestPlugins });
+
+                if (state.activeTab === 'moneySupplyTab') {
+                    // FX Chart
+                    createChart('exchangeRateChart', 'line', [{ label: T('fx_rate_label'), data: exchangeRateData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, borderWidth: 2, pointRadius: 0, tension: 0.1 }], { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'year' }, title: {display: true, text: T('year_axis')}}, y: { title: { display: true, text: T('fx_axis') } } }, plugins: { legend: { display: false } } });
+                    // M1 Chart
+                    createChart('m1Chart', 'line', [{ label: T('us_m1_label'), data: usM1Data, borderColor: '#3b82f6', pointRadius: 0, borderWidth: 2 }, { label: T('china_m1_label'), data: chinaM1Data, borderColor: '#ef4444', pointRadius: 0, borderWidth: 2 }], { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'year' }, title: {display: true, text: T('year_axis')} }, y: { type: 'logarithmic', title: { display: true, text: T('money_supply_axis') } } }, plugins: { legend: { display: true, position: 'top' } } });
+                    // M2 Chart
+                    createChart('m2Chart', 'line', [{ label: T('us_m2_label'), data: usM2Data, borderColor: '#3b82f6', pointRadius: 0, borderWidth: 2 }, { label: T('china_m2_label'), data: chinaM2Data, borderColor: '#ef4444', pointRadius: 0, borderWidth: 2 }], { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'year' }, title: {display: true, text: T('year_axis')} }, y: { type: 'logarithmic', title: { display: true, text: T('money_supply_axis') } } }, plugins: { legend: { display: true, position: 'top' } } });
+                }
+            }
+
+            function updateNavigation() {
+                const navigationContainer = document.getElementById('era-navigation');
+                navigationContainer.innerHTML = '';
+                fedData.forEach(era => {
+                    const button = document.createElement('button');
+                    button.textContent = T(`era${era.id.slice(-1)}_name`);
+                    button.dataset.eraId = era.id;
+                    button.className = 'era-button text-sm md:text-base bg-white text-slate-700 font-semibold py-2 px-3 md:px-5 rounded-lg shadow-sm hover:bg-slate-100 border border-slate-200';
+                    if (era.id === state.activeEra) {
+                        button.classList.add('active');
+                    }
+                    navigationContainer.appendChild(button);
+                });
+            }
+
+            function renderContent() {
+                const eraData = fedData.find(e => e.id === state.activeEra);
+                if (!eraData) return;
+                
+                const contentContainer = document.getElementById('content-container');
+                contentContainer.innerHTML = ''; // Clear previous content
+
+                // Render comparative analysis first
+                const compAnalysisDiv = document.createElement('div');
+                compAnalysisDiv.id = 'comparative-analysis';
+                compAnalysisDiv.className = 'mb-8 p-6 border-l-4 border-amber-400 bg-amber-50 rounded-lg';
+                compAnalysisDiv.innerHTML = `<h2 class="text-2xl font-bold mb-3 text-amber-800">${T('compAnalysisTitle')}</h2><div class="space-y-4 text-amber-700"><p>${T('compAnalysisIntro')}</p><ul class="list-disc list-inside space-y-2"><li>${T('compAnalysisPoint1')}</li><li>${T('compAnalysisPoint2')}</li><li>${T('compAnalysisPoint3')}</li><li>${T('compAnalysisPoint4')}</li></ul></div>`;
+                contentContainer.appendChild(compAnalysisDiv);
+
+                // Render era-specific content
+                const eraDiv = document.createElement('div');
+                eraDiv.id = eraData.id;
+                eraDiv.className = 'content-era active';
+                
+                const eraName = T(`era${eraData.id.slice(-1)}_name`);
+                const eraDesc = T(`era${eraData.id.slice(-1)}_desc`);
+                
+                let eventsHtml = '';
+                eraData.events.forEach((event, index) => {
+                    const eventTitle = T(`era${eraData.id.slice(-1)}_event${index+1}_title`);
+                    const eventReason = T(`era${eraData.id.slice(-1)}_event${index+1}_reason`);
+                    const eventImpact = T(`era${eraData.id.slice(-1)}_event${index+1}_impact`);
+                    
+                    eventsHtml += `<div class="border border-slate-200 rounded-lg p-4 md:p-6 hover:shadow-md transition-shadow duration-300">
+                        <h3 class="font-bold text-lg md:text-xl text-slate-800 mb-2">${eventTitle}</h3>
+                        <p class="text-sm text-slate-500 mb-4">${event.time}</p>
+                        <div class="grid md:grid-cols-3 gap-4 text-sm md:text-base">
+                            <div class="bg-slate-100 p-3 rounded">
+                                <h4 class="font-semibold text-slate-700 mb-1">${T('decision_makers')}</h4>
+                                <p><strong>${T('president')}:</strong> ${event.people.president}</p>
+                                <p><strong>${T('treasury')}:</strong> ${event.people.treasury}</p>
+                                <p><strong>${T('fed_chair')}:</strong> ${event.people.fed}</p>
+                            </div>
+                            <div class="bg-slate-100 p-3 rounded">
+                                <h4 class="font-semibold text-slate-700 mb-1">${T('reason')}</h4><p>${eventReason}</p>
+                            </div>
+                            <div class="bg-slate-100 p-3 rounded">
+                                <h4 class="font-semibold text-slate-700 mb-1">${T('impact')}</h4><p>${eventImpact}</p>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+
+                eraDiv.innerHTML = `<h2 class="text-2xl md:text-3xl font-bold mb-3 text-slate-700">${eraName} ${T('us_view')}</h2><p class="text-slate-600 mb-8">${eraDesc}</p><div class="space-y-6">${eventsHtml}</div>`;
+                contentContainer.appendChild(eraDiv);
+            }
+
+            // Setup Event Listeners
+            document.getElementById('language-switcher').addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' && e.target.dataset.lang) {
+                    state.lang = e.target.dataset.lang;
+                    updateUI();
+                }
+            });
+
+            document.getElementById('chartTabs').addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' && e.target.dataset.tab) {
+                    state.activeTab = e.target.dataset.tab;
+                    updateUI();
+                }
+            });
+
+            document.getElementById('era-navigation').addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' && e.target.dataset.eraId) {
+                    state.activeEra = e.target.dataset.eraId;
+                    updateUI();
+                }
+            });
+
+            document.getElementById('toggleChinaRate').addEventListener('change', (e) => {
+                state.showChina = e.target.checked;
+                updateUI();
+            });
+
+            // Initial Load
+            const simplifiedAnnotationPlugin = { id: 'annotation', beforeDraw(chart, args, options) { if (!options || !options.annotations) return; const { ctx, chartArea: { top, bottom, left, right }, scales: { x, y } } = chart; Object.values(options.annotations).forEach(box => { if (box.type !== 'box') return; ctx.save(); ctx.fillStyle = box.backgroundColor || 'rgba(0, 0, 0, 0.1)'; ctx.strokeStyle = box.borderColor || 'rgba(0, 0, 0, 0.1)'; ctx.lineWidth = box.borderWidth || 1; const xMinPixel = x.getPixelForValue(new Date(box.xMin).valueOf()); const xMaxPixel = x.getPixelForValue(new Date(box.xMax).valueOf()); const rectX = Math.max(left, Math.min(xMinPixel, xMaxPixel)); const rectWidth = Math.min(right, Math.max(xMinPixel, xMaxPixel)) - rectX; if (rectWidth > 0 && rectX < right) { ctx.fillRect(rectX, top, rectWidth, bottom - top); ctx.strokeRect(rectX, top, rectWidth, bottom - top); } ctx.restore(); }); } };
+            Chart.register(simplifiedAnnotationPlugin);
+            
+            updateUI();
+        });
+    </script>
+</body>
+</html>
