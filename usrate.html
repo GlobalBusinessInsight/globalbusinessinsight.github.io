@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三十年风云：美联储利率决策全景透视</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral (Stone) with a professional Slate blue accent -->
+    <!-- Application Structure Plan: The application uses a thematic/chronological structure based on distinct monetary policy eras. The primary navigation consists of buttons for each era. A master line chart visualizes the entire 30-year rate history, with the selected era's timeframe being dynamically highlighted. Detailed information for each era is presented in content panels that are shown/hidden based on user selection. This structure facilitates both a high-level overview and a deep dive into specific periods, making the complex history easily digestible. -->
+    <!-- Visualization & Content Choices: Report Info: 30 years of Fed rate changes, personnel, reasons, and impacts. -> Goal: Show change over time and allow comparison between eras. -> Viz/Presentation: A master Chart.js line chart for the 30-year overview, with dynamic region highlighting. Detailed content is organized in Tailwind CSS-styled cards and text blocks within toggleable sections. -> Interaction: Users click era buttons to filter the displayed content and highlight the main chart. Tooltips on the chart provide specific data points. -> Justification: This approach combines a macro view (the full timeline chart) with micro details (the era-specific cards), catering to both quick exploration and in-depth analysis. -> Library/Method: Chart.js for canvas-based charting, vanilla JavaScript for all interaction logic. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .era-button {
+            transition: all 0.3s ease;
+        }
+        .era-button.active {
+            background-color: #475569; /* slate-600 */
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .content-era {
+            display: none;
+            animation: fadeIn 0.8s;
+        }
+        .content-era.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chart-container {
+            position: relative;
+            height: 40vh;
+            max-height: 400px;
+            width: 100%;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 50vh;
+                max-height: 500px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto px-4 py-8 md:py-12">
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-3xl md:text-5xl font-bold text-slate-800">三十年风云：美联储利率决策全景透视</h1>
+            <p class="mt-4 text-base md:text-lg text-slate-600 max-w-4xl mx-auto">一个交互式时间轴，带您回顾自1995年以来美联储的关键利率周期、决策者、背后动因及深远影响。</p>
+        </header>
+
+        <main>
+            <div class="chart-container max-w-6xl mx-auto mb-8 p-4 bg-white rounded-xl shadow-lg">
+                <canvas id="fedRateChart"></canvas>
+            </div>
+
+            <nav id="era-navigation" class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8 md:mb-12">
+            </nav>
+
+            <div id="content-container" class="bg-white p-6 md:p-8 rounded-2xl shadow-lg max-w-6xl mx-auto">
+            </div>
+        </main>
+        
+        <footer class="text-center mt-12 text-slate-500 text-sm">
+            <p>数据整理自公开信息，仅供研究学习使用。应用生成于 <span id="generationDate"></span>。</p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('generationDate').textContent = new Date().toLocaleDateString('zh-CN');
+
+        const fedData = [
+            {
+                id: 'era1',
+                name: '格林斯潘的“艺术”与繁荣终结 (1995-2001)',
+                startDate: '1995-02-01',
+                endDate: '2001-01-02',
+                description: '这一时期由艾伦·格林斯潘掌舵美联储，前期以其“先发制人”的微调和对“新经济”生产率提升的判断，成功缔造了高增长、低通胀的“金发姑娘”经济。但后期，面对互联网泡沫的极度膨胀，其加息举措未能阻止泡沫破裂，为21世纪初的衰退埋下伏笔。',
+                events: [
+                    {
+                        title: '预防式加息',
+                        time: '1995年2月',
+                        people: { president: '克林顿', treasury: '罗伯特·鲁宾', fed: '格林斯潘' },
+                        reason: '<strong>关键数据/事件:</strong> 经济增长强劲，为防止1994年紧缩周期后的通胀重燃。这是对经济潜力的信心投票，意在实现“软着陆”。',
+                        impact: '<strong>短期:</strong> 市场平稳过渡，经济增长势头得以延续。<br><strong>中长期:</strong> 成功巩固了低通胀环境，开启了90年代后期的持续繁荣，但也助长了市场的乐观情绪和科技股泡沫的萌芽。'
+                    },
+                    {
+                        title: '亚洲金融风暴与LTCM危机期间的降息',
+                        time: '1998年9月-11月',
+                        people: { president: '克林顿', treasury: '罗伯特·鲁宾', fed: '格林斯潘' },
+                        reason: '<strong>关键数据/事件:</strong> 亚洲金融危机和俄罗斯债务违约引发全球避险情绪，对冲基金“长期资本管理公司”(LTCM)濒临倒闭，威胁全球金融体系稳定。',
+                        impact: '<strong>短期:</strong> 迅速向市场注入流动性，成功避免了系统性金融危机，稳定了市场信心。被称为“格林斯潘对策”的经典案例。<br><strong>中长期:</strong> 强化了市场的“美联储看跌期权”（Fed Put）预期，即市场相信在危机时美联储总会出手救市，这在一定程度上鼓励了后来的过度冒险行为。'
+                    },
+                    {
+                        title: '刺破互联网泡沫的系列加息',
+                        time: '1999年6月 - 2000年5月',
+                        people: { president: '克林顿', treasury: '劳伦斯·萨默斯', fed: '格林斯潘' },
+                        reason: '<strong>关键数据/事件:</strong> 纳斯达克指数飙升，互联网公司估值脱离基本面，经济出现过热迹象，核心通胀压力开始显现。格林斯潘发表了著名的“非理性繁荣”演讲。',
+                        impact: '<strong>短期:</strong> 加息初期市场仍在上涨，但最终加重了科技股的压力，成为刺破泡沫的最后一根稻草。<br><strong>中长期:</strong> 未能阻止泡沫破裂，美国经济在2001年陷入衰退。这一轮紧缩的滞后效应，加上泡沫破裂的冲击，导致了随后的深度降息周期。'
+                    }
+                ]
+            },
+            {
+                id: 'era2',
+                name: '危机应对与非传统政策诞生 (2001-2008)',
+                startDate: '2001-01-03',
+                endDate: '2008-12-15',
+                description: '这是美联储应对连续冲击的时期。从互联网泡沫破裂到“9·11”恐怖袭击，再到最终引爆全球的次贷危机，美联储的政策工具箱被前所未有地打开，利率降至零，并开启了量化宽松（QE）的时代。',
+                events: [
+                    {
+                        title: '“9·11”后的急速降息',
+                        time: '2001年1月 - 2003年6月',
+                        people: { president: '乔治·W·布什', treasury: '保罗·奥尼尔 / 约翰·斯诺', fed: '格林斯潘' },
+                        reason: '<strong>关键数据/事件:</strong> 互联网泡沫破裂导致的经济衰退，叠加“9·11”恐怖袭击对经济和信心的巨大冲击。为防止经济陷入深度衰退和通货紧缩。',
+                        impact: '<strong>短期:</strong> 提供了巨大的流动性支持，刺激了消费和投资，特别是房地产市场。<br><strong>中长期:</strong> 极低的利率环境（联邦基金利率一度低至1%）为房地产泡沫的形成创造了完美的温床。这是后来次贷危机的关键背景之一。'
+                    },
+                    {
+                        title: '危机前的紧缩与伯南克的登场',
+                        time: '2004年6月 - 2006年6月',
+                        people: { president: '乔治·W·布什', treasury: '约翰·斯诺 / 亨利·保尔森', fed: '格林斯潘 / 本·伯南克' },
+                        reason: '<strong>关键数据/事件:</strong> 经济从衰退中复苏，房地产市场异常繁荣，通胀压力再现。美联储采取了连续17次、每次25个基点的“可预测”加息路径。',
+                        impact: '<strong>短期:</strong> 提高了借贷成本，试图为过热的房地产市场降温。<br><strong>中长期:</strong> 加息刺破了由次级抵押贷款支撑的巨大房地产泡沫，直接引爆了2007-2008年的全球金融危机。这次紧缩被广泛批评为“为时已晚，力度不足”。'
+                    },
+                    {
+                        title: '全球金融危机与零利率时代',
+                        time: '2007年9月 - 2008年12月',
+                        people: { president: '布什 / 奥巴马', treasury: '亨利·保尔森 / 蒂莫西·盖特纳', fed: '本·伯南克' },
+                        reason: '<strong>关键数据/事件:</strong> 次贷危机全面爆发，贝尔斯登倒闭，雷曼兄弟破产，金融市场陷入瘫痪。GDP急剧萎缩，失业率飙升。这是自“大萧条”以来最严重的金融危机。',
+                        impact: '<strong>短期:</strong> 将利率降至0-0.25%的有效下限，并启动首轮量化宽松（QE1），向金融体系注入天量流动性，成功阻止了全球金融体系的彻底崩溃。<br><strong>中长期:</strong> 开启了长达七年的零利率时代和多轮量化宽松，美联储资产负债表急剧扩张。这深刻改变了全球资产定价，但也引发了对未来通胀和资产泡沫的担忧。'
+                    }
+                ]
+            },
+            {
+                id: 'era3',
+                name: '缓慢的正常化与“缩减恐慌” (2009-2019)',
+                startDate: '2008-12-16',
+                endDate: '2020-03-02',
+                description: '金融危机后，美国经济进入漫长的复苏期。在珍妮特·耶伦和杰罗姆·鲍威尔的领导下，美联储小心翼翼地尝试退出非常规货币政策，但每一步都引发市场震动，凸显了后危机时代经济的脆弱性。',
+                events: [
+                    {
+                        title: '“缩减恐慌”(Taper Tantrum)',
+                        time: '2013年5月 (言论)',
+                        people: { president: '奥巴马', treasury: '杰克·卢', fed: '本·伯南克' },
+                        reason: '<strong>关键数据/事件:</strong> 伯南克首次暗示可能放缓（Taper）购债规模，引发市场对流动性收紧的恐慌。这并非一次实际的利率改变，但其影响巨大。',
+                        impact: '<strong>短期:</strong> 全球债券收益率飙升，新兴市场遭遇大规模资本外流，金融市场剧烈动荡。<br><strong>中长期:</strong> 成为美联储沟通策略的转折点，此后Fed在与市场沟通退出策略时变得极为谨慎。它揭示了全球金融体系对美联储宽松政策的深度依赖。'
+                    },
+                    {
+                        title: '首次加息与缓慢的正常化',
+                        time: '2015年12月 - 2018年12月',
+                        people: { president: '奥巴马 / 特朗普', treasury: '杰克·卢 / 史蒂文·姆努钦', fed: '耶伦 / 鲍威尔' },
+                        reason: '<strong>关键数据/事件:</strong> 劳动力市场显著改善，失业率降至历史低位，核心通胀缓慢接近2%的目标。经济基本面支持退出零利率。',
+                        impact: '<strong>短期:</strong> 每次加息都伴随着市场对经济能否承受更高利率的担忧。2018年底的加息，叠加贸易战担忧，引发了股市的大幅回调。<br><strong>中长期:</strong> 利率正常化进程缓慢且坎坷。2019年，由于全球经济放缓和贸易战的影响，美联储被迫转向降息，表明经济的内生增长动力依然不足以支撑利率回到危机前的水平。'
+                    }
+                ]
+            },
+            {
+                id: 'era4',
+                name: '新冠冲击与史上最激进紧缩 (2020-至今)',
+                startDate: '2020-03-03',
+                endDate: '2025-07-07',
+                description: '新冠疫情的爆发，迫使美联储以前所未有的速度和规模重启危机模式。然而，随之而来的四十年未见之高通胀，又迫使美联储上演了历史上最快、最猛烈的紧缩周期，全球经济再次面临严峻考验。',
+                events: [
+                    {
+                        title: '新冠疫情紧急降息',
+                        time: '2020年3月',
+                        people: { president: '特朗普', treasury: '史蒂文·姆努钦', fed: '杰罗姆·鲍威尔' },
+                        reason: '<strong>关键数据/事件:</strong> 新冠肺炎全球大流行，各国采取封锁措施，经济活动陷入停滞，金融市场出现流动性危机。',
+                        impact: '<strong>短期:</strong> 两次紧急降息将利率降回零，并启动无限量QE，迅速稳定了金融市场，为后续大规模财政刺激提供了支持。<br><strong>中长期:</strong> 极度宽松的货币政策与财政刺激相结合，叠加供应链中断，为2021-2022年的历史性高通胀埋下了伏笔。'
+                    },
+                    {
+                        title: '应对高通胀的激进加息',
+                        time: '2022年3月 - 2023年7月',
+                        people: { president: '乔·拜登', treasury: '珍妮特·耶伦', fed: '杰罗姆·鲍威尔' },
+                        reason: '<strong>关键数据/事件:</strong> CPI和PCE通胀率飙升至8%-9%的四十年高位，劳动力市场异常紧张。美联储承认通胀“并非暂时性”，被迫采取激进行动。',
+                        impact: '<strong>短期:</strong> 利率以罕见的50和75个基点的幅度连续上调，显著提高了借贷成本，导致成长性资产暴跌，房地产市场降温，并引发了2023年春季的区域性银行危机。<br><strong>中长期:</strong> 通胀已从高点显著回落，但核心通胀仍具粘性。经济展现出惊人的韧性，但高利率的滞后效应仍是未来经济走向的最大不确定性。'
+                    },
+                     {
+                        title: '高利率平台期',
+                        time: '2023年8月 - 至今',
+                        people: { president: '乔·拜登', treasury: '珍妮特·耶伦', fed: '杰罗姆·鲍威尔' },
+                        reason: '<strong>关键数据/事件:</strong> 利率维持在二十多年高位。美联储进入“依赖数据”的观望模式，核心任务是在确认通胀持续回归2%目标与避免过度紧缩导致经济衰退之间取得平衡。',
+                        impact: '<strong>短期:</strong> 市场在“更高更久”的预期和对经济数据的敏感反应之间摇摆。<br><strong>中长期:</strong> 持续的高利率环境正在重塑全球经济格局。美联储何时开启降息周期，成为2025年全球市场关注的焦点。'
+                    }
+                ]
+            }
+        ];
+
+        const rateHistory = {
+            '1995-02-01': 6.00, '1995-07-06': 5.75, '1995-12-19': 5.50, '1996-01-31': 5.25, '1997-03-25': 5.50,
+            '1998-09-29': 5.25, '1998-10-15': 5.00, '1998-11-17': 4.75, '1999-06-30': 5.00, '1999-08-24': 5.25,
+            '1999-11-16': 5.50, '2000-02-02': 5.75, '2000-03-21': 6.00, '2000-05-16': 6.50, '2001-01-03': 6.00,
+            '2001-01-31': 5.50, '2001-03-20': 5.00, '2001-04-18': 4.50, '2001-05-15': 4.00, '2001-06-27': 3.75,
+            '2001-08-21': 3.50, '2001-09-17': 3.00, '2001-10-02': 2.50, '2001-11-06': 2.00, '2001-12-11': 1.75,
+            '2002-11-06': 1.25, '2003-06-25': 1.00, '2004-06-30': 1.25, '2004-08-10': 1.50, '2004-09-21': 1.75,
+            '2004-11-10': 2.00, '2004-12-14': 2.25, '2005-02-02': 2.50, '2005-03-22': 2.75, '2005-05-03': 3.00,
+            '2005-06-30': 3.25, '2005-08-09': 3.50, '2005-09-20': 3.75, '2005-11-01': 4.00, '2005-12-13': 4.25,
+            '2006-01-31': 4.50, '2006-03-28': 4.75, '2006-05-10': 5.00, '2006-06-29': 5.25, '2007-09-18': 4.75,
+            '2007-10-31': 4.50, '2007-12-11': 4.25, '2008-01-22': 3.50, '2008-01-30': 3.00, '2008-03-18': 2.25,
+            '2008-04-30': 2.00, '2008-10-08': 1.50, '2008-10-29': 1.00, '2008-12-16': 0.25, '2015-12-17': 0.50,
+            '2016-12-15': 0.75, '2017-03-16': 1.00, '2017-06-15': 1.25, '2017-12-14': 1.50, '2018-03-22': 1.75,
+            '2018-06-14': 2.00, '2018-09-27': 2.25, '2018-12-20': 2.50, '2019-08-01': 2.25, '2019-09-19': 2.00,
+            '2019-10-31': 1.75, '2020-03-03': 1.25, '2020-03-16': 0.25, '2022-03-17': 0.50, '2022-05-05': 1.00,
+            '2022-06-16': 1.75, '2022-07-28': 2.50, '2022-09-22': 3.25, '2022-11-03': 4.00, '2022-12-15': 4.50,
+            '2023-02-02': 4.75, '2023-03-23': 5.00, '2023-05-04': 5.25, '2023-07-27': 5.50, '2025-07-07': 5.50
+        };
+
+        const sortedDates = Object.keys(rateHistory).sort((a, b) => new Date(a) - new Date(b));
+        const chartLabels = sortedDates.map(date => date);
+        const chartDataPoints = sortedDates.map(date => rateHistory[date]);
+
+        let fedRateChart;
+
+        const renderChart = (highlightedEra = null) => {
+            const ctx = document.getElementById('fedRateChart').getContext('2d');
+            
+            const datasets = [{
+                label: '联邦基金利率目标上限 (%)',
+                data: chartDataPoints,
+                borderColor: '#64748b', // slate-500
+                backgroundColor: 'rgba(100, 116, 139, 0.1)',
+                borderWidth: 2.5,
+                pointRadius: 0,
+                pointHitRadius: 10,
+                tension: 0.1,
+                fill: true,
+            }];
+
+            let plugins = {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            return `日期: ${tooltipItems[0].label}`;
+                        },
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += `${context.parsed.y.toFixed(2)}%`;
+                            }
+                            return label;
+                        }
+                    }
+                },
+                annotation: {}
+            };
+
+            if (highlightedEra) {
+                plugins.annotation = {
+                    annotations: {
+                        box1: {
+                            type: 'box',
+                            xMin: highlightedEra.startDate,
+                            xMax: highlightedEra.endDate,
+                            backgroundColor: 'rgba(71, 85, 105, 0.15)', // slate-600 with alpha
+                            borderColor: 'rgba(71, 85, 105, 0.2)',
+                            borderWidth: 1,
+                        }
+                    }
+                }
+            }
+
+            if (fedRateChart) {
+                fedRateChart.destroy();
+            }
+
+            fedRateChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'year',
+                                tooltipFormat: 'yyyy-MM-dd',
+                                displayFormats: {
+                                    year: 'yyyy'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: '年份'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '利率 (%)'
+                            },
+                             ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: plugins
+                }
+            });
+        };
+
+        const navigationContainer = document.getElementById('era-navigation');
+        const contentContainer = document.getElementById('content-container');
+
+        const renderContent = (eraId) => {
+            const era = fedData.find(e => e.id === eraId);
+            if (!era) return;
+
+            contentContainer.innerHTML = `
+                <div id="${era.id}" class="content-era active">
+                    <h2 class="text-2xl md:text-3xl font-bold mb-3 text-slate-700">${era.name}</h2>
+                    <p class="text-slate-600 mb-8">${era.description}</p>
+                    <div class="space-y-6">
+                        ${era.events.map(event => `
+                            <div class="border border-slate-200 rounded-lg p-4 md:p-6 hover:shadow-md transition-shadow duration-300">
+                                <h3 class="font-bold text-lg md:text-xl text-slate-800 mb-2">${event.title}</h3>
+                                <p class="text-sm text-slate-500 mb-4">${event.time}</p>
+                                <div class="grid md:grid-cols-3 gap-4 text-sm md:text-base">
+                                    <div class="bg-slate-100 p-3 rounded">
+                                        <h4 class="font-semibold text-slate-700 mb-1">核心决策者</h4>
+                                        <p><strong>总统:</strong> ${event.people.president}</p>
+                                        <p><strong>财长:</strong> ${event.people.treasury}</p>
+                                        <p><strong>Fed主席:</strong> ${event.people.fed}</p>
+                                    </div>
+                                    <div class="bg-slate-100 p-3 rounded">
+                                        <h4 class="font-semibold text-slate-700 mb-1">主要驱动原因</h4>
+                                        <p>${event.reason}</p>
+                                    </div>
+                                    <div class="bg-slate-100 p-3 rounded">
+                                        <h4 class="font-semibold text-slate-700 mb-1">利率改变后的影响</h4>
+                                        <p>${event.impact}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        };
+
+        const setupNavigation = () => {
+            fedData.forEach(era => {
+                const button = document.createElement('button');
+                button.textContent = era.name;
+                button.dataset.eraId = era.id;
+                button.className = 'era-button text-sm md:text-base bg-white text-slate-700 font-semibold py-2 px-3 md:px-5 rounded-lg shadow-sm hover:bg-slate-100 border border-slate-200';
+                navigationContainer.appendChild(button);
+            });
+
+            navigationContainer.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    const eraId = e.target.dataset.eraId;
+                    
+                    document.querySelectorAll('.era-button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    renderContent(eraId);
+
+                    const highlightedEra = fedData.find(era => era.id === eraId);
+                    renderChart(highlightedEra);
+                }
+            });
+            
+            const firstButton = navigationContainer.querySelector('button');
+            if(firstButton) {
+                firstButton.click();
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const simplifiedAnnotationPlugin = {
+                id: 'annotation',
+                beforeDraw(chart, args, options) {
+                    if (!options || !options.annotations) {
+                        return;
+                    }
+                    
+                    const {ctx, chartArea: {top, bottom, left, right}, scales: {x, y}} = chart;
+                    
+                    Object.values(options.annotations).forEach(box => {
+                        if (box.type !== 'box') return;
+
+                        ctx.save();
+                        ctx.fillStyle = box.backgroundColor || 'rgba(0, 0, 0, 0.1)';
+                        ctx.strokeStyle = box.borderColor || 'rgba(0, 0, 0, 0.1)';
+                        ctx.lineWidth = box.borderWidth || 1;
+
+                        const xMinPixel = x.getPixelForValue(new Date(box.xMin).valueOf());
+                        const xMaxPixel = x.getPixelForValue(new Date(box.xMax).valueOf());
+                        
+                        const rectX = Math.max(left, Math.min(xMinPixel, xMaxPixel));
+                        const rectWidth = Math.min(right, Math.max(xMinPixel, xMaxPixel)) - rectX;
+
+                        if (rectWidth > 0 && rectX < right) {
+                            ctx.fillRect(rectX, top, rectWidth, bottom - top);
+                            ctx.strokeRect(rectX, top, rectWidth, bottom - top);
+                        }
+                        ctx.restore();
+                    });
+                }
+            };
+            Chart.register(simplifiedAnnotationPlugin);
+            
+            setupNavigation();
+        });
+
+    </script>
+</body>
+</html>
