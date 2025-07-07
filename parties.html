@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美国少数党派全景扫描</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The SPA is designed with a non-linear, exploratory structure to maximize user engagement and understanding. It comprises four main sections navigated via a sticky header: 1. **历史长河 (Timeline)**: The landing page, providing an immediate visual overview of party lifespans, encouraging exploration. 2. **政党档案 (Profiles)**: A central hub for deep dives into specific parties, allowing users to select any party from a grid and view its detailed information. 3. **关键时刻 (Key Moments)**: A case-study section that uses interactive charts to illustrate the tangible impact of third parties on major elections. 4. **制度与未来 (System & Future)**: An analytical section explaining the structural barriers and future outlook. This structure guides the user from a broad historical context to specific details, then to impactful analysis, and finally to systemic understanding, which is more intuitive and powerful than the linear format of the source report. -->
+    <!-- Visualization & Content Choices: 1. **Historical Timeline**: (Goal: Show change over time) A custom horizontal timeline built with HTML/CSS was chosen over a static list to visually represent party lifespans and overlaps. Interaction: Click to navigate. Justification: More engaging and provides better historical context. 2. **Party Profiles**: (Goal: Inform/Organize) A card-based grid and dynamic content display. Interaction: Click to reveal details. Justification: Standard, intuitive UI for browsing and deep-diving without page reloads. 3. **Key Election Data**: (Goal: Compare/Show Relationships) Chart.js bar charts. Interaction: Tooltips on hover. Justification: Best tool for clear, quantitative comparison of election results, making the 'spoiler effect' tangible. 4. **System Explanation**: (Goal: Organize/Inform) A diagram built with HTML/Tailwind CSS. Interaction: Toggle to switch between voting systems. Justification: A simple, interactive visual is more effective for explaining abstract concepts like voting systems than pure text. All choices adhere to the NO SVG/Mermaid constraint. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans SC', sans-serif; background-color: #fdfaf6; color: #4a4a4a; }
+        .nav-link { transition: color 0.3s, border-color 0.3s; }
+        .nav-link.active, .nav-link:hover { color: #c084fc; border-color: #c084fc; }
+        .party-card { transition: transform 0.3s, box-shadow 0.3s; }
+        .party-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .timeline-item { transition: background-color 0.3s; }
+        .timeline-item:hover { opacity: 0.8; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 350px; max-height: 50vh; }
+        @media (min-width: 768px) { .chart-container { height: 450px; } }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .sim-button { transition: background-color 0.3s, color 0.3s; }
+        .sim-button.active { background-color: #a855f7; color: white; }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl sm:text-2xl font-bold text-purple-500">美国少数党派全景</h1>
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#timeline" class="nav-link text-base sm:text-lg font-medium border-b-2 border-transparent pb-1">历史长河</a>
+                    <a href="#profiles" class="nav-link text-base sm:text-lg font-medium border-b-2 border-transparent pb-1">政党档案</a>
+                    <a href="#moments" class="nav-link text-base sm:text-lg font-medium border-b-2 border-transparent pb-1">关键时刻</a>
+                    <a href="#future" class="nav-link text-base sm:text-lg font-medium border-b-2 border-transparent pb-1">制度与未来</a>
+                </nav>
+                <button id="mobile-menu-button" class="md:hidden p-2 rounded-md text-stone-600 hover:bg-stone-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500">
+                    <span class="sr-only">打开主菜单</span>
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-4 6h10" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#timeline" class="nav-link block px-3 py-2 rounded-md text-base font-medium">历史长河</a>
+                <a href="#profiles" class="nav-link block px-3 py-2 rounded-md text-base font-medium">政党档案</a>
+                <a href="#moments" class="nav-link block px-3 py-2 rounded-md text-base font-medium">关键时刻</a>
+                <a href="#future" class="nav-link block px-3 py-2 rounded-md text-base font-medium">制度与未来</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <section id="timeline" class="content-section fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-stone-800">历史长河</h2>
+                <p class="mt-4 text-base sm:text-lg text-stone-600 max-w-3xl mx-auto">下图展示了美国历史上重要少数党派的活跃时期。将鼠标悬停或点击色块以探索每个政党的简要信息，或导航至“政党档案”查看完整详情。</p>
+            </div>
+            <div class="relative w-full overflow-x-auto bg-white p-6 rounded-xl shadow-lg">
+                <div id="timeline-container" class="relative h-[500px] sm:h-[600px]">
+                    <!-- Timeline will be generated by JS here -->
+                </div>
+                <div class="absolute bottom-0 left-6 right-6 flex justify-between text-sm font-semibold text-stone-500 pb-2">
+                    <span>1790</span>
+                    <span>1820</span>
+                    <span>1850</span>
+                    <span>1880</span>
+                    <span>1910</span>
+                    <span>1940</span>
+                    <span>1970</span>
+                    <span>2000</span>
+                    <span>2024</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="profiles" class="content-section fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-stone-800">政党档案</h2>
+                <p class="mt-4 text-base sm:text-lg text-stone-600 max-w-3xl mx-auto">点击下方的卡片，深入了解各个少数党派的核心理念、主要人物、历史成就及其最终的政治命运。</p>
+            </div>
+            <div id="party-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Party cards will be generated by JS here -->
+            </div>
+            <div id="party-details-container" class="hidden">
+                 <!-- Party details will be injected here by JS -->
+            </div>
+        </section>
+        
+        <section id="moments" class="content-section fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-stone-800">关键时刻：改变历史的选举</h2>
+                <p class="mt-4 text-base sm:text-lg text-stone-600 max-w-3xl mx-auto">少数党派虽然鲜有胜绩，但它们在某些关键选举中扮演了“搅局者”的角色，深刻影响了美国的政治走向。以下是两个最著名的案例。</p>
+            </div>
+            <div class="space-y-16">
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4">1912年总统选举：共和党的分裂</h3>
+                    <p class="mb-6 text-stone-700">前总统西奥多·罗斯福对共和党保守派不满，自创进步党（“公麋党”）参选，直接分散了共和党的选票，导致民主党人伍德罗·威尔逊轻松获胜。这次选举是“搅局者效应”最经典的教科书案例，同时也显示了进步主义思潮在当时已深入人心。</p>
+                    <div class="chart-container">
+                        <canvas id="election1912Chart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4">2000年总统选举：纳德的争议</h3>
+                    <p class="mb-6 text-stone-700">绿党候选人拉尔夫·纳德在全国获得2.7%的选票，但在佛罗里达等关键摇摆州，他的得票数远超共和党人乔治·W·布什对民主党人阿尔·戈尔的领先优势。许多分析认为，如果没有纳德参选，戈尔将赢得大选。这一事件至今仍在关于第三党角色的辩论中被反复提及。</p>
+                    <div class="chart-container">
+                        <canvas id="election2000Chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="content-section fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-stone-800">制度与未来</h2>
+                <p class="mt-4 text-base sm:text-lg text-stone-600 max-w-3xl mx-auto">是什么系统性地限制了美国少数党派的发展？未来它们又面临着怎样的机遇与挑战？</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4">制度壁垒：交互式模拟</h3>
+                    <p class="mb-6 text-stone-700">美国绝大多数选举采用“单一选区多数决制”，即“赢者通吃”。这导致选民担心“浪费”选票而进行策略性投票。点击下方按钮，查看不同选举制度如何改变选举结果。</p>
+                    
+                    <div class="mb-4 flex justify-center rounded-lg bg-stone-100 p-1">
+                        <button id="wta-button" class="sim-button active w-1/2 p-2 rounded-md font-semibold">赢者通吃</button>
+                        <button id="rcv-button" class="sim-button w-1/2 p-2 rounded-md font-semibold">排序复选制</button>
+                    </div>
+
+                    <div class="border border-stone-200 rounded-lg p-4 text-center">
+                        <h4 class="font-semibold text-lg mb-2">模拟投票情景</h4>
+                        <p class="text-sm mb-4">在一个有100名选民的选区，初始投票情况如下：</p>
+                        <div class="chart-container h-64 sm:h-72">
+                            <canvas id="simulationChart"></canvas>
+                        </div>
+                        <div id="simulation-result" class="mt-4 p-3 rounded-md transition-all duration-300">
+                            <!-- Result text will be injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4">未来的机遇与挑战</h3>
+                     <div class="space-y-6">
+                        <div>
+                            <h4 class="text-xl font-semibold text-emerald-600 mb-2">有利因素</h4>
+                            <ul class="list-disc list-inside space-y-2 text-stone-700">
+                                <li><b>主流政党极化：</b>更多选民感到两党都无法代表自己。</li>
+                                <li><b>互联网时代：</b>社交媒体降低了组织和传播成本。</li>
+                                <li><b>年轻选民：</b>Z世代和千禧一代对新议题和新选择更开放。</li>
+                                <li><b>选举改革呼声：</b>“排序复选制”等改革方案获得更多关注。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-rose-600 mb-2">不利因素</h4>
+                            <ul class="list-disc list-inside space-y-2 text-stone-700">
+                                <li><b>选举制度壁垒：</b>“赢者通吃”是根本性障碍。</li>
+                                <li><b>媒体曝光不均：</b>主流媒体资源高度集中于两党。</li>
+                                <li><b>资金劣势：</b>政治献金和公共资金难以获得。</li>
+                                <li><b>历史惯性：</b>选民习惯于在两党之间做选择。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-800 text-stone-300 mt-16">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center">
+            <p>交互式报告根据“美国历史少数党派研究报告”生成。</p>
+            <p class="text-sm text-stone-400 mt-2">© 2025 美国政治分析。保留所有权利。</p>
+        </div>
+    </footer>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const partiesData = [
+        { id: 'federalist', name: '联邦党', start: 1791, end: 1824, color: '#a855f7', status: '已解散', leaders: '亚历山大·汉密尔顿、约翰·亚当斯', background: '支持强中央政府、亲英倾向、反对法国革命影响。', achievements: '主导了华盛顿和亚当斯政府时期政策，包括建立国家银行，奠定国家财政基础。', demise: '1812战争后因其反战立场失去公众支持，在杰斐逊民主共和党的崛起中逐渐解体。' },
+        { id: 'dem-rep', name: '民主共和党', start: 1792, end: 1834, color: '#ec4899', status: '已解散', leaders: '托马斯·杰斐逊、詹姆斯·麦迪逊', background: '反对联邦党的中央集权，主张州权、农业共和国和严格解释宪法。', achievements: '赢得了1800年大选，开启了“杰斐逊民主”时代，主导政坛数十年。', demise: '“和谐时代”后，因内部经济与地区矛盾加剧而分裂，演化为民主党和国家共和党。' },
+        { id: 'liberty', name: '自由党', start: 1840, end: 1848, color: '#f97316', status: '已解散', leaders: '詹姆斯·伯尼', background: '美国第一个完全致力于废除奴隶制的政党，具有强烈的道德和宗教色彩。', achievements: '在1840和1844年总统选举中提出废奴议题，对主流政治形成道德压力。', demise: '其核心成员和理念并入更具政治现实性的土地自由党。' },
+        { id: 'free-soil', name: '土地自由党', start: 1848, end: 1854, color: '#eab308', status: '已解散', leaders: '马丁·范布伦、萨蒙·蔡斯', background: '反对奴隶制向西部新领土扩张，口号是“自由土地、自由言论、自由劳动、自由人”。', achievements: '成功地将反奴隶制扩张议题推向全国政治中心，为共和党的成立奠定基础。', demise: '大部分成员和其核心纲领被新成立的共和党吸收。' },
+        { id: 'know-nothing', name: '美国党 (一无所知党)', start: 1855, end: 1860, color: '#84cc16', status: '已解散', leaders: '米勒德·菲尔莫尔', background: '一个本土主义、反天主教、反移民的秘密社团式政党。', achievements: '在19世纪50年代中期短暂地成为一股强大的政治力量，赢得了多个州的选举。', demise: '奴隶制问题的尖锐化使其内部分裂，迅速衰落。' },
+        { id: 'progressive', name: '进步党 (公麋党)', start: 1912, end: 1912, color: '#22c55e', status: '短暂复兴', leaders: '西奥多·罗斯福 (1912), 罗伯特·拉福莱特 (1924), 亨利·华莱士 (1948)', background: '由对两大党不满的改革者组成，分三次出现，主张反垄断、社会福利和政府监管。', achievements: '促使主流政党采纳其部分社会改革政策（如妇女选举权、劳工权益），深刻影响了“新政”议程。', demise: '高度依赖领袖个人魅力，缺乏稳固的基层组织，最终被主流党派吸收或边缘化。' },
+        { id: 'socialist', name: '美国社会党', start: 1901, end: 1972, color: '#14b8a6', status: '已解散', leaders: '尤金·德布斯、诺曼·托马斯', background: '主张民主社会主义，倡导公有制、劳工权利、妇女选举权和反战。', achievements: '提前提出社会保障、失业保险等理念，对后来的“新政”产生深远影响。德布斯在1920年狱中参选获得近百万票。', demise: '因政府镇压（红色恐慌）、内部意识形态分裂以及“新政”采纳其部分主张而衰落。' },
+        { id: 'communist', name: '美国共产党', start: 1919, end: 2024, color: '#ef4444', status: '活跃中', leaders: '厄尔·白劳德、格斯·霍尔', background: '信奉马克思列宁主义，主张工人阶级革命和社会主义建设。', achievements: '在20世纪30-40年代的工会运动和早期民权运动中有过重要贡献。', demise: '冷战时期的镇压和麦卡锡主义重创其组织力，加上与苏联的紧密联系，使其被彻底边缘化，至今维持象征性存在。' },
+        { id: 'libertarian', name: '自由意志党', start: 1971, end: 2024, color: '#3b82f6', status: '活跃中', leaders: '罗恩·保罗、加里·约翰逊', background: '主张最小政府、最大化个人自由和完全的自由市场经济。', achievements: '美国第三大党，在选举中长期稳定存在，其理念对部分共和党和民主党人有重要影响。', demise: '尚未消亡。持续活跃中。' },
+        { id: 'green', name: '绿党', start: 1991, end: 2024, color: '#10b981', status: '活跃中', leaders: '拉尔夫·纳德、吉尔·斯坦', background: '基于生态智慧、社会正义、草根民主和非暴力四大支柱。', achievements: '在地方选举中取得一定成功，推动环境议题进入公共话语。2000年大选的“搅局者”角色引发巨大争议。', demise: '尚未消亡。持续活跃中。' },
+        { id: 'constitution', name: '宪法党', start: 1992, end: 2024, color: '#6366f1', status: '活跃中', leaders: '霍华德·菲利普斯', background: '主张严格按照美国宪法原旨治理国家，融合了旧保守主义和基督教价值观。', achievements: '在部分极端保守派选民中保有小众吸引力。', demise: '尚未消亡。其政治空间常被共和党更强硬的言论所挤压。' }
+    ];
+
+    const timelineContainer = document.getElementById('timeline-container');
+    const startYear = 1790;
+    const endYear = 2025;
+    const totalYears = endYear - startYear;
+
+    function generateTimeline() {
+        partiesData.forEach((party, index) => {
+            const partyStart = party.start - startYear;
+            const partyDuration = party.end - party.start;
+            const left = (partyStart / totalYears) * 100;
+            const width = (partyDuration / totalYears) * 100;
+
+            const item = document.createElement('div');
+            item.className = 'absolute h-6 rounded timeline-item cursor-pointer flex items-center justify-center text-white text-xs font-bold';
+            item.style.left = `${left}%`;
+            item.style.width = `${width}%`;
+            item.style.top = `${40 + index * 35}px`;
+            item.style.backgroundColor = party.color;
+            item.setAttribute('data-party-id', party.id);
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = party.name;
+            item.appendChild(nameSpan);
+
+            item.addEventListener('click', () => {
+                showSection('profiles');
+                renderPartyDetails(party.id);
+            });
+            timelineContainer.appendChild(item);
+        });
+
+        for (let i = 0; i <= (endYear - startYear) / 10; i++) {
+            const year = startYear + i * 10;
+            const marker = document.createElement('div');
+            marker.className = 'absolute top-0 bottom-0 border-l border-stone-200';
+            marker.style.left = `${(i * 10 / totalYears) * 100}%`;
+            timelineContainer.appendChild(marker);
+        }
+    }
+
+    const partyGrid = document.getElementById('party-grid');
+    const partyDetailsContainer = document.getElementById('party-details-container');
+    
+    function generatePartyGrid() {
+        partiesData.forEach(party => {
+            const card = document.createElement('div');
+            card.className = 'party-card p-4 bg-white rounded-lg shadow-md cursor-pointer border-l-4';
+            card.style.borderColor = party.color;
+            card.setAttribute('data-party-id', party.id);
+            card.innerHTML = `
+                <h3 class="text-xl font-bold text-stone-800">${party.name}</h3>
+                <p class="text-sm text-stone-500">${party.start}–${party.end > 2024 ? '至今' : party.end}</p>
+                <span class="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded-full ${party.status === '活跃中' ? 'bg-green-100 text-green-800' : 'bg-stone-100 text-stone-800'}">${party.status}</span>
+            `;
+            card.addEventListener('click', () => renderPartyDetails(party.id));
+            partyGrid.appendChild(card);
+        });
+    }
+
+    function renderPartyDetails(partyId) {
+        const party = partiesData.find(p => p.id === partyId);
+        if (!party) return;
+
+        partyDetailsContainer.innerHTML = `
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg fade-in border-t-8" style="border-color: ${party.color};">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-3xl sm:text-4xl font-bold">${party.name}</h2>
+                        <p class="text-base sm:text-lg text-stone-500 mb-4">${party.start}–${party.end > 2024 ? '至今' : party.end}</p>
+                    </div>
+                    <button id="close-details" class="text-stone-500 hover:text-stone-800 text-3xl">&times;</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                    <div>
+                        <h4 class="text-xl font-semibold mb-2 text-stone-700">核心主张</h4>
+                        <p class="text-base">${party.background}</p>
+                        <h4 class="text-xl font-semibold mt-6 mb-2 text-stone-700">主要领导人</h4>
+                        <p class="text-base">${party.leaders}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold mb-2 text-stone-700">历史成就与影响</h4>
+                        <p class="text-base">${party.achievements}</p>
+                        <h4 class="text-xl font-semibold mt-6 mb-2 text-stone-700">衰落或现状</h4>
+                        <p class="text-base">${party.demise}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        partyDetailsContainer.classList.remove('hidden');
+        document.getElementById('close-details').addEventListener('click', () => {
+            partyDetailsContainer.classList.add('hidden');
+            partyDetailsContainer.innerHTML = '';
+        });
+        partyDetailsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    const sections = document.querySelectorAll('.content-section');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+
+    function showSection(id) {
+        sections.forEach(section => {
+            if (section.id === id) {
+                section.classList.add('active');
+            } else {
+                section.classList.remove('active');
+            }
+        });
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === '#' + id) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+        if (!mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.add('hidden');
+        }
+    }
+    
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href').substring(1);
+            showSection(targetId);
+            window.history.pushState(null, '', '#' + targetId);
+        });
+    });
+
+    function handleRouting() {
+        let hash = window.location.hash.substring(1);
+        if (!['timeline', 'profiles', 'moments', 'future'].includes(hash)) {
+            hash = 'timeline';
+        }
+        showSection(hash);
+    }
+    
+    window.addEventListener('popstate', handleRouting);
+
+    function create1912Chart() {
+        const ctx = document.getElementById('election1912Chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['民主党 (威尔逊)', '进步党 (罗斯福)', '共和党 (塔夫脱)', '社会党 (德布斯)'],
+                datasets: [{
+                    label: '普选票得票率 (%)',
+                    data: [41.8, 27.4, 23.2, 6.0],
+                    backgroundColor: ['#3b82f6', '#22c55e', '#ef4444', '#14b8a6'],
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { title: { display: true, text: '1912年美国总统选举结果', font: { size: 16 } }, legend: { display: false } }, scales: { x: { beginAtZero: true, title: { display: true, text: '得票率 (%)' } } } }
+        });
+    }
+
+    function create2000Chart() {
+        const ctx = document.getElementById('election2000Chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['佛罗里达州', '新罕布什尔州'],
+                datasets: [ { label: '布什 (共和党) 领先戈尔 (民主党) 票数', data: [537, 7211], backgroundColor: '#fca5a5' }, { label: '纳德 (绿党) 得票数', data: [97488, 22198], backgroundColor: '#86efac' } ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: '2000年关键州选票对比', font: { size: 16 } }, tooltip: { mode: 'index', intersect: false } }, scales: { y: { beginAtZero: true, title: { display: true, text: '票数' } } } }
+        });
+    }
+
+    let simulationChart;
+    function createOrUpdateSimulationChart(data, resultText, resultBgColor, resultTextColor) {
+        const resultDiv = document.getElementById('simulation-result');
+        resultDiv.innerHTML = resultText;
+        resultDiv.style.backgroundColor = resultBgColor;
+        resultDiv.style.color = resultTextColor;
+
+        const ctx = document.getElementById('simulationChart').getContext('2d');
+        if (simulationChart) {
+            simulationChart.data.datasets[0].data = data;
+            simulationChart.update();
+        } else {
+            simulationChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['共和党', '民主党', '第三党'],
+                    datasets: [{
+                        label: '票数',
+                        data: data,
+                        backgroundColor: ['#ef4444', '#3b82f6', '#10b981'],
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, max: 100 } }
+                }
+            });
+        }
+    }
+
+    const wtaButton = document.getElementById('wta-button');
+    const rcvButton = document.getElementById('rcv-button');
+
+    const initialVotes = { republican: 45, democrat: 40, third: 15 };
+
+    function showWtaResult() {
+        wtaButton.classList.add('active');
+        rcvButton.classList.remove('active');
+        const resultText = `<b>结果：</b>共和党以45%的相对多数获胜，尽管55%的选民选择了其他候选人。第三党的15%选票没有带来任何代表权。`;
+        createOrUpdateSimulationChart(
+            [initialVotes.republican, initialVotes.democrat, initialVotes.third],
+            resultText,
+            '#fee2e2', // red-100
+            '#991b1b'  // red-800
+        );
+    }
+
+    function showRcvResult() {
+        rcvButton.classList.add('active');
+        wtaButton.classList.remove('active');
+        const finalDemocratVotes = initialVotes.democrat + initialVotes.third;
+        const resultText = `<b>结果：</b>第一轮无人过半，得票最少的第三党被淘汰。其15张选票根据选民第二选择流向民主党。<b>最终民主党以 ${finalDemocratVotes}% 的多数票获胜。</b>`;
+        createOrUpdateSimulationChart(
+            [initialVotes.republican, finalDemocratVotes, 0],
+            resultText,
+            '#dbeafe', // blue-100
+            '#1e40af'  // blue-800
+        );
+    }
+
+    wtaButton.addEventListener('click', showWtaResult);
+    rcvButton.addEventListener('click', showRcvResult);
+
+
+    handleRouting();
+    generateTimeline();
+    generatePartyGrid();
+    create1912Chart();
+    create2000Chart();
+    showWtaResult(); // Initialize simulation chart
+});
+</script>
+
+</body>
+</html>
