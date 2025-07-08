@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>边缘的坚持：美国少数党派探索</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals - Background: #F8F5F2, Text: #3D3D3D, Primary Accent: #7D8B9B, Highlight: #C6B09E -->
+    <!-- Application Structure Plan: 设计了一个非线性的、以探索为导金の向的单页应用结构。顶部导航栏提供对核心模块的快速访问：1) 首页 (介绍报告核心论点), 2) 政党时间轴 (将报告中的党派体系模型和列表融合成一个核心的、可交互的发现工具), 3) 党派档案 (一个可筛选的数据库，用于深入了解各个党派), 4) 制度困境 (通过交互式图表解释复杂的政治学概念), 5) 未来展望 (总结报告的预测)。这种结构旨在引导用户从宏观历史背景（时间轴）深入到微观细节（党派档案），同时通过专门的解释模块（制度困境）提供理论背景，最终引向对未来的思考，从而优化信息的消化和用户参与度。 -->
+    <!-- Visualization & Content Choices: 1) 首页: 简洁的文本展示，突出报告的核心论点。2) 时间轴: 使用HTML/CSS Flexbox构建的水平时间轴，结合JS交互，目标是直观展示党派在不同历史时期（党派体系）的出现与消亡。3) 党派档案: 使用HTML/CSS网格布局和JS进行筛选与内容动态展示，目标是提供一个易于访问的党派信息库。4) 制度困境: 使用Chart.js创建交互式柱状图来解释“搅局者效应”，并用纯HTML/CSS构建图示来解释杜瓦杰定律，目标是将抽象概念可视化。5) 未来展望: 使用Chart.js创建折线图展示选民不满情绪，结合卡片式布局呈现报告的预测，目标是使预测内容更具吸引力。所有选择都旨在增强用户理解和互动，并严格遵守无SVG/Mermaid的要求。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340" crossorigin="anonymous"></script>
+    <style>
+        body { font-family: 'Roboto', 'Noto Sans SC', sans-serif; background-color: #F8F5F2; color: #3D3D3D; }
+        .chart-container { position: relative; width: 100%; max-width: 700px; margin-left: auto; margin-right: auto; height: 350px; max-height: 50vh; }
+        @media (max-width: 768px) { .chart-container { height: 300px; } }
+        .nav-link { transition: color 0.3s, border-color 0.3s; }
+        .nav-link.active { color: #7D8B9B; border-bottom-color: #7D8B9B; }
+        .party-card { transition: transform 0.3s, box-shadow 0.3s; }
+        .party-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+        .modal { transition: opacity 0.3s ease-in-out; }
+        .modal-content { transition: transform 0.3s ease-in-out; }
+        .timeline-era { transition: background-color 0.3s; }
+        .timeline-era:hover { background-color: rgba(125, 139, 155, 0.1); }
+        .timeline-marker { transition: all 0.2s; }
+        .timeline-marker:hover { transform: scale(1.2); background-color: #7D8B9B; }
+        .timeline-marker:hover .tooltip { opacity: 1; visibility: visible; transform: translateY(-100%); }
+        .tooltip { transition: opacity 0.2s, visibility 0.2s, transform 0.2s; }
+        .lang-toggle:hover { background-color: rgba(125, 139, 155, 0.1); }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header id="header" class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
+            <div id="nav-title" class="text-xl font-bold text-gray-800">边缘的坚持</div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#hero" id="nav-hero" class="nav-link text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-1">首页</a>
+                <a href="#timeline" id="nav-timeline" class="nav-link text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-1">政党时间轴</a>
+                <a href="#profiles" id="nav-profiles" class="nav-link text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-1">党派档案</a>
+                <a href="#barriers" id="nav-barriers" class="nav-link text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-1">制度困境</a>
+                <a href="#future" id="nav-future" class="nav-link text-gray-600 hover:text-gray-900 border-b-2 border-transparent pb-1">未来展望</a>
+                <button id="lang-toggle-desktop" class="lang-toggle ml-4 px-3 py-1 border border-gray-400 text-gray-600 rounded-full text-sm font-semibold transition-colors">EN</button>
+            </div>
+            <div class="md:hidden flex items-center">
+                <button id="lang-toggle-mobile" class="lang-toggle mr-2 px-3 py-1 border border-gray-400 text-gray-600 rounded-full text-sm font-semibold transition-colors">EN</button>
+                <button id="mobile-menu-button" class="focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="#hero" id="mobile-nav-hero" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">首页</a>
+            <a href="#timeline" id="mobile-nav-timeline" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">政党时间轴</a>
+            <a href="#profiles" id="mobile-nav-profiles" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">党派档案</a>
+            <a href="#barriers" id="mobile-nav-barriers" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">制度困境</a>
+            <a href="#future" id="mobile-nav-future" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">未来展望</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Section 1: Hero -->
+        <section id="hero" class="py-20 md:py-32 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h1 id="hero-title" class="text-4xl md:text-6xl font-bold leading-tight mb-4">边缘的坚持</h1>
+                <h2 id="hero-subtitle" class="text-xl md:text-2xl text-gray-600 mb-8">美国少数党派的综合分析</h2>
+                <p id="hero-desc" class="max-w-3xl mx-auto text-lg leading-relaxed text-gray-700">
+                    虽然美国选举制度中的结构性障碍将少数党派永久地限制在政治边缘，但它们主要且持久的影响力在于，能够将新的思想和政策平台注入国家话语体系。这些平台随后常被主要党派内的派系所吸纳，从而塑造了美国政治发展的长期轨迹。
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 2: Timeline -->
+        <section id="timeline" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 id="timeline-title" class="text-3xl md:text-4xl font-bold">美国政党体系演进</h2>
+                    <p id="timeline-desc" class="text-lg text-gray-600 mt-4">点击时间轴上的标记点，可跳转至对应党派的详细档案。</p>
+                </div>
+                <div id="timeline-container" class="relative w-full overflow-x-auto pb-8">
+                    <!-- Timeline will be generated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Party Profiles -->
+        <section id="profiles" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 id="profiles-title" class="text-3xl md:text-4xl font-bold">党派档案库</h2>
+                    <p id="profiles-desc" class="text-lg text-gray-600 mt-4">探索美国历史上重要少数党派的兴衰沉浮。</p>
+                    <div class="mt-8 flex justify-center space-x-2 sm:space-x-4">
+                        <button id="filter-all" class="px-4 sm:px-6 py-2 bg-[#7D8B9B] text-white rounded-full shadow-md transition-transform transform hover:scale-105">所有党派</button>
+                        <button id="filter-historical" class="px-4 sm:px-6 py-2 bg-white text-gray-700 rounded-full shadow-md transition-transform transform hover:scale-105">历史党派</button>
+                        <button id="filter-active" class="px-4 sm:px-6 py-2 bg-white text-gray-700 rounded-full shadow-md transition-transform transform hover:scale-105">活跃党派</button>
+                    </div>
+                </div>
+                <div id="profiles-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    <!-- Party cards will be generated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Systemic Barriers -->
+        <section id="barriers" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 id="barriers-title" class="text-3xl md:text-4xl font-bold">制度困境：为何只有两大党？</h2>
+                    <p id="barriers-desc" class="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">美国政治由两党主导并非偶然，而是一系列环环相扣的结构性、法律性和心理性障碍共同作用的结果。</p>
+                </div>
+                
+                <div class="space-y-16">
+                    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+                        <h3 id="spoiler-title" class="text-2xl font-bold text-center mb-2">“搅局者效应”</h3>
+                        <p id="spoiler-desc" class="text-center text-gray-600 mb-6">在势均力敌的选举中，少数党派候选人可能会吸走意识形态相近的主要党派候选人的选票，从而导致选民最不希望看到的另一主要党派候选人获胜。请选择一次选举查看数据：</p>
+                        <div class="flex justify-center mb-6">
+                            <select id="spoiler-election-select" class="p-2 border border-gray-300 rounded-md bg-white">
+                                <!-- Options will be generated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="spoilerChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+                        <h3 id="duverger-title" class="text-2xl font-bold text-center mb-6">杜瓦杰定律：两党制的“铁律”</h3>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div class="border-r-0 md:border-r border-gray-200 md:pr-8">
+                                <h4 id="duverger-mech-title" class="font-bold text-xl mb-3 text-center">1. 机械效应</h4>
+                                <p id="duverger-mech-desc" class="text-gray-600 mb-4">在“赢者通吃”的制度下，一个党派即使在全国获得20%的选票，也可能因为在任何单一选区都未能成为第一名而无法赢得任何席位。</p>
+                                <div class="flex items-center justify-around p-4 bg-gray-50 rounded-lg space-x-2">
+                                    <div class="text-center"><div class="h-24 w-12 sm:w-16 bg-[#7D8B9B] rounded-t-lg flex items-end justify-center text-white font-bold pb-1">45%</div><p id="party-a-1" class="text-sm mt-1">A党</p></div>
+                                    <div class="text-center"><div class="h-20 w-12 sm:w-16 bg-[#C6B09E] rounded-t-lg flex items-end justify-center text-white font-bold pb-1">40%</div><p id="party-b-1" class="text-sm mt-1">B党</p></div>
+                                    <div class="text-center"><div class="h-8 w-12 sm:w-16 bg-gray-400 rounded-t-lg flex items-end justify-center text-white font-bold pb-1">15%</div><p id="party-c-1" class="text-sm mt-1">C党</p></div>
+                                    <div class="text-center font-bold text-2xl text-[#7D8B9B]">&rarr;</div>
+                                    <div class="text-center"><div class="h-24 w-12 sm:w-16 bg-[#7D8B9B] rounded-lg flex items-center justify-center text-white font-bold text-base sm:text-lg text-center leading-tight"><span id="party-a-wins">A党获胜</span></div><p id="wins-all" class="text-sm mt-1">赢得全部</p></div>
+                                </div>
+                            </div>
+                            <div class="pt-8 md:pt-0">
+                                <h4 id="duverger-psych-title" class="font-bold text-xl mb-3 text-center">2. 心理效应</h4>
+                                <p id="duverger-psych-desc" class="text-gray-600 mb-4">选民为了不“浪费”选票，倾向于进行“策略性投票”：放弃自己真正支持但胜算不大的少数党，转而投给“两害相权取其轻”的主要党派。</p>
+                                <div class="p-4 bg-gray-50 rounded-lg text-center">
+                                    <span class="text-2xl">🤔</span>
+                                    <p id="voter-thought" class="mt-2 text-gray-700">“我更喜欢C党，但它赢不了... 我还是投给B党，至少能阻止我最讨厌的A党上台。”</p>
+                                    <p id="voter-consequence" class="mt-4 text-sm text-gray-500">这种心理形成了一个自我实现的预言，进一步巩固了两党格局。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Future Outlook -->
+        <section id="future" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 id="future-title" class="text-3xl md:text-4xl font-bold">未来展望：边缘的呐喊 (2025-2035)</h2>
+                    <p id="future-desc" class="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">尽管对两大党的不满情绪高涨，但结构性力量依然强大。少数党派的未来在于从边缘发挥其独特影响力。</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 id="dissatisfaction-title" class="text-2xl font-bold mb-4">选民不满情绪高涨</h3>
+                        <p id="dissatisfaction-desc" class="text-gray-600 mb-6">民调显示，超过半数的美国人认为需要一个强大的第三党。然而，这种意愿与实际投票行为之间存在巨大鸿沟，这正是少数党派面临的核心困境。</p>
+                        <div class="chart-container">
+                            <canvas id="dissatisfactionChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                         <div class="p-6 bg-gray-50 rounded-lg"><h4 id="future-point1-title" class="font-bold text-xl mb-2">💡 平台被吸收</h4><p id="future-point1-desc" class="text-gray-600">继续扮演“政治研发部”的角色，其激进理念（如绿色新政）被主要党派吸收，从而影响国家议程。</p></div>
+                         <div class="p-6 bg-gray-50 rounded-lg"><h4 id="future-point2-title" class="font-bold text-xl mb-2">🏛️ 地方主义策略</h4><p id="future-point2-desc" class="text-gray-600">在市、县等地方选举中寻求突破，积累执政经验，培养人才，这是最现实的成功路径。</p></div>
+                         <div class="p-6 bg-gray-50 rounded-lg"><h4 id="future-point3-title" class="font-bold text-xl mb-2">🗳️ 推动选举改革</h4><p id="future-point3-desc" class="text-gray-600">将“排序复选制”（RCV）等制度改革作为核心议题，可能建立一个独特的“修复系统”政治联盟。</p></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p id="footer-credit">基于提供的《美国历史少数党派研究报告》构建。</p>
+            <p id="footer-subtitle" class="text-sm text-gray-400 mt-2">交互式数据可视化应用</p>
+        </div>
+    </footer>
+
+    <!-- Modal -->
+    <div id="party-modal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 opacity-0 invisible z-50">
+        <div id="modal-content" class="modal-content bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto transform scale-95">
+            <!-- Modal content will be generated by JavaScript -->
+        </div>
+    </div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- DATA & TRANSLATIONS ---
+        let currentLanguage = 'zh';
+
+        const translations = {
+            zh: {
+                // Nav & Titles
+                navTitle: '边缘的坚持',
+                navHome: '首页',
+                navTimeline: '政党时间轴',
+                navProfiles: '党派档案',
+                navBarriers: '制度困境',
+                navFuture: '未来展望',
+                langToggle: 'EN',
+                // Hero
+                heroTitle: '边缘的坚持',
+                heroSubtitle: '美国少数党派的综合分析',
+                heroDesc: '虽然美国选举制度中的结构性障碍将少数党派永久地限制在政治边缘，但它们主要且持久的影响力在于，能够将新的思想和政策平台注入国家话语体系。这些平台随后常被主要党派内的派系所吸纳，从而塑造了美国政治发展的长期轨迹。',
+                // Timeline
+                timelineTitle: '美国政党体系演进',
+                timelineDesc: '点击时间轴上的标记点，可跳转至对应党派的详细档案。',
+                // Profiles
+                profilesTitle: '党派档案库',
+                profilesDesc: '探索美国历史上重要少数党派的兴衰沉浮。',
+                filterAll: '所有党派',
+                filterHistorical: '历史党派',
+                filterActive: '活跃党派',
+                statusActive: '活跃',
+                statusHistorical: '历史',
+                // Barriers
+                barriersTitle: '制度困境：为何只有两大党？',
+                barriersDesc: '美国政治由两党主导并非偶然，而是一系列环环相扣的结构性、法律性和心理性障碍共同作用的结果。',
+                spoilerTitle: '“搅局者效应”',
+                spoilerDesc: '在势均力敌的选举中，少数党派候选人可能会吸走意识形态相近的主要党派候选人的选票，从而导致选民最不希望看到的另一主要党派候选人获胜。请选择一次选举查看数据：',
+                duvergerTitle: '杜瓦杰定律：两党制的“铁律”',
+                duvergerMechTitle: '1. 机械效应',
+                duvergerMechDesc: '在“赢者通吃”的制度下，一个党派即使在全国获得20%的选票，也可能因为在任何单一选区都未能成为第一名而无法赢得任何席位。',
+                partyA: 'A党',
+                partyB: 'B党',
+                partyC: 'C党',
+                partyAWins: 'A党获胜',
+                winsAll: '赢得全部',
+                duvergerPsychTitle: '2. 心理效应',
+                duvergerPsychDesc: '选民为了不“浪费”选票，倾向于进行“策略性投票”：放弃自己真正支持但胜算不大的少数党，转而投给“两害相权取其轻”的主要党派。',
+                voterThought: '“我更喜欢C党，但它赢不了... 我还是投给B党，至少能阻止我最讨厌的A党上台。”',
+                voterConsequence: '这种心理形成了一个自我实现的预言，进一步巩固了两党格局。',
+                // Future
+                futureTitle: '未来展望：边缘的呐喊 (2025-2035)',
+                futureDesc: '尽管对两大党的不满情绪高涨，但结构性力量依然强大。少数党派的未来在于从边缘发挥其独特影响力。',
+                dissatisfactionTitle: '选民不满情绪高涨',
+                dissatisfactionDesc: '民调显示，超过半数的美国人认为需要一个强大的第三党。然而，这种意愿与实际投票行为之间存在巨大鸿沟，这正是少数党派面临的核心困境。',
+                futurePoint1Title: '💡 平台被吸收',
+                futurePoint1Desc: '继续扮演“政治研发部”的角色，其激进理念（如绿色新政）被主要党派吸收，从而影响国家议程。',
+                futurePoint2Title: '🏛️ 地方主义策略',
+                futurePoint2Desc: '在市、县等地方选举中寻求突破，积累执政经验，培养人才，这是最现实的成功路径。',
+                futurePoint3Title: '🗳️ 推动选举改革',
+                futurePoint3Desc: '将“排序复选制”（RCV）等制度改革作为核心议题，可能建立一个独特的“修复系统”政治联盟。',
+                // Modal
+                closeButton: '关闭',
+                // Footer
+                footerCredit: '基于提供的《美国历史少数党派研究报告》构建。',
+                footerSubtitle: '交互式数据可视化应用',
+            },
+            en: {
+                // Nav & Titles
+                navTitle: 'The Persistent Fringe',
+                navHome: 'Home',
+                navTimeline: 'Timeline',
+                navProfiles: 'Profiles',
+                navBarriers: 'Barriers',
+                navFuture: 'Future',
+                langToggle: '中文',
+                // Hero
+                heroTitle: 'The Persistent Fringe',
+                heroSubtitle: 'A Comprehensive Analysis of U.S. Minor Parties',
+                heroDesc: 'While structural barriers in the U.S. electoral system perpetually confine minor parties to the political periphery, their primary and enduring influence lies in their ability to inject new ideas and policy platforms into the national discourse, which are often co-opted by major party factions, shaping long-term political development.',
+                // Timeline
+                timelineTitle: 'Evolution of U.S. Party Systems',
+                timelineDesc: 'Click on a marker on the timeline to navigate to the respective party\'s detailed profile.',
+                // Profiles
+                profilesTitle: 'Party Archives',
+                profilesDesc: 'Explore the rise and fall of significant minor parties throughout American history.',
+                filterAll: 'All Parties',
+                filterHistorical: 'Historical',
+                filterActive: 'Active',
+                statusActive: 'Active',
+                statusHistorical: 'Historical',
+                // Barriers
+                barriersTitle: 'Systemic Barriers: Why Only Two Parties?',
+                barriersDesc: 'The dominance of two parties in American politics is no accident, but the result of interlocking structural, legal, and psychological barriers.',
+                spoilerTitle: 'The "Spoiler Effect"',
+                spoilerDesc: 'In a close election, a minor-party candidate can draw votes from a similar major-party candidate, causing the victory of the least-desired candidate. Select an election to see the data:',
+                duvergerTitle: 'Duverger\'s Law: The "Iron Law" of Two-Party Politics',
+                duvergerMechTitle: '1. The Mechanical Effect',
+                duvergerMechDesc: 'In a "winner-take-all" system, a party can get 20% of the vote nationwide but win zero seats if it never comes in first in any single district.',
+                partyA: 'Party A',
+                partyB: 'Party B',
+                partyC: 'Party C',
+                partyAWins: 'Party A Wins',
+                winsAll: 'Wins All',
+                duvergerPsychTitle: '2. The Psychological Effect',
+                duvergerPsychDesc: 'To avoid "wasting" their vote, voters tend to vote strategically, abandoning their preferred minor party for the "lesser of two evils" among the major parties.',
+                voterThought: '"I prefer Party C, but it can\'t win... I\'ll vote for Party B to stop Party A, which I dislike the most."',
+                voterConsequence: 'This mindset becomes a self-fulfilling prophecy, reinforcing the two-party system.',
+                // Future
+                futureTitle: 'Future Outlook: A Voice from the Fringe (2025-2035)',
+                futureDesc: 'Despite high dissatisfaction with the two major parties, structural forces remain strong. The future of minor parties lies in exerting their unique influence from the margins.',
+                dissatisfactionTitle: 'Rising Voter Dissatisfaction',
+                dissatisfactionDesc: 'Polls show a majority of Americans believe a strong third party is needed. However, a huge gap exists between this desire and actual voting behavior, which is the core dilemma for minor parties.',
+                futurePoint1Title: '💡 Platform Co-optation',
+                futurePoint1Desc: 'Continue to act as a "political R&D department," with radical ideas (like the Green New Deal) being absorbed by major parties, thus influencing the national agenda.',
+                futurePoint2Title: '🏛️ Localist Strategy',
+                futurePoint2Desc: 'Seeking breakthroughs in local elections (city, county) to gain governing experience and build a talent pipeline is the most realistic path to success.',
+                futurePoint3Title: '🗳️ Pushing for Electoral Reform',
+                futurePoint3Desc: 'Making systemic reforms like Ranked-Choice Voting (RCV) a core issue could build a unique "fix the system" political coalition.',
+                // Modal
+                closeButton: 'Close',
+                // Footer
+                footerCredit: 'Built based on the provided "Research Report on U.S. Minor Parties".',
+                footerSubtitle: 'Interactive Data Visualization Application',
+            }
+        };
+
+        const partyData_zh = {
+            'federalist': { name: '联邦党', period: 'c. 1792-1816', type: 'historical', system: 1, content: `<h4>联邦党 (Federalist Party)</h4><p><b>创立背景与理念:</b> 美国首个政党体系的开创者之一，由汉密尔顿领导，主张建立一个强大的中央政府以促进经济发展，并与英国保持密切关系。</p><p><b>主要领导人:</b> 亚历山大·汉密尔顿, 约翰·亚当斯。</p><p><b>成就与影响:</b> 成功建立了美国金融体系的基础，包括联邦承担州债、建立第一国家银行等。</p><p><b>衰落原因:</b> 其精英主义立场与国家日益增长的平等主义精神相悖。因反对1812年战争并召开哈特福德会议，被贴上“不忠”标签，最终瓦解。</p>` },
+            'whig': { name: '辉格党', period: '1834-1856', type: 'historical', system: 2, content: `<h4>辉格党 (Whig Party)</h4><p><b>创立背景与理念:</b> 为反对安德鲁·杰克逊总统而形成的广泛联盟，指责其为“安德鲁国王一世”。核心纲领是亨利·克莱的“美国体系”，主张保护性关税、建立国家银行和联邦资助国内建设。</p><p><b>主要领导人:</b> 亨利·克莱, 丹尼尔·韦伯斯特。</p><p><b>成就与影响:</b> 执政八年，推动了《1850年妥协案》。但正是这个妥协案，以及后来的《堪萨斯-内布拉斯加法案》，暴露了其在奴隶制问题上的致命分歧。</p><p><b>衰落原因:</b> 无法弥合党内南北两翼在奴隶制问题上的根本分歧，最终分裂。北方成员大多加入新成立的共和党，南方成员则流向民主党。</p>` },
+            'anti-masonic': { name: '反共济会党', period: 'c. 1827-1836', type: 'historical', system: 2, content: `<h4>反共济会党 (Anti-Masonic Party)</h4><p><b>创立背景与理念:</b> 美国历史上第一个真正的第三党，源于对秘密组织共济会的恐惧和猜疑，尤其是在威廉·摩根失踪事件之后。</p><p><b>主要领导人:</b> 威廉·沃特。</p><p><b>成就与影响:</b> 开创了两项重要的政治制度创新：1831年举行了美国历史上首次全国总统提名大会，并率先使用了成文的政党纲领。这两项制度迅速被主要政党采纳。</p><p><b>衰落原因:</b> 作为一个单一议题政党，其吸引力有限。随着反杰克逊的政治力量整合为辉格党，该党被自然吸收。</p>` },
+            'know-nothing': { name: '一无所知党', period: 'c. 1849-1856', type: 'historical', system: 2, content: `<h4>一无所知党 (American Party / "Know-Nothings")</h4><p><b>创立背景与理念:</b> 一个本土主义运动政党，因对19世纪40年代大量爱尔兰和德国天主教移民的仇视而兴起。其成员被问及组织情况时回答“我一无所知”，故得此名。</p><p><b>主要领导人:</b> 米勒德·菲尔莫尔。</p><p><b>成就与影响:</b> 在辉格党瓦解之际迅速崛起，一度成为民主党的主要对手，赢得了多个州的控制权，显示了本土主义在美国政治中的动员力量。</p><p><b>衰落原因:</b> 和辉格党一样，它也无法跨越奴隶制问题的南北鸿沟，迅速分裂。其政治空间很快被立场更鲜明的共和党所取代。</p>` },
+            'free-soil': { name: '自由土地党', period: '1848-1854', type: 'historical', system: 2, content: `<h4>自由土地党 (Free Soil Party)</h4><p><b>创立背景与理念:</b> 由反奴隶制的民主党人、辉格党人以及废奴主义的自由党成员组成。核心纲领是反对将奴隶制扩张到从墨西哥获得的新领土。口号是“自由土地，自由言论，自由劳动，自由人”。</p><p><b>主要领导人:</b> 马丁·范布伦。</p><b>成就与影响:</b> 证明了以反奴隶制扩张为单一议题的政党具有强大的政治号召力。它为后来更成功的共和党的成立铺平了道路，是其重要的前身。</p><p><b>衰落原因:</b> 1854年《堪萨斯-内布拉斯加法案》通过后，其核心理念被新成立的、组织更强大的共和党全盘接纳，该党成员和纲领几乎完全并入共和党。</p>` },
+            'populist': { name: '人民党 (民粹党)', period: '1891-1908', type: 'historical', system: 4, content: `<h4>人民党 (Populist / People's Party)</h4><p><b>创立背景与理念:</b> 19世纪末期大规模农民运动的政治产物，代表农民和工人的利益，反对银行、铁路和企业垄断。主张实行金银复本位制以增加货币供应，并要求政府监管关键行业。</p><p><b>主要领导人:</b> 詹姆斯·B·韦弗, 威廉·詹宁斯·布莱恩 (被联合提名)。</p><p><b>成就与影响:</b> 其1892年《奥马哈纲领》提出了多项激进的进步主义改革，如累进所得税、参议员直选等，这些在后来都得以实现。深刻地影响了20世纪的改革议程。</p><p><b>衰落原因:</b> 1896年选择与民主党“融合”，支持布莱恩竞选总统。这一决定虽然避免了分裂选票，但也使其失去了独立性。布莱恩的失败导致该党迅速消亡，其理念被民主党的进步派吸收。</p>` },
+            'progressive': { name: '进步党 (公麋党)', period: '1912-1916', type: 'historical', system: 4, content: `<h4>进步党 (Progressive "Bull Moose" Party)</h4><p><b>创立背景与理念:</b> 为支持前总统西奥多·罗斯福竞选而成立的分裂政党。因罗斯福未能获得共和党提名，他便率支持者出走，组建进步党，并宣称自己“像公麋一样强壮”。</p><p><b>主要领导人:</b> 西奥多·罗斯福。</p><p><b>成就与影响:</b> 创造了美国第三党选举的最好成绩，得票超过了现任总统塔夫脱。虽然分裂了共和党选票导致民主党人威尔逊当选，但其提出的纲领（妇女选举权、八小时工作制、社会保险）为后来的“新政”改革设定了议程。</p><p><b>衰落原因:</b> 完全依赖于罗斯福的个人魅力。当罗斯福在1916年拒绝再次参选后，该党瞬间瓦解。</p>` },
+            'dixiecrat': { name: '州权民主党 (迪克西党)', period: '1948', type: 'historical', system: 5, content: `<h4>州权民主党 (States' Rights Democratic "Dixiecrat" Party)</h4><p><b>创立背景与理念:</b> 1948年，部分南方民主党人为抗议杜鲁门总统的民权政策（如废除军队种族隔离）而脱党组建。核心诉求是维护种族隔离制度和州权。</p><p><b>主要领导人:</b> 斯特罗姆·瑟蒙德。</p><p><b>成就与影响:</b> 虽然只是一次短暂的叛乱，但它预示了民主党“铁杆南方”的瓦解。这是保守派白人选民从民主党转向共和党的长期政治大重组的开端。</p><p><b>衰落原因:</b> 这是一个单一事件驱动的短期分裂，在1948年大选后其成员便回归民主党，但裂痕已经产生。 </p>` },
+            'libertarian': { name: '自由意志党', period: '1971-至今', type: 'active', system: 6, content: `<h4>自由意志党 (Libertarian Party)</h4><p><b>创立背景与理念:</b> 成立于1971年，反对尼克松政府的经济管制和越南战争。核心理念是最大化个人自由，最小化政府干预，常被概括为“财政上保守，社会上自由”。</p><p><b>主要领导人:</b> 戴维·诺兰 (创始人), 加里·约翰逊 (知名候选人)。</p><p><b>纲领与影响:</b> 主张废除所得税、结束毒品战争、实行不干预外交政策。作为美国第三大党，其主要影响在于意识形态层面，推动了主流政治对政府权力和个人自由的讨论。</p><p><b>当前状态:</b> 活跃。在各级选举中持续推出候选人，在地方层面偶有成功，但在全国选举中主要扮演理念倡导者的角色。</p>` },
+            'green': { name: '绿党', period: '2001-至今 (源于1984)', type: 'active', system: 6, content: `<h4>绿党 (Green Party of the United States)</h4><p><b>创立背景与理念:</b> 其意识形态基于“生态智慧、社会正义、基层民主、非暴力”四大支柱。自我定位为“生态社会主义”，寻求资本主义和国家社会主义之外的第三条道路。</p><p><b>主要领导人:</b> 拉尔夫·纳德, 吉尔·斯泰因 (知名候选人)。</p><p><b>纲领与影响:</b> 长期倡导“绿色新政”，要求向100%可再生能源快速转型。在2000年大选中，纳德被指责为“搅局者”，导致戈尔失利。其主要影响是将环境议题和社会正义议程推向政治前沿，许多理念被民主党进步派采纳。</p><p><b>当前状态:</b> 活跃。在全国拥有超过100名地方民选官员，持续在各级选举中传播其理念。</p>` },
+            'constitution': { name: '宪法党', period: '1992-至今', type: 'active', system: 6, content: `<h4>宪法党 (Constitution Party)</h4><p><b>创立背景与理念:</b> 原名“美国纳税人党”，是美国政治光谱中最保守的政党之一。其理念融合了旧保守主义、基督教民族主义和对宪法的原教旨主义解释，主张国家治理应回归《圣经》和宪法的原则。</p><p><b>主要领导人:</b> 霍华德·菲利普斯 (创始人)。</p><p><b>纲领与影响:</b> 主张大幅削减联邦政府，废除所得税，并在社会议题上持极端保守立场（如无条件反对堕胎）。它为那些认为共和党不够保守的选民提供了一个政治平台。</p><p><b>当前状态:</b> 活跃。规模小于自由意志党和绿党，但在部分保守州份拥有支持基础，主要发挥意识形态作用。</p>` },
+        };
+        const partyData_en = {
+            'federalist': { name: 'Federalist Party', period: 'c. 1792-1816', type: 'historical', system: 1, content: `<h4>Federalist Party</h4><p><b>Founding & Ideology:</b> One of the creators of the first party system, led by Hamilton, advocating for a strong central government to promote economic development and maintain close ties with Britain.</p><p><b>Key Leaders:</b> Alexander Hamilton, John Adams.</p><p><b>Achievements & Impact:</b> Successfully established the foundations of the U.S. financial system, including federal assumption of state debts and the creation of the First National Bank.</p><p><b>Decline:</b> Its elitist stance contradicted the nation's growing egalitarian spirit. Opposition to the War of 1812 and the Hartford Convention branded it as "disloyal," leading to its collapse.</p>` },
+            'whig': { name: 'Whig Party', period: '1834-1856', type: 'historical', system: 2, content: `<h4>Whig Party</h4><p><b>Founding & Ideology:</b> A broad coalition formed to oppose President Andrew Jackson, whom they called "King Andrew I." Its core was Henry Clay's "American System," advocating for protective tariffs, a national bank, and federal funding for internal improvements.</p><p><b>Key Leaders:</b> Henry Clay, Daniel Webster.</p><p><b>Achievements & Impact:</b> Held power for eight years and pushed through the Compromise of 1850. However, this compromise and the later Kansas-Nebraska Act exposed fatal divisions over slavery.</p><p><b>Decline:</b> Unable to bridge the North-South divide on slavery, the party ultimately split. Northern members largely joined the new Republican Party, while Southern members drifted to the Democrats.</p>` },
+            'anti-masonic': { name: 'Anti-Masonic Party', period: 'c. 1827-1836', type: 'historical', system: 2, content: `<h4>Anti-Masonic Party</h4><p><b>Founding & Ideology:</b> America's first true third party, born from fear and suspicion of the secretive Freemasons, especially after the disappearance of William Morgan.</p><p><b>Key Leaders:</b> William Wirt.</p><p><b>Achievements & Impact:</b> Pioneered two major political innovations: held the first-ever national presidential nominating convention in 1831 and was the first to use a written party platform. Both were quickly adopted by major parties.</p><p><b>Decline:</b> As a single-issue party, its appeal was limited. It was absorbed into the Whig Party as the anti-Jackson coalition solidified.</p>` },
+            'know-nothing': { name: 'American Party ("Know-Nothings")', period: 'c. 1849-1856', type: 'historical', system: 2, content: `<h4>American Party ("Know-Nothings")</h4><p><b>Founding & Ideology:</b> A nativist movement fueled by hostility toward the large influx of Irish and German Catholic immigrants in the 1840s. Its members would reply "I know nothing" when asked about the organization.</p><p><b>Key Leaders:</b> Millard Fillmore.</p><p><b>Achievements & Impact:</b> Rose rapidly during the collapse of the Whig Party, briefly becoming the main opposition to the Democrats and demonstrating the mobilizing power of nativism in U.S. politics.</p><p><b>Decline:</b> Like the Whigs, it could not overcome the North-South divide on slavery and quickly fractured. Its political space was soon occupied by the more clearly defined Republican Party.</p>` },
+            'free-soil': { name: 'Free Soil Party', period: '1848-1854', type: 'historical', system: 2, content: `<h4>Free Soil Party</h4><p><b>Founding & Ideology:</b> Formed by anti-slavery Democrats, Whigs, and Liberty Party members. Its core principle was opposing the expansion of slavery into new territories from Mexico. Its slogan was "Free Soil, Free Speech, Free Labor, and Free Men."</p><p><b>Key Leaders:</b> Martin Van Buren.</p><b>Achievements & Impact:</b> Proved the political viability of a party focused on anti-slavery expansion. It paved the way for the more successful Republican Party, serving as its important predecessor.</p><p><b>Decline:</b> After the 1854 Kansas-Nebraska Act, its core ideology was adopted by the newly formed, more powerful Republican Party, and the Free Soil Party was almost entirely absorbed.</p>` },
+            'populist': { name: 'Populist (People\'s) Party', period: '1891-1908', type: 'historical', system: 4, content: `<h4>Populist (People's) Party</h4><p><b>Founding & Ideology:</b> The political arm of a massive farmers' movement, representing the interests of farmers and laborers against banks, railroads, and corporate monopolies. Advocated for bimetallism and government regulation of key industries.</p><p><b>Key Leaders:</b> James B. Weaver, William Jennings Bryan (jointly nominated).</p><p><b>Achievements & Impact:</b> Its 1892 Omaha Platform proposed radical progressive reforms like a graduated income tax and direct election of senators, many of which later became law. It profoundly influenced the 20th-century reform agenda.</p><p><b>Decline:</b> Chose to "fuse" with the Democratic Party in 1896 by supporting Bryan. This decision cost the party its independence, and Bryan's defeat led to its rapid demise as its ideas were absorbed by progressive Democrats.</p>` },
+            'progressive': { name: 'Progressive ("Bull Moose") Party', period: '1912-1916', type: 'historical', system: 4, content: `<h4>Progressive ("Bull Moose") Party</h4><p><b>Founding & Ideology:</b> A splinter party formed to support Theodore Roosevelt's presidential run after he failed to get the Republican nomination. Roosevelt claimed he was "as strong as a bull moose."</p><p><b>Key Leaders:</b> Theodore Roosevelt.</p><p><b>Achievements & Impact:</b> Achieved the best third-party election result in U.S. history, outpolling incumbent President Taft. Though it split the Republican vote, allowing Wilson to win, its platform (women's suffrage, 8-hour workday, social insurance) set the agenda for later New Deal reforms.</p><p><b>Decline:</b> Entirely dependent on Roosevelt's personal charisma. When he declined to run again in 1916, the party instantly collapsed.</p>` },
+            'dixiecrat': { name: 'States\' Rights Democratic ("Dixiecrat") Party', period: '1948', type: 'historical', system: 5, content: `<h4>States' Rights Democratic ("Dixiecrat") Party</h4><p><b>Founding & Ideology:</b> Formed in 1948 by Southern Democrats protesting President Truman's civil rights policies. Its core demand was to maintain racial segregation and states' rights.</p><p><b>Key Leaders:</b> Strom Thurmond.</p><p><b>Achievements & Impact:</b> Though a short-lived rebellion, it signaled the cracking of the Democratic "Solid South" and was the beginning of the long-term political realignment of conservative white voters from the Democratic to the Republican Party.</p><p><b>Decline:</b> A single-event-driven split, its members returned to the Democratic Party after the 1948 election, but the rift had been created.</p>` },
+            'libertarian': { name: 'Libertarian Party', period: '1971-Present', type: 'active', system: 6, content: `<h4>Libertarian Party</h4><p><b>Founding & Ideology:</b> Founded in 1971 in opposition to Nixon's economic controls and the Vietnam War. Its core ideology is maximizing individual liberty and minimizing government intervention, often summarized as "fiscally conservative, socially liberal."</p><p><b>Key Leaders:</b> David Nolan (founder), Gary Johnson (notable candidate).</p><p><b>Platform & Impact:</b> Advocates for abolishing the income tax, ending the war on drugs, and a non-interventionist foreign policy. As the third-largest U.S. party, its main impact is ideological, pushing mainstream politics to discuss government power and individual freedom.</p><p><b>Current Status:</b> Active. Consistently runs candidates in elections at all levels, with occasional success locally, but primarily acts as an ideological advocate in national elections.</p>` },
+            'green': { name: 'Green Party', period: '2001-Present (roots in 1984)', type: 'active', system: 6, content: `<h4>Green Party of the United States</h4><p><b>Founding & Ideology:</b> Its ideology is based on the "Four Pillars": Ecological Wisdom, Social Justice, Grassroots Democracy, and Nonviolence. It identifies as "eco-socialist," seeking a third way beyond corporate capitalism and state socialism.</p><p><b>Key Leaders:</b> Ralph Nader, Jill Stein (notable candidates).</p><p><b>Platform & Impact:</b> Long-time advocate for a "Green New Deal." In the 2000 election, Nader was accused of being a "spoiler," costing Al Gore the presidency. Its main impact is pushing environmental and social justice issues to the forefront, with many ideas adopted by progressive Democrats.</p><p><b>Current Status:</b> Active. Holds over 100 local elected offices nationwide and continues to spread its ideas in elections at all levels.</p>` },
+            'constitution': { name: 'Constitution Party', period: '1992-Present', type: 'active', system: 6, content: `<h4>Constitution Party</h4><p><b>Founding & Ideology:</b> Originally the "U.S. Taxpayers' Party," it is one of the most conservative parties. Its ideology blends paleoconservatism, Christian nationalism, and an originalist interpretation of the Constitution, advocating for governance based on the Bible and the Constitution.</p><p><b>Key Leaders:</b> Howard Phillips (founder).</p><p><b>Platform & Impact:</b> Advocates for drastically reducing the federal government, abolishing the income tax, and holds extremely conservative social positions (e.g., unconditionally opposes abortion). It provides a political platform for voters who find the Republican Party not conservative enough.</p><p><b>Current Status:</b> Active. Smaller than the Libertarian and Green parties, but has a support base in some conservative states, mainly playing an ideological role.</p>` },
+        };
+
+        const partySystems_zh = [
+            { id: 1, name: '第一党派体系', period: '1792–1824', parties: ['federalist'] },
+            { id: 2, name: '第二党派体系', period: '1828–1854', parties: ['anti-masonic', 'whig', 'free-soil', 'know-nothing'] },
+            { id: 3, name: '第三党派体系', period: '1854–1890s', parties: [] },
+            { id: 4, name: '第四党派体系', period: '1896–1932', parties: ['populist', 'progressive'] },
+            { id: 5, name: '第五党派体系', period: '1932–1976', parties: ['dixiecrat'] },
+            { id: 6, name: '第六/七党派体系', period: '1980–至今', parties: ['libertarian', 'green', 'constitution'] },
+        ];
+        const partySystems_en = [
+            { id: 1, name: 'First Party System', period: '1792–1824', parties: ['federalist'] },
+            { id: 2, name: 'Second Party System', period: '1828–1854', parties: ['anti-masonic', 'whig', 'free-soil', 'know-nothing'] },
+            { id: 3, name: 'Third Party System', period: '1854–1890s', parties: [] },
+            { id: 4, name: 'Fourth Party System', period: '1896–1932', parties: ['populist', 'progressive'] },
+            { id: 5, name: 'Fifth Party System', period: '1932–1976', parties: ['dixiecrat'] },
+            { id: 6, name: 'Sixth/Seventh System', period: '1980–Present', parties: ['libertarian', 'green', 'constitution'] },
+        ];
+        
+        const spoilerData_zh = {
+            '2000': { labels: ['戈尔 (D) 在佛州票数', '布什 (R) 在佛州票数', '纳德 (G) 在佛州票数'], datasets: [{ label: '佛罗里达州票数', data: [2912253, 2912790, 97488], backgroundColor: ['#7D8B9B', '#C6B09E', '#A9A9A9'], borderColor: '#ffffff', borderWidth: 2 }], title: '2000年: 布什以537票优势获胜，而纳德获得超过9.7万票。', optionText: '2000年 (布什 vs 戈尔)' },
+            '2016': { labels: ['克林顿 (D) 在威斯康星州', '特朗普 (R) 在威斯康星州', '少数党在威斯康星州 (自由意志党+绿党)'], datasets: [{ label: '威斯康星州票数', data: [1382536, 1405284, 106674 + 31069], backgroundColor: ['#7D8B9B', '#C6B09E', '#A9A9A9'], borderColor: '#ffffff', borderWidth: 2 }], title: '2016年: 特朗普以约2.2万票优势获胜，而两个主要少数党获得超过13万票。', optionText: '2016年 (特朗普 vs 克林顿)' },
+            '1912': { labels: ['威尔逊 (D) 全国普选票', '塔夫脱 (R) 全国普选票', '罗斯福 (进步党) 全国普选票'], datasets: [{ label: '全国普选票', data: [6296547, 3486720, 4126020], backgroundColor: ['#7D8B9B', '#C6B09E', '#A9A9A9'], borderColor: '#ffffff', borderWidth: 2 }], title: '1912年: 罗斯福分裂了共和党选票，使威尔逊以多数优势当选。', optionText: '1912年 (威尔逊 vs 塔夫脱)' }
+        };
+        const spoilerData_en = {
+            '2000': { labels: ['Gore (D) in FL', 'Bush (R) in FL', 'Nader (G) in FL'], datasets: [{ label: 'Votes in Florida', data: [2912253, 2912790, 97488], backgroundColor: ['#7D8B9B', '#C6B09E', '#A9A9A9'], borderColor: '#ffffff', borderWidth: 2 }], title: '2000: Bush won by 537 votes, while Nader got over 97,000 votes.', optionText: '2000 (Bush vs. Gore)' },
+            '2016': { labels: ['Clinton (D) in WI', 'Trump (R) in WI', 'Minor Parties in WI (Lib. + Green)'], datasets: [{ label: 'Votes in Wisconsin', data: [1382536, 1405284, 106674 + 31069], backgroundColor: ['#7D8B9B', '#C6B09E', '#A9A9A9'], borderColor: '#ffffff', borderWidth: 2 }], title: '2016: Trump won by ~22k votes, while two major minor parties got over 130k votes.', optionText: '2016 (Trump vs. Clinton)' },
+            '1912': { labels: ['Wilson (D) National Pop. Vote', 'Taft (R) National Pop. Vote', 'Roosevelt (Prog.) National Pop. Vote'], datasets: [{ label: 'National Popular Vote', data: [6296547, 3486720, 4126020], backgroundColor: ['#7D8B9B', '#C6B09E', '#A9A9A9'], borderColor: '#ffffff', borderWidth: 2 }], title: '1912: Roosevelt split the Republican vote, allowing Wilson to win with a plurality.', optionText: '1912 (Wilson vs. Taft)' }
+        };
+
+        const dissatisfactionData_zh = { labels: ['2014', '2016', '2018', '2020', '2022', '2024'], datasets: [{ label: '认为需要第三党的美国人比例 (%)', data: [57, 57, 54, 56, 60, 58], fill: true, backgroundColor: 'rgba(125, 139, 155, 0.2)', borderColor: '#7D8B9B', tension: 0.3 }] };
+        const dissatisfactionData_en = { labels: ['2014', '2016', '2018', '2020', '2022', '2024'], datasets: [{ label: '% of Americans who think a third party is needed', data: [57, 57, 54, 56, 60, 58], fill: true, backgroundColor: 'rgba(125, 139, 155, 0.2)', borderColor: '#7D8B9B', tension: 0.3 }] };
+
+        const dataMap = {
+            zh: { partyData: partyData_zh, partySystems: partySystems_zh, spoilerData: spoilerData_zh, dissatisfactionData: dissatisfactionData_zh },
+            en: { partyData: partyData_en, partySystems: partySystems_en, spoilerData: spoilerData_en, dissatisfactionData: dissatisfactionData_en }
+        };
+
+        // --- UI Elements ---
+        const timelineContainer = document.getElementById('timeline-container');
+        const profilesGrid = document.getElementById('profiles-grid');
+        const partyModal = document.getElementById('party-modal');
+        const modalContent = document.getElementById('modal-content');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const spoilerSelect = document.getElementById('spoiler-election-select');
+
+        // --- Functions ---
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            document.documentElement.lang = lang;
+
+            const t = translations[lang];
+            
+            // Update all UI text
+            document.getElementById('nav-title').innerText = t.navTitle;
+            document.getElementById('nav-hero').innerText = t.navHome;
+            document.getElementById('nav-timeline').innerText = t.navTimeline;
+            document.getElementById('nav-profiles').innerText = t.navProfiles;
+            document.getElementById('nav-barriers').innerText = t.navBarriers;
+            document.getElementById('nav-future').innerText = t.navFuture;
+            document.getElementById('mobile-nav-hero').innerText = t.navHome;
+            document.getElementById('mobile-nav-timeline').innerText = t.navTimeline;
+            document.getElementById('mobile-nav-profiles').innerText = t.navProfiles;
+            document.getElementById('mobile-nav-barriers').innerText = t.navBarriers;
+            document.getElementById('mobile-nav-future').innerText = t.navFuture;
+            document.getElementById('lang-toggle-desktop').innerText = t.langToggle;
+            document.getElementById('lang-toggle-mobile').innerText = t.langToggle;
+            
+            document.getElementById('hero-title').innerText = t.heroTitle;
+            document.getElementById('hero-subtitle').innerText = t.heroSubtitle;
+            document.getElementById('hero-desc').innerText = t.heroDesc;
+
+            document.getElementById('timeline-title').innerText = t.timelineTitle;
+            document.getElementById('timeline-desc').innerText = t.timelineDesc;
+
+            document.getElementById('profiles-title').innerText = t.profilesTitle;
+            document.getElementById('profiles-desc').innerText = t.profilesDesc;
+            document.getElementById('filter-all').innerText = t.filterAll;
+            document.getElementById('filter-historical').innerText = t.filterHistorical;
+            document.getElementById('filter-active').innerText = t.filterActive;
+
+            document.getElementById('barriers-title').innerText = t.barriersTitle;
+            document.getElementById('barriers-desc').innerText = t.barriersDesc;
+            document.getElementById('spoiler-title').innerText = t.spoilerTitle;
+            document.getElementById('spoiler-desc').innerText = t.spoilerDesc;
+            document.getElementById('duverger-title').innerText = t.duvergerTitle;
+            document.getElementById('duverger-mech-title').innerText = t.duvergerMechTitle;
+            document.getElementById('duverger-mech-desc').innerText = t.duvergerMechDesc;
+            document.getElementById('party-a-1').innerText = t.partyA;
+            document.getElementById('party-b-1').innerText = t.partyB;
+            document.getElementById('party-c-1').innerText = t.partyC;
+            document.getElementById('party-a-wins').innerText = t.partyAWins;
+            document.getElementById('wins-all').innerText = t.winsAll;
+            document.getElementById('duverger-psych-title').innerText = t.duvergerPsychTitle;
+            document.getElementById('duverger-psych-desc').innerText = t.duvergerPsychDesc;
+            document.getElementById('voter-thought').innerText = t.voterThought;
+            document.getElementById('voter-consequence').innerText = t.voterConsequence;
+
+            document.getElementById('future-title').innerText = t.futureTitle;
+            document.getElementById('future-desc').innerText = t.futureDesc;
+            document.getElementById('dissatisfaction-title').innerText = t.dissatisfactionTitle;
+            document.getElementById('dissatisfaction-desc').innerText = t.dissatisfactionDesc;
+            document.getElementById('future-point1-title').innerText = t.futurePoint1Title;
+            document.getElementById('future-point1-desc').innerText = t.futurePoint1Desc;
+            document.getElementById('future-point2-title').innerText = t.futurePoint2Title;
+            document.getElementById('future-point2-desc').innerText = t.futurePoint2Desc;
+            document.getElementById('future-point3-title').innerText = t.futurePoint3Title;
+            document.getElementById('future-point3-desc').innerText = t.futurePoint3Desc;
+            
+            document.getElementById('footer-credit').innerText = t.footerCredit;
+            document.getElementById('footer-subtitle').innerText = t.footerSubtitle;
+            
+            // Re-render dynamic content
+            generateTimeline();
+            generateProfiles(document.querySelector('#profiles .bg-\\[\\#7D8B9B\\]')?.id.replace('filter-','') || 'all');
+            populateSpoilerSelect();
+            initSpoilerChart(spoilerSelect.value);
+            initDissatisfactionChart();
+        }
+
+        function generateTimeline() {
+            const currentData = dataMap[currentLanguage];
+            let timelineHTML = '<div class="flex space-x-0 w-max">';
+            currentData.partySystems.forEach(system => {
+                timelineHTML += `
+                    <div class="timeline-era flex-shrink-0 border-r border-gray-300 p-4" style="width: 300px;">
+                        <div class="font-bold text-lg text-gray-800">${system.name}</div>
+                        <div class="text-sm text-gray-500 mb-4">${system.period}</div>
+                        <div class="relative h-20">`;
+                system.parties.forEach(partyId => {
+                    const party = currentData.partyData[partyId];
+                    if (!party) return;
+                    const randomLeft = Math.random() * 80;
+                    timelineHTML += `
+                        <div class="timeline-marker absolute w-4 h-4 bg-gray-400 rounded-full cursor-pointer" style="left: ${randomLeft}%; top: 40%;" data-party-id="${partyId}">
+                            <div class="tooltip absolute bottom-full left-1/2 -translate-x-1/2 w-max max-w-xs bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 invisible">
+                                ${party.name}
+                            </div>
+                        </div>`;
+                });
+                timelineHTML += `</div></div>`;
+            });
+            timelineHTML += '</div>';
+            timelineContainer.innerHTML = timelineHTML;
+        }
+
+        function generateProfiles(filter = 'all') {
+            const currentData = dataMap[currentLanguage];
+            const t = translations[currentLanguage];
+            profilesGrid.innerHTML = '';
+            Object.keys(currentData.partyData).forEach(id => {
+                const party = currentData.partyData[id];
+                if (filter === 'all' || filter === party.type) {
+                    const card = document.createElement('div');
+                    card.className = 'party-card bg-white rounded-lg shadow-md overflow-hidden cursor-pointer';
+                    card.dataset.partyId = id;
+                    const statusText = party.type === 'active' ? t.statusActive : t.statusHistorical;
+                    card.innerHTML = `
+                        <div class="p-5">
+                            <h3 class="font-bold text-xl mb-2">${party.name}</h3>
+                            <p class="text-gray-600 text-sm">${party.period}</p>
+                            <span class="inline-block mt-3 text-xs font-semibold py-1 px-2 rounded-full ${party.type === 'active' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">
+                                ${statusText}
+                            </span>
+                        </div>`;
+                    profilesGrid.appendChild(card);
+                }
+            });
+            
+            // Update filter button styles
+            ['all', 'historical', 'active'].forEach(f => {
+                const btn = document.getElementById(`filter-${f}`);
+                if (f === filter) {
+                    btn.classList.add('bg-[#7D8B9B]', 'text-white');
+                    btn.classList.remove('bg-white', 'text-gray-700');
+                } else {
+                    btn.classList.remove('bg-[#7D8B9B]', 'text-white');
+                    btn.classList.add('bg-white', 'text-gray-700');
+                }
+            });
+        }
+
+        function showModal(partyId) {
+            const party = dataMap[currentLanguage].partyData[partyId];
+            const t = translations[currentLanguage];
+            modalContent.innerHTML = `
+                <div class="p-6 sm:p-8">
+                    <div class="prose max-w-none">${party.content}</div>
+                    <button id="close-modal" class="mt-8 px-4 py-2 bg-[#7D8B9B] text-white rounded hover:bg-opacity-90">${t.closeButton}</button>
+                </div>`;
+            partyModal.classList.remove('invisible', 'opacity-0');
+            modalContent.classList.remove('scale-95');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('close-modal').addEventListener('click', hideModal);
+        }
+        
+        function hideModal() {
+            partyModal.classList.add('invisible', 'opacity-0');
+            modalContent.classList.add('scale-95');
+            document.body.style.overflow = '';
+        }
+
+        let spoilerChart, dissatisfactionChartInstance;
+
+        function populateSpoilerSelect() {
+            const spoilerData = dataMap[currentLanguage].spoilerData;
+            spoilerSelect.innerHTML = '';
+            Object.keys(spoilerData).forEach(year => {
+                spoilerSelect.innerHTML += `<option value="${year}">${spoilerData[year].optionText}</option>`;
+            });
+        }
+
+        function initSpoilerChart(election = '2000') {
+            if (spoilerChart) spoilerChart.destroy();
+            const ctx = document.getElementById('spoilerChart').getContext('2d');
+            const data = dataMap[currentLanguage].spoilerData[election];
+            spoilerChart = new Chart(ctx, {
+                type: 'bar', data: data,
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: data.title, font: { size: 14 }, color: '#3D3D3D' },
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (c) => `${c.label}: ${c.parsed.y.toLocaleString()}` } }
+                    },
+                    scales: { y: { beginAtZero: true, ticks: { callback: (v) => (v / 1000000).toFixed(1) + 'M' } } }
+                }
+            });
+        }
+        
+        function initDissatisfactionChart() {
+            if (dissatisfactionChartInstance) dissatisfactionChartInstance.destroy();
+            const ctx = document.getElementById('dissatisfactionChart').getContext('2d');
+            dissatisfactionChartInstance = new Chart(ctx, {
+                type: 'line', data: dataMap[currentLanguage].dissatisfactionData,
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: false, min: 50, max: 65, ticks: { callback: (v) => v + '%' } } }
+                }
+            });
+        }
+
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id));
+                }
+            });
+        }, { rootMargin: '-50% 0px -50% 0px' });
+        sections.forEach(section => observer.observe(section));
+
+        // --- Event Listeners ---
+        mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+        partyModal.addEventListener('click', (e) => { if (e.target === partyModal) hideModal(); });
+        profilesGrid.addEventListener('click', (e) => { const c = e.target.closest('.party-card'); if (c) showModal(c.dataset.partyId); });
+        timelineContainer.addEventListener('click', (e) => {
+            const marker = e.target.closest('.timeline-marker');
+            if (marker) {
+                const partyId = marker.dataset.partyId;
+                document.getElementById('profiles').scrollIntoView({ behavior: 'smooth' });
+                setTimeout(() => showModal(partyId), 500);
+            }
+        });
+        
+        ['all', 'historical', 'active'].forEach(f => {
+            document.getElementById(`filter-${f}`).addEventListener('click', () => generateProfiles(f));
+        });
+
+        spoilerSelect.addEventListener('change', (e) => initSpoilerChart(e.target.value));
+        
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+                if (mobileMenu.offsetParent !== null) mobileMenu.classList.add('hidden');
+            });
+        });
+
+        function toggleLanguage() {
+            setLanguage(currentLanguage === 'zh' ? 'en' : 'zh');
+        }
+
+        document.getElementById('lang-toggle-desktop').addEventListener('click', toggleLanguage);
+        document.getElementById('lang-toggle-mobile').addEventListener('click', toggleLanguage);
+
+        // --- Initializations ---
+        setLanguage('zh');
+    });
+    </script>
+</body>
+</html>
