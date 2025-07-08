@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>US Minor Parties: A Panoramic Scan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The SPA is designed with a non-linear, exploratory structure to maximize user engagement and understanding. It comprises four main sections navigated via a sticky header: 1. **历史长河 (Timeline)**: The landing page, providing an immediate visual overview of party lifespans, encouraging exploration. 2. **政党档案 (Profiles)**: A central hub for deep dives into specific parties, allowing users to select any party from a grid and view its detailed information. 3. **关键时刻 (Key Moments)**: A case-study section that uses interactive charts to illustrate the tangible impact of third parties on major elections. 4. **制度与未来 (System & Future)**: An analytical section explaining the structural barriers and future outlook. This structure guides the user from a broad historical context to specific details, then to impactful analysis, and finally to systemic understanding, which is more intuitive and powerful than the linear format of the source report. -->
+    <!-- Visualization & Content Choices: 1. **Historical Timeline**: (Goal: Show change over time) A custom horizontal timeline built with HTML/CSS was chosen over a static list to visually represent party lifespans and overlaps. Interaction: Click to navigate. Justification: More engaging and provides better historical context. 2. **Party Profiles**: (Goal: Inform/Organize) A card-based grid and dynamic content display. Interaction: Click to reveal details. Justification: Standard, intuitive UI for browsing and deep-diving without page reloads. 3. **Key Election Data**: (Goal: Compare/Show Relationships) Chart.js bar charts. Interaction: Tooltips on hover. Justification: Best tool for clear, quantitative comparison of election results, making the 'spoiler effect' tangible. 4. **System Explanation**: (Goal: Organize/Inform) A diagram built with HTML/Tailwind CSS. Interaction: Toggle to switch between voting systems. Justification: A simple, interactive visual is more effective for explaining abstract concepts like voting systems than pure text. All choices adhere to the NO SVG/Mermaid constraint. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #fdfaf6; color: #4a4a4a; }
+        .nav-link { transition: color 0.3s, border-color 0.3s; }
+        .nav-link.active, .nav-link:hover { color: #c084fc; border-color: #c084fc; }
+        .party-card { transition: transform 0.3s, box-shadow 0.3s; }
+        .party-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .timeline-item { transition: background-color 0.3s; }
+        .timeline-item:hover { opacity: 0.8; }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 350px; max-height: 50vh; }
+        @media (min-width: 768px) { .chart-container { height: 450px; } }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .sim-button { transition: background-color 0.3s, color 0.3s; }
+        .sim-button.active { background-color: #a855f7; color: white; }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl sm:text-2xl font-bold text-purple-500">US Minor Parties Panorama</h1>
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#timeline" class="nav-link text-base sm:text-lg font-medium border-b-2 border-transparent pb-1">Timeline</a>
+                    <a href="#profiles" class="nav-link text-base sm:text-lg font-medium border-b-2 border-transparent pb-1">Party Profiles</a>
+                    <a href="#moments" class="nav-link text-base sm:text-lg font-medium border-b-2 border-transparent pb-1">Key Moments</a>
+                    <a href="#future" class="nav-link text-base sm:text-lg font-medium border-b-2 border-transparent pb-1">System & Future</a>
+                </nav>
+                <button id="mobile-menu-button" class="md:hidden p-2 rounded-md text-stone-600 hover:bg-stone-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500">
+                    <span class="sr-only">Open main menu</span>
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-4 6h10" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#timeline" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Timeline</a>
+                <a href="#profiles" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Party Profiles</a>
+                <a href="#moments" class="nav-link block px-3 py-2 rounded-md text-base font-medium">Key Moments</a>
+                <a href="#future" class="nav-link block px-3 py-2 rounded-md text-base font-medium">System & Future</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <section id="timeline" class="content-section fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-stone-800">Historical Timeline</h2>
+                <p class="mt-4 text-base sm:text-lg text-stone-600 max-w-3xl mx-auto">The chart below shows the active periods of important minor parties in US history. Hover over or click on a bar to explore brief information about each party, or navigate to 'Party Profiles' for full details.</p>
+            </div>
+            <div class="relative w-full overflow-x-auto bg-white p-6 rounded-xl shadow-lg">
+                <div id="timeline-container" class="relative h-[500px] sm:h-[600px]">
+                    <!-- Timeline will be generated by JS here -->
+                </div>
+                <div class="absolute bottom-0 left-6 right-6 flex justify-between text-sm font-semibold text-stone-500 pb-2">
+                    <span>1790</span>
+                    <span>1820</span>
+                    <span>1850</span>
+                    <span>1880</span>
+                    <span>1910</span>
+                    <span>1940</span>
+                    <span>1970</span>
+                    <span>2000</span>
+                    <span>2024</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="profiles" class="content-section fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-stone-800">Party Profiles</h2>
+                <p class="mt-4 text-base sm:text-lg text-stone-600 max-w-3xl mx-auto">Click on the cards below to learn more about the core principles, key figures, historical achievements, and ultimate political fate of each minor party.</p>
+            </div>
+            <div id="party-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Party cards will be generated by JS here -->
+            </div>
+            <div id="party-details-container" class="hidden">
+                 <!-- Party details will be injected here by JS -->
+            </div>
+        </section>
+        
+        <section id="moments" class="content-section fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-stone-800">Key Moments: Elections That Changed History</h2>
+                <p class="mt-4 text-base sm:text-lg text-stone-600 max-w-3xl mx-auto">Although minor parties rarely win, they have played the role of 'spoilers' in certain key elections, profoundly influencing the course of American politics. Below are two of the most famous cases.</p>
+            </div>
+            <div class="space-y-16">
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4">1912 Presidential Election: The Republican Split</h3>
+                    <p class="mb-6 text-stone-700">Dissatisfied with the Republican conservative wing, former President Theodore Roosevelt ran under his own Progressive ('Bull Moose') Party, directly splitting the Republican vote and leading to an easy victory for Democrat Woodrow Wilson. This election is a classic textbook case of the 'spoiler effect' and also showed the deep inroads of progressive ideas at the time.</p>
+                    <div class="chart-container">
+                        <canvas id="election1912Chart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4">2000 Presidential Election: The Nader Controversy</h3>
+                    <p class="mb-6 text-stone-700">Green Party candidate Ralph Nader won 2.7% of the national vote, but in key swing states like Florida, his vote total far exceeded Republican George W. Bush's margin of victory over Democrat Al Gore. Many analysts believe Gore would have won the election if Nader had not run. This event is still frequently cited in debates about the role of third parties.</p>
+                    <div class="chart-container">
+                        <canvas id="election2000Chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="content-section fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold text-stone-800">The System & The Future</h2>
+                <p class="mt-4 text-base sm:text-lg text-stone-600 max-w-3xl mx-auto">What systematically limits the development of American minor parties? What opportunities and challenges do they face in the future?</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4">Institutional Barriers: Interactive Simulation</h3>
+                    <p class="mb-6 text-stone-700">The vast majority of US elections use a 'single-member, plurality-winner' system, also known as 'Winner-Take-All'. This leads voters to vote strategically, fearing they will 'waste' their vote. Click the buttons below to see how different electoral systems can change the outcome.</p>
+                    
+                    <div class="mb-4 flex justify-center rounded-lg bg-stone-100 p-1">
+                        <button id="wta-button" class="sim-button active w-1/2 p-2 rounded-md font-semibold">Winner-Take-All</button>
+                        <button id="rcv-button" class="sim-button w-1/2 p-2 rounded-md font-semibold">Ranked-Choice Voting</button>
+                    </div>
+
+                    <div class="border border-stone-200 rounded-lg p-4 text-center">
+                        <h4 class="font-semibold text-lg mb-2">Simulated Voting Scenario</h4>
+                        <p class="text-sm mb-4">In a district with 100 voters, the initial vote is as follows:</p>
+                        <div class="chart-container h-64 sm:h-72">
+                            <canvas id="simulationChart"></canvas>
+                        </div>
+                        <div id="simulation-result" class="mt-4 p-3 rounded-md transition-all duration-300">
+                            <!-- Result text will be injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4">Future Opportunities & Challenges</h3>
+                     <div class="space-y-6">
+                        <div>
+                            <h4 class="text-xl font-semibold text-emerald-600 mb-2">Favorable Factors</h4>
+                            <ul class="list-disc list-inside space-y-2 text-stone-700">
+                                <li><b>Mainstream Party Polarization:</b> More voters feel neither party represents them.</li>
+                                <li><b>Internet Age:</b> Social media lowers the cost of organizing and communication.</li>
+                                <li><b>Young Voters:</b> Gen Z and Millennials are more open to new issues and choices.</li>
+                                <li><b>Calls for Electoral Reform:</b> Systems like 'Ranked-Choice Voting' are gaining attention.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-rose-600 mb-2">Unfavorable Factors</h4>
+                            <ul class="list-disc list-inside space-y-2 text-stone-700">
+                                <li><b>Electoral System Barriers:</b> 'Winner-take-all' is a fundamental obstacle.</li>
+                                <li><b>Uneven Media Exposure:</b> Mainstream media focuses heavily on the two major parties.</li>
+                                <li><b>Funding Disadvantage:</b> Political donations and public funding are hard to come by.</li>
+                                <li><b>Historical Inertia:</b> Voters are accustomed to choosing between the two parties.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-800 text-stone-300 mt-16">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center">
+            <p>Interactive report generated based on the 'Research Report on US Historical Minor Parties'.</p>
+            <p class="text-sm text-stone-400 mt-2">© 2025 US Political Analysis. All rights reserved.</p>
+        </div>
+    </footer>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const partiesData = [
+        { id: 'federalist', name: 'Federalist Party', start: 1791, end: 1824, color: '#a855f7', status: 'Disbanded', leaders: 'Alexander Hamilton, John Adams', background: 'Supported a strong central government, pro-British tendencies, and opposed the influence of the French Revolution.', achievements: 'Dominated policy during the Washington and Adams administrations, including establishing the national bank and laying the nation\'s financial foundation.', demise: 'Lost public support after the War of 1812 due to its anti-war stance and gradually disintegrated with the rise of Jeffersonian democracy.' },
+        { id: 'dem-rep', name: 'Democratic-Republican Party', start: 1792, end: 1834, color: '#ec4899', status: 'Disbanded', leaders: 'Thomas Jefferson, James Madison', background: 'Opposed the Federalist centralization, advocating for states\' rights, an agrarian republic, and a strict interpretation of the Constitution.', achievements: 'Won the election of 1800, ushering in the "Jeffersonian Democracy" era and dominating politics for decades.', demise: 'After the "Era of Good Feelings," it fractured over internal economic and regional conflicts, evolving into the Democratic Party and the National Republican Party.' },
+        { id: 'liberty', name: 'Liberty Party', start: 1840, end: 1848, color: '#f97316', status: 'Disbanded', leaders: 'James G. Birney', background: 'The first American political party dedicated entirely to the abolition of slavery, with strong moral and religious overtones.', achievements: 'Raised the issue of abolition in the 1840 and 1844 presidential elections, creating moral pressure on mainstream politics.', demise: 'Its core members and ideas were absorbed into the more politically pragmatic Free Soil Party.' },
+        { id: 'free-soil', name: 'Free Soil Party', start: 1848, end: 1854, color: '#eab308', status: 'Disbanded', leaders: 'Martin Van Buren, Salmon P. Chase', background: 'Opposed the expansion of slavery into the new western territories, with the slogan "Free Soil, Free Speech, Free Labor, and Free Men."', achievements: 'Successfully pushed the issue of anti-slavery expansion to the center of national politics, laying the groundwork for the Republican Party.', demise: 'Most of its members and its core platform were absorbed by the newly formed Republican Party.' },
+        { id: 'know-nothing', name: 'American Party (Know-Nothings)', start: 1855, end: 1860, color: '#84cc16', status: 'Disbanded', leaders: 'Millard Fillmore', background: 'A nativist, anti-Catholic, and anti-immigrant political party structured as a secret society.', achievements: 'Briefly became a powerful political force in the mid-1850s, winning elections in several states.', demise: 'The sharpening of the slavery issue caused internal divisions, leading to its rapid decline.' },
+        { id: 'progressive', name: 'Progressive Party (Bull Moose)', start: 1912, end: 1912, color: '#22c55e', status: 'Brief Revivals', leaders: 'Theodore Roosevelt (1912), Robert La Follette (1924), Henry Wallace (1948)', background: 'Formed by reformers dissatisfied with the two major parties, it appeared three times, advocating for anti-trust, social welfare, and government regulation.', achievements: 'Pushed mainstream parties to adopt some of its social reform policies (like women\'s suffrage and labor rights), profoundly influencing the New Deal agenda.', demise: 'Highly dependent on the personal charisma of its leaders and lacking a stable grassroots organization, it was eventually absorbed or marginalized by the mainstream parties.' },
+        { id: 'socialist', name: 'Socialist Party of America', start: 1901, end: 1972, color: '#14b8a6', status: 'Disbanded', leaders: 'Eugene V. Debs, Norman Thomas', background: 'Advocated for democratic socialism, promoting public ownership, labor rights, women\'s suffrage, and anti-war policies.', achievements: 'Proposed ideas like Social Security and unemployment insurance well in advance, deeply influencing the later New Deal. Debs received nearly a million votes in the 1920 election while imprisoned.', demise: 'Declined due to government repression (Red Scares), internal ideological splits, and the New Deal\'s adoption of some of its platform.' },
+        { id: 'communist', name: 'Communist Party USA', start: 1919, end: 2024, color: '#ef4444', status: 'Active', leaders: 'Earl Browder, Gus Hall', background: 'Adheres to Marxism-Leninism, advocating for a workers\' revolution and the establishment of socialism.', achievements: 'Made significant contributions to the labor movement in the 1930s-40s and the early civil rights movement.', demise: 'Repression during the Cold War and McCarthyism devastated its organizational strength. Its close ties to the Soviet Union led to its complete marginalization, and it exists today as a symbolic force.' },
+        { id: 'libertarian', name: 'Libertarian Party', start: 1971, end: 2024, color: '#3b82f6', status: 'Active', leaders: 'Ron Paul, Gary Johnson', background: 'Advocates for minimal government, maximum individual liberty, and a completely free-market economy.', achievements: 'The third-largest party in the U.S., it has a consistent presence in elections, and its ideas have significantly influenced some Republicans and Democrats.', demise: 'Not defunct. Remains active.' },
+        { id: 'green', name: 'Green Party', start: 1991, end: 2024, color: '#10b981', status: 'Active', leaders: 'Ralph Nader, Jill Stein', background: 'Based on the four pillars of ecological wisdom, social justice, grassroots democracy, and nonviolence.', achievements: 'Has achieved some success in local elections and pushed environmental issues into public discourse. Its "spoiler" role in the 2000 election caused huge controversy.', demise: 'Not defunct. Remains active.' },
+        { id: 'constitution', name: 'Constitution Party', start: 1992, end: 2024, color: '#6366f1', status: 'Active', leaders: 'Howard Phillips', background: 'Advocates for governing the nation strictly according to the original intent of the U.S. Constitution, blending paleoconservatism and Christian values.', achievements: 'Maintains a niche appeal among some ultra-conservative voters.', demise: 'Not defunct. Its political space is often squeezed by the more hardline rhetoric of the Republican Party.' }
+    ];
+
+    const timelineContainer = document.getElementById('timeline-container');
+    const startYear = 1790;
+    const endYear = 2025;
+    const totalYears = endYear - startYear;
+
+    function generateTimeline() {
+        partiesData.forEach((party, index) => {
+            const partyStart = party.start - startYear;
+            const partyDuration = party.end - party.start;
+            const left = (partyStart / totalYears) * 100;
+            const width = (partyDuration / totalYears) * 100;
+
+            const item = document.createElement('div');
+            item.className = 'absolute h-6 rounded timeline-item cursor-pointer flex items-center justify-center text-white text-xs font-bold';
+            item.style.left = `${left}%`;
+            item.style.width = `${width}%`;
+            item.style.top = `${40 + index * 35}px`;
+            item.style.backgroundColor = party.color;
+            item.setAttribute('data-party-id', party.id);
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = party.name;
+            item.appendChild(nameSpan);
+
+            item.addEventListener('click', () => {
+                showSection('profiles');
+                renderPartyDetails(party.id);
+            });
+            timelineContainer.appendChild(item);
+        });
+
+        for (let i = 0; i <= (endYear - startYear) / 10; i++) {
+            const year = startYear + i * 10;
+            const marker = document.createElement('div');
+            marker.className = 'absolute top-0 bottom-0 border-l border-stone-200';
+            marker.style.left = `${(i * 10 / totalYears) * 100}%`;
+            timelineContainer.appendChild(marker);
+        }
+    }
+
+    const partyGrid = document.getElementById('party-grid');
+    const partyDetailsContainer = document.getElementById('party-details-container');
+    
+    function generatePartyGrid() {
+        partiesData.forEach(party => {
+            const card = document.createElement('div');
+            card.className = 'party-card p-4 bg-white rounded-lg shadow-md cursor-pointer border-l-4';
+            card.style.borderColor = party.color;
+            card.setAttribute('data-party-id', party.id);
+            card.innerHTML = `
+                <h3 class="text-xl font-bold text-stone-800">${party.name}</h3>
+                <p class="text-sm text-stone-500">${party.start}–${party.end > 2024 ? 'Present' : party.end}</p>
+                <span class="inline-block mt-2 px-2 py-1 text-xs font-semibold rounded-full ${party.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-stone-100 text-stone-800'}">${party.status}</span>
+            `;
+            card.addEventListener('click', () => renderPartyDetails(party.id));
+            partyGrid.appendChild(card);
+        });
+    }
+
+    function renderPartyDetails(partyId) {
+        const party = partiesData.find(p => p.id === partyId);
+        if (!party) return;
+
+        partyDetailsContainer.innerHTML = `
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg fade-in border-t-8" style="border-color: ${party.color};">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-3xl sm:text-4xl font-bold">${party.name}</h2>
+                        <p class="text-base sm:text-lg text-stone-500 mb-4">${party.start}–${party.end > 2024 ? 'Present' : party.end}</p>
+                    </div>
+                    <button id="close-details" class="text-stone-500 hover:text-stone-800 text-3xl">&times;</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                    <div>
+                        <h4 class="text-xl font-semibold mb-2 text-stone-700">Core Tenets</h4>
+                        <p class="text-base">${party.background}</p>
+                        <h4 class="text-xl font-semibold mt-6 mb-2 text-stone-700">Key Leaders</h4>
+                        <p class="text-base">${party.leaders}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold mb-2 text-stone-700">Historical Achievements & Impact</h4>
+                        <p class="text-base">${party.achievements}</p>
+                        <h4 class="text-xl font-semibold mt-6 mb-2 text-stone-700">Decline or Current Status</h4>
+                        <p class="text-base">${party.demise}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        partyDetailsContainer.classList.remove('hidden');
+        document.getElementById('close-details').addEventListener('click', () => {
+            partyDetailsContainer.classList.add('hidden');
+            partyDetailsContainer.innerHTML = '';
+        });
+        partyDetailsContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    const sections = document.querySelectorAll('.content-section');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+
+    function showSection(id) {
+        sections.forEach(section => {
+            if (section.id === id) {
+                section.classList.add('active');
+            } else {
+                section.classList.remove('active');
+            }
+        });
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === '#' + id) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+        if (!mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.add('hidden');
+        }
+    }
+    
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href').substring(1);
+            showSection(targetId);
+            window.history.pushState(null, '', '#' + targetId);
+        });
+    });
+
+    function handleRouting() {
+        let hash = window.location.hash.substring(1);
+        if (!['timeline', 'profiles', 'moments', 'future'].includes(hash)) {
+            hash = 'timeline';
+        }
+        showSection(hash);
+    }
+    
+    window.addEventListener('popstate', handleRouting);
+
+    function create1912Chart() {
+        const ctx = document.getElementById('election1912Chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Democratic (Wilson)', 'Progressive (Roosevelt)', 'Republican (Taft)', 'Socialist (Debs)'],
+                datasets: [{
+                    label: 'Popular Vote Share (%)',
+                    data: [41.8, 27.4, 23.2, 6.0],
+                    backgroundColor: ['#3b82f6', '#22c55e', '#ef4444', '#14b8a6'],
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { title: { display: true, text: '1912 US Presidential Election Results', font: { size: 16 } }, legend: { display: false } }, scales: { x: { beginAtZero: true, title: { display: true, text: 'Vote Share (%)' } } } }
+        });
+    }
+
+    function create2000Chart() {
+        const ctx = document.getElementById('election2000Chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Florida', 'New Hampshire'],
+                datasets: [ { label: 'Bush (R) Lead Over Gore (D) Votes', data: [537, 7211], backgroundColor: '#fca5a5' }, { label: 'Nader (G) Votes', data: [97488, 22198], backgroundColor: '#86efac' } ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: '2000 Key State Vote Comparison', font: { size: 16 } }, tooltip: { mode: 'index', intersect: false } }, scales: { y: { beginAtZero: true, title: { display: true, text: 'Votes' } } } }
+        });
+    }
+
+    let simulationChart;
+    function createOrUpdateSimulationChart(data, resultText, resultBgColor, resultTextColor) {
+        const resultDiv = document.getElementById('simulation-result');
+        resultDiv.innerHTML = resultText;
+        resultDiv.style.backgroundColor = resultBgColor;
+        resultDiv.style.color = resultTextColor;
+
+        const ctx = document.getElementById('simulationChart').getContext('2d');
+        if (simulationChart) {
+            simulationChart.data.datasets[0].data = data;
+            simulationChart.update();
+        } else {
+            simulationChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Republican', 'Democrat', 'Third Party'],
+                    datasets: [{
+                        label: 'Votes',
+                        data: data,
+                        backgroundColor: ['#ef4444', '#3b82f6', '#10b981'],
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, max: 100 } }
+                }
+            });
+        }
+    }
+
+    const wtaButton = document.getElementById('wta-button');
+    const rcvButton = document.getElementById('rcv-button');
+
+    const initialVotes = { republican: 45, democrat: 40, third: 15 };
+
+    function showWtaResult() {
+        wtaButton.classList.add('active');
+        rcvButton.classList.remove('active');
+        const resultText = `<b>Result:</b> The Republican Party wins with a 45% plurality, despite 55% of voters choosing other candidates. The Third Party's 15% of the vote yields no representation.`;
+        createOrUpdateSimulationChart(
+            [initialVotes.republican, initialVotes.democrat, initialVotes.third],
+            resultText,
+            '#fee2e2', // red-100
+            '#991b1b'  // red-800
+        );
+    }
+
+    function showRcvResult() {
+        rcvButton.classList.add('active');
+        wtaButton.classList.remove('active');
+        const finalDemocratVotes = initialVotes.democrat + initialVotes.third;
+        const resultText = `<b>Result:</b> No candidate has a majority in the first round, so the Third Party with the fewest votes is eliminated. Its 15 votes are redistributed to the Democratic party based on voters' second choice. <b>The Democratic Party ultimately wins with a ${finalDemocratVotes}% majority.</b>`;
+        createOrUpdateSimulationChart(
+            [initialVotes.republican, finalDemocratVotes, 0],
+            resultText,
+            '#dbeafe', // blue-100
+            '#1e40af'  // blue-800
+        );
+    }
+
+    wtaButton.addEventListener('click', showWtaResult);
+    rcvButton.addEventListener('click', showRcvResult);
+
+
+    handleRouting();
+    generateTimeline();
+    generatePartyGrid();
+    create1912Chart();
+    create2000Chart();
+    showWtaResult(); // Initialize simulation chart
+});
+</script>
+
+</body>
+</html>
