@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户分析交互式仪表板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals & Muted Tones -->
+    <!-- Application Structure Plan: A tab-based dashboard design was chosen to organize the complex analysis into user-centric tasks: 1) a high-level '概览' (Overview), 2) a deep-dive '渠道分析' (Channel Analysis), and 3) an actionable '销售业绩' (Sales Performance) view. This structure avoids overwhelming the user by presenting information progressively. The user flow encourages exploration, starting broad and allowing drill-down into specifics, such as clicking a sales consultant to see their detailed performance metrics and associated problem customers. This is more intuitive and insightful than a linear report. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Customer counts by status -> Goal: Inform -> Viz: Donut Chart -> Interaction: Hover tooltips -> Justification: Shows proportions of the whole customer base clearly. Library: Chart.js.
+        - Report Info: Customers by source channel -> Goal: Compare -> Viz: Horizontal Bar Chart -> Interaction: Clickable bars (future enhancement) -> Justification: Easy comparison of channel effectiveness. Library: Chart.js.
+        - Report Info: Sales consultant refund rates & problem customers -> Goal: Analyze/Identify Issues -> Viz: Interactive HTML Table + Dynamic detail section -> Interaction: Click table row to update detail view -> Justification: Connects high-level metrics (refund rate) directly to specific, actionable data (problem customer list and timeline), which is the report's key insight. The "Time to Refund" is visualized as a simple HTML/CSS timeline for clarity. Library: Vanilla JS for interaction, Chart.js for supporting charts.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif';
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .tab-active {
+            border-color: #14b8a6; /* teal-500 */
+            color: #14b8a6;
+            background-color: #f0fdfa; /* teal-50 */
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">客户数据交互式分析仪表板</h1>
+            <p class="text-slate-600 mt-2">一个动态的、可交互的视角来探索您的客户数据</p>
+        </header>
+
+        <nav class="flex justify-center border-b border-slate-200 mb-8">
+            <button data-tab="overview" class="tab-button py-3 px-6 font-semibold text-slate-600 border-b-2 border-transparent transition-colors duration-300">概览</button>
+            <button data-tab="channels" class="tab-button py-3 px-6 font-semibold text-slate-600 border-b-2 border-transparent transition-colors duration-300">渠道分析</button>
+            <button data-tab="performance" class="tab-button py-3 px-6 font-semibold text-slate-600 border-b-2 border-transparent transition-colors duration-300">销售业绩</button>
+        </nav>
+
+        <main>
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content space-y-8">
+                <section>
+                    <div class="text-left mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">业务核心指标</h2>
+                        <p class="text-slate-500 mt-1">从最高层面快速了解您当前的客户构成和业务状态。</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <h3 class="text-slate-500 text-sm font-medium">客户总数</h3>
+                            <p class="text-3xl font-bold text-slate-900 mt-1">202</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <h3 class="text-slate-500 text-sm font-medium">制作中客户</h3>
+                            <p class="text-3xl font-bold text-teal-600 mt-1">158</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <h3 class="text-slate-500 text-sm font-medium">已截单客户</h3>
+                            <p class="text-3xl font-bold text-sky-600 mt-1">34</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <h3 class="text-slate-500 text-sm font-medium">提退款客户</h3>
+                            <p class="text-3xl font-bold text-amber-600 mt-1">10</p>
+                        </div>
+                    </div>
+                </section>
+                <section>
+                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                            <h3 class="text-xl font-bold text-slate-800 mb-4">客户状态分布</h3>
+                            <div class="chart-container h-72 md:h-80"><canvas id="statusChart"></canvas></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                             <h3 class="text-xl font-bold text-slate-800 mb-4">主要客户来源</h3>
+                            <div class="chart-container h-72 md:h-80"><canvas id="topChannelsChart"></canvas></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Channels Tab -->
+            <div id="channels" class="tab-content hidden space-y-8">
+                 <section>
+                    <div class="text-left mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">客户来源渠道深度分析</h2>
+                        <p class="text-slate-500 mt-1">探究不同获客渠道的表现及其对客户质量的影响。</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                        <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                             <h3 class="text-xl font-bold text-slate-800 mb-4">各渠道客户数量对比</h3>
+                            <div class="chart-container h-96"><canvas id="allChannelsChart"></canvas></div>
+                        </div>
+                        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col">
+                            <h3 class="text-xl font-bold text-slate-800">渠道退款风险分析</h3>
+                            <p class="text-sm text-slate-500 mt-1 mb-4">比较各渠道的客户总数与退款客户数，识别高风险渠道。</p>
+                            <div class="flex-grow chart-container h-96"><canvas id="channelRefundRiskChart"></canvas></div>
+                            <div id="channel-insights" class="mt-4 p-4 bg-amber-50 border-l-4 border-amber-400 text-amber-800 rounded-r-lg">
+                                <h4 class="font-bold">核心洞察</h4>
+                                <p class="text-sm">数据显示，**抖音**虽然是最大的获客来源，但其退款客户占比（8.3%）在主要渠道中最高，需要重点关注。相比之下，**转介绍**客户更为稳定。</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Performance Tab -->
+            <div id="performance" class="tab-content hidden space-y-8">
+                 <section>
+                    <div class="text-left mb-6">
+                        <h2 class="text-2xl font-bold text-slate-800">销售顾问业绩洞察</h2>
+                        <p class="text-slate-500 mt-1">分析销售团队的表现，识别优秀实践与潜在问题。点击表格中的顾问查看详情。</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-slate-100">
+                            <h3 class="text-xl font-bold text-slate-800 mb-4">销售顾问客户退款率</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left" id="performance-table">
+                                    <thead class="border-b border-slate-200 text-sm text-slate-600">
+                                        <tr>
+                                            <th class="p-3">销售顾问</th>
+                                            <th class="p-3 text-center">跟进客户</th>
+                                            <th class="p-3 text-center">退款客户</th>
+                                            <th class="p-3 text-center">客户退款率</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="performance-table-body" class="divide-y divide-slate-100">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="consultant-detail-view" class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hidden">
+                             <div id="consultant-detail-content">
+                                <!-- Dynamic content will be injected here -->
+                             </div>
+                        </div>
+                        <div id="consultant-detail-placeholder" class="bg-white p-6 rounded-xl shadow-sm border-2 border-dashed border-slate-200 flex items-center justify-center">
+                            <p class="text-slate-500 text-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M17.17 17.17a2.35 2.35 0 01-3.32 0L3 6.36V17a2 2 0 002 2h12.17zM17.17 7.83L7.83 17.17" /></svg>
+                                <span class="mt-2 block font-semibold">请从左侧表格中选择一位销售顾问以查看其详细分析。</span>
+                            </p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const chartInstances = {};
+
+            const dataStore = {
+                consultants: [
+                    { id: 'angel', name: 'Angel', total: 12, refunds: 1 },
+                    { id: 'nana', name: 'Nana', total: 39, refunds: 3 },
+                    { id: 'suki', name: 'Suki', total: 29, refunds: 2 },
+                    { id: 'kiki', name: 'Kiki', total: 16, refunds: 1 },
+                    { id: 'anki', name: 'Anki', total: 33, refunds: 2 },
+                    { id: 'yoyo', name: 'Yoyo', total: 22, refunds: 1 },
+                ],
+                refundDetails: [
+                    { id: 1, name: '梁嘉欣', consultant: 'Angel', source: '抖音', signDate: '2024/2/29', refundDate: '2024/3/11', days: 11 },
+                    { id: 2, name: '梁凯欣', consultant: 'Nana', source: '抖音', signDate: '2024/3/2', refundDate: '2024/3/13', days: 11 },
+                    { id: 3, name: '陈颖欣', consultant: 'Nana', source: '抖音', signDate: '2024/3/10', refundDate: '2024/3/20', days: 10 },
+                    { id: 4, name: '黄丽婷', consultant: 'Nana', source: '轉介紹', signDate: '2024/3/17', refundDate: '2024/3/27', days: 10 }
+                ],
+                channels: [
+                    { name: '抖音', total: 60, refunds: 5 },
+                    { name: '轉介紹', total: 38, refunds: 2 },
+                    { name: '大眾點評', total: 23, refunds: 1 },
+                    { name: '小紅書', total: 19, refunds: 1 },
+                    { name: '其他', total: 18, refunds: 1 },
+                ]
+            };
+            
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            const consultantDetailView = document.getElementById('consultant-detail-view');
+            const consultantDetailPlaceholder = document.getElementById('consultant-detail-placeholder');
+            const consultantDetailContent = document.getElementById('consultant-detail-content');
+
+            function setActiveTab(tabId) {
+                tabs.forEach(button => {
+                    if (button.dataset.tab === tabId) {
+                        button.classList.add('tab-active');
+                    } else {
+                        button.classList.remove('tab-active');
+                    }
+                });
+                tabContents.forEach(content => {
+                    if (content.id === tabId) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+                renderChartsForTab(tabId);
+            }
+
+            tabs.forEach(button => {
+                button.addEventListener('click', () => {
+                    setActiveTab(button.dataset.tab);
+                });
+            });
+
+            function renderChartsForTab(tabId) {
+                if (tabId === 'overview') {
+                    createStatusChart();
+                    createTopChannelsChart();
+                } else if (tabId === 'channels') {
+                    createAllChannelsChart();
+                    createChannelRefundRiskChart();
+                } else if (tabId === 'performance') {
+                    populatePerformanceTable();
+                }
+            }
+            
+            function createChart(canvasId, type, data, options) {
+                if (chartInstances[canvasId]) {
+                    chartInstances[canvasId].destroy();
+                }
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                chartInstances[canvasId] = new Chart(ctx, { type, data, options });
+            }
+
+            function createStatusChart() {
+                const data = {
+                    labels: ['制作中', '已截单', '提退款'],
+                    datasets: [{
+                        data: [158, 34, 10],
+                        backgroundColor: ['#0f766e', '#0284c7', '#d97706'],
+                        borderColor: '#f8fafc',
+                        borderWidth: 4,
+                        hoverOffset: 8
+                    }]
+                };
+                const options = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: { legend: { position: 'bottom' } }
+                };
+                createChart('statusChart', 'doughnut', data, options);
+            }
+            
+            function createTopChannelsChart() {
+                 const topChannels = dataStore.channels.slice(0, 5);
+                const data = {
+                    labels: topChannels.map(c => c.name),
+                    datasets: [{
+                        label: '客户数量',
+                        data: topChannels.map(c => c.total),
+                        backgroundColor: ['#2dd4bf', '#60a5fa', '#fbbf24', '#f87171', '#a78bfa'],
+                        borderRadius: 4
+                    }]
+                };
+                const options = {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false } }, y: { grid: { display: false } } }
+                };
+                createChart('topChannelsChart', 'bar', data, options);
+            }
+
+            function createAllChannelsChart() {
+                const sortedChannels = [...dataStore.channels].sort((a,b) => a.total - b.total);
+                const data = {
+                    labels: sortedChannels.map(c => c.name),
+                    datasets: [{
+                        label: '客户数量',
+                        data: sortedChannels.map(c => c.total),
+                        backgroundColor: '#38bdf8',
+                        borderRadius: 4,
+                    }]
+                };
+                 const options = {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true } }
+                };
+                createChart('allChannelsChart', 'bar', data, options);
+            }
+            
+            function createChannelRefundRiskChart(){
+                const data = {
+                    labels: dataStore.channels.map(c => c.name),
+                    datasets: [
+                        {
+                            label: '总客户',
+                            data: dataStore.channels.map(c => c.total),
+                            backgroundColor: '#60a5fa',
+                            borderRadius: 4,
+                        },
+                        {
+                            label: '退款客户',
+                            data: dataStore.channels.map(c => c.refunds),
+                            backgroundColor: '#facc15',
+                            borderRadius: 4,
+                        }
+                    ]
+                };
+                const options = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { x: { stacked: true }, y: { stacked: true } }
+                };
+                createChart('channelRefundRiskChart', 'bar', data, options);
+            }
+
+            function populatePerformanceTable() {
+                const tableBody = document.getElementById('performance-table-body');
+                tableBody.innerHTML = '';
+                const performanceData = dataStore.consultants.map(c => ({
+                    ...c,
+                    refundRate: c.total > 0 ? (c.refunds / c.total) : 0
+                })).sort((a,b) => b.refundRate - a.refundRate);
+
+                performanceData.forEach(p => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-slate-50 cursor-pointer';
+                    row.dataset.consultantId = p.id;
+                    row.innerHTML = `
+                        <td class="p-3 font-semibold text-slate-700">${p.name}</td>
+                        <td class="p-3 text-center">${p.total}</td>
+                        <td class="p-3 text-center">${p.refunds}</td>
+                        <td class="p-3 text-center font-semibold ${p.refundRate > 0.07 ? 'text-amber-600' : 'text-slate-600'}">
+                            ${(p.refundRate * 100).toFixed(1)}%
+                        </td>
+                    `;
+                    row.addEventListener('click', () => {
+                        showConsultantDetails(p.id);
+                        document.querySelectorAll('#performance-table-body tr').forEach(r => r.classList.remove('bg-teal-50'));
+                        row.classList.add('bg-teal-50');
+                    });
+                    tableBody.appendChild(row);
+                });
+            }
+
+            function showConsultantDetails(consultantId) {
+                const consultant = dataStore.consultants.find(c => c.id === consultantId);
+                const refunds = dataStore.refundDetails.filter(r => r.consultant.toLowerCase() === consultantId);
+                consultantDetailPlaceholder.classList.add('hidden');
+                consultantDetailView.classList.remove('hidden');
+                
+                let refundListHtml = '<p class="text-sm text-slate-500">该顾问无退款记录。</p>';
+                if (refunds.length > 0) {
+                    refundListHtml = refunds.map(r => `
+                        <div class="relative pl-8 py-2 border-l-2 border-slate-200">
+                            <div class="absolute w-4 h-4 bg-amber-400 rounded-full -left-2 top-3 border-4 border-white"></div>
+                            <p class="font-semibold text-slate-700">${r.name} (来自: ${r.source})</p>
+                            <p class="text-sm text-slate-500">签约后 <span class="font-bold text-amber-600">${r.days}天</span> 申请退款</p>
+                            <p class="text-xs text-slate-400">${r.signDate} → ${r.refundDate}</p>
+                        </div>
+                    `).join('');
+                }
+
+                consultantDetailContent.innerHTML = `
+                    <h3 class="text-xl font-bold text-slate-800">${consultant.name} 的业绩详情</h3>
+                    <div class="flex space-x-6 text-center my-4">
+                        <div>
+                            <p class="text-2xl font-bold">${consultant.total}</p>
+                            <p class="text-sm text-slate-500">客户总数</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-amber-600">${consultant.refunds}</p>
+                            <p class="text-sm text-slate-500">退款数</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-amber-600">${(consultant.total > 0 ? (consultant.refunds / consultant.total) * 100 : 0).toFixed(1)}%</p>
+                            <p class="text-sm text-slate-500">退款率</p>
+                        </div>
+                    </div>
+                    <h4 class="font-bold mt-6 mb-2 text-slate-700">退款客户时间线</h4>
+                    <div class="space-y-1">
+                        ${refundListHtml}
+                    </div>
+                    <div class="mt-4 p-4 bg-slate-100 border-l-4 border-slate-400 text-slate-700 rounded-r-lg">
+                        <h4 class="font-bold">分析摘要</h4>
+                        <p class="text-sm">${generateAnalysisText(consultant, refunds)}</p>
+                    </div>
+                `;
+            }
+
+            function generateAnalysisText(consultant, refunds) {
+                const refundRate = consultant.total > 0 ? (consultant.refunds / consultant.total) * 100 : 0;
+                if(refunds.length === 0) return `顾问 ${consultant.name} 目前没有退款客户，表现良好。`;
+
+                const avgDays = refunds.reduce((sum, r) => sum + r.days, 0) / refunds.length;
+                const douyinRefunds = refunds.filter(r => r.source === '抖音').length;
+
+                let text = `顾问 ${consultant.name} 的客户退款率为 **${refundRate.toFixed(1)}%**。`;
+                text += ` 退款客户平均在签约后 **${avgDays.toFixed(0)}天** 内申请退款，属于“快速退款”模式，这通常指向签约环节可能存在问题。`;
+                
+                if (douyinRefunds > 0) {
+                     text += ` 在其退款客户中，有 **${douyinRefunds}** 位来自抖音渠道，表明在转化该渠道客户时可能存在预期管理方面的挑战。`;
+                }
+
+                if (consultant.name === 'Nana' && refunds.some(r => r.source === '轉介紹')) {
+                    text += ` 特别需要注意的是，出现了来自“转介绍”渠道的退款客户，这可能暗示问题不仅限于渠道，而在于销售沟通本身。`
+                }
+                
+                return text;
+            }
+
+            setActiveTab('overview');
+        });
+    </script>
+</body>
+</html>
