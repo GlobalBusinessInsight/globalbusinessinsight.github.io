@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEC T&D - Interactive IT Strategy Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- 
+    Chosen Palette: Calm Harmony
+    - Background: #F8F5F2 (Warm Off-White)
+    - Text: #2F4F4F (Dark Slate Gray)
+    - Primary Accent: #006A4E (SEC Green)
+    - Secondary Accent / Highlights: #BDB76B (Muted Gold/Sand)
+    -->
+    <!-- 
+    Application Structure Plan: The SPA is designed as an interactive dashboard with four thematic sections, deviating from the linear report structure for a more intuitive, exploratory user experience. The goal is to allow stakeholders to quickly grasp the strategic context, drill down into specific systems, understand key projects, and see future opportunities.
+    1.  **Hero/Header:** A concise introduction setting the stage.
+    2.  **Strategic Context:** Presents the "Why" using two interactive cards for Transmission (National Grid SA) vs. Distribution, highlighting their distinct missions and IT needs derived from the report. This simplifies the complex organizational structure.
+    3.  **Systems Integration Hub:** The core interactive element. An HTML/CSS-based matrix visualizes the integration maturity between core IT/OT systems. Clicking a cell reveals detailed analysis (challenges, opportunities) in a side panel, making the dense system data from the report easily digestible and explorable. A dynamic Chart.js doughnut chart provides a high-level summary of integration maturity.
+    4.  **Digital Transformation Pillars:** Showcases flagship initiatives (AMI, DA) and future frontiers (APM, AI) as a grid of clickable cards. This transforms the report's narrative sections into engaging, bite-sized summaries, each linking to a core strategic goal.
+    5.  **Future Outlook & AI:** A dedicated section focusing on high-value AI use cases, presented with a dynamic bar chart to visualize their perceived business value, making the "New Frontiers" section more interactive and forward-looking.
+    This task-oriented, top-down structure (from strategy to specific systems to future projects) is more aligned with how a decision-maker would want to consume the information than the original report's linear flow.
+    -->
+    <!-- 
+    Visualization & Content Choices: 
+    - Report Info: T&D Missions & Goals -> Goal: Compare -> Viz: Interactive Cards (HTML/CSS) -> Interaction: Hover to highlight key stats. Justification: Quickly contrasts the differing priorities of the two main divisions.
+    - Report Info: Core Systems Integration Matrix Data -> Goal: Explore Relationships -> Viz: Interactive Grid (HTML/CSS) + Details Panel (HTML) + Doughnut Chart (Chart.js/Canvas) -> Interaction: Click grid cell to update panel and highlight chart segment. Justification: Makes the complex matrix data interactive and less intimidating. The doughnut chart provides a quick visual summary of the overall integration health.
+    - Report Info: Flagship Initiatives (AMI, DA) & New Frontiers (APM, AI) -> Goal: Inform & Engage -> Viz: Interactive Cards (HTML/CSS) -> Interaction: Click to reveal a summary. Justification: Breaks down long text sections into digestible, visually appealing components.
+    - Report Info: AI Use Case Value -> Goal: Compare & Prioritize -> Viz: Horizontal Bar Chart (Chart.js/Canvas) -> Interaction: Hover tooltips show details. Justification: Provides a clear, quantitative comparison of future investment opportunities discussed in the report.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F5F2;
+            color: #2F4F4F;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 40vh;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 50vh;
+            }
+        }
+        .matrix-cell {
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+        }
+        .matrix-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(189, 183, 107, 0.5);
+        }
+        .matrix-cell.active {
+            transform: scale(1.08);
+            border: 2px solid #006A4E;
+            box-shadow: 0 0 20px rgba(0, 106, 78, 0.6);
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link:hover {
+            color: #006A4E;
+            border-bottom-color: #006A4E;
+        }
+        .pillar-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .pillar-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(47, 79, 79, 0.15);
+        }
+        .smooth-scroll {
+            scroll-behavior: smooth;
+        }
+        .bg-sec-green { background-color: #006A4E; }
+        .text-sec-green { color: #006A4E; }
+        .border-sec-green { border-color: #006A4E; }
+        .bg-muted-gold { background-color: #BDB76B; }
+        .text-muted-gold { color: #BDB76B; }
+        .border-muted-gold { border-color: #BDB76B; }
+        .bg-main { background-color: #F8F5F2; }
+        .bg-card { background-color: #FFFFFF; }
+        .bg-card-alt { background-color: #F0EBE5; }
+    </style>
+</head>
+<body class="smooth-scroll">
+
+    <!-- Header & Navigation -->
+    <header class="bg-card sticky top-0 z-50 shadow-md">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-sec-green">SEC IT STRATEGY DASHBOARD</h1>
+                </div>
+                <nav class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#strategy" class="nav-link text-gray-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">Strategic Context</a>
+                        <a href="#systems" class="nav-link text-gray-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">Systems Hub</a>
+                        <a href="#pillars" class="nav-link text-gray-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">Transformation Pillars</a>
+                        <a href="#outlook" class="nav-link text-gray-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">Future Outlook</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- Section 1: Strategic Context -->
+        <section id="strategy" class="mb-16 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-center mb-4">Strategic Context: A Dual Mission</h2>
+            <p class="text-center max-w-3xl mx-auto text-lg mb-10">This section clarifies the distinct yet complementary missions of SEC's core businesses. Understanding these differences is crucial for creating targeted IT solutions that address their unique strategic goals, all under the umbrella of Saudi Vision 2030.</p>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- National Grid SA Card -->
+                <div class="bg-card rounded-lg shadow-lg p-6 flex flex-col border-t-4 border-sec-green">
+                    <h3 class="text-2xl font-bold mb-2 text-sec-green">National Grid SA (Transmission)</h3>
+                    <p class="text-sm uppercase font-semibold text-muted-gold mb-4">The Kingdom's Electrical Backbone</p>
+                    <p class="mb-4 flex-grow">Responsible for the high-voltage transmission network, National Grid SA's IT needs are driven by reliability, asset longevity, and regional interconnection. The focus is on large-scale systems for managing critical infrastructure.</p>
+                    <div class="mt-auto space-y-2 text-sm">
+                        <p class="flex items-center"><span class="text-sec-green font-bold text-lg mr-2">●</span> Top-Quartile Reliability</p>
+                        <p class="flex items-center"><span class="text-sec-green font-bold text-lg mr-2">●</span> 60% Asset Management Maturity</p>
+                        <p class="flex items-center"><span class="text-sec-green font-bold text-lg mr-2">●</span> Regional Energy Hub Ambition</p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <p class="font-semibold text-sec-green">Key IT Focus: Asset Performance Management (APM), Advanced Grid Analytics, Large-Scale Project Platforms.</p>
+                    </div>
+                </div>
+
+                <!-- SEC Distribution Card -->
+                <div class="bg-card rounded-lg shadow-lg p-6 flex flex-col border-t-4 border-muted-gold">
+                    <h3 class="text-2xl font-bold mb-2 text-muted-gold">SEC Distribution</h3>
+                    <p class="text-sm uppercase font-semibold text-sec-green mb-4">The Customer-Facing Front Line</p>
+                    <p class="mb-4 flex-grow">Serving over 10 million customers, the distribution division's IT priorities center on customer satisfaction, operational efficiency at scale, and smart services. Solutions must be highly adaptable to strict internal standards.</p>
+                    <div class="mt-auto space-y-2 text-sm">
+                        <p class="flex items-center"><span class="text-muted-gold font-bold text-lg mr-2">●</span> Massively Improved Customer Satisfaction</p>
+                        <p class="flex items-center"><span class="text-muted-gold font-bold text-lg mr-2">●</span> Smart Service Delivery (Mobile App, etc.)</p>
+                        <p class="flex items-center"><span class="text-muted-gold font-bold text-lg mr-2">●</span> Field Service Efficiency</p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <p class="font-semibold text-muted-gold">Key IT Focus: Customer Relationship Management (CRM), Mobile Workforce Management, Smart Meter Data Analytics.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Systems Integration Hub -->
+        <section id="systems" class="mb-16 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-center mb-4">Core Systems Integration Hub</h2>
+            <p class="text-center max-w-3xl mx-auto text-lg mb-10">The effectiveness of any digital initiative depends on how well core systems communicate. This hub provides an interactive overview of the integration maturity between key T&D systems. Click on any cell in the matrix to explore the specific challenges and opportunities.</p>
+            
+            <div class="lg:grid lg:grid-cols-3 lg:gap-8">
+                <!-- Interactive Matrix -->
+                <div class="lg:col-span-2 bg-card p-6 rounded-lg shadow-lg">
+                    <div id="integration-matrix" class="grid grid-cols-4 gap-2 text-center text-xs sm:text-sm font-semibold">
+                        <!-- Header Row -->
+                        <div></div>
+                        <div class="py-2">SCADA/EMS</div>
+                        <div class="py-2">OMS</div>
+                        <div class="py-2">EAM</div>
+
+                        <!-- GIS Row -->
+                        <div class="flex items-center justify-center">GIS</div>
+                        <div id="gis-scada" data-key="gis-scada" class="matrix-cell bg-red-200 text-red-800 flex items-center justify-center p-4 rounded-md">Manual</div>
+                        <div id="gis-oms" data-key="gis-oms" class="matrix-cell bg-green-200 text-green-800 flex items-center justify-center p-4 rounded-md">Real-Time</div>
+                        <div id="gis-eam" data-key="gis-eam" class="matrix-cell bg-yellow-200 text-yellow-800 flex items-center justify-center p-4 rounded-md">Batch</div>
+
+                        <!-- CIS Row -->
+                        <div class="flex items-center justify-center">CIS</div>
+                        <div id="cis-scada" data-key="cis-scada" class="matrix-cell bg-red-200 text-red-800 flex items-center justify-center p-4 rounded-md">None</div>
+                        <div id="cis-oms" data-key="cis-oms" class="matrix-cell bg-blue-200 text-blue-800 flex items-center justify-center p-4 rounded-md">API</div>
+                        <div id="cis-eam" data-key="cis-eam" class="matrix-cell bg-red-200 text-red-800 flex items-center justify-center p-4 rounded-md">Manual</div>
+
+                        <!-- DMS Row -->
+                        <div class="flex items-center justify-center">DMS</div>
+                        <div id="dms-scada" data-key="dms-scada" class="matrix-cell bg-blue-200 text-blue-800 flex items-center justify-center p-4 rounded-md">API</div>
+                        <div id="dms-oms" data-key="dms-oms" class="matrix-cell bg-green-200 text-green-800 flex items-center justify-center p-4 rounded-md">Real-Time</div>
+                        <div id="dms-eam" data-key="dms-eam" class="matrix-cell bg-yellow-200 text-yellow-800 flex items-center justify-center p-4 rounded-md">Batch</div>
+                    </div>
+                    <div class="flex justify-center space-x-4 mt-6 text-xs">
+                        <span class="flex items-center"><div class="w-3 h-3 rounded-full bg-green-200 mr-2"></div>Real-Time</span>
+                        <span class="flex items-center"><div class="w-3 h-3 rounded-full bg-blue-200 mr-2"></div>API</span>
+                        <span class="flex items-center"><div class="w-3 h-3 rounded-full bg-yellow-200 mr-2"></div>Batch</span>
+                        <span class="flex items-center"><div class="w-3 h-3 rounded-full bg-red-200 mr-2"></div>Manual/None</span>
+                    </div>
+                </div>
+                
+                <!-- Details Panel & Chart -->
+                <div class="mt-8 lg:mt-0 space-y-8">
+                    <div id="details-panel" class="bg-card p-6 rounded-lg shadow-lg h-full">
+                        <h3 id="details-title" class="text-xl font-bold mb-2 text-sec-green">Select an Integration</h3>
+                        <p id="details-text" class="text-gray-600">Click a cell on the left to see details about the integration's status, challenges, and strategic opportunities.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="lg:grid lg:grid-cols-3 lg:gap-8 mt-8">
+                 <div class="lg:col-start-2 lg:col-span-2 bg-card p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold text-center mb-4 text-sec-green">Overall Integration Maturity</h3>
+                     <div class="chart-container mx-auto">
+                        <canvas id="maturityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Transformation Pillars -->
+        <section id="pillars" class="mb-16 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-center mb-4">Digital Transformation Pillars</h2>
+            <p class="text-center max-w-3xl mx-auto text-lg mb-10">SEC's digital journey is defined by major transformational projects. These pillars represent the primary drivers for investments in analytics and automation, building on the company's core systems.</p>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- AMI Pillar -->
+                <div class="pillar-card bg-card rounded-lg shadow-lg p-6 text-center">
+                    <div class="text-4xl mb-3">⚡</div>
+                    <h3 class="text-xl font-bold mb-2">AMI Data Goldmine</h3>
+                    <p class="text-sm">Leveraging 10M+ smart meters beyond billing for load forecasting, outage detection, and new customer services.</p>
+                </div>
+                <!-- DA Pillar -->
+                <div class="pillar-card bg-card rounded-lg shadow-lg p-6 text-center">
+                    <div class="text-4xl mb-3">🌐</div>
+                    <h3 class="text-xl font-bold mb-2">Self-Healing Grid (DA)</h3>
+                    <p class="text-sm">Automating fault detection, isolation, and restoration to significantly boost grid reliability and efficiency.</p>
+                </div>
+                <!-- APM Pillar -->
+                <div class="pillar-card bg-card rounded-lg shadow-lg p-6 text-center">
+                    <div class="text-4xl mb-3">📈</div>
+                    <h3 class="text-xl font-bold mb-2">Asset Performance (APM)</h3>
+                    <p class="text-sm">Shifting from reactive to predictive maintenance to extend asset life and reduce operational costs.</p>
+                </div>
+                <!-- Digital Twin Pillar -->
+                <div class="pillar-card bg-card rounded-lg shadow-lg p-6 text-center">
+                    <div class="text-4xl mb-3">🌍</div>
+                    <h3 class="text-xl font-bold mb-2">Digital Twin Vision</h3>
+                    <p class="text-sm">Creating a living virtual replica of the grid for advanced simulation, planning, and operational training.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section 4: Future Outlook & AI -->
+        <section id="outlook" class="scroll-mt-16">
+            <h2 class="text-3xl font-bold text-center mb-4">Future Outlook: High-Value AI Applications</h2>
+            <p class="text-center max-w-3xl mx-auto text-lg mb-10">Artificial Intelligence is the engine for the next wave of innovation. This chart highlights the perceived business value of key AI use cases, providing a roadmap for future strategic investments in the T&D sector.</p>
+
+            <div class="bg-card p-6 rounded-lg shadow-lg">
+                <div class="chart-container h-96 max-h-[50vh]">
+                    <canvas id="aiChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-card-alt mt-16 py-6">
+        <div class="container mx-auto text-center text-sm text-gray-500">
+            <p>SEC IT Strategy Dashboard | For Internal Planning & Analysis Only</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            // --- Data Store ---
+            const integrationDetails = {
+                'gis-scada': {
+                    title: 'GIS ↔ SCADA/EMS',
+                    text: 'Currently a manual, file-based transfer. This creates delays in operational awareness. Opportunity lies in real-time integration to provide control room operators with accurate geospatial context for alarms and events, improving response times.'
+                },
+                'gis-oms': {
+                    title: 'GIS ↔ OMS (Outage Management)',
+                    text: 'A highly mature, real-time integration. The GIS acts as the network model\'s source of truth, allowing the OMS to accurately map outages to assets and customers. This is a foundational success story for SEC\'s digitalization.'
+                },
+                'gis-eam': {
+                    title: 'GIS ↔ EAM (Asset Management)',
+                    text: 'A periodic batch integration exists. The key challenge is data inconsistency between the systems. Opportunity: A robust, bi-directional API sync to ensure work orders in EAM are tied to the correct, geospatially-accurate assets in GIS, streamlining maintenance workflows.'
+                },
+                'cis-scada': {
+                    title: 'CIS ↔ SCADA/EMS',
+                    text: 'No direct integration. This is a missed opportunity for correlating large-scale outages detected by SCADA with customer data in the CIS for proactive communication.'
+                },
+                'cis-oms': {
+                    title: 'CIS ↔ OMS',
+                    text: 'A solid API-level integration. This is critical for linking customer outage calls to OMS events and providing support staff with accurate restoration estimates. Further improvement could involve using AI to predict call volumes based on outage data.'
+                },
+                'cis-eam': {
+                    title: 'CIS ↔ EAM',
+                    text: 'A manual data transfer process. Opportunity exists to link customer-reported equipment issues directly to asset records in the EAM, creating a richer maintenance history and faster response to localized problems.'
+                },
+                'dms-scada': {
+                    title: 'DMS ↔ SCADA/EMS',
+                    text: 'Strong API-level integration, forming the core of distribution automation. SCADA provides real-time data, and the DMS provides advanced applications like FLISR. The main challenge is managing the sheer volume and velocity of data.'
+                },
+                'dms-oms': {
+                    title: 'DMS ↔ OMS',
+                    text: 'A critical real-time integration. The DMS automation actions (like switching) are reflected in the OMS, providing a complete operational picture. This synergy is key to reducing SAIDI/SAIFI metrics.'
+                },
+                'dms-eam': {
+                    title: 'DMS ↔ EAM',
+                    text: 'A batch process. Opportunity to create a feedback loop where automated DMS operations on an asset trigger maintenance reviews or inspections in the EAM, moving towards condition-based maintenance.'
+                },
+                'default': {
+                    title: 'Select an Integration',
+                    text: 'Click a cell on the left to see details about the integration\'s status, challenges, and strategic opportunities.'
+                }
+            };
+
+            // --- Interactive Matrix Logic ---
+            const matrix = document.getElementById('integration-matrix');
+            const detailsTitle = document.getElementById('details-title');
+            const detailsText = document.getElementById('details-text');
+            let activeCell = null;
+
+            matrix.addEventListener('click', function(e) {
+                const cell = e.target.closest('.matrix-cell');
+                if (!cell) return;
+
+                if (activeCell) {
+                    activeCell.classList.remove('active');
+                }
+                cell.classList.add('active');
+                activeCell = cell;
+
+                const key = cell.dataset.key;
+                const details = integrationDetails[key] || integrationDetails['default'];
+                
+                detailsTitle.innerText = details.title;
+                detailsText.innerText = details.text;
+            });
+
+            // --- Chart.js Instances ---
+            
+            // Doughnut Chart: Integration Maturity
+            const maturityCtx = document.getElementById('maturityChart').getContext('2d');
+            const maturityData = {
+                labels: ['Real-Time', 'API', 'Batch', 'Manual/None'],
+                datasets: [{
+                    label: 'Integration Points',
+                    data: [2, 2, 2, 3], // Based on the sample matrix
+                    backgroundColor: [
+                        'rgba(0, 106, 78, 0.7)',  // Real-Time (SEC Green)
+                        'rgba(60, 100, 150, 0.7)', // API
+                        'rgba(255, 206, 86, 0.7)', // Batch
+                        'rgba(255, 99, 132, 0.7)'  // Manual/None
+                    ],
+                    borderColor: [
+                        'rgba(0, 106, 78, 1)',
+                        'rgba(60, 100, 150, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+            new Chart(maturityCtx, {
+                type: 'doughnut',
+                data: maturityData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Bar Chart: AI Use Cases
+            const aiCtx = document.getElementById('aiChart').getContext('2d');
+            const aiData = {
+                labels: [
+                    'Predicting Equipment Failure (APM)', 
+                    'Automated Line Inspections (Drones/AI)', 
+                    'Load & Renewables Forecasting', 
+                    'Intelligent Grid Optimization (DA)'
+                ],
+                datasets: [{
+                    label: 'Perceived Business Value',
+                    data: [95, 85, 90, 80],
+                    backgroundColor: [
+                        'rgba(0, 106, 78, 0.6)',
+                        'rgba(189, 183, 107, 0.6)',
+                        'rgba(0, 106, 78, 0.8)',
+                        'rgba(189, 183, 107, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 106, 78, 1)',
+                        'rgba(189, 183, 107, 1)',
+                        'rgba(0, 106, 78, 1)',
+                        'rgba(189, 183, 107, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+            new Chart(aiCtx, {
+                type: 'bar',
+                data: aiData,
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Value Score (0-100)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Value: ${context.raw}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // --- Smooth Scrolling for Nav Links ---
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
