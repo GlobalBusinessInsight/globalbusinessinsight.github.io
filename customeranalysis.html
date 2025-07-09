@@ -168,8 +168,12 @@
                         <h2 class="text-2xl font-bold text-slate-800">问题归因与流程优化建议</h2>
                         <p class="text-slate-500 mt-1">综合所有数据，诊断内部流程弱点，并提供可执行的优化策略。</p>
                     </div>
+
+                    <div id="consultant-analysis-section" class="space-y-8">
+                        <!-- Consultant analysis will be dynamically injected here -->
+                    </div>
                     
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mb-8">
+                    <div class="mt-8 bg-white p-6 rounded-xl shadow-sm border border-slate-100 mb-8">
                         <h3 class="text-xl font-bold text-slate-800 mb-4">核心问题诊断：案例关联分析</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="p-4 bg-amber-50 rounded-lg flex flex-col">
@@ -344,7 +348,7 @@
                         content.classList.add('hidden');
                     }
                 });
-                renderChartsForTab(tabId);
+                renderContentForTab(tabId);
             }
 
             tabs.forEach(button => {
@@ -353,7 +357,7 @@
                 });
             });
 
-            function renderChartsForTab(tabId) {
+            function renderContentForTab(tabId) {
                 if (tabId === 'overview') {
                     createStatusChart();
                     createTopChannelsChart();
@@ -362,6 +366,8 @@
                     createChannelRefundRiskChart();
                 } else if (tabId === 'performance') {
                     populatePerformanceTable();
+                } else if (tabId === 'optimization') {
+                    populateConsultantAnalysis();
                 }
             }
             
@@ -543,6 +549,69 @@
                 const avgDays = refunds.reduce((sum, r) => sum + r.days, 0) / refunds.length;
                 let text = `顾问 ${consultant.name} 的客户退款率为 **${refundRate.toFixed(1)}%**。退款客户平均在签约后 **${avgDays.toFixed(0)}天** 内申请，属于“快速退款”模式，问题根源很可能在签约前期。详细诊断请见“流程优化”标签页。`;
                 return text;
+            }
+
+            function populateConsultantAnalysis() {
+                const container = document.getElementById('consultant-analysis-section');
+                container.innerHTML = '';
+                const performanceData = dataStore.consultants.map(c => ({
+                    ...c,
+                    refundRate: c.total > 0 ? (c.refunds / c.total) : 0
+                })).sort((a, b) => b.refundRate - a.refundRate);
+
+                performanceData.forEach(consultant => {
+                    const refunds = dataStore.refundDetails.filter(r => r.consultant.toLowerCase() === consultant.id);
+                    const card = document.createElement('div');
+                    card.className = `bg-white p-6 rounded-xl shadow-sm border-2 mb-8 ${consultant.refundRate > 0.07 ? 'border-rose-500/50' : (consultant.refundRate > 0 ? 'border-amber-500/50' : 'border-teal-500/50')}`;
+                    
+                    let problemCasesHtml = '<p class="text-sm text-slate-500">无退款案例</p>';
+                    if (refunds.length > 0) {
+                        problemCasesHtml = refunds.map(r => `
+                            <div class="mt-2 p-4 bg-rose-50 rounded-lg border border-rose-100">
+                                <p class="font-semibold text-rose-800">${r.name}</p>
+                                <ul class="text-sm text-rose-700 space-y-1 mt-1">
+                                    <li><strong>来源渠道:</strong> ${r.source}</li>
+                                    <li><strong>签约到退款:</strong> <span class="font-bold">${r.days}天</span></li>
+                                    <li><strong>问题模式:</strong> ${r.source === '抖音' ? '渠道高风险 + ' : ''}${r.source === '轉介紹' ? '高信任度流失 + ' : ''}快速退款</li>
+                                </ul>
+                            </div>
+                        `).join('');
+                    }
+
+                    let conclusionText = '';
+                    if (consultant.refundRate === 0) {
+                        conclusionText = `**${consultant.name}** 目前无退款客户，是团队的标杆，其在客户筛选和期望管理上的方法值得总结和推广。`;
+                    } else if (consultant.refundRate <= 0.05) {
+                         conclusionText = `尽管 **${consultant.name} (Yoyo)** 的整体退款率是团队中最低的（**4.5%**），表现相对稳健，但这起退款案例依然暴露了流程中的共性问题。即便是最优秀的员工，在面对来自**微信**这类熟人社交渠道的客户时，也可能因未能充分管理其高期望值而导致签约失败。这说明问题并非完全是个人能力问题，而是**流程支撑不足**。建议将王洋洋的最佳实践（如何维护低退款率）与此案例的教训相结合，优化所有销售人员针对微信渠道的沟通SOP。`;
+                    } else {
+                        const douyinCount = refunds.filter(r => r.source === '抖音').length;
+                        const introCount = refunds.filter(r => r.source === '轉介紹').length;
+                        conclusionText = `**${consultant.name}** 的退款率（**${(consultant.refundRate * 100).toFixed(1)}%**）处于较高水平。其问题客户 ${douyinCount > 0 ? `主要集中在**抖音渠道**` : ''} ${introCount > 0 ? `并出现了危险的**转介绍客户流失**` : ''}。这表明 **${consultant.name}** 在处理高风险渠道客户和维持高信任度客户方面可能需要额外的培训和支持，特别是在前期期望管理和价值沟通上。`;
+                    }
+
+                    card.innerHTML = `
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">重点销售顾问分析：${consultant.name}</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <h4 class="font-semibold text-slate-700">核心绩效指标</h4>
+                                <ul class="text-sm text-slate-600 space-y-1 mt-2">
+                                    <li><strong>跟进客户:</strong> ${consultant.total} 位</li>
+                                    <li><strong>退款客户:</strong> ${consultant.refunds} 位</li>
+                                    <li><strong>客户退款率:</strong> <span class="font-bold ${consultant.refundRate > 0.07 ? 'text-rose-600' : (consultant.refundRate > 0 ? 'text-amber-600' : 'text-teal-600')}">${(consultant.refundRate * 100).toFixed(1)}%</span></li>
+                                </ul>
+                            </div>
+                            <div class="md:col-span-2">
+                                <h4 class="font-semibold text-slate-700">问题案例分析</h4>
+                                ${problemCasesHtml}
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-200">
+                            <h4 class="font-semibold text-slate-700">结论与建议</h4>
+                            <p class="text-sm text-slate-600 mt-2">${conclusionText}</p>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
             }
 
             setActiveTab('overview');
