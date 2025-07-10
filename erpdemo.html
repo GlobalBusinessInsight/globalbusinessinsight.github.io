@@ -1,0 +1,599 @@
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { Plus, Search, MoreVertical, FileText, Users, ShoppingCart, DollarSign, BarChart2, Briefcase, Settings, HardHat, Package, Warehouse, ListChecks, GanttChart, UserCheck, ChevronDown, CheckCircle, Clock, XCircle, Building, Wrench, Users2, BrainCircuit, Share2, SlidersHorizontal, Database, BotMessageSquare, PlayCircle, Factory, Droplets, Zap, ShieldCheck, Route, CalendarClock, Fuel, Anchor, Truck, Sun, Wind, BatteryCharging, ChevronsRight, GitBranchPlus, Network, Cpu, ShieldAlert, KeyRound, UserPlus, Fingerprint, HelpCircle, Activity, Copy, Lightbulb, TrendingUp, AlertTriangle, Server } from 'lucide-react';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, LineElement, PointElement, DoughnutController, ArcElement } from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, DoughnutController, ArcElement);
+
+
+// --- I18N (Internationalization) Data ---
+const translations = {
+    zh: {
+        // General
+        "app_title": "新一代ERP", "search_placeholder": "全局搜索...", "active": "已激活", "inactive": "未激活", "details": "详情", "create": "创建", "read": "读取", "update": "更新", "delete": "删除",
+        // Sidebar
+        "dashboard": "仪表盘", "core_modules": "核心业务模块", "platform_modules": "平台服务模块", "industry_solutions": "行业解决方案", "system_security": "系统与安全", "user_management": "用户管理", "mm": "物料管理 (MM)", "fico": "财务会计 (FI/CO)", "pp": "生产计划 (PP)", "ps": "项目系统 (PS)", "hr": "人力资源 (HR)", "pm": "工厂维护 (PM)", "mdm": "主数据管理 (MDM)", "bi": "数据分析 (BI)", "workflow": "工作流引擎", "apihub": "API中心", "oil_gas": "石油与天然气", "utilities": "电力行业",
+        // MM Module
+        "po": "采购订单", "inventory": "库存管理", "material_master": "物料主数据", "vendors": "供应商管理", "new_order": "新建订单", "inventory_movement": "库存移动", "create_material": "创建物料", "add_vendor": "新增供应商", "po_number": "订单号", "vendor_name": "供应商", "total_amount": "总金额", "status": "状态", "action": "操作", "material": "物料", "unrestricted_stock": "非限制库存", "qi_stock": "质检库存", "blocked_stock": "冻结库存", "total": "总计", "material_number": "物料号", "description": "描述", "material_type": "类型", "uom": "单位", "material_group": "物料组", "contact_person": "联系人", "rating": "评级",
+        // FICO Module
+        "gl_accounting": "总账会计", "ap": "应付账款", "ar": "应收账款", "cost_center": "成本中心会计", "account_number": "科目号", "account_name": "科目名称", "account_type": "科目类型", "balance": "余额", "invoice_number": "发票号", "due_date": "到期日", "amount": "金额",
+        // PP Module
+        "production_orders": "生产订单", "bom": "物料清单 (BOM)", "work_centers": "工作中心", "order_id": "订单ID", "quantity": "数量", "start_date": "开始日期", "end_date": "结束日期",
+        // PS Module
+        "project_name": "项目名称", "project_manager": "项目经理", "budget": "预算", "spent": "已花费", "progress": "进度",
+        // HR Module
+        "employee_master": "员工主数据", "payroll": "薪资管理", "recruiting": "招聘管理", "employee_id": "员工ID", "employee_name": "姓名", "department": "部门", "position": "职位",
+        // PM Module
+        "maintenance_orders": "维护订单", "equipment_master": "设备主数据", "equipment": "设备", "order_type": "订单类型", "priority": "优先级", "scheduled_date": "计划日期",
+        // MDM Module
+        "customers": "客户",
+        // BI Module
+        "ask_bi": "向智能分析模块提问... (例如：分析一下我们近期的供应链瓶颈)", "get_analysis": "获取分析", "analysis_result": "分析结果", "llm_summary": "大模型总结", "key_findings": "关键发现", "quarterly_sales_trend": "季度销售额趋势", "vendor_performance_issue": "供应商绩效问题", "supply_chain_bottleneck": "供应链瓶颈分析", "employee_turnover_analysis": "员工流动率分析",
+        // Workflow Module
+        "definitions": "流程定义", "monitoring": "实例监控", "process_mining": "流程挖掘", "workflow_name": "流程名称", "instance_id": "实例ID", "start_time": "开始时间", "discovered_model": "挖掘出的流程模型", "performance_analysis": "绩效分析", "avg_lead_time": "平均处理时长", "bottleneck": "瓶颈环节", "improvement_suggestions": "改进建议 (AI生成)",
+        // API Hub Module
+        "api_catalog": "API目录", "version": "版本", "monitoring_api": "API监控", "docs": "文档",
+        // Industry Solutions
+        "oil_gas_solution": "石油与天然气行业解决方案", "utilities_solution": "电力行业解决方案", "hcm": "碳氢化合物管理", "td": "调运管理", "ps_og": "计划与调度", "nuclear_om": "核电运维", "safety_mgmt": "安全管理", "retail_side": "售电侧管理", "vpp": "虚拟电厂",
+        // System & Security
+        "performance_monitoring": "性能监控", "security_monitoring": "安全监控", "adaptive_deployment": "自适应部署", "cpu_usage": "CPU使用率", "memory_usage": "内存使用率", "network_io": "网络 I/O", "container_status": "容器状态", "running": "运行中", "stopped": "已停止", "security_events": "安全事件", "event_time": "事件时间", "event_type": "事件类型", "source_ip": "源IP", "severity": "严重性", "critical": "严重", "high": "高", "medium": "中", "low": "低", "compliance_status": "合规状态", "passed": "通过", "failed": "失败", "server_cluster": "服务器集群", "scale_up_event": "扩容事件", "scale_down_event": "缩容事件",
+        // User Management
+        "user_list": "用户列表", "role_management": "角色管理", "audit_log": "审计日志", "add_user": "新增用户", "username": "用户名", "email": "邮箱", "role": "角色", "last_login": "上次登录", "permissions": "权限", "save_permissions": "保存权限", "timestamp": "时间戳", "user": "用户",
+        // Statuses
+        "status_pending_approval": "待批准", "status_approved": "已批准", "status_invoiced": "已开票", "status_completed": "已完成", "status_pending_payment": "待支付", "status_paid": "已支付", "status_active": "有效", "status_inactive": "无效", "status_released": "已下达", "status_created": "已创建", "status_in_progress": "进行中", "status_on_duty": "在职", "status_planned": "已计划", "status_high": "高", "status_urgent": "紧急",
+    },
+    en: {
+        "app_title": "Next-Gen ERP", "search_placeholder": "Global Search...", "active": "Active", "inactive": "Inactive", "details": "Details", "create": "Create", "read": "Read", "update": "Update", "delete": "Delete",
+        "dashboard": "Dashboard", "core_modules": "Core Business Modules", "platform_modules": "Platform Services", "industry_solutions": "Industry Solutions", "system_security": "System & Security", "user_management": "User Management", "mm": "Materials Mgmt (MM)", "fico": "Finance (FI/CO)", "pp": "Production (PP)", "ps": "Project System (PS)", "hr": "Human Resources (HR)", "pm": "Plant Maintenance (PM)", "mdm": "Master Data (MDM)", "bi": "Data Analytics (BI)", "workflow": "Workflow Engine", "apihub": "API Hub", "oil_gas": "Oil & Gas", "utilities": "Utilities",
+        "po": "Purchase Orders", "inventory": "Inventory Mgmt", "material_master": "Material Master", "vendors": "Vendor Mgmt", "new_order": "New Order", "inventory_movement": "Inventory Mvmt", "create_material": "Create Material", "add_vendor": "Add Vendor", "po_number": "PO Number", "vendor_name": "Vendor", "total_amount": "Total Amount", "status": "Status", "action": "Action", "material": "Material", "unrestricted_stock": "Unrestricted", "qi_stock": "Quality Insp.", "blocked_stock": "Blocked", "total": "Total", "material_number": "Material No.", "description": "Description", "material_type": "Type", "uom": "UoM", "material_group": "Material Group", "contact_person": "Contact", "rating": "Rating",
+        "gl_accounting": "General Ledger", "ap": "Accounts Payable", "ar": "Accounts Receivable", "cost_center": "Cost Center Acct.", "account_number": "Account No.", "account_name": "Account Name", "account_type": "Account Type", "balance": "Balance", "invoice_number": "Invoice No.", "due_date": "Due Date", "amount": "Amount",
+        "production_orders": "Production Orders", "bom": "Bill of Materials (BOM)", "work_centers": "Work Centers", "order_id": "Order ID", "quantity": "Quantity", "start_date": "Start Date", "end_date": "End Date",
+        "project_name": "Project Name", "project_manager": "Project Manager", "budget": "Budget", "spent": "Spent", "progress": "Progress",
+        "employee_master": "Employee Master", "payroll": "Payroll", "recruiting": "Recruiting", "employee_id": "Employee ID", "employee_name": "Name", "department": "Department", "position": "Position",
+        "maintenance_orders": "Maintenance Orders", "equipment_master": "Equipment Master", "equipment": "Equipment", "order_type": "Order Type", "priority": "Priority", "scheduled_date": "Scheduled Date",
+        "customers": "Customers",
+        "ask_bi": "Ask the analytics module... (e.g., Analyze our recent supply chain bottlenecks)", "get_analysis": "Get Analysis", "analysis_result": "Analysis Result", "llm_summary": "LLM Summary", "key_findings": "Key Findings", "quarterly_sales_trend": "Quarterly Sales Trend", "vendor_performance_issue": "Vendor Performance Issue", "supply_chain_bottleneck": "Supply Chain Bottleneck Analysis", "employee_turnover_analysis": "Employee Turnover Analysis",
+        "definitions": "Definitions", "monitoring": "Monitoring", "process_mining": "Process Mining", "workflow_name": "Workflow Name", "instance_id": "Instance ID", "start_time": "Start Time", "discovered_model": "Discovered Process Model", "performance_analysis": "Performance Analysis", "avg_lead_time": "Avg. Lead Time", "bottleneck": "Bottleneck", "improvement_suggestions": "Improvement Suggestions (AI-Generated)",
+        "api_catalog": "API Catalog", "version": "Version", "monitoring_api": "API Monitoring", "docs": "Docs",
+        "oil_gas_solution": "Oil & Gas Industry Solution", "utilities_solution": "Utilities Industry Solution", "hcm": "Hydrocarbon Mgmt", "td": "Transportation & Dist.", "ps_og": "Planning & Scheduling", "nuclear_om": "Nuclear O&M", "safety_mgmt": "Safety Management", "retail_side": "Retail Side Mgmt", "vpp": "Virtual Power Plant",
+        "performance_monitoring": "Performance Monitoring", "security_monitoring": "Security Monitoring", "adaptive_deployment": "Adaptive Deployment", "cpu_usage": "CPU Usage", "memory_usage": "Memory Usage", "network_io": "Network I/O", "container_status": "Container Status", "running": "Running", "stopped": "Stopped", "security_events": "Security Events", "event_time": "Event Time", "event_type": "Event Type", "source_ip": "Source IP", "severity": "Severity", "critical": "Critical", "high": "High", "medium": "Medium", "low": "Low", "compliance_status": "Compliance Status", "passed": "Passed", "failed": "Failed", "server_cluster": "Server Cluster", "scale_up_event": "Scale-Up Event", "scale_down_event": "Scale-Down Event",
+        "user_list": "User List", "role_management": "Role Management", "audit_log": "Audit Log", "add_user": "Add User", "username": "Username", "email": "Email", "role": "Role", "last_login": "Last Login", "permissions": "Permissions", "save_permissions": "Save Permissions", "timestamp": "Timestamp", "user": "User",
+        "status_pending_approval": "Pending Approval", "status_approved": "Approved", "status_invoiced": "Invoiced", "status_completed": "Completed", "status_pending_payment": "Pending Payment", "status_paid": "Paid", "status_active": "Active", "status_inactive": "Inactive", "status_released": "Released", "status_created": "Created", "status_in_progress": "In Progress", "status_on_duty": "Active", "status_planned": "Planned", "status_high": "High", "status_urgent": "Urgent",
+    },
+    fr: {
+        "app_title": "ERP Prochaine Gén.", "search_placeholder": "Recherche globale...", "active": "Activé", "inactive": "Désactivé", "details": "Détails", "create": "Créer", "read": "Lire", "update": "Mettre à jour", "delete": "Supprimer",
+        "dashboard": "Tableau de bord", "core_modules": "Modules Métiers", "platform_modules": "Services Plateforme", "industry_solutions": "Solutions Industrielles", "system_security": "Système et Sécurité", "user_management": "Gestion Utilisateurs", "mm": "Gestion Articles (MM)", "fico": "Finance (FI/CO)", "pp": "Production (PP)", "ps": "Gestion Projets (PS)", "hr": "Ressources Hum. (RH)", "pm": "Maintenance (PM)", "mdm": "Données de base (MDM)", "bi": "Analyse de données (BI)", "workflow": "Moteur de workflow", "apihub": "API Hub", "oil_gas": "Pétrole et Gaz", "utilities": "Services Publics",
+        "po": "Commandes d'achat", "inventory": "Gestion de stock", "material_master": "Données articles", "vendors": "Gestion fournisseurs", "new_order": "Nouvelle commande", "inventory_movement": "Mouvement de stock", "create_material": "Créer article", "add_vendor": "Ajouter fournisseur", "po_number": "N° Commande", "vendor_name": "Fournisseur", "total_amount": "Montant total", "status": "Statut", "action": "Action", "material": "Article", "unrestricted_stock": "Utilisable", "qi_stock": "Contrôle Qualité", "blocked_stock": "Bloqué", "total": "Total", "material_number": "N° Article", "description": "Description", "material_type": "Type", "uom": "Unité", "material_group": "Groupe d'articles", "contact_person": "Contact", "rating": "Note",
+        "gl_accounting": "Grand Livre", "ap": "Comptes fournisseurs", "ar": "Comptes clients", "cost_center": "Compt. analytique", "account_number": "N° Compte", "account_name": "Nom du compte", "account_type": "Type de compte", "balance": "Solde", "invoice_number": "N° Facture", "due_date": "Échéance", "amount": "Montant",
+        "production_orders": "Ordres de fabrication", "bom": "Nomenclature (BOM)", "work_centers": "Postes de travail", "order_id": "ID Ordre", "quantity": "Quantité", "start_date": "Date début", "end_date": "Date fin",
+        "project_name": "Nom du projet", "project_manager": "Chef de projet", "budget": "Budget", "spent": "Dépensé", "progress": "Progression",
+        "employee_master": "Fiche employé", "payroll": "Paie", "recruiting": "Recrutement", "employee_id": "ID Employé", "employee_name": "Nom", "department": "Département", "position": "Poste",
+        "maintenance_orders": "Ordres de maintenance", "equipment_master": "Données équipement", "equipment": "Équipement", "order_type": "Type d'ordre", "priority": "Priorité", "scheduled_date": "Date planifiée",
+        "customers": "Clients",
+        "ask_bi": "Posez une question... (ex: Analyser nos goulots d'étranglement logistiques)", "get_analysis": "Analyser", "analysis_result": "Résultat de l'analyse", "llm_summary": "Résumé LLM", "key_findings": "Points Clés", "quarterly_sales_trend": "Tendance des ventes trimestrielles", "vendor_performance_issue": "Problème de performance fournisseur", "supply_chain_bottleneck": "Analyse des goulots d'étranglement", "employee_turnover_analysis": "Analyse du turnover des employés",
+        "definitions": "Définitions", "monitoring": "Suivi", "process_mining": "Exploration de processus", "workflow_name": "Nom du workflow", "instance_id": "ID Instance", "start_time": "Date de début", "discovered_model": "Modèle de processus découvert", "performance_analysis": "Analyse de performance", "avg_lead_time": "Délai moyen", "bottleneck": "Goulot d'étranglement", "improvement_suggestions": "Suggestions d'amélioration (par IA)",
+        "api_catalog": "Catalogue d'API", "version": "Version", "monitoring_api": "Suivi d'API", "docs": "Docs",
+        "oil_gas_solution": "Solution Industrie Pétrole & Gaz", "utilities_solution": "Solution Industrie Services Publics", "hcm": "Gestion des Hydrocarbures", "td": "Transport & Dist.", "ps_og": "Planification", "nuclear_om": "O&M Nucléaire", "safety_mgmt": "Gestion de la Sécurité", "retail_side": "Gestion Vente au Détail", "vpp": "Centrale Électrique Virtuelle",
+        "performance_monitoring": "Suivi de performance", "security_monitoring": "Suivi de sécurité", "adaptive_deployment": "Déploiement adaptatif", "cpu_usage": "Usage CPU", "memory_usage": "Usage Mémoire", "network_io": "E/S Réseau", "container_status": "Statut Conteneur", "running": "En cours", "stopped": "Arrêté", "security_events": "Événements de sécurité", "event_time": "Heure", "event_type": "Type", "source_ip": "IP Source", "severity": "Sévérité", "critical": "Critique", "high": "Haute", "medium": "Moyenne", "low": "Basse", "compliance_status": "État de conformité", "passed": "Conforme", "failed": "Non conforme", "server_cluster": "Cluster de serveurs", "scale_up_event": "Événement d'ajout", "scale_down_event": "Événement de retrait",
+        "user_list": "Liste des utilisateurs", "role_management": "Gestion des rôles", "audit_log": "Journal d'audit", "add_user": "Ajouter un utilisateur", "username": "Nom d'utilisateur", "email": "E-mail", "role": "Rôle", "last_login": "Dernière connexion", "permissions": "Permissions", "save_permissions": "Sauvegarder", "timestamp": "Horodatage", "user": "Utilisateur",
+        "status_pending_approval": "En attente d'appro.", "status_approved": "Approuvé", "status_invoiced": "Facturé", "status_completed": "Terminé", "status_pending_payment": "En attente de paiement", "status_paid": "Payé", "status_active": "Actif", "status_inactive": "Inactif", "status_released": "Lancé", "status_created": "Créé", "status_in_progress": "En cours", "status_on_duty": "Actif", "status_planned": "Planifié", "status_high": "Haute", "status_urgent": "Urgent",
+    },
+    es: {
+        "app_title": "ERP Nueva Gen.", "search_placeholder": "Búsqueda global...", "active": "Activado", "inactive": "Desactivado", "details": "Detalles", "create": "Crear", "read": "Leer", "update": "Actualizar", "delete": "Borrar",
+        "dashboard": "Panel de control", "core_modules": "Módulos de Negocio", "platform_modules": "Servicios de Plataforma", "industry_solutions": "Soluciones de Industria", "system_security": "Sistema y Seguridad", "user_management": "Gestión de Usuarios", "mm": "Gestión Materiales (MM)", "fico": "Finanzas (FI/CO)", "pp": "Producción (PP)", "ps": "Sistema Proyectos (PS)", "hr": "Recursos Humanos (RRHH)", "pm": "Mantenimiento (PM)", "mdm": "Datos Maestros (MDM)", "bi": "Análisis de Datos (BI)", "workflow": "Motor de Flujo", "apihub": "API Hub", "oil_gas": "Petróleo y Gas", "utilities": "Servicios Públicos",
+        "po": "Pedidos de compra", "inventory": "Gestión de stock", "material_master": "Maestro de materiales", "vendors": "Gestión de proveedores", "new_order": "Nuevo pedido", "inventory_movement": "Movimiento de stock", "create_material": "Crear material", "add_vendor": "Añadir proveedor", "po_number": "Nº Pedido", "vendor_name": "Proveedor", "total_amount": "Importe total", "status": "Estado", "action": "Acción", "material": "Material", "unrestricted_stock": "Libre utilización", "qi_stock": "Control calidad", "blocked_stock": "Bloqueado", "total": "Total", "material_number": "Nº Material", "description": "Descripción", "material_type": "Tipo", "uom": "Unidad", "material_group": "Grupo de artículos", "contact_person": "Contacto", "rating": "Calificación",
+        "gl_accounting": "Libro Mayor", "ap": "Cuentas por pagar", "ar": "Cuentas por cobrar", "cost_center": "Cont. de costes", "account_number": "Nº Cuenta", "account_name": "Nombre de cuenta", "account_type": "Tipo de cuenta", "balance": "Saldo", "invoice_number": "Nº Factura", "due_date": "Vencimiento", "amount": "Importe",
+        "production_orders": "Órdenes de producción", "bom": "Lista de materiales (BOM)", "work_centers": "Puestos de trabajo", "order_id": "ID Orden", "quantity": "Cantidad", "start_date": "Fecha de inicio", "end_date": "Fecha de fin",
+        "project_name": "Nombre del proyecto", "project_manager": "Jefe de proyecto", "budget": "Presupuesto", "spent": "Gastado", "progress": "Progreso",
+        "employee_master": "Maestro de empleados", "payroll": "Nómina", "recruiting": "Reclutamiento", "employee_id": "ID Empleado", "employee_name": "Nombre", "department": "Departamento", "position": "Puesto",
+        "maintenance_orders": "Órdenes de mantenimiento", "equipment_master": "Maestro de equipos", "equipment": "Equipo", "order_type": "Tipo de orden", "priority": "Prioridad", "scheduled_date": "Fecha planificada",
+        "customers": "Clientes",
+        "ask_bi": "Pregunte al módulo de análisis... (ej: Analizar nuestros cuellos de botella en la cadena de suministro)", "get_analysis": "Analizar", "analysis_result": "Resultado del Análisis", "llm_summary": "Resumen del LLM", "key_findings": "Hallazgos Clave", "quarterly_sales_trend": "Tendencia de ventas trimestrales", "vendor_performance_issue": "Problema de rendimiento de proveedores", "supply_chain_bottleneck": "Análisis de Cuello de Botella", "employee_turnover_analysis": "Análisis de Rotación de Empleados",
+        "definitions": "Definiciones", "monitoring": "Monitoreo", "process_mining": "Minería de Procesos", "workflow_name": "Nombre del Flujo", "instance_id": "ID Instancia", "start_time": "Hora de inicio", "discovered_model": "Modelo de Proceso Descubierto", "performance_analysis": "Análisis de Rendimiento", "avg_lead_time": "Tiempo Promedio", "bottleneck": "Cuello de Botella", "improvement_suggestions": "Sugerencias de Mejora (por IA)",
+        "api_catalog": "Catálogo de API", "version": "Versión", "monitoring_api": "Monitoreo de API", "docs": "Docs",
+        "oil_gas_solution": "Solución para Petróleo y Gas", "utilities_solution": "Solución para Servicios Públicos", "hcm": "Gestión de Hidrocarburos", "td": "Transporte y Dist.", "ps_og": "Planificación", "nuclear_om": "O&M Nuclear", "safety_mgmt": "Gestión de Seguridad", "retail_side": "Gestión Minorista", "vpp": "Central Eléctrica Virtual",
+        "performance_monitoring": "Monitoreo de Rendimiento", "security_monitoring": "Monitoreo de Seguridad", "adaptive_deployment": "Despliegue Adaptativo", "cpu_usage": "Uso de CPU", "memory_usage": "Uso de Memoria", "network_io": "E/S de Red", "container_status": "Estado del Contenedor", "running": "En ejecución", "stopped": "Detenido", "security_events": "Eventos de Seguridad", "event_time": "Hora del Evento", "event_type": "Tipo de Evento", "source_ip": "IP de Origen", "severity": "Gravedad", "critical": "Crítico", "high": "Alto", "medium": "Medio", "low": "Bajo", "compliance_status": "Estado de Cumplimiento", "passed": "Aprobado", "failed": "Fallido", "server_cluster": "Clúster de Servidores", "scale_up_event": "Evento de Escalado Positivo", "scale_down_event": "Evento de Escalado Negativo",
+        "user_list": "Lista de Usuarios", "role_management": "Gestión de Roles", "audit_log": "Registro de Auditoría", "add_user": "Añadir Usuario", "username": "Usuario", "email": "Email", "role": "Rol", "last_login": "Último Acceso", "permissions": "Permisos", "save_permissions": "Guardar Permisos", "timestamp": "Marca de Tiempo", "user": "Usuario",
+        "status_pending_approval": "Pendiente aprobación", "status_approved": "Aprobado", "status_invoiced": "Facturado", "status_completed": "Completado", "status_pending_payment": "Pendiente de pago", "status_paid": "Pagado", "status_active": "Activo", "status_inactive": "Inactivo", "status_released": "Liberado", "status_created": "Creado", "status_in_progress": "En curso", "status_on_duty": "Activo", "status_planned": "Planificado", "status_high": "Alta", "status_urgent": "Urgente",
+    },
+};
+
+// --- Mock Data with I18N ---
+const initialVendors = [ { id: 'V001', name: {zh: '环球电子元件供应商', en: 'Global Electronics Supplier', fr: 'Fournisseur Global Électronique', es: 'Proveedor Global de Electrónica'}, contact: '李经理', rating: 4.5, status: 'status_active' }, { id: 'V002', name: {zh: '精密机械配件有限公司', en: 'Precision Parts Ltd.', fr: 'Pièces de Précision Ltée', es: 'Piezas de Precisión S.L.'}, contact: '王工', rating: 4.8, status: 'status_active' }, { id: 'V003', name: {zh: '企业级软件解决方案', en: 'Enterprise Software Solutions', fr: 'Solutions Logicielles d\'Entreprise', es: 'Soluciones de Software Empresarial'}, contact: '陈顾问', rating: 4.2, status: 'status_active' }, { id: 'V004', name: {zh: '办公用品直供中心', en: 'Office Supply Direct', fr: 'Fournitures de Bureau Direct', es: 'Suministros de Oficina Directo'}, contact: '赵小姐', rating: 3.9, status: 'status_inactive' }, ];
+const initialMaterials = [ { id: 'MAT-001', description: {zh: '高性能微处理器 A1', en: 'High-Performance Microprocessor A1', fr: 'Microprocesseur Haute Performance A1', es: 'Microprocesador de Alto Rendimiento A1'}, type: {zh: '成品 (FERT)', en: 'Finished Good (FERT)', fr: 'Produit Fini (FERT)', es: 'Producto Terminado (FERT)'}, uom: 'PC', group: {zh: '电子元件', en: 'Electronics', fr: 'Électronique', es: 'Electrónica'} }, { id: 'MAT-002', description: {zh: '内存条 16GB', en: 'Memory Module 16GB', fr: 'Module Mémoire 16Go', es: 'Módulo de Memoria 16GB'}, type: {zh: '成品 (FERT)', en: 'Finished Good (FERT)', fr: 'Produit Fini (FERT)', es: 'Producto Terminado (FERT)'}, uom: 'PC', group: {zh: '电子元件', en: 'Electronics', fr: 'Électronique', es: 'Electrónica'} }, { id: 'MAT-003', description: {zh: 'CNC精密轴承', en: 'CNC Precision Bearing', fr: 'Roulement de Précision CNC', es: 'Rodamiento de Precisión CNC'}, type: {zh: '原材料 (ROH)', en: 'Raw Material (ROH)', fr: 'Matière Première (ROH)', es: 'Materia Prima (ROH)'}, uom: 'PC', group: {zh: '机械配件', en: 'Mechanical Parts', fr: 'Pièces Mécaniques', es: 'Piezas Mecánicas'} }, ];
+const initialInventory = [ { materialId: 'MAT-001', location: 'A-01-01', unrestricted: 1250, inQualityInspection: 50, blocked: 10 }, { materialId: 'MAT-002', location: 'A-01-02', unrestricted: 3400, inQualityInspection: 0, blocked: 0 }, { materialId: 'MAT-003', location: 'B-05-03', unrestricted: 800, inQualityInspection: 200, blocked: 0 }, ];
+const initialPurchaseOrders = [ { id: 'PO2025-07-001', vendorId: 'V001', date: '2025-07-10', total: 15800.00, status: 'status_approved', items: [{ id: 1, materialId: 'MAT-001', qty: 100, price: 150 }, { id: 2, materialId: 'MAT-002', qty: 20, price: 40 }] }, { id: 'PO2025-07-002', vendorId: 'V002', date: '2025-07-09', total: 8200.00, status: 'status_pending_approval', items: [{ id: 1, materialId: 'MAT-003', qty: 50, price: 120 }] }, ];
+const initialInvoices = [ { id: 'INV-001', poId: 'PO2025-06-015', vendorId: 'V001', amount: 3250.00, issueDate: '2025-06-20', dueDate: '2025-07-20', status: 'status_pending_payment' }, { id: 'INV-002', poId: 'PO2025-07-003', vendorId: 'V003', amount: 25000.00, issueDate: '2025-07-09', dueDate: '2025-08-08', status: 'status_paid' }, ];
+const initialGLAccounts = [ { id: '100101', name: {zh: '现金', en: 'Cash', fr: 'Caisse', es: 'Caja'}, type: {zh: '资产', en: 'Asset', fr: 'Actif', es: 'Activo'}, balance: 1250000.00 }, { id: '200101', name: {zh: '应付账款-国内', en: 'A/P - Domestic', fr: 'Comptes Fournisseurs - Dom.', es: 'Cuentas por Pagar - Dom.'}, type: {zh: '负债', en: 'Liability', fr: 'Passif', es: 'Pasivo'}, balance: -345000.00 }, ];
+const initialProductionOrders = [ { id: 'PROD-001', materialId: 'MAT-001', quantity: 500, startDate: '2025-07-15', endDate: '2025-07-20', status: 'status_released' }, { id: 'PROD-002', materialId: 'MAT-005', quantity: 1000, startDate: '2025-07-18', endDate: '2025-07-25', status: 'status_created' }, ];
+const initialProjects = [ { id: 'PROJ-A1', name: {zh: '新生产线建设', en: 'New Production Line Construction', fr: 'Construction Nouvelle Ligne de Prod.', es: 'Construcción Nueva Línea de Prod.'}, manager: '项目经理A', budget: 5000000, spent: 1200000, progress: 25, status: 'status_in_progress' }, { id: 'PROJ-B2', name: {zh: 'ERP系统升级', en: 'ERP System Upgrade', fr: 'Mise à Niveau Système ERP', es: 'Actualización del Sistema ERP'}, manager: '项目经理B', budget: 800000, spent: 850000, progress: 100, status: 'status_completed' }, ];
+const initialEmployees = [ { id: 'E1001', name: '张伟', department: {zh: '研发部', en: 'R&D', fr: 'R&D', es: 'I+D'}, position: {zh: '软件工程师', en: 'Software Engineer', fr: 'Ingénieur Logiciel', es: 'Ingeniero de Software'}, status: 'status_on_duty' }, { id: 'E1002', name: '李静', department: {zh: '人力资源部', en: 'Human Resources', fr: 'Ressources Humaines', es: 'Recursos Humanos'}, position: {zh: '招聘专员', en: 'Recruiter', fr: 'Recruteur', es: 'Reclutador'}, status: 'status_on_duty' }, ];
+const initialMaintenanceOrders = [ { id: 'MAINT-001', equipment: {zh: '数控机床 #3', en: 'CNC Machine #3', fr: 'Machine CNC #3', es: 'Máquina CNC #3'}, type: {zh: '预防性维护', en: 'Preventive Maintenance', fr: 'Maintenance préventive', es: 'Mantenimiento preventivo'}, priority: 'status_high', scheduledDate: '2025-07-20', status: 'status_planned' }, { id: 'MAINT-002', equipment: {zh: '中央空调系统', en: 'Central A/C System', fr: 'Système de CVC central', es: 'Sistema de A/C Central'}, type: {zh: '故障维修', en: 'Breakdown Maintenance', fr: 'Maintenance corrective', es: 'Mantenimiento correctivo'}, priority: 'status_urgent', scheduledDate: '2025-07-10', status: 'status_completed' }, ];
+
+// --- Helper Components ---
+const Card = ({ children, className = '' }) => <div className={`bg-white rounded-xl shadow-md p-6 ${className}`}>{children}</div>;
+const Button = ({ children, onClick, variant = 'primary', className = '' }) => {
+    const baseClasses = 'px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2';
+    const variants = { primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm', secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300' };
+    return <button onClick={onClick} className={`${baseClasses} ${variants[variant]} ${className}`}>{children}</button>;
+};
+const StatusBadge = ({ status, t }) => {
+    const statusStyles = {
+        status_pending_approval: 'bg-yellow-100 text-yellow-800', status_approved: 'bg-green-100 text-green-800', status_invoiced: 'bg-blue-100 text-blue-800',
+        status_completed: 'bg-gray-200 text-gray-800', status_pending_payment: 'bg-orange-100 text-orange-800', status_paid: 'bg-teal-100 text-teal-800',
+        status_active: 'bg-green-100 text-green-800', status_inactive: 'bg-gray-100 text-gray-800', status_released: 'bg-blue-100 text-blue-800',
+        status_created: 'bg-gray-100 text-gray-800', status_in_progress: 'bg-cyan-100 text-cyan-800', status_on_duty: 'bg-green-100 text-green-800',
+        status_planned: 'bg-indigo-100 text-indigo-800', status_high: 'bg-red-100 text-red-800', status_urgent: 'bg-red-200 text-red-900'
+    };
+    return <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[status] || 'bg-gray-100 text-gray-800'}`}>{t(status)}</span>;
+};
+const Switch = ({ checked, onChange }) => (
+    <label className="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" checked={checked} onChange={onChange} className="sr-only peer" />
+        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+    </label>
+);
+
+
+// --- Main Layout Components ---
+const Sidebar = ({ activeView, setActiveView, t, industrySolutions }) => {
+    const navItems = [
+        { id: 'dashboard', label: t('dashboard'), icon: <BarChart2 size={20} /> },
+        { type: 'divider', label: t('core_modules') },
+        { id: 'mm', label: t('mm'), icon: <Package size={20} /> }, { id: 'fico', label: t('fico'), icon: <DollarSign size={20} /> },
+        { id: 'pp', label: t('pp'), icon: <Settings size={20} /> }, { id: 'ps', label: t('ps'), icon: <Briefcase size={20} /> },
+        { id: 'hr', label: t('hr'), icon: <Users size={20} /> }, { id: 'pm', label: t('pm'), icon: <HardHat size={20} /> },
+        ...(industrySolutions.oilAndGas ? [{ id: 'oil_gas', label: t('oil_gas'), icon: <Fuel size={20} /> }] : []),
+        ...(industrySolutions.utilities ? [{ id: 'utilities', label: t('utilities'), icon: <Zap size={20} /> }] : []),
+        { type: 'divider', label: t('platform_modules') },
+        { id: 'mdm', label: t('mdm'), icon: <Database size={20} /> }, { id: 'bi', label: t('bi'), icon: <BrainCircuit size={20} /> },
+        { id: 'workflow', label: t('workflow'), icon: <SlidersHorizontal size={20} /> }, { id: 'apihub', label: t('apihub'), icon: <Share2 size={20} /> },
+        { id: 'industry_solutions', label: t('industry_solutions'), icon: <Factory size={20} /> },
+        { id: 'system_security', label: t('system_security'), icon: <ShieldCheck size={20} /> },
+        { id: 'user_management', label: t('user_management'), icon: <Users2 size={20} /> },
+    ];
+    return (
+        <aside className="w-64 bg-gray-800 text-white flex flex-col flex-shrink-0">
+            <div className="h-16 flex items-center justify-center text-xl font-bold border-b border-gray-700">{t('app_title')}</div>
+            <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+                {navItems.map((item, index) =>
+                    item.type === 'divider' ? <h3 key={index} className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">{item.label}</h3>
+                    : <a key={item.id} href="#" onClick={(e) => { e.preventDefault(); setActiveView(item.id); }}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeView.startsWith(item.id) ? 'bg-gray-900 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white'}`}>
+                        {item.icon} <span className="font-medium">{item.label}</span>
+                    </a>
+                )}
+            </nav>
+        </aside>
+    );
+};
+
+const Header = ({ title, t, language, setLanguage }) => (
+    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0">
+        <h1 className="text-2xl font-semibold text-gray-800">{title}</h1>
+        <div className="flex items-center gap-4">
+            <div className="relative">
+                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="text" placeholder={t('search_placeholder')} className="pl-10 pr-4 py-2 w-64 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div className="relative">
+                 <select value={language} onChange={(e) => setLanguage(e.target.value)} className="pl-4 pr-8 py-2 bg-gray-100 border-transparent rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
+                    <option value="zh">中文</option>
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="es">Español</option>
+                </select>
+                <ChevronDown size={16} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            </div>
+            <div className="flex items-center gap-2">
+                <img src="https://placehold.co/40x40/E2E8F0/4A5568?text=U" alt="User Avatar" className="w-10 h-10 rounded-full" />
+            </div>
+        </div>
+    </header>
+);
+
+const SubNav = ({ items, activeSubView, setActiveSubView, t }) => (
+    <div className="mb-6 border-b border-gray-200">
+        <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+            {items.map(item => <button key={item.id} onClick={() => setActiveSubView(item.id)}
+                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${activeSubView === item.id ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
+                {t(item.id)}
+            </button>)}
+        </nav>
+    </div>
+);
+
+// --- Module Views ---
+const DashboardView = ({ data, t }) => ( <div className="space-y-6"> <Card><h3 className="text-lg font-semibold mb-4">P2P 流程概览</h3><div className="flex items-center justify-around text-center"><div className="flex flex-col items-center"><div className="p-3 bg-gray-100 rounded-full text-gray-500"><ListChecks size={24}/></div><p className="mt-2 font-medium">采购申请</p></div><div className="text-gray-300">&rarr;</div><div className="flex flex-col items-center"><div className="p-3 bg-blue-100 rounded-full text-blue-500"><ShoppingCart size={24}/></div><p className="mt-2 font-medium">采购订单</p></div><div className="text-gray-300">&rarr;</div><div className="flex flex-col items-center"><div className="p-3 bg-green-100 rounded-full text-green-500"><Warehouse size={24}/></div><p className="mt-2 font-medium">收货</p></div><div className="text-gray-300">&rarr;</div><div className="flex flex-col items-center"><div className="p-3 bg-orange-100 rounded-full text-orange-500"><FileText size={24}/></div><p className="mt-2 font-medium">发票校验</p></div><div className="text-gray-300">&rarr;</div><div className="flex flex-col items-center"><div className="p-3 bg-teal-100 rounded-full text-teal-500"><DollarSign size={24}/></div><p className="mt-2 font-medium">付款</p></div></div></Card> </div> );
+
+const MMView = ({ data, t, t_data }) => {
+    const [activeSubView, setActiveSubView] = useState('po');
+    const [selectedPO, setSelectedPO] = useState(null);
+    const subNavItems = [{ id: 'po' }, { id: 'inventory' }, { id: 'material_master' }, { id: 'vendors' }];
+    
+    const renderContent = () => {
+        switch (activeSubView) {
+            case 'po': return (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <Card>
+                        <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-semibold">{t('po')}</h2><Button><Plus size={16} />{t('new_order')}</Button></div>
+                        <div className="overflow-y-auto max-h-[60vh]">
+                            <table className="w-full text-left">
+                                <thead className="border-b bg-gray-50 text-sm text-gray-600 sticky top-0"><tr><th className="p-3">{t('po_number')}</th><th className="p-3">{t('vendor_name')}</th><th className="p-3">{t('status')}</th><th className="p-3">{t('action')}</th></tr></thead>
+                                <tbody>{data.purchaseOrders.map(po => <tr key={po.id} className={`border-b hover:bg-gray-100 cursor-pointer ${selectedPO?.id === po.id ? 'bg-blue-50' : ''}`} onClick={() => setSelectedPO(po)}><td className="p-3 font-medium text-blue-600">{po.id}</td><td className="p-3">{t_data(data.vendors.find(v => v.id === po.vendorId), 'name')}</td><td className="p-3"><StatusBadge status={po.status} t={t} /></td><td className="p-3"><ChevronsRight size={18} className="text-gray-400" /></td></tr>)}</tbody>
+                            </table>
+                        </div>
+                    </Card>
+                    <Card className={selectedPO ? '' : 'flex items-center justify-center bg-gray-50'}>
+                        {selectedPO ? (
+                            <div>
+                                <h3 className="text-lg font-semibold mb-2">{t('details')}: {selectedPO.id}</h3>
+                                <p className="text-sm text-gray-500 mb-4">{t('vendor_name')}: {t_data(data.vendors.find(v => v.id === selectedPO.vendorId), 'name')}</p>
+                                <table className="w-full text-left text-sm">
+                                    <thead className="border-b"><tr><th className="p-2">{t('material')}</th><th className="p-2">{t('quantity')}</th><th className="p-2 text-right">{t('amount')}</th></tr></thead>
+                                    <tbody>{selectedPO.items.map(item => <tr key={item.id} className="border-b"><td className="p-2">{t_data(data.materials.find(m => m.id === item.materialId), 'description')}</td><td className="p-2">{item.qty}</td><td className="p-2 text-right">¥{(item.qty * item.price).toLocaleString()}</td></tr>)}</tbody>
+                                    <tfoot className="font-bold"><tr><td colSpan="2" className="p-2 text-right">{t('total')}</td><td className="p-2 text-right">¥{selectedPO.total.toLocaleString()}</td></tr></tfoot>
+                                </table>
+                            </div>
+                        ) : <div className="text-center text-gray-500">请从左侧选择一个订单查看详情</div>}
+                    </Card>
+                </div>
+            );
+            case 'inventory': return <Card><div className="flex justify-between items-center mb-4"><h2 className="text-xl font-semibold">{t('inventory')}</h2><Button variant="secondary">{t('inventory_movement')}</Button></div><table className="w-full text-left"><thead className="border-b bg-gray-50 text-sm text-gray-600"><tr><th className="p-3">{t('material')}</th><th className="p-3">{t('unrestricted_stock')}</th><th className="p-3">{t('qi_stock')}</th><th className="p-3">{t('blocked_stock')}</th><th className="p-3">{t('total')}</th></tr></thead><tbody>{data.inventory.map(i => <tr key={i.materialId} className="border-b hover:bg-gray-50"><td className="p-3 font-medium">{t_data(data.materials.find(m => m.id === i.materialId), 'description')}</td><td className="p-3">{i.unrestricted}</td><td className="p-3">{i.inQualityInspection}</td><td className="p-3">{i.blocked}</td><td className="p-3 font-bold">{i.unrestricted + i.inQualityInspection + i.blocked}</td></tr>)}</tbody></table></Card>;
+            case 'material_master': return <Card><div className="flex justify-between items-center mb-4"><h2 className="text-xl font-semibold">{t('material_master')}</h2><Button><Plus size={16} />{t('create_material')}</Button></div><table className="w-full text-left"><thead className="border-b bg-gray-50 text-sm text-gray-600"><tr><th className="p-3">{t('material_number')}</th><th className="p-3">{t('description')}</th><th className="p-3">{t('material_type')}</th><th className="p-3">{t('uom')}</th><th className="p-3">{t('material_group')}</th></tr></thead><tbody>{data.materials.map(m => <tr key={m.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-blue-600">{m.id}</td><td className="p-3">{t_data(m, 'description')}</td><td className="p-3">{t_data(m, 'type')}</td><td className="p-3">{m.uom}</td><td className="p-3">{t_data(m, 'group')}</td></tr>)}</tbody></table></Card>;
+            case 'vendors': return <Card><div className="flex justify-between items-center mb-4"><h2 className="text-xl font-semibold">{t('vendors')}</h2><Button><Plus size={16} />{t('add_vendor')}</Button></div><table className="w-full text-left"><thead className="border-b bg-gray-50 text-sm text-gray-600"><tr><th className="p-3">{t('vendor_name')}</th><th className="p-3">{t('contact_person')}</th><th className="p-3">{t('rating')}</th><th className="p-3">{t('status')}</th><th className="p-3">{t('action')}</th></tr></thead><tbody>{data.vendors.map(v => <tr key={v.id} className="border-b hover:bg-gray-50"><td className="p-3 font-semibold">{t_data(v, 'name')}</td><td className="p-3">{v.contact}</td><td className="p-3 flex items-center gap-1"><span className="text-yellow-500">★</span> {v.rating}</td><td className="p-3"><StatusBadge status={v.status} t={t} /></td><td className="p-3"><button className="text-gray-500 hover:text-gray-800"><MoreVertical size={18} /></button></td></tr>)}</tbody></table></Card>;
+            default: return null;
+        }
+    };
+    return <div><SubNav items={subNavItems} activeSubView={activeSubView} setActiveSubView={setActiveSubView} t={t} />{renderContent()}</div>;
+};
+
+const FICOView = ({ data, t, t_data }) => {
+    const [activeSubView, setActiveSubView] = useState('gl_accounting');
+    const subNavItems = [{ id: 'gl_accounting' }, { id: 'ap' }, { id: 'ar' }, { id: 'cost_center' }];
+    const renderContent = () => {
+        switch (activeSubView) {
+            case 'gl_accounting': return <Card><h2 className="text-xl font-semibold mb-4">{t('gl_accounting')}</h2><table className="w-full text-left"><thead className="border-b bg-gray-50 text-sm text-gray-600"><tr><th className="p-3">{t('account_number')}</th><th className="p-3">{t('account_name')}</th><th className="p-3">{t('account_type')}</th><th className="p-3 text-right">{t('balance')}</th></tr></thead><tbody>{data.glAccounts.map(acc => <tr key={acc.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-blue-600">{acc.id}</td><td className="p-3">{t_data(acc, 'name')}</td><td className="p-3">{t_data(acc, 'type')}</td><td className="p-3 text-right font-mono">¥{acc.balance.toLocaleString(undefined, {minimumFractionDigits: 2})}</td></tr>)}</tbody></table></Card>;
+            case 'ap': return <Card><h2 className="text-xl font-semibold mb-4">{t('ap')}</h2><table className="w-full text-left"><thead className="border-b bg-gray-50 text-sm text-gray-600"><tr><th className="p-3">{t('invoice_number')}</th><th className="p-3">{t('vendor_name')}</th><th className="p-3 text-right">{t('amount')}</th><th className="p-3">{t('due_date')}</th><th className="p-3">{t('status')}</th></tr></thead><tbody>{data.invoices.map(inv => <tr key={inv.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-blue-600">{inv.id}</td><td className="p-3">{t_data(data.vendors.find(v => v.id === inv.vendorId), 'name')}</td><td className="p-3 text-right font-mono">¥{inv.amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td><td className="p-3">{inv.dueDate}</td><td className="p-3"><StatusBadge status={inv.status} t={t}/></td></tr>)}</tbody></table></Card>;
+            default: return <Card className="flex flex-col items-center justify-center text-center h-96"><div className="p-4 bg-gray-100 rounded-full text-gray-500 mb-4"><DollarSign size={48}/></div><h2 className="text-2xl font-bold text-gray-800">{t(activeSubView)}</h2></Card>;
+        }
+    };
+    return <div><SubNav items={subNavItems} activeSubView={activeSubView} setActiveSubView={setActiveSubView} t={t} />{renderContent()}</div>;
+};
+
+const PPView = ({ data, t, t_data }) => {
+    const [activeSubView, setActiveSubView] = useState('production_orders');
+    const subNavItems = [{ id: 'production_orders' }, { id: 'bom' }, { id: 'work_centers' }];
+    const renderContent = () => {
+        switch (activeSubView) {
+            case 'production_orders': return <Card><h2 className="text-xl font-semibold mb-4">{t('production_orders')}</h2><table className="w-full text-left"><thead className="border-b bg-gray-50 text-sm text-gray-600"><tr><th className="p-3">{t('order_id')}</th><th className="p-3">{t('material')}</th><th className="p-3">{t('quantity')}</th><th className="p-3">{t('start_date')}</th><th className="p-3">{t('end_date')}</th><th className="p-3">{t('status')}</th></tr></thead><tbody>{data.productionOrders.map(po => <tr key={po.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-blue-600">{po.id}</td><td className="p-3">{t_data(data.materials.find(m => m.id === po.materialId), 'description')}</td><td className="p-3">{po.quantity}</td><td className="p-3">{po.startDate}</td><td className="p-3">{po.endDate}</td><td className="p-3"><StatusBadge status={po.status} t={t}/></td></tr>)}</tbody></table></Card>;
+            default: return <Card className="flex flex-col items-center justify-center text-center h-96"><div className="p-4 bg-gray-100 rounded-full text-gray-500 mb-4"><Settings size={48}/></div><h2 className="text-2xl font-bold text-gray-800">{t(activeSubView)}</h2></Card>;
+        }
+    };
+    return <div><SubNav items={subNavItems} activeSubView={activeSubView} setActiveSubView={setActiveSubView} t={t} />{renderContent()}</div>;
+};
+
+const PSView = ({ data, t, t_data }) => (
+    <div className="space-y-6">
+        {data.projects.map(p => (
+            <Card key={p.id}>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h3 className="text-xl font-bold text-gray-800">{t_data(p, 'name')}</h3>
+                        <p className="text-sm text-gray-500">{t('project_manager')}: {p.manager}</p>
+                    </div>
+                    <StatusBadge status={p.status} t={t} />
+                </div>
+                <div className="mt-4 space-y-3">
+                    <div>
+                        <div className="flex justify-between text-sm font-medium text-gray-600"><span>{t('progress')}</span><span>{p.progress}%</span></div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1"><div className="bg-blue-600 h-2.5 rounded-full" style={{width: `${p.progress}%`}}></div></div>
+                    </div>
+                    <div>
+                        <div className="flex justify-between text-sm font-medium text-gray-600"><span>{t('budget')}</span><span>¥{p.spent.toLocaleString()} / ¥{p.budget.toLocaleString()}</span></div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1"><div className="bg-green-600 h-2.5 rounded-full" style={{width: `${(p.spent/p.budget)*100}%`}}></div></div>
+                    </div>
+                </div>
+            </Card>
+        ))}
+    </div>
+);
+
+const HRView = ({ data, t, t_data }) => {
+    const [activeSubView, setActiveSubView] = useState('employee_master');
+    const subNavItems = [{ id: 'employee_master' }, { id: 'payroll' }, { id: 'recruiting' }];
+    const renderContent = () => {
+        switch(activeSubView) {
+            case 'employee_master': return <Card><h2 className="text-xl font-semibold mb-4">{t('employee_master')}</h2><table className="w-full text-left"><thead className="border-b bg-gray-50 text-sm text-gray-600"><tr><th className="p-3">{t('employee_id')}</th><th className="p-3">{t('employee_name')}</th><th className="p-3">{t('department')}</th><th className="p-3">{t('position')}</th><th className="p-3">{t('status')}</th></tr></thead><tbody>{data.employees.map(e => <tr key={e.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-blue-600">{e.id}</td><td className="p-3">{e.name}</td><td className="p-3">{t_data(e, 'department')}</td><td className="p-3">{t_data(e, 'position')}</td><td className="p-3"><StatusBadge status={e.status} t={t}/></td></tr>)}</tbody></table></Card>;
+            default: return <Card className="flex flex-col items-center justify-center text-center h-96"><div className="p-4 bg-gray-100 rounded-full text-gray-500 mb-4"><Users2 size={48}/></div><h2 className="text-2xl font-bold text-gray-800">{t(activeSubView)}</h2></Card>;
+        }
+    };
+    return <div><SubNav items={subNavItems} activeSubView={activeSubView} setActiveSubView={setActiveSubView} t={t} />{renderContent()}</div>;
+};
+
+const PMView = ({ data, t, t_data }) => {
+    const [activeSubView, setActiveSubView] = useState('maintenance_orders');
+    const subNavItems = [{ id: 'maintenance_orders' }, { id: 'equipment_master' }];
+    const renderContent = () => {
+        switch(activeSubView) {
+            case 'maintenance_orders': return <Card><h2 className="text-xl font-semibold mb-4">{t('maintenance_orders')}</h2><table className="w-full text-left"><thead className="border-b bg-gray-50 text-sm text-gray-600"><tr><th className="p-3">{t('order_id')}</th><th className="p-3">{t('equipment')}</th><th className="p-3">{t('order_type')}</th><th className="p-3">{t('priority')}</th><th className="p-3">{t('scheduled_date')}</th><th className="p-3">{t('status')}</th></tr></thead><tbody>{data.maintenanceOrders.map(mo => <tr key={mo.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-blue-600">{mo.id}</td><td className="p-3">{t_data(mo, 'equipment')}</td><td className="p-3">{t_data(mo, 'type')}</td><td className="p-3"><StatusBadge status={mo.priority} t={t}/></td><td className="p-3">{mo.scheduledDate}</td><td className="p-3"><StatusBadge status={mo.status} t={t}/></td></tr>)}</tbody></table></Card>;
+            default: return <Card className="flex flex-col items-center justify-center text-center h-96"><div className="p-4 bg-gray-100 rounded-full text-gray-500 mb-4"><Wrench size={48}/></div><h2 className="text-2xl font-bold text-gray-800">{t(activeSubView)}</h2></Card>;
+        }
+    };
+    return <div><SubNav items={subNavItems} activeSubView={activeSubView} setActiveSubView={setActiveSubView} t={t} />{renderContent()}</div>;
+};
+
+const MDMView = ({ data, t, t_data }) => {
+    const [activeSubView, setActiveSubView] = useState('material_master');
+    const subNavItems = [{ id: 'material_master' }, { id: 'vendors' }, { id: 'customers' }, { id: 'employee_master' }];
+    const renderContent = () => {
+        switch (activeSubView) {
+            case 'material_master': return <Card><h2 className="text-xl font-semibold mb-4">{t('material_master')}</h2><table className="w-full text-left"><thead className="border-b bg-gray-50 text-sm text-gray-600"><tr><th className="p-3">{t('material_number')}</th><th className="p-3">{t('description')}</th><th className="p-3">{t('material_type')}</th><th className="p-3">{t('uom')}</th><th className="p-3">{t('material_group')}</th></tr></thead><tbody>{data.materials.map(m => <tr key={m.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-blue-600">{m.id}</td><td className="p-3">{t_data(m, 'description')}</td><td className="p-3">{t_data(m, 'type')}</td><td className="p-3">{m.uom}</td><td className="p-3">{t_data(m, 'group')}</td></tr>)}</tbody></table></Card>;
+            case 'vendors': return <Card><h2 className="text-xl font-semibold mb-4">{t('vendors')}</h2><table className="w-full text-left"><thead className="border-b bg-gray-50 text-sm text-gray-600"><tr><th className="p-3">{t('vendor_name')}</th><th className="p-3">{t('contact_person')}</th><th className="p-3">{t('rating')}</th><th className="p-3">{t('status')}</th></tr></thead><tbody>{data.vendors.map(v => <tr key={v.id} className="border-b hover:bg-gray-50"><td className="p-3 font-semibold">{t_data(v, 'name')}</td><td className="p-3">{v.contact}</td><td className="p-3 flex items-center gap-1"><span className="text-yellow-500">★</span> {v.rating}</td><td className="p-3"><StatusBadge status={v.status} t={t} /></td></tr>)}</tbody></table></Card>;
+            case 'employee_master': return <Card><h2 className="text-xl font-semibold mb-4">{t('employee_master')}</h2><table className="w-full text-left"><thead className="border-b bg-gray-50 text-sm text-gray-600"><tr><th className="p-3">{t('employee_id')}</th><th className="p-3">{t('employee_name')}</th><th className="p-3">{t('department')}</th><th className="p-3">{t('position')}</th></tr></thead><tbody>{data.employees.map(e => <tr key={e.id} className="border-b hover:bg-gray-50"><td className="p-3 font-medium text-blue-600">{e.id}</td><td className="p-3">{e.name}</td><td className="p-3">{t_data(e, 'department')}</td><td className="p-3">{t_data(e, 'position')}</td></tr>)}</tbody></table></Card>;
+            default: return <Card className="flex flex-col items-center justify-center text-center h-96"><div className="p-4 bg-gray-100 rounded-full text-gray-500 mb-4"><Users size={48}/></div><h2 className="text-2xl font-bold text-gray-800">{t(activeSubView)}</h2></Card>;
+        }
+    };
+    return <div><SubNav items={subNavItems} activeSubView={activeSubView} setActiveSubView={setActiveSubView} t={t} />{renderContent()}</div>;
+};
+
+const BIView = ({ t }) => {
+    const [query, setQuery] = useState('');
+    const [analysis, setAnalysis] = useState(null);
+    const chartRef = useRef(null);
+    const chartInstance = useRef(null);
+
+    const handleAnalysis = () => {
+        const lowerQuery = query.toLowerCase();
+        // Mock analysis based on query
+        if (lowerQuery.includes('sales') || lowerQuery.includes('销售')) {
+            setAnalysis({
+                type: 'chart', title: t('quarterly_sales_trend'),
+                summary: '模型分析显示，过去四个季度的销售额呈现稳步增长趋势，特别是在第四季度有显著的季节性高峰。增长主要由电子元件类别带动。',
+                findings: ['Q4销售额环比增长25%', '电子元件贡献了总销售额的60%', '建议为Q1的淡季准备促销活动'],
+                chartData: { labels: ['Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024'], datasets: [{ label: '销售额 (万元)', data: [120, 150, 140, 200], backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }] }
+            });
+        } else if (lowerQuery.includes('vendor') || lowerQuery.includes('供应商')) {
+            setAnalysis({
+                type: 'text', title: t('vendor_performance_issue'),
+                summary: '模型发现供应商“办公用品直供中心”(V004)的准时交货率显著低于平均水平，且其评级为“不活跃”。这可能影响相关采购订单的执行。',
+                findings: ['V004的准时交货率仅为75%', '该供应商已被标记为不活跃', '建议重新评估与该供应商的合作关系，并寻找替代供应商']
+            });
+        } else if (lowerQuery.includes('supply chain') || lowerQuery.includes('供应链')) {
+            setAnalysis({
+                type: 'text', title: t('supply_chain_bottleneck'),
+                summary: '通过分析采购订单的提前期和库存周转率，模型识别出“CNC精密轴承”(MAT-003)是一个潜在的供应链瓶颈。其平均到货时间比标准长15%，且安全库存水平较低。',
+                findings: ['MAT-003平均采购提前期为23天，高于标准的20天', '库存周转率较低，可能导致生产延误', '建议与供应商V002协商缩短交货时间，或开发备用供应商']
+            });
+        } else if (lowerQuery.includes('turnover') || lowerQuery.includes('流动率')) {
+            setAnalysis({
+                type: 'text', title: t('employee_turnover_analysis'),
+                summary: '模型分析了过去一年的离职数据（模拟），发现研发部门的员工流动率（15%）高于公司平均水平（8%）。',
+                findings: ['研发部是流动率最高的部门', '离职员工的平均在职时间为1.8年', '建议HR部门针对研发团队进行访谈，了解潜在问题']
+            });
+        } else { setAnalysis(null); }
+    };
+    
+    useEffect(() => {
+        if (chartInstance.current) {
+            chartInstance.current.destroy();
+        }
+        if (analysis && analysis.type === 'chart' && chartRef.current) {
+            chartInstance.current = new ChartJS(chartRef.current, { type: 'bar', data: analysis.chartData, options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: analysis.title } } } });
+        }
+    }, [analysis]);
+
+    return (
+        <div className="space-y-6">
+            <Card><div className="flex items-center gap-4"><BotMessageSquare className="w-10 h-10 text-blue-600 flex-shrink-0" /><input type="text" value={query} onChange={e => setQuery(e.target.value)} placeholder={t('ask_bi')} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" /><Button onClick={handleAnalysis}>{t('get_analysis')}</Button></div></Card>
+            {analysis && <Card><h2 className="text-xl font-semibold mb-4">{t('analysis_result')}: {analysis.title}</h2><div className="grid grid-cols-1 md:grid-cols-3 gap-6"><div className="md:col-span-2">{analysis.type === 'chart' ? <canvas ref={chartRef}></canvas> : <div className="p-4 bg-gray-50 rounded-lg h-full flex items-center justify-center"><p className="text-gray-600">{analysis.summary}</p></div>}</div><div className="space-y-4"><h3 className="font-semibold">{t('llm_summary')}</h3><p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{analysis.summary}</p><h3 className="font-semibold">{t('key_findings')}</h3><ul className="list-disc list-inside space-y-1 text-sm text-gray-700">{analysis.findings.map((f, i) => <li key={i}>{f}</li>)}</ul></div></div></Card>}
+        </div>
+    );
+};
+
+const WorkflowView = ({ t }) => {
+    const [activeSubView, setActiveSubView] = useState('process_mining');
+    const subNavItems = [{ id: 'definitions' }, { id: 'monitoring' }, { id: 'process_mining' }];
+    const renderContent = () => {
+        switch (activeSubView) {
+            case 'definitions': return <Card><h2 className="text-xl font-semibold mb-4">{t('definitions')}</h2><div className="p-4 border rounded-lg"><h3 className="font-bold mb-4">采购订单审批流程</h3><div className="flex items-center justify-between space-x-2 text-center"><div className="flex flex-col items-center"><div className="p-3 bg-green-100 rounded-full text-green-600"><PlayCircle/></div><span className="mt-1 text-sm">开始</span></div><div className="flex-1 border-t-2 border-dashed border-gray-300"></div><div className="flex flex-col items-center"><div className="p-3 bg-blue-100 rounded-full text-blue-600"><UserCheck/></div><span className="mt-1 text-sm">经理审批</span></div><div className="flex-1 border-t-2 border-dashed border-gray-300"></div><div className="flex flex-col items-center"><div className="p-3 bg-blue-100 rounded-full text-blue-600"><DollarSign/></div><span className="mt-1 text-sm">财务审批</span></div><div className="flex-1 border-t-2 border-dashed border-gray-300"></div><div className="flex flex-col items-center"><div className="p-3 bg-gray-100 rounded-full text-gray-600"><CheckCircle/></div><span className="mt-1 text-sm">结束</span></div></div></div></Card>;
+            case 'monitoring': return <Card><h2 className="text-xl font-semibold mb-4">{t('monitoring')}</h2><table className="w-full text-left"><thead className="border-b bg-gray-50 text-sm text-gray-600"><tr><th className="p-3">{t('instance_id')}</th><th className="p-3">{t('workflow_name')}</th><th className="p-3">{t('start_time')}</th><th className="p-3">{t('status')}</th></tr></thead><tbody><tr className="border-b hover:bg-gray-50"><td className="p-3">WF-00123</td><td className="p-3">采购订单审批</td><td className="p-3">2025-07-10 09:15</td><td className="p-3"><StatusBadge status="status_pending_approval" t={t}/></td></tr><tr className="border-b hover:bg-gray-50"><td className="p-3">WF-00122</td><td className="p-3">采购订单审批</td><td className="p-3">2025-07-09 14:30</td><td className="p-3"><StatusBadge status="status_completed" t={t}/></td></tr></tbody></table></Card>;
+            case 'process_mining': return <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"><Card><h2 className="text-xl font-semibold mb-4">{t('discovered_model')}</h2><div className="p-4 border rounded-lg"><h3 className="font-bold mb-4">采购订单审批流程 (实际)</h3><div className="flex items-center justify-between space-x-2 text-center"><div className="flex flex-col items-center"><div className="p-3 bg-green-100 rounded-full text-green-600"><PlayCircle/></div><span className="mt-1 text-sm">开始</span></div><div className="flex-1 border-t-2 border-dashed border-gray-300"></div><div className="flex flex-col items-center"><div className="p-3 bg-blue-100 rounded-full text-blue-600"><UserCheck/></div><span className="mt-1 text-sm">经理审批</span></div><div className="flex-1 border-t-2 border-dashed border-red-400"></div><div className="flex flex-col items-center"><div className="p-3 bg-red-100 rounded-full text-red-600"><Clock/></div><span className="mt-1 text-sm">财务等待</span></div><div className="flex-1 border-t-2 border-dashed border-gray-300"></div><div className="flex flex-col items-center"><div className="p-3 bg-gray-100 rounded-full text-gray-600"><CheckCircle/></div><span className="mt-1 text-sm">结束</span></div></div></div></Card><Card><h2 className="text-xl font-semibold mb-4">{t('performance_analysis')}</h2><div className="space-y-4"><div className="flex justify-between"><span>{t('avg_lead_time')}:</span><span className="font-bold">3.5 天</span></div><div className="flex justify-between"><span>{t('bottleneck')}:</span><span className="font-bold">财务等待 (平均 2.1 天)</span></div><div><h3 className="font-semibold mt-4">{t('improvement_suggestions')}</h3><p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">1. 为低于特定金额的订单设置财务自动审批规则。<br/>2. 引入移动审批，减少财务人员的等待时间。</p></div></div></Card></div>;
+            default: return null;
+        }
+    };
+    return <div><SubNav items={subNavItems} activeSubView={activeSubView} setActiveSubView={setActiveSubView} t={t} />{renderContent()}</div>;
+};
+
+const APIHubView = ({ t, t_data }) => {
+    const [selectedApi, setSelectedApi] = useState(null);
+    const apis = [
+        { name: 'Purchase Order API', domain: 'MM', version: 'v2.1', status: 'status_active', desc: {zh: '创建、读取和更新采购订单', en: 'Create, read, and update purchase orders', fr: 'Créer, lire et mettre à jour les commandes', es: 'Crear, leer y actualizar pedidos de compra'}, uptime: '99.98%', avgResponse: '120ms' },
+        { name: 'Inventory API', domain: 'MM', version: 'v1.5', status: 'status_active', desc: {zh: '查询实时库存水平和物料移动', en: 'Query real-time stock levels and material movements', fr: 'Consulter les niveaux de stock et mouvements', es: 'Consultar niveles de stock y movimientos'}, uptime: '99.99%', avgResponse: '80ms' },
+        { name: 'Business Partner API', domain: 'MDM', version: 'v3.0', status: 'status_active', desc: {zh: '管理客户和供应商主数据', en: 'Manage customer and vendor master data', fr: 'Gérer les données de base partenaires', es: 'Gestionar datos maestros de socios'}, uptime: '99.99%', avgResponse: '95ms' },
+        { name: 'GL Posting API', domain: 'FICO', version: 'v1.8', status: 'status_active', desc: {zh: '过账总账凭证', en: 'Post General Ledger documents', fr: 'Comptabiliser des écritures du Grand Livre', es: 'Contabilizar documentos del libro mayor'}, uptime: '99.97%', avgResponse: '150ms' },
+    ];
+    
+    const copyToClipboard = (text) => {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+        }
+        document.body.removeChild(textArea);
+    };
+
+    return (
+        <Card>
+            <h2 className="text-xl font-semibold mb-4">{t('api_catalog')}</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    {apis.map(api => (
+                        <div key={api.name} className={`border p-4 rounded-lg mb-4 cursor-pointer hover:shadow-lg transition-shadow ${selectedApi?.name === api.name ? 'border-blue-500 bg-blue-50' : ''}`} onClick={() => setSelectedApi(api)}>
+                            <div className="flex justify-between items-start"><h3 className="font-bold text-blue-700">{api.name}</h3><StatusBadge status={api.status} t={t}/></div>
+                            <p className="text-sm text-gray-600 mt-2">{t_data(api, 'desc')}</p>
+                            <div className="mt-4 flex justify-between items-center text-xs text-gray-500"><span>{t('version')}: {api.version}</span><div className="flex items-center gap-2"><div className="w-2 h-2 bg-green-500 rounded-full"></div><span>{api.uptime}</span></div><span className="font-semibold bg-gray-200 px-2 py-1 rounded">{api.domain}</span></div>
+                        </div>
+                    ))}
+                </div>
+                <Card className={selectedApi ? '' : 'flex items-center justify-center bg-gray-50'}>
+                    {selectedApi ? (
+                        <div>
+                            <h3 className="text-lg font-semibold mb-2">{t('docs')}: {selectedApi.name}</h3>
+                            <p className="text-sm font-semibold mt-4">Endpoint:</p>
+                            <div className="relative"><pre className="bg-gray-100 p-2 rounded text-sm font-mono pr-8">POST /api/{selectedApi.domain.toLowerCase()}/{selectedApi.name.split(' ')[0].toLowerCase()}</pre><button onClick={() => copyToClipboard(`POST /api/${selectedApi.domain.toLowerCase()}/${selectedApi.name.split(' ')[0].toLowerCase()}`)} className="absolute top-1 right-1 p-1 text-gray-500 hover:bg-gray-200 rounded"><Copy size={14}/></button></div>
+                            <p className="text-sm font-semibold mt-4">Sample Request:</p>
+                            <div className="relative"><pre className="bg-gray-100 p-2 rounded text-sm font-mono whitespace-pre-wrap pr-8">{`{\n  "id": "PO12345",\n  "vendor": "V001"\n}`}</pre><button onClick={() => copyToClipboard(`{\n  "id": "PO12345",\n  "vendor": "V001"\n}`)} className="absolute top-1 right-1 p-1 text-gray-500 hover:bg-gray-200 rounded"><Copy size={14}/></button></div>
+                        </div>
+                    ) : <div className="text-center text-gray-500">请从左侧选择一个API查看详情</div>}
+                </Card>
+            </div>
+        </Card>
+    );
+};
+
+const IndustrySolutionsView = ({ t, solutions, setSolutions }) => (
+    <div className="space-y-6">
+        <Card>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="text-lg font-semibold flex items-center gap-2"><Fuel className="text-green-600"/>{t('oil_gas_solution')}</h3>
+                    <p className="text-sm text-gray-500 mt-1">激活碳氢化合物管理、调运管理和计划调度功能。</p>
+                </div>
+                <div className="flex items-center gap-4">
+                    <span className={`font-medium text-sm ${solutions.oilAndGas ? 'text-green-600' : 'text-gray-500'}`}>{solutions.oilAndGas ? t('active') : t('inactive')}</span>
+                    <Switch checked={solutions.oilAndGas} onChange={() => setSolutions(s => ({...s, oilAndGas: !s.oilAndGas}))} />
+                </div>
+            </div>
+        </Card>
+        <Card>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="text-lg font-semibold flex items-center gap-2"><Zap className="text-yellow-500"/>{t('utilities_solution')}</h3>
+                    <p className="text-sm text-gray-500 mt-1">激活核电运维、行业安全管理、售电侧和虚拟电厂功能。</p>
+                </div>
+                <div className="flex items-center gap-4">
+                    <span className={`font-medium text-sm ${solutions.utilities ? 'text-green-600' : 'text-gray-500'}`}>{solutions.utilities ? t('active') : t('inactive')}</span>
+                    <Switch checked={solutions.utilities} onChange={() => setSolutions(s => ({...s, utilities: !s.utilities}))} />
+                </div>
+            </div>
+        </Card>
+    </div>
+);
+
+const OilAndGasView = ({ t }) => {
+    const [activeSubView, setActiveSubView] = useState('td');
+    const subNavItems = [{ id: 'hcm' }, { id: 'td' }, { id: 'ps_og' }];
+    const renderContent = () => {
+        switch (activeSubView) {
+            case 'td': return <Card><h2 className="text-xl font-semibold mb-4">{t('td')}</h2><div className="grid grid-cols-1 lg:grid-cols-3 gap-6"><div className="lg:col-span-2"><h3 className="font-semibold mb-2">调度指令</h3><table className="w-full text-left"><tbody><tr className="border-b"><td className="p-2 flex items-center gap-2"><Route color="#9ca3af"/>管道 A-101</td><td className="p-2">原油</td><td className="p-2">10,000 BBL</td><td className="p-2 text-green-600">进行中</td></tr><tr className="border-b"><td className="p-2 flex items-center gap-2"><Truck/>槽车 B-543</td><td className="p-2">汽油</td><td className="p-2">30 m³</td><td className="p-2 text-gray-500">已完成</td></tr><tr className="border-b"><td className="p-2 flex items-center gap-2"><Anchor/>油轮 C-998</td><td className="p-2">LNG</td><td className="p-2">50,000 m³</td><td className="p-2 text-blue-600">已计划</td></tr></tbody></table></div><div><h3 className="font-semibold mb-2">储罐区 #1</h3><div className="space-y-3 mt-2"><div className="w-full bg-gray-200 rounded-full h-4"><div className="bg-yellow-500 h-4 rounded-full text-right pr-2 text-xs text-white" style={{width: '75%'}}>75%</div></div><div className="w-full bg-gray-200 rounded-full h-4"><div className="bg-yellow-500 h-4 rounded-full text-right pr-2 text-xs text-white" style={{width: '90%'}}>90%</div></div></div></div></div></Card>;
+            default: return <Card className="flex flex-col items-center justify-center text-center h-96"><div className="p-4 bg-gray-100 rounded-full text-gray-500 mb-4"><Droplets size={48}/></div><h2 className="text-2xl font-bold text-gray-800">{t(activeSubView)}</h2></Card>;
+        }
+    };
+    return <div><SubNav items={subNavItems} activeSubView={activeSubView} setActiveSubView={setActiveSubView} t={t} />{renderContent()}</div>;
+};
+
+const UtilitiesView = ({ t }) => {
+    const [activeSubView, setActiveSubView] = useState('vpp');
+    const subNavItems = [{ id: 'nuclear_om' }, { id: 'safety_mgmt' }, { id: 'retail_side' }, { id: 'vpp' }];
+    const chartRef = useRef(null);
+    const chartInstance = useRef(null);
+    
+    const renderContent = () => {
+        switch (activeSubView) {
+            case 'safety_mgmt': return <Card><h2 className="text-xl font-semibold mb-4">工作票管理</h2><table className="w-full text-left"><tbody><tr className="border-b"><td className="p-2">#12345 - 电气工作票</td><td className="p-2">3号发电机</td><td className="p-2 text-green-600">已签发</td></tr><tr className="border-b"><td className="p-2">#12346 - 操作票</td><td className="p-2">主变压器</td><td className="p-2 text-green-600">已签发</td></tr></tbody></table></Card>;
+            case 'vpp': return <Card><h2 className="text-xl font-semibold mb-4">{t('vpp')}</h2><div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="flex flex-col items-center"><h3 className="font-semibold">实时出力构成</h3><div className="w-64 h-64"><canvas ref={chartRef}></canvas></div></div><div className="space-y-4"><div className="flex items-center gap-3"><Sun className="text-yellow-500"/><div><p>光伏电站</p><p className="font-bold">2.5 MW</p></div></div><div className="flex items-center gap-3"><Wind className="text-blue-500"/><div><p>风力电场</p><p className="font-bold">5.1 MW</p></div></div><div className="flex items-center gap-3"><BatteryCharging className="text-green-500"/><div><p>储能电站</p><p className="font-bold">1.2 MW (放电中)</p></div></div></div></div></Card>;
+            default: return <Card className="flex flex-col items-center justify-center text-center h-96"><div className="p-4 bg-gray-100 rounded-full text-gray-500 mb-4"><Zap size={48}/></div><h2 className="text-2xl font-bold text-gray-800">{t(activeSubView)}</h2></Card>;
+        }
+    };
+    
+    useEffect(() => {
+        if (chartInstance.current) {
+            chartInstance.current.destroy();
+        }
+        if (activeSubView === 'vpp' && chartRef.current) {
+            chartInstance.current = new ChartJS(chartRef.current, {
+                type: 'doughnut',
+                data: { labels: ['光伏', '风电', '储能'], datasets: [{ data: [2.5, 5.1, 1.2], backgroundColor: ['#f59e0b', '#3b82f6', '#10b981'] }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+    }, [activeSubView]);
+
+    return <div><SubNav items={subNavItems} activeSubView={activeSubView} setActiveSubView={setActiveSubView} t={t} />{renderContent()}</div>;
+};
+
+const SystemSecurityView = ({ t }) => {
+    const [activeSubView, setActiveSubView] = useState('performance_monitoring');
+    const subNavItems = [{ id: 'performance_monitoring' }, { id: 'security_monitoring' }, { id: 'adaptive_deployment' }];
+    return <div><SubNav items={subNavItems} activeSubView={activeSubView} setActiveSubView={setActiveSubView} t={t} /></div>;
+};
+
+const UserManagementView = ({ t }) => {
+    const [activeSubView, setActiveSubView] = useState('user_list');
+    const subNavItems = [{ id: 'user_list' }, { id: 'role_management' }, { id: 'audit_log' }];
+    return <div><SubNav items={subNavItems} activeSubView={activeSubView} setActiveSubView={setActiveSubView} t={t} /></div>;
+};
+
+
+// --- Main App Component ---
+export default function App() {
+    const [language, setLanguage] = useState('zh');
+    const [activeView, setActiveView] = useState('dashboard');
+    const [industrySolutions, setIndustrySolutions] = useState({ oilAndGas: false, utilities: false });
+    const [data] = useState({
+        vendors: initialVendors, materials: initialMaterials, inventory: initialInventory,
+        purchaseOrders: initialPurchaseOrders, invoices: initialInvoices, glAccounts: initialGLAccounts,
+        productionOrders: initialProductionOrders, projects: initialProjects, employees: initialEmployees,
+        maintenanceOrders: initialMaintenanceOrders,
+    });
+
+    const t = useMemo(() => {
+        const translate = (key) => translations[language][key] || key;
+        translate.lang = language;
+        return translate;
+    }, [language]);
+    
+    const t_data = (dataObject, fieldName) => {
+        if (!dataObject || !dataObject[fieldName]) return '';
+        if (typeof dataObject[fieldName] === 'string') return dataObject[fieldName];
+        return dataObject[fieldName][language] || dataObject[fieldName]['en'] || '';
+    };
+
+    const viewComponents = {
+        dashboard: <DashboardView data={data} t={t} />,
+        mm: <MMView data={data} t={t} t_data={t_data} />,
+        fico: <FICOView data={data} t={t} t_data={t_data} />,
+        pp: <PPView data={data} t={t} t_data={t_data} />,
+        ps: <PSView data={data} t={t} t_data={t_data} />,
+        hr: <HRView data={data} t={t} t_data={t_data} />,
+        pm: <PMView data={data} t={t} t_data={t_data} />,
+        mdm: <MDMView data={data} t={t} t_data={t_data} />,
+        bi: <BIView t={t} />,
+        workflow: <WorkflowView t={t} />,
+        apihub: <APIHubView t={t} t_data={t_data} />,
+        industry_solutions: <IndustrySolutionsView t={t} solutions={industrySolutions} setSolutions={setIndustrySolutions} />,
+        oil_gas: <OilAndGasView t={t} />,
+        utilities: <UtilitiesView t={t} />,
+        system_security: <SystemSecurityView t={t} />,
+        user_management: <UserManagementView t={t} />,
+    };
+
+    const viewTitles = { dashboard: 'dashboard', mm: 'mm', fico: 'fico', pp: 'pp', ps: 'ps', hr: 'hr', pm: 'pm', mdm: 'mdm', bi: 'bi', workflow: 'workflow', apihub: 'apihub', industry_solutions: 'industry_solutions', oil_gas: 'oil_gas', utilities: 'utilities', system_security: 'system_security', user_management: 'user_management' };
+    const getBaseView = (view) => view.split('/')[0];
+
+    return (
+        <div className="h-screen w-full flex bg-gray-100 font-sans overflow-hidden">
+            <Sidebar activeView={activeView} setActiveView={setActiveView} t={t} industrySolutions={industrySolutions} />
+            <div className="flex-1 flex flex-col">
+                <Header title={t(viewTitles[getBaseView(activeView)])} t={t} language={language} setLanguage={setLanguage} />
+                <main className="flex-1 p-6 overflow-y-auto">
+                    {viewComponents[getBaseView(activeView)]}
+                </main>
+            </div>
+        </div>
+    );
+}
