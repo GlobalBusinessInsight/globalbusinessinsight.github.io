@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>四风之变：全球麻将的过去、现在与未来</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: A thematic, single-page narrative structure. The user scrolls through four key sections: 1. An interactive timeline for history. 2. A core interactive dashboard comparing the five main rule sets using a radar chart and dynamic text panels, which is the most effective way to handle the complex comparison task. 3. A section on the modern era using stat cards and a CSS-based diagram to illustrate the cultural feedback loop. 4. A forward-looking section using an accordion to present future trends cleanly. This structure transforms the linear report into an exploratory journey, prioritizing user engagement and direct comparison over passive reading. -->
+    <!-- Visualization & Content Choices: History -> Goal: Show Change -> Viz: Interactive Timeline (HTML/JS) -> Interaction: Click on eras to reveal info. Justification: More engaging than text. | Gameplay Comparison -> Goal: Compare -> Viz: Radar Chart (Chart.js) & Dynamic Text Panels -> Interaction: Click buttons to switch variants, updating chart and text. Justification: Radar chart provides an instant "personality" profile of each variant's strategy, superior to a static table. | Modern Era -> Goal: Organize/Relationships -> Viz: CSS Flexbox Diagram -> Interaction: Static visual. Justification: Clearly illustrates the feedback loop without complex code. | Future Trends -> Goal: Compare/Inform -> Viz: Bar Chart (Chart.js) & Accordion UI -> Interaction: Click to expand. Justification: Organizes dense future-looking text cleanly. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans SC', sans-serif; background-color: #FDFDF6; color: #383838; }
+        .chart-container { position: relative; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; height: 300px; max-height: 350px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; max-height: 400px; } }
+        .nav-link { transition: color 0.3s, border-color 0.3s; }
+        .nav-link.active { color: #A0522D; border-bottom-color: #A0522D; }
+        .nav-link:hover { color: #A0522D; }
+        .variant-btn { transition: all 0.3s; }
+        .variant-btn.active { background-color: #A0522D; color: #FDFDF6; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        .timeline-item::before { content: ''; position: absolute; left: 19px; top: 0; bottom: 0; width: 2px; background-color: #D3D3D3; }
+        .timeline-dot { position: absolute; left: 11px; top: 4px; width: 18px; height: 18px; border-radius: 9999px; background-color: #FDFDF6; border: 3px solid #A0522D; transition: all 0.3s; }
+        .timeline-content.active .timeline-dot { background-color: #A0522D; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        .text-balance { text-wrap: balance; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="sticky top-0 bg-white/80 backdrop-blur-lg shadow-sm z-50">
+        <nav class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-3 md:py-4">
+                <h1 class="text-xl md:text-2xl font-bold text-gray-800">四风之变</h1>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#history" class="nav-link text-gray-600 pb-1 border-b-2 border-transparent">历史长河</a>
+                    <a href="#variants" class="nav-link text-gray-600 pb-1 border-b-2 border-transparent">一桌世界</a>
+                    <a href="#modern" class="nav-link text-gray-600 pb-1 border-b-2 border-transparent">现代牌局</a>
+                    <a href="#future" class="nav-link text-gray-600 pb-1 border-b-2 border-transparent">未来展望</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+
+        <section id="hero" class="text-center py-12 md:py-24">
+            <h2 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+                <span class="block">全球麻将的</span>
+                <span class="block text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-red-700">过去、现在与未来</span>
+            </h2>
+            <p class="mt-6 max-w-2xl mx-auto text-base md:text-xl text-gray-600 text-balance">
+                从东方古老的牌戏到风靡全球的智力运动，麻将的魅力跨越了文化与时代。本应用将带您深入探索其迷人的演变、多样的玩法和激动人心的未来。
+            </p>
+        </section>
+
+        <div class="space-y-20 md:space-y-32">
+
+            <section id="history">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl font-bold text-gray-800">历史长河</h3>
+                    <p class="mt-2 text-gray-600 text-balance">追溯麻将从19世纪的模糊起源到21世纪全球化的非凡旅程。</p>
+                </div>
+                <div class="max-w-4xl mx-auto">
+                    <div class="relative pl-12">
+                        <div class="timeline-item relative pb-12">
+                            <div class="timeline-content">
+                                <div class="timeline-dot"></div>
+                                <h4 class="text-xl font-semibold mb-1">演化前身：清代牌戏</h4>
+                                <p class="text-gray-700 text-balance">麻将并非古老游戏，其核心的“凑牌”玩法诞生于19世纪。它脱胎于“马吊”等传统牌戏，并在“默和牌”等游戏中首次引入了“碰”、“顺子”等核心机制，确立了万、索、筒三门花色。</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item relative pb-12">
+                           <div class="timeline-content">
+                                <div class="timeline-dot"></div>
+                                <h4 class="text-xl font-semibold mb-1">诞生与命名：19世纪下半叶</h4>
+                                <p class="text-gray-700 text-balance">学术界共识麻将诞生于19世纪下半叶的中国。关于其确切发源地有“宁波说”和“闽粤说”之争。洗牌声酷似“麻雀”啾鸣，故得名“麻雀”，后演变为“麻将”。</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item relative pb-12">
+                            <div class="timeline-content">
+                                <div class="timeline-dot"></div>
+                                <h4 class="text-xl font-semibold mb-1">西传与风靡：1920年代</h4>
+                                <p class="text-gray-700 text-balance">美国商人约瑟夫·巴布科克是麻将西传的关键人物。他简化规则、出版“红皮书”，并以“Mah-Jongg”为商标进行商业推广，迎合了当时西方对“中国风”的迷恋，在欧美掀起了一场麻将狂热。美国麻将联盟(NMJL)于1937年成立，至今仍是美国麻将的权威。</p>
+                            </div>
+                        </div>
+                        <div class="timeline-item relative">
+                             <div class="timeline-content">
+                                <div class="timeline-dot"></div>
+                                <h4 class="text-xl font-semibold mb-1">亚洲的演变与发展</h4>
+                                <p class="text-gray-700 text-balance">麻将于20世纪初传入日本，最初是上流社会的消遣，二战后逐渐普及，并发展出独特的“立直”、“振听”等规则和深厚的职业联赛文化。在中国，麻将也演化出各种地方玩法，并最终在1998年由国家体育总局制定了“国标麻将”，旨在将其标准化为一项智力运动。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="variants">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl font-bold text-gray-800">一桌世界</h3>
+                    <p class="mt-2 text-gray-600 text-balance">全球麻将玩法规则各异，策略千变万化。点击下方按钮，探索不同玩法的核心魅力与战略差异。</p>
+                </div>
+
+                <div class="flex justify-center flex-wrap gap-2 md:gap-3 mb-8 max-w-5xl mx-auto">
+                    <button class="variant-btn px-3 py-2 md:px-4 text-sm md:text-base bg-white border border-gray-300 rounded-full shadow-sm text-gray-700 font-medium" data-variant="xuezhan">血战到底</button>
+                    <button class="variant-btn px-3 py-2 md:px-4 text-sm md:text-base bg-white border border-gray-300 rounded-full shadow-sm text-gray-700 font-medium" data-variant="xueliu">血流成河</button>
+                    <button class="variant-btn px-3 py-2 md:px-4 text-sm md:text-base bg-white border border-gray-300 rounded-full shadow-sm text-gray-700 font-medium" data-variant="riichi">日本立直麻将</button>
+                    <button class="variant-btn px-3 py-2 md:px-4 text-sm md:text-base bg-white border border-gray-300 rounded-full shadow-sm text-gray-700 font-medium" data-variant="mcr">国标麻将 (MCR)</button>
+                    <button class="variant-btn px-3 py-2 md:px-4 text-sm md:text-base bg-white border border-gray-300 rounded-full shadow-sm text-gray-700 font-medium" data-variant="beijing">北京麻将</button>
+                    <button class="variant-btn px-3 py-2 md:px-4 text-sm md:text-base bg-white border border-gray-300 rounded-full shadow-sm text-gray-700 font-medium" data-variant="hk">香港麻将</button>
+                    <button class="variant-btn px-3 py-2 md:px-4 text-sm md:text-base bg-white border border-gray-300 rounded-full shadow-sm text-gray-700 font-medium" data-variant="tw">台湾麻将</button>
+                    <button class="variant-btn px-3 py-2 md:px-4 text-sm md:text-base bg-white border border-gray-300 rounded-full shadow-sm text-gray-700 font-medium" data-variant="nmjl">美国麻将 (NMJL)</button>
+                    <button class="variant-btn px-3 py-2 md:px-4 text-sm md:text-base bg-white border border-gray-300 rounded-full shadow-sm text-gray-700 font-medium" data-variant="ningbo">宁波麻将</button>
+                    <button class="variant-btn px-3 py-2 md:px-4 text-sm md:text-base bg-white border border-gray-300 rounded-full shadow-sm text-gray-700 font-medium" data-variant="fenghua">奉化麻将</button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div class="bg-white p-6 rounded-lg shadow-md border order-2 lg:order-1">
+                        <h4 id="variant-title" class="text-2xl font-bold mb-4 text-gray-800"></h4>
+                        <p id="variant-description" class="text-gray-600 mb-6 text-balance"></p>
+                        <div class="space-y-4">
+                            <div>
+                                <h5 class="font-semibold text-gray-700">核心规则:</h5>
+                                <p id="variant-rules" class="text-gray-600 text-balance"></p>
+                            </div>
+                             <div>
+                                <h5 class="font-semibold text-gray-700">计分系统:</h5>
+                                <p id="variant-scoring" class="text-gray-600 text-balance"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="order-1 lg:order-2">
+                        <div class="chart-container">
+                            <canvas id="strategyChart"></canvas>
+                        </div>
+                         <p class="text-center text-sm text-gray-500 mt-2">各玩法策略重心雷达图</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="modern">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl font-bold text-gray-800">现代牌局</h3>
+                    <p class="mt-2 text-gray-600 text-balance">数字化浪潮和流行文化正在重塑麻将的全球格局。</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md border">
+                        <h4 class="text-xl font-semibold mb-4">数字牌桌的兴起</h4>
+                        <p class="text-gray-600 mb-4 text-balance">在线平台极大地推动了麻将的普及，尤其对于规则复杂的日本麻将。《雀魂》等平台以其动漫风格和便捷的自动计分功能，吸引了全球数百万年轻玩家，使立直麻将成为事实上的国际流行标准。</p>
+                        <div class="flex flex-col sm:flex-row items-center justify-center p-4 bg-slate-50 rounded-lg gap-4">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-amber-600">动漫文化</div>
+                                <div class="text-xl text-gray-500 my-1 sm:my-2">↓</div>
+                                <div class="text-gray-600 text-sm">《天才麻将少女》<br/>《斗牌传说》</div>
+                            </div>
+                             <div class="text-center">
+                                <div class="text-2xl font-bold text-red-700">新玩家涌入</div>
+                                <div class="text-xl text-gray-500 my-1 sm:my-2">↓</div>
+                                 <div class="text-gray-600 text-sm">全球粉丝<br/>兴趣激增</div>
+                            </div>
+                             <div class="text-center">
+                                <div class="text-2xl font-bold text-sky-600">在线平台</div>
+                                 <div class="text-xl text-gray-500 my-1 sm:my-2">↓</div>
+                                 <div class="text-gray-600 text-sm">《雀魂》等<br/>游戏流行</div>
+                            </div>
+                        </div>
+                        <p class="text-center text-xs text-gray-500 mt-2">日本麻将全球增长的文化引擎正反馈循环</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md border">
+                         <h4 class="text-xl font-semibold mb-4">竞技化与职业化</h4>
+                        <p class="text-gray-600 text-balance">麻将正从社交消遣转变为严肃的智力运动。世界立直麻将锦标赛(WRC)、世界麻将锦标赛(WMC)等组织在全球范围内举办赛事。尤其在日本，M-League等职业联赛以其“健康麻将”的理念和高水平的竞技性，为麻将的商业化和职业化发展提供了范本。</p>
+                        <div class="mt-6 space-y-3">
+                            <div class="flex items-center">
+                                <span class="text-lg mr-2">🏆</span>
+                                <span class="font-medium">世界级赛事组织：</span>
+                                <span class="text-gray-600 ml-1">WRC, WMC, EMA</span>
+                            </div>
+                             <div class="flex items-center">
+                                <span class="text-lg mr-2">💼</span>
+                                <span class="font-medium">职业联赛范本：</span>
+                                <span class="text-gray-600 ml-1">日本 M-League</span>
+                            </div>
+                             <div class="flex items-center">
+                                <span class="text-lg mr-2">🌐</span>
+                                <span class="font-medium">国际承认：</span>
+                                <span class="text-gray-600 ml-1">获国际智力运动联盟(IMSA)承认</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="future">
+                 <div class="text-center mb-12">
+                    <h3 class="text-3xl font-bold text-gray-800">未来展望</h3>
+                    <p class="mt-2 text-gray-600 text-balance">技术革新与文化融合将如何引导麻将的下一个时代？</p>
+                </div>
+                <div class="max-w-3xl mx-auto space-y-4">
+                    <div class="accordion-item bg-white border rounded-lg shadow-sm">
+                        <button class="accordion-header w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-gray-50">
+                            <span>牌中的幽灵：超人AI的影响</span>
+                            <span class="accordion-icon transform transition-transform text-amber-600 text-2xl">+</span>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="p-4 border-t">
+                                <p class="text-gray-600 text-balance">微软研发的AI Suphx在“天凤”平台达到顶级水平，其表现超越了99.99%的人类玩家。AI将成为顶尖选手的必备训练工具，革新人类对麻将策略的认知，尤其是在防守和风险评估方面。未来的麻将策略将是人机协作的产物。</p>
+                                <div class="mt-4">
+                                     <div class="chart-container" style="max-width:400px; height:200px;">
+                                        <canvas id="aiChart"></canvas>
+                                    </div>
+                                    <p class="text-center text-sm text-gray-500 mt-2">Suphx (AI) vs 人类顶级玩家表现</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item bg-white border rounded-lg shadow-sm">
+                        <button class="accordion-header w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-gray-50">
+                            <span>市场与商业化潜力</span>
+                            <span class="accordion-icon transform transition-transform text-amber-600 text-2xl">+</span>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="p-4 border-t">
+                                <p class="text-gray-600 text-balance">市场增长将继续由在线平台驱动，商业模式包括游戏内购、订阅服务和赛事报名等。观赏性强的职业麻将电子竞技潜力巨大。此外，从复古牌具到现代设计师款式的实体产品市场，也构成了重要的辅助市场。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                     <div class="accordion-item bg-white border rounded-lg shadow-sm">
+                        <button class="accordion-header w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-gray-50">
+                            <span>新领域：沉浸式社交体验</span>
+                            <span class="accordion-icon transform transition-transform text-amber-600 text-2xl">+</span>
+                        </button>
+                        <div class="accordion-content">
+                             <div class="p-4 border-t">
+                                <p class="text-gray-600 text-balance">麻将的持久魅力在于其社交和触感属性——“牌张的碰撞声”。目前VR麻将多为单机版。真正的潜力在于创造能复刻“围坐一桌”社交感的沉浸式多人VR/AR体验，将线上便利性与线下社交感结合，这可能主导市场的下一个发展阶段。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item bg-white border rounded-lg shadow-sm">
+                        <button class="accordion-header w-full text-left p-4 font-semibold text-lg flex justify-between items-center hover:bg-gray-50">
+                            <span>统一的困境：多样性 vs 全球标准</span>
+                            <span class="accordion-icon transform transition-transform text-amber-600 text-2xl">+</span>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="p-4 border-t">
+                                <p class="text-gray-600 text-balance">这是全球麻将社区的核心困境。规则的多样性是其魅力所在，却也阻碍其成为像国际象棋一样统一的智力运动。未来可能是多种玩法作为不同“项目”并存的“奥林匹克模式”，或是由市场力量推动某一种玩法（很可能是立直麻将）成为事实上的国际标准。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-24">
+        <div class="container mx-auto px-4 py-8 text-center">
+            <p class="font-semibold text-lg">麻雀游戏的持久魅力</p>
+            <p class="mt-2 text-gray-400 max-w-3xl mx-auto text-balance">无论作为朋友间的情感纽带，职业选手间的智力对决，还是AI研究的前沿阵地，麻将的四风将继续吹向全球，其牌张的碰撞声也将在新的时代中持续回响。</p>
+        </div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const variantData = {
+            xuezhan: {
+                title: "血战到底 (四川麻将)",
+                description: "四川地区极具代表性的玩法，以其快节奏和持续战斗的特点而闻名。核心在于“战斗到最后一人”。",
+                rules: "必须打缺一门（定缺）。一家和牌后，游戏不结束，未和牌的玩家继续打，直到三家和牌或牌墙摸完。不能吃牌。",
+                scoring: "基于“根”（四张相同的牌）和牌型的番数计算。点炮者一人承担，自摸则三家支付。",
+                strategy: [10, 2, 9, 3, 7]
+            },
+            xueliu: {
+                title: "血流成河 (四川麻将)",
+                description: "“血战到底”的进阶版，节奏更快，战局更刺激。玩家和牌后可以继续游戏，争取多次和牌。",
+                rules: "与血战到底类似，必须打缺一门。和牌后，玩家将和的牌亮出，然后打出一张牌继续参与牌局，直到牌墙摸完。",
+                scoring: "多次和牌，分数累加。自摸、杠牌等收益极高，鼓励玩家在和牌后继续做大牌。",
+                strategy: [10, 1, 10, 4, 8]
+            },
+            riichi: {
+                title: "日本立直麻将",
+                description: "一种策略和战术性极强的变体，在休闲和职业领域都广受欢迎，尤其强调防守和风险管理。",
+                rules: "役、立直、振听。和牌必须有“役”（特定牌型）。门前清听牌时可宣告“立直”增加收益和博弈性。“振听”规则极大强化了防守的重要性。",
+                scoring: "符番制。综合计算“番”（指数增长）和“符”（基础分），导致分数差距极大，高风险高回报。",
+                strategy: [7, 9, 6, 8, 5]
+            },
+            mcr: {
+                title: "国标麻将 (MCR)",
+                description: "由中国国家体育总局于1998年制定，旨在将麻将标准化为一项健康的智力运动，剔除博弈成分和地方规则的差异。",
+                rules: "8番起和。和牌牌型必须由规定的番种构成，且总分值不低于8分。这迫使玩家必须积极构筑特定的、有难度的牌型。",
+                scoring: "加法计分制。基于81个独立的“番种”进行计算，最终得分为底分和所有有效番种分值之和。",
+                strategy: [8, 5, 4, 9, 3]
+            },
+            beijing: {
+                title: "北京麻将",
+                description: "北京地区的传统玩法，规则简单明快，有独特的“吃碰杠跑”机制和计分方式。",
+                rules: "可以吃、碰、杠。和牌必须有“番”，如“对对和”、“清一色”等，否则为“屁和”，不能和牌。有时会加入“捉五魁”等特殊规则。",
+                scoring: "基于番数计算，有庄家翻倍、点炮者“包庄”等规则，强调对庄家的攻防。",
+                strategy: [7, 6, 8, 5, 6]
+            },
+            hk: {
+                title: "香港麻将",
+                description: "一种节奏明快、规则直接、常与博弈结合的玩法，在华语圈非常流行。",
+                rules: "通常三番起和。规则简单直接，没有过多限制，鼓励快速和牌。",
+                scoring: "指数制。每多一番，得分翻倍，计算简单，刺激性强。",
+                strategy: [9, 4, 8, 4, 6]
+            },
+            tw: {
+                title: "台湾麻将",
+                description: "一种独特的16张手牌变体，侧重于累积高“台”数和利用庄家优势。",
+                rules: "16张手牌。庄家角色非常强大，连庄（连续做庄）会显著增加和牌时的“台”数。",
+                scoring: "加法制（底+台）。得分由一个基础分（底）加上每“台”（计分元素）的对应分数构成。",
+                strategy: [6, 6, 7, 7, 7]
+            },
+            nmjl: {
+                title: "美国麻将 (NMJL)",
+                description: "一种为社交娱乐设计的高度动态化的变体，由美国麻将联盟(NMJL)管理，每年发布一张新的官方计分卡。",
+                rules: "百搭牌(Joker)、查尔斯顿换牌、年度计分卡。和牌牌型必须与当年计分卡上列出的完全匹配，核心是模式识别和适应能力。",
+                scoring: "固定牌型分值。计分卡上的每种牌型都有一个预设的分值，简单明了。",
+                strategy: [5, 3, 9, 6, 8]
+            },
+            ningbo: {
+                title: "宁波麻将",
+                description: "浙江宁波地区的特色玩法，以其独特的“台风”和“财神”（百搭牌）机制著称，策略性强。",
+                rules: "核心在于“台风”和“财神”。开局后翻一张牌确定“财神”（百搭牌）。玩家若持有与本圈风（东风圈、南风圈等）相同的风牌刻子，则形成“台风”，可获高额奖励。",
+                scoring: "基于番数和台风计算。台风可提供巨额加成，是游戏的核心博弈点。财神的使用灵活，但有些大牌型会限制财神的数量。",
+                strategy: [6, 7, 7, 7, 5]
+            },
+            fenghua: {
+                title: "奉化麻将",
+                description: "宁波奉化地区的特色玩法，是宁波麻将的一个高刺激性分支，以翻财神（百搭）和“级数”计分为核心。",
+                rules: "翻财神定百搭：开局后翻一张牌，其下一张牌成为本局的百搭牌。有“三牢”、“四牢”等特殊的杠牌奖励规则，即连续杠牌有额外加成，鼓励玩家积极开杠。",
+                scoring: "采用“级数”计分。基础分较低，但通过和牌、杠牌等方式不断提升“级数”，最终得分呈指数级增长，非常刺激。",
+                strategy: [8, 4, 8, 6, 7]
+            }
+        };
+
+        const variantTitleEl = document.getElementById('variant-title');
+        const variantDescEl = document.getElementById('variant-description');
+        const variantRulesEl = document.getElementById('variant-rules');
+        const variantScoringEl = document.getElementById('variant-scoring');
+        const variantBtns = document.querySelectorAll('.variant-btn');
+
+        const strategyCtx = document.getElementById('strategyChart').getContext('2d');
+        let strategyChart;
+
+        function createStrategyChart(data) {
+            if (strategyChart) {
+                strategyChart.destroy();
+            }
+            strategyChart = new Chart(strategyCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['进攻性', '防守性', '速度', '策略复杂度', '运气成分'],
+                    datasets: [{
+                        label: '策略重心',
+                        data: data,
+                        backgroundColor: 'rgba(160, 82, 45, 0.2)',
+                        borderColor: 'rgba(160, 82, 45, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(160, 82, 45, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(160, 82, 45, 1)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            pointLabels: { 
+                                font: { size: window.innerWidth < 768 ? 10 : 12 }, 
+                                color: '#383838' 
+                            },
+                            ticks: {
+                                backdropColor: 'transparent',
+                                stepSize: 2,
+                                font: { size: 10 },
+                                color: 'rgba(0,0,0,0.5)'
+                            },
+                            min: 0,
+                            max: 10
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+        
+        function updateVariantContent(variantKey) {
+            const data = variantData[variantKey];
+            variantTitleEl.textContent = data.title;
+            variantDescEl.textContent = data.description;
+            variantRulesEl.textContent = data.rules;
+            variantScoringEl.textContent = data.scoring;
+            
+            createStrategyChart(data.strategy);
+
+            variantBtns.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.variant === variantKey);
+            });
+        }
+
+        variantBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                updateVariantContent(btn.dataset.variant);
+            });
+        });
+
+        updateVariantContent('xuezhan');
+
+        const accordionItems = document.querySelectorAll('.accordion-item');
+        accordionItems.forEach(item => {
+            const header = item.querySelector('.accordion-header');
+            const content = item.querySelector('.accordion-content');
+            const icon = item.querySelector('.accordion-icon');
+            header.addEventListener('click', () => {
+                const isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
+                
+                accordionItems.forEach(i => {
+                    if (i !== item) {
+                       i.querySelector('.accordion-content').style.maxHeight = '0px';
+                       i.querySelector('.accordion-icon').textContent = '+';
+                       i.querySelector('.accordion-icon').classList.remove('rotate-45');
+                    }
+                });
+
+                if (!isOpen) {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    icon.textContent = '-';
+                    icon.classList.add('rotate-45');
+                } else {
+                    content.style.maxHeight = '0px';
+                    icon.textContent = '+';
+                    icon.classList.remove('rotate-45');
+                }
+            });
+        });
+
+        const aiCtx = document.getElementById('aiChart').getContext('2d');
+        new Chart(aiCtx, {
+            type: 'bar',
+            data: {
+                labels: ['人类顶尖职业选手', 'Suphx (AI)'],
+                datasets: [{
+                    label: '天凤平台段位分',
+                    data: [3700, 5300],
+                    backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(255, 99, 132, 0.6)'],
+                    borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: { beginAtZero: true, grid: { display: false } }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+        
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('main > div > section');
+        const scrollOffset = 100;
+
+        function updateActiveNav() {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - scrollOffset) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').substring(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveNav);
+        updateActiveNav(); // Initial check
+
+    });
+    </script>
+</body>
+</html>
