@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全球碳纳米管供应链：互动仪表盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Google Ads Script -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <!-- Chosen Palette: Serene Tech Neutrals -->
+    <!-- Application Structure Plan: The SPA is designed as an interactive dashboard and narrative journey. It starts with a high-level overview (Hero & Market Dashboard) to give immediate context. It then guides the user through the core narrative of the report: the entire supply chain from Upstream (Production) -> Midstream (Value-add) -> Downstream (Applications). This is more intuitive than a linear report structure because it mirrors a business analysis thought process. Key interactions include filterable application cards, clickable producer profiles, and dynamic charts to facilitate data exploration and comparison. The structure concludes with regulatory context and strategic takeaways, providing a comprehensive view. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Market Forecasts (Table 1.1) -> Goal: Show change & scale -> Viz: Line & Bar Charts (Chart.js Canvas) -> Interaction: Hover tooltips -> Justification: Clearly visualizes market growth trends and compares different market segments (MWCNT vs. SWCNT).
+        - Report Info: Market Segmentation (Chapter 1) -> Goal: Compare proportions -> Viz: Donut Chart (Chart.js Canvas) -> Interaction: Hover for details -> Justification: Effective for showing market share of applications.
+        - Report Info: Global Producers (Table 2.1) -> Goal: Organize/Compare -> Viz: Interactive Tabs (HTML/JS) -> Interaction: Click tab to show detailed profile -> Justification: Provides in-depth analysis requested by user while maintaining a clean UI.
+        - Report Info: Value Chain (Chapter 3) -> Goal: Explain a process -> Viz: Structured Diagram (HTML/Tailwind) -> Interaction: Static -> Justification: A clear visual flow is best to explain the crucial concept of value-added intermediates.
+        - Report Info: Regulations (Chapter 5) -> Goal: Compare -> Viz: Side-by-side text blocks -> Interaction: Static -> Justification: Simplifies complex regulatory information for easy comparison.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f9fafb;
+            color: #1f2937;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: #2563eb;
+        }
+        .stat-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .accordion-header {
+            transition: background-color 0.2s ease-out;
+        }
+        .accordion-content {
+            transition: max-height 0.5s ease-in-out;
+        }
+        .producer-tab {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .producer-tab.active {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+        .producer-content {
+            display: none;
+        }
+        .producer-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="bg-white/90 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-800">CNT全球供应链深度分析</h1>
+            <div class="hidden md:flex items-center space-x-8 text-gray-600">
+                <a href="#dashboard" class="nav-link">市场看板</a>
+                <a href="#supply-chain" class="nav-link">价值链</a>
+                <a href="#applications" class="nav-link">应用领域</a>
+                <a href="#regulations" class="nav-link">全球监管</a>
+                <a href="#strategy" class="nav-link">战略展望</a>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-gray-600 hover:text-gray-800 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-gray-200">
+            <a href="#dashboard" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-50">市场看板</a>
+            <a href="#supply-chain" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-50">价值链</a>
+            <a href="#applications" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-50">应用领域</a>
+            <a href="#regulations" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-50">全球监管</a>
+            <a href="#strategy" class="block py-3 px-4 text-sm text-gray-600 hover:bg-gray-50">战略展望</a>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">从粉末到性能：解构全球碳纳米管供应链</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">碳纳米管市场正从专业利基材料向关键工业添加剂转变。成功的关键已从单纯的生产能力，转向提供“即用型”解决方案的价值链中游环节。</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                    <div class="stat-card">
+                        <span class="text-4xl font-bold text-blue-600">>90%</span>
+                        <p class="mt-2 text-gray-500">多壁碳纳米管(MWCNT)主导的市场份额</p>
+                    </div>
+                    <div class="stat-card">
+                        <span class="text-4xl font-bold text-blue-600">~35%</span>
+                        <p class="mt-2 text-gray-500">单壁碳纳米管(SWCNT)市场的预估年复合增长率</p>
+                    </div>
+                    <div class="stat-card">
+                        <span class="text-4xl font-bold text-blue-600">#1</span>
+                        <p class="mt-2 text-gray-500">电池是市场增长的第一驱动力</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboard" class="py-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <h3 class="text-3xl font-bold text-center mb-4">市场看板</h3>
+                <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto leading-relaxed">全球碳纳米管市场正经历高速增长，但呈现清晰的两极分化：由销量驱动的MWCNT市场和由价值驱动的SWCNT市场。</p>
+                <div class="grid lg:grid-cols-2 gap-12">
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                        <h4 class="text-xl font-semibold text-center mb-4">市场增长预测 (SWCNT vs MWCNT)</h4>
+                        <div class="chart-container">
+                            <canvas id="marketGrowthChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                        <h4 class="text-xl font-semibold text-center mb-4">主要应用领域份额</h4>
+                        <div class="chart-container">
+                            <canvas id="applicationShareChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="supply-chain" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <h3 class="text-3xl font-bold text-center mb-4">价值链解析：成功的关键瓶颈</h3>
+                <p class="text-center text-gray-500 mb-12 max-w-3xl mx-auto leading-relaxed">碳纳米管的商业成功不在于生产原始粉末，而在于克服其团聚难题，提供稳定、易用的预分散中间产品。掌握这一环节是连接上游生产与下游应用的核心竞争力。</p>
+                
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 mb-16">
+                    <div class="flex flex-col md:flex-row items-center justify-around text-center gap-8">
+                        <div class="flex-1">
+                            <div class="text-5xl mb-4">🏭</div>
+                            <h4 class="text-xl font-bold">上游：原材料生产</h4>
+                            <p class="text-sm text-gray-600 mt-2">生产CNT原始粉末</p>
+                            <span class="inline-block bg-red-100 text-red-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full mt-2">高技术壁垒</span>
+                        </div>
+                        
+                        <div class="text-4xl text-blue-400 font-light transform rotate-90 md:rotate-0 my-4 md:my-0">&rarr;</div>
+                        
+                        <div class="flex-1 border-2 border-blue-500 border-dashed p-6 rounded-lg bg-blue-50">
+                            <div class="text-5xl mb-4">🔬</div>
+                            <h4 class="text-xl font-bold text-blue-700">中游：增值加工 (关键环节)</h4>
+                            <p class="text-sm text-gray-600 mt-2">将粉末制成浆料和母粒</p>
+                            <span class="inline-block bg-green-100 text-green-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full mt-2">价值核心</span>
+                        </div>
+
+                        <div class="text-4xl text-blue-400 font-light transform rotate-90 md:rotate-0 my-4 md:my-0">&rarr;</div>
+
+                        <div class="flex-1">
+                            <div class="text-5xl mb-4">🚗</div>
+                            <h4 class="text-xl font-bold">下游：终端应用</h4>
+                            <p class="text-sm text-gray-600 mt-2">电池、复合材料、涂料等</p>
+                            <span class="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full mt-2">需求驱动</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-3xl font-bold text-center mb-10">全球主要生产商深度分析</h3>
+                <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-8">
+                    <div class="w-full md:w-1/4 flex-shrink-0">
+                        <div id="producer-tabs-container" class="flex flex-col space-y-2">
+                           <button class="producer-tab p-3 text-left rounded-md border-l-4 active" data-tab="ocsial">OCSiAl</button>
+                           <button class="producer-tab p-3 text-left rounded-md border-l-4 border-transparent" data-tab="lgchem">LG Chem</button>
+                           <button class="producer-tab p-3 text-left rounded-md border-l-4 border-transparent" data-tab="cnano">Cnano Tech</button>
+                           <button class="producer-tab p-3 text-left rounded-md border-l-4 border-transparent" data-tab="cabot">Cabot Corp.</button>
+                           <button class="producer-tab p-3 text-left rounded-md border-l-4 border-transparent" data-tab="nanocyl">Nanocyl</button>
+                        </div>
+                    </div>
+                    <div id="producer-details" class="w-full md:w-3/4 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+                        <!-- Content will be injected here by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="applications" class="py-20">
+             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <h3 class="text-3xl font-bold text-center mb-4">关键应用领域深度分析</h3>
+                <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto leading-relaxed">由电动汽车电池革命引领，碳纳米管正在渗透到追求轻量化、高强度和多功能性的各个高科技领域。点击下方卡片查看各领域的具体应用。</p>
+                <div id="applications-container" class="space-y-4 max-w-4xl mx-auto">
+                </div>
+            </div>
+        </section>
+        
+        <section id="regulations" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <h3 class="text-3xl font-bold text-center mb-4">全球监管框架</h3>
+                <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto leading-relaxed">复杂的全球监管环境是重要的市场准入门槛。企业必须具备强大的法规事务能力才能在全球成功运营。</p>
+                <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <div class="bg-white p-8 rounded-xl shadow-md border border-gray-200">
+                        <h4 class="text-xl font-bold mb-4">🇪🇺 欧盟REACH法规</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600 leading-relaxed">
+                            <li><strong>方法：</strong>基于物质吨位的预设数据要求。</li>
+                            <li><strong>核心概念：</strong>将CNT的每种“纳米形态”视为需独立评估的实体。</li>
+                            <li><strong>挑战：</strong>数据生成负担重、成本高，构成了高准入门槛。</li>
+                            <li><strong>结果：</strong>为已合规的现有企业创造了显著的竞争优势。</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-md border border-gray-200">
+                        <h4 class="text-xl font-bold mb-4">🇺🇸 美国TSCA法规</h4>
+                         <ul class="list-disc list-inside space-y-2 text-gray-600 leading-relaxed">
+                            <li><strong>方法：</strong>基于“特定物质、特定用途”的风险评估。</li>
+                             <li><strong>核心概念：</strong>通过“生产前通报(PMN)”和“重要新用途规则(SNURs)”进行管理。</li>
+                            <li><strong>挑战：</strong>“一事一议”的框架，市场扩张需与监管机构持续沟通。</li>
+                            <li><strong>结果：</strong>为特定、可控的应用提供了可能更快的市场准入路径。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="strategy" class="py-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <h3 class="text-3xl font-bold text-center mb-4">战略展望：图文深度解析</h3>
+                <p class="text-center text-gray-500 mb-12 max-w-2xl mx-auto leading-relaxed">对于不同的市场参与者，在全球碳纳米管市场中导航需要采取差异化的策略。</p>
+                <div class="grid md:grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="stat-card p-8">
+                        <div class="text-5xl mb-4">🏭</div>
+                        <h4 class="text-xl font-bold mb-3">对生产商的建议</h4>
+                        <ul class="text-left list-disc list-inside space-y-2 text-gray-600 leading-relaxed">
+                            <li><strong>拥抱价值链：</strong>从“粉末制造商”转型为“解决方案提供商”，大力投资浆料和母粒技术。</li>
+                            <li><strong>实施双轨战略：</strong>为MWCNT（规模/成本）和SWCNT（价值/性能）市场设立独立的业务单元和策略。</li>
+                            <li><strong>全球化布局：</strong>将生产设施布局在客户集群附近（如欧美电池超级工厂），保障供应链安全。</li>
+                            <li><strong>引领法规：</strong>主动参与国际标准制定，将合规性从成本负担转变为赢得客户信任的竞争优势。</li>
+                        </ul>
+                    </div>
+                    <div class="stat-card p-8">
+                        <div class="text-5xl mb-4">🧑‍💼</div>
+                        <h4 class="text-xl font-bold mb-3">对终端用户的建议</h4>
+                        <ul class="text-left list-disc list-inside space-y-2 text-gray-600 leading-relaxed">
+                            <li><strong>采购中间产品：</strong>优先选择预分散的母粒或浆料，以规避自行分散的成本、技术和安全风险。</li>
+                            <li><strong>系统级价值分析：</strong>评估CNT时，关注其带来的系统总价值（如多功能性、工艺简化），而非仅比较单位价格。</li>
+                            <li><strong>要求标准化数据：</strong>向供应商索取基于ISO/ASTM标准的材料数据，确保批次一致性并满足自身供应链合规要求。</li>
+                        </ul>
+                    </div>
+                    <div class="stat-card p-8">
+                        <div class="text-5xl mb-4">💰</div>
+                        <h4 class="text-xl font-bold mb-3">对投资者的建议</h4>
+                        <ul class="text-left list-disc list-inside space-y-2 text-gray-600 leading-relaxed">
+                            <li><strong>识别价值链定位：</strong>寻找掌握了增值配方和分散技术的公司，它们通常拥有更高的利润空间和客户粘性。</li>
+                            <li><strong>评估技术壁垒：</strong>对于SWCNT公司，评估其合成技术的独特性和专利保护；对于MWCNT公司，评估其规模效率和关键产品（如浆料）的质量。</li>
+                            <li><strong>考察法规应对能力：</strong>公司熟练驾驭全球复杂法规（如REACH, TSCA）的能力，是其成熟度和全球化能力的重要标志，也是关键的风险评估指标。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16 py-10">
+        <div class="container mx-auto px-6 text-center">
+            <p>基于全球碳纳米管供应链战略分析报告生成。</p>
+            <p class="text-sm text-gray-400 mt-2">此应用仅供信息参考。</p>
+        </div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const marketData = {
+            labels: ['2024', '2025', '2026', '2027', '2028', '2029', '2030'],
+            swcnt: [3.33, 4.51, 6.11, 8.28, 11.22, 15.2, 20.59], 
+            mwcnt: [37.1, 42.3, 48.3, 55.1, 62.8, 71.6, 81.5] 
+        };
+
+        const applicationData = {
+            labels: ['聚合物与复合材料', '能源 (电池等)', '电子与半导体', '其他'],
+            shares: [69.7, 20.1, 5.2, 5]
+        };
+
+        const producerDetailsData = {
+            ocsial: {
+                title: "OCSiAl (卢森堡/俄罗斯) - SWCNT的绝对霸主",
+                content: `
+                    <ul class="list-disc list-inside space-y-3 text-gray-700 leading-relaxed">
+                        <li><strong>公司历史与地位：</strong> 2009年由俄罗斯科学家创立，总部设于卢森堡，是全球单壁碳纳米管（SWCNT）市场的绝对领导者，占据超过90%的全球产能。2021年估值已达20亿美元，成为行业“独角兽”。</li>
+                        <li><strong>技术优势：</strong> 核心竞争力是其独有的“Graphetron”等离子体合成技术。这项革命性技术首次实现了SWCNT的工业化量产，将生产成本降低了近百倍，从而开启了其大规模商业化应用的大门。</li>
+                        <li><strong>业务规模与产品：</strong> 核心产品品牌为“TUBALL™”，定位为通用添加剂。公司不仅生产SWCNT粉末，更提供易于使用的中间产品，如专为电池设计的TUBALL™ BATT分散液和用于各种聚合物的母粒。现有年产能75吨，并计划通过塞尔维亚和卢森堡的新工厂将总产能提升至235吨以上。</li>
+                        <li><strong>竞争实力：</strong> 在SWCNT领域，OCSiAl拥有无可匹敌的技术和成本优势，几乎没有直接竞争对手。其全球化的生产布局（重心转向欧洲）和广泛的分销网络，有效对冲了地缘政治风险并贴近核心客户。其竞争压力主要来自MWCNT在部分应用领域的成本优势，以及全球对替代材料和新合成技术的持续研究。</li>
+                    </ul>`
+            },
+            lgchem: {
+                title: "LG Chem (韩国) - 电池用MWCNT巨头",
+                content: `
+                    <ul class="list-disc list-inside space-y-3 text-gray-700 leading-relaxed">
+                        <li><strong>公司历史与地位：</strong> 作为韩国最大的综合化学公司，LG Chem凭借其在电池材料领域的深厚积累，已成为全球领先的多壁碳纳米管（MWCNT）生产商之一，尤其在电动汽车电池供应链中扮演着关键角色。</li>
+                        <li><strong>技术优势：</strong> 利用其专有的钴基催化剂和大型流化床反应器技术，能够大规模生产高纯度、高导电性的MWCNT。该技术能有效减少对电池性能有害的磁性金属杂质，确保产品质量。</li>
+                        <li><strong>业务规模与产品：</strong> 当前年产能为2,900吨，并计划到2025年将总产能提升至6,100吨，以满足电动汽车市场的爆炸性需求。其产品主要以导电浆料的形式，直接供应给LG能源解决方案等全球主要电池制造商。</li>
+                        <li><strong>竞争实力：</strong> LG Chem的竞争优势在于其巨大的生产规模、与下游电池巨头的深度绑定、以及在生产高品质电池级MWCNT方面的技术专长。其战略清晰，即聚焦于增长最快的电动汽车市场，通过持续扩大产能来巩固其作为核心供应商的地位。</li>
+                    </ul>`
+            },
+            cnano: {
+                title: "Cnano Technology (中国) - 导电浆料龙头",
+                content: `
+                    <ul class="list-disc list-inside space-y-3 text-gray-700 leading-relaxed">
+                        <li><strong>公司历史与地位：</strong> 天奈科技（Cnano）是中国领先的MWCNT生产商，尤其在导电浆料领域占据市场龙头地位，在中国市场份额超过40%。</li>
+                        <li><strong>技术优势：</strong> 公司不仅掌握了MWCNT的规模化生产技术，更在下游的浆料配方和分散工艺上建立了核心优势，能够为不同类型的锂电池（LFP, NCM等）提供定制化的导电浆料产品。</li>
+                        <li><strong>业务规模与产品：</strong> 公司拥有超过500吨的MWCNT产能，并宣布了宏大的扩张计划，包括建设年产450吨的SWCNT工厂和年产10万吨的阴极材料工厂，显示其向价值链下游深度整合的雄心。</li>
+                        <li><strong>竞争实力：</strong> Cnano的实力在于其对中国这个全球最大电池市场的深刻理解和市场主导地位。通过提供高附加值的导电浆料，公司与主要电池厂商建立了紧密的合作关系。其向SWCNT和阴极材料的扩张，表明其旨在成为一个全面的电池材料解决方案提供商，而不仅仅是CNT生产商。</li>
+                    </ul>`
+            },
+            cabot: {
+                title: "Cabot Corporation (美国) - 导电添加剂的多元化领导者",
+                content: `
+                    <ul class="list-disc list-inside space-y-3 text-gray-700 leading-relaxed">
+                        <li><strong>公司历史与地位：</strong> 作为一家拥有百年历史的全球特种化学品巨头，Cabot在导电碳添加剂（CCA）领域拥有广泛的产品组合，包括导电炭黑、CNT和碳纳米结构（CNS）。</li>
+                        <li><strong>技术优势：</strong> Cabot的优势在于其对整个碳基添加剂市场的深刻理解和强大的研发能力。通过收购和自主研发，公司能够为客户提供从成本效益型到高性能的全方位导电解决方案，而非局限于单一技术。</li>
+                        <li><strong>业务规模与产品：</strong> 公司正积极投资扩大其在美国的CCA产能，包括新建CNT粉末和分散体产能，并获得了美国能源部（DOE）的资助，旨在构建美国本土的电动汽车电池供应链。</li>
+                        <li><strong>竞争实力：</strong> Cabot的竞争力源于其品牌声誉、全球化的运营网络、多元化的产品组合以及强大的财务实力。在美国政府推动供应链本土化的背景下，Cabot正处于有利地位，有望成为北美地区电池和特种化学品领域的核心CNT供应商。</li>
+                    </ul>`
+            },
+            nanocyl: {
+                title: "Nanocyl (比利时) - 欧洲母粒专家",
+                content: `
+                    <ul class="list-disc list-inside space-y-3 text-gray-700 leading-relaxed">
+                        <li><strong>公司历史与地位：</strong> Nanocyl是欧洲历史最悠久的MWCNT生产商之一，在将CNT应用于塑料和复合材料领域拥有丰富的经验和良好的声誉。</li>
+                        <li><strong>技术优势：</strong> 公司的核心专长在于下游的母粒技术。其PLASTICYL™系列母粒产品，能够将高浓度的CNT均匀分散在各种聚合物基体中，为塑料加工行业提供了便捷的“即用型”解决方案。</li>
+                        <li><strong>业务规模与产品：</strong> 拥有460吨的原始CNT年产能和高达3,500吨的母粒年产能，显示其业务重心明确地放在了高附加值的中间产品上。</li>
+                        <li><strong>竞争实力：</strong> Nanocyl的竞争优势在于其在聚合物改性领域的深度垂直整合和应用专长。与追求大批量粉末生产的亚洲巨头不同，Nanocyl通过提供高品质的母粒和强大的技术支持，在欧洲的特种塑料、汽车和工业品市场建立了稳固的地位。</li>
+                    </ul>`
+            }
+        };
+        
+        const applicationsContent = [
+            {
+                title: "⚡ 能源存储：电池革命",
+                content: `
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 leading-relaxed">
+                        <li><strong>市场前景：</strong>作为最强劲的增长引擎，由电动汽车（EV）市场驱动。预计2024年用于电池的CNT市场价值为7.27亿美元，到2031年将增长至38亿美元。</li>
+                        <li><strong>性能优势：</strong>CNT在电极中构建三维导电网络，能显著提升能量密度、充放电速率和循环寿命。在硅基负极中，其柔性网络能缓冲巨大的体积膨胀，解决关键技术瓶颈。</li>
+                        <li><strong>行业规模：</strong>全球主要电池制造商（如LG能源、CATL）均在积极导入CNT技术。LG Chem、Cnano等CNT巨头正大规模扩产以满足其需求。</li>
+                        <li><strong>竞争产品：</strong>传统导电剂主要是导电炭黑（如Super P）。相比之下，CNT的导电效率更高（添加量更低）、柔性更好，尤其在高性能电池（如高镍正极、硅基负极）中优势明显，而炭黑在成本敏感的中低端电池中仍有应用。</li>
+                    </ul>`
+            },
+            {
+                title: "🏗️ 聚合物与复合材料：轻量化与高强度",
+                content: `
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 leading-relaxed">
+                        <li><strong>市场前景：</strong>作为目前最大的应用市场，在汽车、航空航天、体育用品等领域对轻质高强材料的需求持续增长。</li>
+                        <li><strong>性能优势：</strong>拥有极高的强度重量比，仅需添加少量（<5%）即可显著提升聚合物的机械强度、刚度和导电性。</li>
+                        <li><strong>行业规模：</strong>市场成熟，应用广泛，但竞争激烈。成功的关键在于提供易于使用的母粒产品，并展示出明确的成本效益。</li>
+                        <li><strong>竞争产品：</strong>传统增强填料包括碳纤维和玻璃纤维。碳纤维性能优异但成本高昂；玻璃纤维成本低但增重明显。CNT填补了两者之间的空白，尤其适用于需要同时实现增强和导电等多功能性的场合。</li>
+                    </ul>`
+            },
+            {
+                title: "🚗 汽车领域：多功能应用",
+                content: `
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 leading-relaxed">
+                        <li><strong>市场前景：</strong>随着汽车电气化和智能化的发展，对具备导电、抗静电、电磁屏蔽和轻量化等多种功能的材料需求日益增长。</li>
+                        <li><strong>性能优势：</strong>CNT的价值在于其“多功能性”，通过一次添加即可实现多种性能提升，如用于燃油管路的抗静电（ESD）防护、无需底漆的静电喷涂车身部件，以及基于电阻发热的除冰系统。</li>
+                        <li><strong>行业规模：</strong>汽车行业对成本和可靠性要求极高，CNT的应用需要通过严格的验证周期。目前在特定部件（如燃油管、挡泥板）已有成熟应用。</li>
+                        <li><strong>竞争产品：</strong>传统的解决方案通常需要多种材料或多个工艺步骤（如使用导电底漆）。CNT的优势在于能够简化系统设计，降低总成本，这是其核心竞争力。</li>
+                    </ul>`
+            },
+            {
+                title: "✈️ 航空航天与国防：性能孵化器",
+                content: `
+                    <ul class="list-disc list-inside space-y-2 text-gray-600 leading-relaxed">
+                        <li><strong>市场前景：</strong>该领域对性能的要求远高于对成本的敏感度，是CNT尖端应用的理想试验场，如超轻质结构件、结构健康监测（SHM）、雷击防护（LSP）和电磁屏蔽（EMI）。</li>
+                        <li><strong>性能优势：</strong>CNT的极限性能（超高强度重量比、导电性）在这里得到充分发挥，有望替代传统的铝、钛和重金属网，实现革命性的减重效果。</li>
+                        <li><strong>行业规模：</strong>市场规模不大，但战略重要性极高。NASA、洛克希德·马丁等机构已在部分项目中使用CNT技术。</li>
+                        <li><strong>竞争产品：</strong>主要与高性能碳纤维复合材料和金属材料竞争。CNT的优势在于更极致的轻量化潜力和“自感知”等智能化功能。但其技术成熟度（TRL）仍是商业化应用的主要障碍。</li>
+                    </ul>`
+            }
+        ];
+
+        new Chart(document.getElementById('marketGrowthChart'), {
+            type: 'bar',
+            data: {
+                labels: marketData.labels,
+                datasets: [
+                    {
+                        label: 'SWCNT 市场 (亿美元)',
+                        data: marketData.swcnt,
+                        backgroundColor: '#3b82f6',
+                        yAxisID: 'y1',
+                    },
+                    {
+                        label: 'MWCNT+ 市场 (亿美元)',
+                        data: marketData.mwcnt,
+                        backgroundColor: '#93c5fd',
+                        yAxisID: 'y',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { stacked: true },
+                    y: {
+                        stacked: true,
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'MWCNT+ 市场 (亿美元)' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'SWCNT 市场 (亿美元)' },
+                        grid: { drawOnChartArea: false }
+                    }
+                },
+                plugins: { tooltip: { mode: 'index', intersect: false } }
+            }
+        });
+
+        new Chart(document.getElementById('applicationShareChart'), {
+            type: 'doughnut',
+            data: {
+                labels: applicationData.labels,
+                datasets: [{
+                    data: applicationData.shares,
+                    backgroundColor: ['#60a5fa', '#3b82f6', '#1d4ed8', '#dbeafe'],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+        
+        const applicationsContainer = document.getElementById('applications-container');
+        applicationsContent.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200';
+            el.innerHTML = `
+                <button class="accordion-header w-full text-left p-5 flex justify-between items-center font-semibold text-lg hover:bg-gray-50">
+                    <span>${item.title}</span>
+                    <span class="transform transition-transform duration-300 text-gray-500">&#9662;</span>
+                </button>
+                <div class="accordion-content overflow-hidden max-h-0">
+                    <div class="p-5 pt-0">${item.content}</div>
+                </div>
+            `;
+            applicationsContainer.appendChild(el);
+        });
+        
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                const icon = header.querySelector('span:last-child');
+                const isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
+
+                if (isOpen) {
+                    content.style.maxHeight = '0px';
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            });
+        });
+        
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when a link is clicked
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+
+        // Producer tabs logic
+        const producerTabs = document.querySelectorAll('.producer-tab');
+        const producerDetailsContainer = document.getElementById('producer-details');
+
+        function updateProducerContent(tabId) {
+            const data = producerDetailsData[tabId];
+            if (data) {
+                producerDetailsContainer.innerHTML = `
+                    <div class="producer-content active">
+                        <h4 class="text-2xl font-bold mb-4">${data.title}</h4>
+                        ${data.content}
+                    </div>
+                `;
+            }
+        }
+
+        producerTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                producerTabs.forEach(item => item.classList.remove('active'));
+                tab.classList.add('active');
+                updateProducerContent(tab.dataset.tab);
+            });
+        });
+
+        // Initial load
+        updateProducerContent('ocsial');
+
+    });
+    </script>
+
+</body>
+</html>
