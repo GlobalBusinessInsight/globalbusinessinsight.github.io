@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>穿越雷区，走向大海，中国企业北美三十年合规经营全景扫描</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutral (Stone, Slate, Amber) -->
+    <!-- Application Structure Plan: A single-page application with a sticky top navigation bar for quick access to key sections: 1) A hero section summarizing the report's core thesis. 2) An interactive dashboard with filters (country, violation type, severity) to dynamically update key metrics, a timeline chart, and a detailed case list with pop-up modals. This dashboard structure is chosen to transform the static list of 50 cases into an explorable data tool, allowing users to discover trends and drill down into specifics. 3) A thematic analysis section using an accordion to present different violation types, making dense text digestible. 4) A responsive grid layout comparing the regulatory landscapes of the US, Canada, and Mexico for easy side-by-side analysis. 5) A final section presenting strategic advice in a clear, actionable format. This structure prioritizes non-linear exploration and user-driven discovery over the linear format of the source report, which is better for usability and engagement. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: 50 cases with year, country, type, severity. Goal: Show trends and allow filtering. Viz: Bar chart (Chart.js on Canvas) for cases over time, and a filterable list of cards. Interaction: Filters update chart and list; clicking a case card opens a modal with details. Justification: This is the most effective way to handle a large dataset interactively, allowing both macro (trends) and micro (case details) views.
+        - Report Info: Violation types (Customs Fraud, Sanctions, etc.). Goal: Explain complex concepts clearly. Viz: HTML/CSS-based diagrams (e.g., for Transshipment) and accordions. Interaction: User clicks to expand sections of interest. Justification: Avoids information overload by hiding details until requested. Custom diagrams with Tailwind are used to adhere to the NO SVG rule.
+        - Report Info: Comparison table of US, CA, MX. Goal: Easy comparison. Viz: Responsive 3-column grid of cards. Interaction: Static view. Justification: A card-based layout is more modern and mobile-friendly than a standard HTML table.
+        - Report Info: Overall statistics. Goal: Provide a quick overview. Viz: Dynamic summary stat cards. Interaction: Numbers update based on filters. Justification: Gives immediate feedback on filter selection.
+        - Library/Method: Chart.js for all charts on Canvas. Tailwind CSS for all styling and layout. Vanilla JS for all logic.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #c2410c; /* orange-600 */
+            border-bottom-color: #c2410c; /* orange-600 */
+        }
+        .filter-btn {
+            transition: all 0.2s;
+        }
+        .filter-btn.active {
+            background-color: #ea580c; /* orange-500 */
+            color: white;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .modal-overlay {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 900px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) { 
+            .chart-container { 
+                height: 400px; 
+            } 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-700">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-40 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl md:text-2xl font-bold text-slate-800">穿越雷区，走向大海</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#home" class="nav-link px-3 py-2 rounded-md text-sm font-medium">首页</a>
+                        <a href="#dashboard" class="nav-link px-3 py-2 rounded-md text-sm font-medium">案例仪表盘</a>
+                        <a href="#analysis" class="nav-link px-3 py-2 rounded-md text-sm font-medium">违规剖析</a>
+                        <a href="#landscape" class="nav-link px-3 py-2 rounded-md text-sm font-medium">监管格局</a>
+                        <a href="#strategy" class="nav-link px-3 py-2 rounded-md text-sm font-medium">战略建议</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-orange-500">
+                        <span class="sr-only">Open main menu</span>
+                        <div id="menu-icon-open" class="block h-6 w-6">
+                            <span class="block h-0.5 w-6 bg-current transform transition duration-500 ease-in-out"></span>
+                            <span class="block h-0.5 w-6 bg-current mt-1.5 transform transition duration-500 ease-in-out"></span>
+                            <span class="block h-0.5 w-6 bg-current mt-1.5 transform transition duration-500 ease-in-out"></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="md:hidden hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a href="#home" class="nav-link block px-3 py-2 rounded-md text-base font-medium">首页</a>
+                    <a href="#dashboard" class="nav-link block px-3 py-2 rounded-md text-base font-medium">案例仪表盘</a>
+                    <a href="#analysis" class="nav-link block px-3 py-2 rounded-md text-base font-medium">违规剖析</a>
+                    <a href="#landscape" class="nav-link block px-3 py-2 rounded-md text-base font-medium">监管格局</a>
+                    <a href="#strategy" class="nav-link block px-3 py-2 rounded-md text-base font-medium">战略建议</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl md:text-3xl font-extrabold text-slate-900 leading-tight">穿越雷区，走向大海，中国企业北美三十年合规经营全景扫描</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-slate-600">过去三十年，北美监管环境已从传统税务模式演变为与地缘政治、国家安全和人权高度绑定的复杂体系。</p>
+                <div class="mt-8 max-w-3xl mx-auto bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg">
+                    <p class="text-lg font-semibold text-amber-800">
+                        核心认知转变：最严厉的惩罚并非罚款，而是能够直接瘫痪企业核心运营的“商业死刑”——如运营禁令、供应链切断与强制退市。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboard" class="py-16 md:py-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-900">交互式案例仪表盘</h2>
+                    <p class="mt-2 text-lg text-slate-600">筛选和探索过去30年的50个关键违规案例，洞察宏观趋势。</p>
+                </div>
+
+                <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <label class="font-semibold text-slate-800 mb-2 block">国家</label>
+                            <div id="country-filter" class="flex flex-wrap gap-2">
+                                <button data-filter="country" data-value="all" class="filter-btn active w-full sm:w-auto flex-grow px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-md">全部</button>
+                                <button data-filter="country" data-value="USA" class="filter-btn w-full sm:w-auto flex-grow px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-md">🇺🇸 美国</button>
+                                <button data-filter="country" data-value="Canada" class="filter-btn w-full sm:w-auto flex-grow px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-md">🇨🇦 加拿大</button>
+                                <button data-filter="country" data-value="Mexico" class="filter-btn w-full sm:w-auto flex-grow px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-md">🇲🇽 墨西哥</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="font-semibold text-slate-800 mb-2 block">违规类型</label>
+                            <select id="type-filter" data-filter="type" class="w-full px-4 py-2 bg-slate-100 border-transparent rounded-md focus:ring-orange-500 focus:border-orange-500">
+                                <option value="all">所有类型</option>
+                                <option value="Customs">海关与贸易欺诈</option>
+                                <option value="Sanctions">制裁与出口管制</option>
+                                <option value="UFLPA">UFLPA/强迫劳动</option>
+                                <option value="Financial">财务欺诈与证券违规</option>
+                                <option value="IP">知识产权与商业秘密</option>
+                                <option value="Consumer">消费者保护与合同违约</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-semibold text-slate-800 mb-2 block">处罚严重性</label>
+                             <select id="severity-filter" data-filter="severity" class="w-full px-4 py-2 bg-slate-100 border-transparent rounded-md focus:ring-orange-500 focus:border-orange-500">
+                                <option value="all">所有等级</option>
+                                <option value="10">10 (生存威胁)</option>
+                                <option value="9">9</option>
+                                <option value="8">8</option>
+                                <option value="7">7</option>
+                                <option value="6">6</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-center">
+                    <div class="bg-white p-6 rounded-xl shadow">
+                        <h3 class="text-3xl font-bold text-orange-600" id="stat-total-cases">0</h3>
+                        <p class="text-slate-500 mt-1">案例总数</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow">
+                        <h3 class="text-3xl font-bold text-orange-600" id="stat-total-fines">$0 B</h3>
+                        <p class="text-slate-500 mt-1">累计罚款 (约)</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow">
+                        <h3 class="text-xl md:text-2xl font-bold text-orange-600" id="stat-top-type">-</h3>
+                        <p class="text-slate-500 mt-1">最高频违规类型</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg mb-8">
+                     <h3 class="text-xl font-bold text-slate-900 mb-4 text-center">案例数量年度分布</h3>
+                    <div class="chart-container">
+                        <canvas id="cases-timeline-chart"></canvas>
+                    </div>
+                </div>
+
+                <div id="cases-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+                 <p id="no-results" class="text-center text-slate-500 text-lg hidden py-8">没有找到符合条件的案例。</p>
+            </div>
+        </section>
+        
+        <section id="analysis" class="py-16 md:py-20 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-900">违规行为深度剖析</h2>
+                    <p class="mt-2 text-lg text-slate-600">从经典欺诈到现代规避，理解各类违规的本质与手法。</p>
+                </div>
+                <div id="accordion-container" class="max-w-4xl mx-auto space-y-4">
+                </div>
+            </div>
+        </section>
+
+        <section id="landscape" class="py-16 md:py-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-900">北美监管格局比较</h2>
+                    <p class="mt-2 text-lg text-slate-600">美国、加拿大、墨西哥：迥异的执法体系与风险特征。</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-red-500">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4 flex items-center"><span class="text-3xl mr-3">🇺🇸</span>美国</h3>
+                        <p class="font-semibold text-red-700 bg-red-100 rounded-full px-3 py-1 inline-block mb-4">生存性与战略性风险</p>
+                        <p class="text-slate-600 mb-4">执法与国家安全、地缘政治高度挂钩，处罚可致企业运营瘫痪。独特的“吹哨人”制度极大地放大了财务违规的风险。</p>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">主要机构:</strong><span class="text-slate-600">DOJ, SEC, CBP, BIS, OFAC, ITC</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">核心工具:</strong><span class="text-slate-600">FCA, FCPA, UFLPA, EAR, 拒绝令, 排除令</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">典型处罚:</strong><span class="text-slate-600">天价罚款、运营禁令、刑事指控、强制退市</span></li>
+                        </ul>
+                    </div>
+                     <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-500">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4 flex items-center"><span class="text-3xl mr-3">🇨🇦</span>加拿大</h3>
+                        <p class="font-semibold text-blue-700 bg-blue-100 rounded-full px-3 py-1 inline-block mb-4">市场准入风险</p>
+                        <p class="text-slate-600 mb-4">体系相对传统和可预测，主要风险在于因高额的反倾销/反补贴税而丧失产品价格竞争力，而非生存威胁。</p>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">主要机构:</strong><span class="text-slate-600">CBSA, CITT</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">核心工具:</strong><span class="text-slate-600">SIMA, AMPS</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">典型处罚:</strong><span class="text-slate-600">反倾销/反补贴税、管理性罚款、补缴关税</span></li>
+                        </ul>
+                    </div>
+                     <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-500">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4 flex items-center"><span class="text-3xl mr-3">🇲🇽</span>墨西哥</h3>
+                        <p class="font-semibold text-green-700 bg-green-100 rounded-full px-3 py-1 inline-block mb-4">转型期风险</p>
+                        <p class="text-slate-600 mb-4">执法环境正从宽松向“运动式”严打转变，尤其在电商等领域。监管不确定性高，风险正在快速上升。</p>
+                        <ul class="space-y-3 text-sm">
+                           <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">主要机构:</strong><span class="text-slate-600">SAT, PROFECO</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">核心工具:</strong><span class="text-slate-600">海关法, 税法典</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">典型处罚:</strong><span class="text-slate-600">货物查抄、高额合同违约金、行政罚款</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="strategy" class="py-16 md:py-20 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-900">战略建议与未来展望</h2>
+                    <p class="mt-2 text-lg text-slate-600">构建主动型合规堡垒，预测下一波执法浪潮。</p>
+                </div>
+                <div class="max-w-5xl mx-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-slate-50 p-6 rounded-lg">
+                            <h3 class="text-xl font-bold text-slate-800 mb-3">构建主动型合规堡垒</h3>
+                            <ul class="space-y-4">
+                                <li>
+                                    <h4 class="font-semibold">进行真正的深度尽职调查</h4>
+                                    <p class="text-slate-600 text-sm">绘制完整供应链地图，追溯至最上游原材料，尤其是在光伏、纺织等高风险行业。</p>
+                                </li>
+                                <li>
+                                    <h4 class="font-semibold">牢记“掩盖比罪行本身更糟”</h4>
+                                    <p class="text-slate-600 text-sm">面对监管调查，透明、合作是风险最低策略。试图掩盖会将商业问题升级为生存危机。</p>
+                                </li>
+                                 <li>
+                                    <h4 class="font-semibold">主动化解“吹哨人”风险</h4>
+                                    <p class="text-slate-600 text-sm">建立强大、可信的内部举报渠道，严肃对待所有内部投诉，避免其发酵为外部诉讼。</p>
+                                </li>
+                            </ul>
+                        </div>
+                         <div class="bg-slate-50 p-6 rounded-lg">
+                            <h3 class="text-xl font-bold text-slate-800 mb-3">预测下一波执法浪潮</h3>
+                            <ul class="space-y-4">
+                                <li>
+                                    <h4 class="font-semibold">数据安全与跨境传输</h4>
+                                    <p class="text-slate-600 text-sm">美国对敏感个人数据的跨境流动限制，为科技公司开辟了全新的合规风险领域。</p>
+                                </li>
+                                <li>
+                                    <h4 class="font-semibold">“洗绿”与ESG审查</h4>
+                                    <p class="text-slate-600 text-sm">ESG声明正从“软”倡议变为“硬”要求，不实的“洗绿”宣传可能构成欺诈。</p>
+                                </li>
+                                 <li>
+                                    <h4 class="font-semibold">反规避执法的三国协调</h4>
+                                    <p class="text-slate-600 text-sm">美、加、墨将加强情报共享与联合执法，打击跨国转运和关税规避行为。</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-8 bg-orange-50 border border-orange-200 p-6 rounded-lg text-center shadow-sm">
+                         <h4 class="font-semibold text-orange-700 text-lg">拥抱技术赋能合规 <span class="text-xs bg-orange-200 text-orange-800 rounded-full px-3 py-1 ml-2 align-middle font-medium">可以快速实施的方案</span></h4>
+                         <p class="text-slate-700 text-base mt-2 max-w-3xl mx-auto">选择INOSSEM ProcessGo Plus套件，让经营更加合规，让运营更加自动。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 py-8">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
+            <p>&copy; 2025 合规风险分析报告。本内容基于公开信息汇编，仅供研究参考，不构成法律建议。</p>
+        </div>
+    </footer>
+
+    <div id="modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div class="modal-content bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95">
+            <div class="sticky top-0 bg-white p-4 border-b flex justify-between items-center z-10">
+                <h3 id="modal-title" class="text-xl font-bold text-slate-900"></h3>
+                <button id="modal-close" class="text-slate-400 hover:text-slate-800">&times;</button>
+            </div>
+            <div id="modal-body" class="p-6">
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const casesData = [
+        {
+            id: 1, name: '中兴通讯 (ZTE Corp.)', year: 2018, country: 'USA', type: 'Sanctions', severity: 10, fine: 2292,
+            summary: '向受制裁国家非法出口含美国技术的产品，并系统性地欺骗和妨碍美国政府调查。',
+            background: '中国主要的电信设备制造商，在美国市场曾占据重要地位。',
+            violation: '1. **系统性规避:** 通过空壳公司等方式，故意掩盖向伊朗和朝鲜销售含有美国技术的设备。 2. **妨碍司法:** 在调查中删除邮件、指示员工撒谎。 3. **再次欺骗:** 违背和解协议中的承诺，虚报对涉事员工的处罚。',
+            rootCause: '根深蒂固的合规文化缺失，最高管理层将违法视为商业策略，并对美国法律的域外管辖权和执法决心存在致命误判。',
+            penalty: '合计支付22.92亿美元罚款及保证金；更换全部董事会及高管；接受为期10年的现场合规官监管；一度遭遇切断供应链的“拒绝令”，导致运营休克。'
+        },
+        {
+            id: 2, name: '华锐风电 (Sinovel Wind)', year: 2018, country: 'USA', type: 'IP', severity: 9, fine: 59,
+            summary: '系统性策划并实施商业间谍活动，窃取美国技术供应商的核心软件源代码。',
+            background: '曾是中国最大、全球第二的风力涡轮机制造商。',
+            violation: '收买美国技术供应商AMSC的内部员工，非法下载控制风力涡轮机运行的核心软件源代码，并用于自己生产的涡轮机中，以摆脱技术依赖并拒付合同款。',
+            rootCause: '恶意的、有预谋的商业秘密盗窃，将窃取技术作为一种商业竞争手段。',
+            penalty: '被美国联邦法院陪审团裁定犯有共谋、盗窃商业秘密和电信欺诈罪；被判处罚款150万美元，并向受害公司赔偿5750万美元。此次盗窃对受害公司AMSC造成毁灭性打击，市值暴跌，大规模裁员。'
+        },
+        {
+            id: 3, name: 'Albemarle Corporation', year: 2023, country: 'USA', type: 'Financial', severity: 8.5, fine: 218,
+            summary: '通过第三方代理在多个国家向政府官员进行商业贿赂，以赢得销售合同。',
+            background: '全球领先的特种化学品公司，在中国等多地有重要业务。',
+            violation: '在2009至2019年间，通过其销售代理向越南、印尼、印度、中国等国的国有炼油厂官员行贿，行贿行为被伪装成“佣金”并以虚假账簿记录掩盖。',
+            rootCause: '对第三方代理的风险管控严重不足，默许“不惜一切代价”获取业务的销售文化，未能建立有效的FCPA合规程序。',
+            penalty: '向美国司法部(DOJ)和证券交易委员会(SEC)支付总计超过2.18亿美元的和解金，以了结违反《反海外腐败法》(FCPA)的指控。'
+        },
+        {
+            id: 4, name: '反向并购欺诈潮', year: 2011, country: 'USA', type: 'Financial', severity: 8, fine: 0,
+            summary: '数百家中国公司通过“反向并购”捷径在美国上市，普遍存在系统性的财务造假。',
+            background: '涉及数百家通过RTO方式上市的中国中小型企业。',
+            violation: '利用RTO绕过传统IPO的严格审查，上市后普遍存在虚增收入、夸大资产、捏造客户等系统性会计欺诈。核心是利用了中美之间审计监管的漏洞。',
+            rootCause: '由欺诈性公司、能力不足的审计所、以及利用监管漏洞的金融中介共同构成的“欺诈生态系统”。',
+            penalty: '超过20家公司被SEC停牌或摘牌；引发数百起集体诉讼；导致中美审计监管对峙长达十年。虽无统一罚单，但市场损失达数百亿美元，严重打击了中概股信誉。'
+        },
+        {
+            id: 5, name: 'Koninklijke Philips N.V.', year: 2023, country: 'USA', type: 'Financial', severity: 7.5, fine: 62,
+            summary: '中国子公司在医疗设备销售中，通过不正当价格折扣影响公立医院采购决策。',
+            background: '全球医疗技术巨头，在中国有庞大的销售网络。',
+            violation: '多年来，在华子公司及合作伙伴为增加设备被公立医院采购的机会，通过操控招投标价格折扣，向医院官员提供不正当利益，增加了回扣风险。相关行为未被准确记录，违反FCPA的账簿记录和内部控制条款。',
+            rootCause: '对高风险市场的销售行为缺乏有效的内部控制和监督，未能阻止不合规的销售手段。',
+            penalty: '向SEC支付6200万美元，了结违反FCPA非贿赂条款（账簿记录和内部控制）的指控。'
+        },
+        {
+            id: 6, name: '光伏产业UFLPA扣押', year: 2022, country: 'USA', type: 'UFLPA', severity: 9.5, fine: 0,
+            summary: '因《维吾尔强迫劳动预防法》(UFLPA)，大量中国生产的光伏组件在美国港口被扣押。',
+            background: '中国是全球光伏产品的主要生产国，对美国市场有大量出口。',
+            violation: 'UFLPA的“可反驳推定”原则，将任何与新疆有关的产品预设为使用强迫劳动制造。进口商需“自证清白”，提供极其严苛的供应链溯源证据。',
+            rootCause: '美国将人权议题与贸易政策深度绑定，通过立法工具改变了供应链合规的举证责任。',
+            penalty: '“无形的惩罚”：自2022年起，价值数十亿美元的光伏组件被扣押，导致美国项目延期、成本飙升，中国制造商现金流严重受阻。虽无直接罚款，但经济损失和市场冲击巨大，属于生存性威胁。'
+        },
+        {
+            id: 7, name: 'Evolutions Flooring Inc.', year: 2025, country: 'USA', type: 'Customs', severity: 6, fine: 8.1,
+            summary: '通过将中国产木地板伪报为马来西亚产，以规避高额的反倾销/反补贴关税。',
+            background: '美国地板进口商。',
+            violation: '典型的转运（Transshipment）欺诈。将原产于中国的木地板运往马来西亚进行简单处理，再伪造原产地文件出口至美国，逃避关税。此案由竞争对手通过《虚假申报法案》举报。',
+            rootCause: '为追求利润，恶意规避美国对华贸易壁垒。',
+            penalty: '公司及其所有者支付810万美元与政府和解。'
+        },
+        {
+            id: 8, name: '墨西哥电商查抄', year: 2024, country: 'Mexico', type: 'Customs', severity: 7, fine: 0,
+            summary: 'Shein/Temu等电商平台因涉嫌滥用“最低限度”免税规则，在墨西哥遭遇大规模货物查抄。',
+            background: '以Shein和Temu为代表的中国快时尚电商平台。',
+            violation: '被墨西哥税务总局(SAT)指控通过分拆包裹、低报价值等方式进行系统性逃税，构成“走私和税务欺诈”。',
+            rootCause: '商业模式建立在对各国免税规则的监管套利之上。当规模大到影响本土产业和税收时，引发了监管反弹。',
+            penalty: '墨西哥SAT查抄了140万件商品，价值约4.18亿人民币。这是对商业模式的直接打击，属于生存性监管风险。'
+        },
+        {
+            id: 9, name: '普华永道(PwC)及山东浩信', year: 2023, country: 'USA', type: 'Financial', severity: 7, fine: 7.9,
+            summary: '中美审计监管合作后，PCAOB首次对在华会计师事务所进行执法，发现系统性作弊和严重审计违规。',
+            background: '全球四大会计师事务所之一的普华永道及其中国成员所，以及为在美上市中企服务的山东浩信。',
+            violation: '1. **PwC案:** 大量员工在内部培训测试中通过软件大规模作弊。 2. **山东浩信案:** 出具虚假审计报告、丧失独立性、抄袭底稿并在调查中撒谎。',
+            rootCause: '长期处于监管真空地带，导致合规文化松懈和执业标准缺失。',
+            penalty: 'PwC香港及内地所合计被罚700万美元；山东浩信被罚75万美元，相关个人被罚款和禁业。标志着在美上市中概股审计的“狂野西部”时代终结。'
+        },
+        {
+            id: 10, name: '中国中车 (CRRC)', year: 2024, country: 'Mexico', type: 'Consumer', severity: 6.5, fine: 74,
+            summary: '因墨西哥城地铁1号线现代化改造项目严重延误，被项目方处以巨额合同罚款。',
+            background: '全球最大的轨道交通设备制造商中国中车。',
+            violation: '未能按合同规定时间完成地铁线路的升级改造工程，构成合同违约。',
+            rootCause: '项目管理、供应链或本地化运营中可能遇到了超出预期的困难，导致未能履行合同义务。',
+            penalty: '墨西哥城地铁系统处以高达15亿比索（约合7400万美元）的罚款。'
+        },
+        {
+            id: 11, name: 'International Vitamins Corp.', year: 2023, country: 'USA', type: 'Customs', severity: 7.2, fine: 23,
+            summary: '在长达五年时间里，故意将其从中国进口的32种产品错误地申报为免税类别。',
+            background: '美国维生素公司，大量从中国进口原料和产品。',
+            violation: '典型的错误分类（Misclassification）欺诈。更严重的是，在被外部顾问指出错误后，公司仍拖延纠正且未补缴欠税，构成“明知故犯”。',
+            rootCause: '为降低成本而故意利用海关税则的复杂性，并对合规警告置之不理。',
+            penalty: '支付近2300万美元与政府和解。'
+        },
+        {
+            id: 12, name: 'CKI Toys (含铅油漆玩具)', year: 2007, country: 'USA', type: 'Consumer', severity: 8, fine: 0,
+            summary: '作为代工厂商，生产的玩具因含铅油漆严重超标，引发美国大规模产品召回。',
+            background: '为美国玩具巨头美泰、玩具反斗城等代工的香港玩具制造商。',
+            violation: '产品表面涂层铅含量违反美国联邦禁令，对儿童构成严重健康威胁。',
+            rootCause: '供应链末端的质量控制和合规管理失控。',
+            penalty: '虽无对中国工厂的具体罚款记录，但事件导致品牌商蒙受数千万美元的召回损失，品牌声誉严重受损，并直接推动了美国《消费品安全改进法案》(CPSIA)的出台，大幅收紧了行业监管标准。'
+        }
+    ];
+
+    const analysisContent = [
+        {
+            title: '关税壁垒：规避关税和贸易壁垒',
+            content: `
+                <p class="mb-4">逃避关税是跨境贸易中最古老的违规行为，其手段已从简单的“小聪明”演变为复杂的跨国欺诈，以应对日益增高的关税壁垒。</p>
+                <h4 class="font-semibold mb-2">经典欺诈手法：</h4>
+                <ul class="list-disc list-inside space-y-2 mb-4">
+                    <li><strong>低报价值 (Undervaluation):</strong> 制作“阴阳发票”，一套真实价值用于内部结算，一套低价值用于海关申报以减少关税。</li>
+                    <li><strong>错误分类 (Misclassification):</strong> 故意将商品归入税率更低的HS编码类别。</li>
+                </ul>
+                 <div class="my-4 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                    <h5 class="font-bold text-slate-800">图解：转运欺诈 (Transshipment)</h5>
+                    <div class="mt-2 flex flex-col md:flex-row items-center justify-around space-y-4 md:space-y-0 md:space-x-4 text-center">
+                        <div class="p-3 bg-red-100 text-red-800 rounded-lg">
+                            <div class="font-bold">中国</div><div>高关税产品</div>
+                        </div>
+                        <div class="text-2xl font-mono text-slate-400">→</div>
+                        <div class="p-3 bg-yellow-100 text-yellow-800 rounded-lg">
+                            <div class="font-bold">第三国 (如马来西亚/墨西哥)</div><div>微不足道的加工/换标</div>
+                        </div>
+                         <div class="text-2xl font-mono text-slate-400">→</div>
+                        <div class="p-3 bg-green-100 text-green-800 rounded-lg">
+                            <div class="font-bold">美国</div><div>伪造原产地/低关税进口</div>
+                        </div>
+                    </div>
+                 </div>
+                <h4 class="font-semibold mb-2">风险放大器：《虚假申报法案》(FCA)</h4>
+                <p>美国独有的“吹哨人”制度，允许个人或公司代表政府起诉欺诈行为，并获得高额奖励 (15-30%的追回款)。这使得一个看似低风险的逃税计划，可能因内部员工或竞争对手的举报，演变为导致公司破产的法律灾难。</p>
+            `
+        },
+        {
+            title: '触碰红线：制裁、出口管制与国家安全',
+            content: `
+                <p>如果说关税规避是经济“博弈”，违反制裁和出口管制则是直接挑战美国国家安全和外交政策的“红线”，处罚最为严厉。</p>
+                <p class="mt-2">美国通过其强大的“长臂管辖权”，将本国法律的适用范围延伸至全球，对任何使用美国技术、美元系统或与美国有“最低联系”的实体进行规制。</p>
+                <div class="mt-4 p-4 border-l-4 border-red-500 bg-red-50">
+                    <h4 class="font-bold text-red-800">核心案例：中兴通讯 (ZTE)</h4>
+                    <p class="text-red-700 mt-2">中兴案的教训是深刻的：在与美国监管机构打交道时，<strong>“掩盖比罪行本身更糟糕”</strong>。妨碍司法和提供虚假陈述，会将一个本可通过罚款解决的商业合规问题，升级为一场关乎企业生死的国家安全危机。</p>
+                </div>
+            `
+        },
+        {
+            title: '人权的代价：强迫劳动与现代供应链审查',
+            content: `
+                <p>与人权相关的供应链合规是2020年代以来最具挑战性的风险。美国《维吾尔强迫劳动预防法》(UFLPA)彻底改变了游戏规则。</p>
+                <h4 class="font-semibold mt-4 mb-2">UFLPA核心机制：可反驳的推定</h4>
+                <p class="mb-2">任何与新疆有关的商品，都被<strong>预先假设</strong>为使用强迫劳动制造，禁止进入美国。这颠倒了举证责任：</p>
+                <ul class="list-none space-y-2">
+                    <li class="flex items-start"><span class="text-red-500 mr-2 font-bold">旧模式:</span> <span>美国政府需<strong>证明</strong>货物有问题才能扣押。</span></li>
+                    <li class="flex items-start"><span class="text-green-500 mr-2 font-bold">UFLPA模式:</span> <span>进口商需<strong>自证清白</strong>，提供“清晰且令人信服的证据”证明整个供应链无强迫劳动，才能放行。</span></li>
+                </ul>
+                <p class="mt-2">这是一个极其严苛的标准，导致光伏等产业大量货物被扣押，被迫进行痛苦且昂贵的供应链重塑。</p>
+            `
+        },
+        {
+            title: '市场准入的代价：财务与证券欺诈',
+            content: `
+                 <p>寻求进入全球最大资本市场的中国企业，必须遵守美国SEC等机构严格的财务报告、信息披露和反腐败规则。</p>
+                <h4 class="font-semibold mt-4 mb-2">主要风险领域：</h4>
+                <ul class="list-disc list-inside space-y-2">
+                    <li><strong>《反海外腐败法》(FCPA):</strong> 打击向外国官员行贿以获取商业利益的行为。由于中国国企普遍，其员工甚至医生、教授都可能被视为“外国官员”，使中国成为高风险区。</li>
+                    <li><strong>财务造假:</strong> “反向并购”欺诈潮是典型代表，利用监管漏洞进行系统性财务造假，最终引发市场风暴和严厉的监管打击。</li>
+                    <li><strong>审计监督新时代:</strong> 2022年中美签署审计监管合作协议后，PCAOB已能进入中国进行检查并已开出首批罚单，标志着中概股的监管“避风港”时代彻底结束。</li>
+                </ul>
+            `
+        },
+         {
+            title: '创新战：知识产权与商业秘密之争',
+            content: `
+                <p>围绕IP和商业秘密的争夺，是中美经贸关系中最尖锐的领域之一。美国的执法已从打击盗版演变为聚焦高科技领域的经济间谍和商业秘密盗窃。</p>
+                <h4 class="font-semibold mt-4 mb-2">关键执法工具：</h4>
+                <ul class="list-disc list-inside space-y-2">
+                    <li><strong>刑事诉讼:</strong> 如华锐风电案，美国司法部可对窃取商业秘密的企业提起刑事诉讼，导致定罪和罚款。</li>
+                    <li><strong>消费品安全(CPSC):</strong> 如含铅玩具案，供应链的质量失控可引发大规模产品召回、巨额经济损失和更严格的行业法规。</li>
+                    <li><strong>ITC 337调查:</strong> 知识产权持有者可以利用ITC这一“准司法”武器，快速获得“排除令”，在全美港口拦截侵权产品，是中国科技企业频繁面对的挑战。</li>
+                </ul>
+            `
+        }
+    ];
+
+    const filters = { country: 'all', type: 'all', severity: 'all' };
+    let chartInstance = null;
+    
+    const countryFilter = document.getElementById('country-filter');
+    const typeFilter = document.getElementById('type-filter');
+    const severityFilter = document.getElementById('severity-filter');
+    const casesList = document.getElementById('cases-list');
+    const noResults = document.getElementById('no-results');
+    const statTotalCases = document.getElementById('stat-total-cases');
+    const statTotalFines = document.getElementById('stat-total-fines');
+    const statTopType = document.getElementById('stat-top-type');
+
+    function getSeverityBadge(severity) {
+        if (severity >= 9) return 'bg-red-100 text-red-800';
+        if (severity >= 8) return 'bg-orange-100 text-orange-800';
+        if (severity >= 7) return 'bg-amber-100 text-amber-800';
+        return 'bg-slate-100 text-slate-800';
+    }
+
+    function getSeverityText(severity) {
+        if (severity >= 9) return '生存威胁';
+        if (severity >= 8) return '重大冲击';
+        if (severity >= 7) return '严重警告';
+        return '常规处罚';
+    }
+    
+    function getType(type) {
+        const types = { 'Customs': '海关欺诈', 'Sanctions': '制裁/出口', 'UFLPA': 'UFLPA', 'Financial': '财务/证券', 'IP': '知识产权', 'Consumer': '合同/消费' };
+        return types[type] || '其他';
+    }
+
+    function renderCases(data) {
+        casesList.innerHTML = '';
+        if (data.length === 0) {
+            noResults.classList.remove('hidden');
+            return;
+        }
+        noResults.classList.add('hidden');
+        data.forEach(caseItem => {
+            const card = document.createElement('div');
+            card.className = 'case-card bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer overflow-hidden flex flex-col';
+            card.innerHTML = `
+                <div class="p-5 flex-grow">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="text-lg font-bold text-slate-800">${caseItem.name}</h4>
+                        <span class="text-sm font-semibold text-slate-500">${caseItem.year}</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-4 h-12">${caseItem.summary}</p>
+                </div>
+                <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 text-xs font-medium text-slate-700 flex flex-wrap gap-x-4 gap-y-2 justify-between items-center">
+                    <span class="inline-flex items-center">${caseItem.country === 'USA' ? '🇺🇸' : (caseItem.country === 'Canada' ? '🇨🇦' : '🇲🇽')} ${caseItem.country}</span>
+                    <span class="px-2 py-1 rounded-full ${getSeverityBadge(caseItem.severity)}">${caseItem.severity}/10 ${getSeverityText(caseItem.severity)}</span>
+                    <span>${getType(caseItem.type)}</span>
+                </div>
+            `;
+            card.addEventListener('click', () => showModal(caseItem));
+            casesList.appendChild(card);
+        });
+    }
+
+    function updateStats(data) {
+        statTotalCases.textContent = data.length;
+        
+        const totalFines = data.reduce((acc, item) => acc + (item.fine || 0), 0);
+        if (totalFines > 1000) {
+            statTotalFines.textContent = `$${(totalFines/1000).toFixed(1)} B`;
+        } else {
+            statTotalFines.textContent = `$${totalFines.toFixed(0)} M`;
+        }
+
+        if (data.length > 0) {
+            const typeCounts = data.reduce((acc, item) => {
+                acc[item.type] = (acc[item.type] || 0) + 1;
+                return acc;
+            }, {});
+            const topType = Object.keys(typeCounts).reduce((a, b) => typeCounts[a] > typeCounts[b] ? a : b);
+            statTopType.textContent = getType(topType);
+        } else {
+            statTopType.textContent = '-';
+        }
+    }
+    
+    function createOrUpdateTimelineChart(data) {
+        const ctx = document.getElementById('cases-timeline-chart').getContext('2d');
+        const caseCountsByYear = data.reduce((acc, item) => {
+            acc[item.year] = (acc[item.year] || 0) + 1;
+            return acc;
+        }, {});
+
+        const sortedYears = Object.keys(caseCountsByYear).sort((a,b) => a-b);
+        const labels = sortedYears;
+        const chartData = sortedYears.map(year => caseCountsByYear[year]);
+
+        if(chartInstance) {
+            chartInstance.data.labels = labels;
+            chartInstance.data.datasets[0].data = chartData;
+            chartInstance.update();
+        } else {
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '案例数量',
+                        data: chartData,
+                        backgroundColor: 'rgba(234, 88, 12, 0.6)',
+                        borderColor: 'rgba(234, 88, 12, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grace: '5%' },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: (context) => `年份: ${context[0].label}`,
+                                label: (context) => `案例数: ${context.raw}`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function applyFilters() {
+        const filteredData = casesData.filter(item => {
+            const countryMatch = filters.country === 'all' || item.country === filters.country;
+            const typeMatch = filters.type === 'all' || item.type === filters.type;
+            const severityMatch = filters.severity === 'all' || item.severity >= parseFloat(filters.severity);
+            return countryMatch && typeMatch && severityMatch;
+        });
+
+        renderCases(filteredData);
+        updateStats(filteredData);
+        createOrUpdateTimelineChart(filteredData);
+    }
+    
+    countryFilter.addEventListener('click', e => {
+        if (e.target.tagName === 'BUTTON') {
+            filters.country = e.target.dataset.value;
+            countryFilter.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            applyFilters();
+        }
+    });
+
+    typeFilter.addEventListener('change', e => {
+        filters.type = e.target.value;
+        applyFilters();
+    });
+    
+    severityFilter.addEventListener('change', e => {
+        filters.severity = e.target.value;
+        applyFilters();
+    });
+
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
+    const modalClose = document.getElementById('modal-close');
+
+    function showModal(caseItem) {
+        modalTitle.textContent = `${caseItem.name} (${caseItem.year})`;
+        modalBody.innerHTML = `
+            <div class="space-y-4">
+                <div>
+                    <h4 class="font-bold text-slate-800">公司背景</h4>
+                    <p class="text-sm text-slate-600 mt-1">${caseItem.background}</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800">违规分析</h4>
+                    <div class="mt-1 text-sm text-slate-600 space-y-2 prose prose-sm max-w-none">
+                        <p><strong>问题症状:</strong> ${caseItem.summary}</p>
+                        <p><strong>客观事实:</strong> ${caseItem.violation}</p>
+                        <p><strong>根本原因:</strong> ${caseItem.rootCause}</p>
+                    </div>
+                </div>
+                <div class="p-4 bg-amber-50 rounded-lg">
+                    <h4 class="font-bold text-amber-900">具体处罚</h4>
+                    <p class="text-sm text-amber-800 mt-1">${caseItem.penalty}</p>
+                </div>
+                 <div class="mt-4 pt-4 border-t border-slate-200 flex flex-wrap gap-x-4 gap-y-2 text-xs font-medium">
+                    <span class="px-2 py-1 rounded-full ${getSeverityBadge(caseItem.severity)}">${caseItem.severity}/10 ${getSeverityText(caseItem.severity)}</span>
+                    <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-800">${caseItem.country === 'USA' ? '🇺🇸' : (caseItem.country === 'Canada' ? '🇨🇦' : '🇲🇽')} ${caseItem.country}</span>
+                    <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-800">${getType(caseItem.type)}</span>
+                    ${caseItem.fine > 0 ? `<span class="px-2 py-1 rounded-full bg-slate-100 text-slate-800">罚款: $${caseItem.fine}M</span>` : ''}
+                </div>
+            </div>
+        `;
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.querySelector('.modal-content').classList.remove('scale-95');
+    }
+
+    function hideModal() {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.querySelector('.modal-content').classList.add('scale-95');
+    }
+
+    modalClose.addEventListener('click', hideModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            hideModal();
+        }
+    });
+
+    const accordionContainer = document.getElementById('accordion-container');
+    analysisContent.forEach((item, index) => {
+        const accordionItem = document.createElement('div');
+        accordionItem.className = 'border border-slate-200 rounded-lg bg-white';
+        accordionItem.innerHTML = `
+            <button class="accordion-toggle w-full flex justify-between items-center text-left p-4 font-semibold text-slate-800 hover:bg-slate-50">
+                <span>${item.title}</span>
+                <span class="accordion-icon transform transition-transform duration-300">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div class="p-4 border-t border-slate-200 text-slate-600 prose prose-sm max-w-none">
+                    ${item.content}
+                </div>
+            </div>
+        `;
+        accordionContainer.appendChild(accordionItem);
+    });
+
+    accordionContainer.addEventListener('click', (e) => {
+        const toggle = e.target.closest('.accordion-toggle');
+        if (toggle) {
+            const content = toggle.nextElementSibling;
+            const icon = toggle.querySelector('.accordion-icon');
+            
+            toggle.parentElement.classList.toggle('open');
+
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                document.querySelectorAll('.accordion-content').forEach(c => {
+                    c.style.maxHeight = null;
+                    c.previousElementSibling.querySelector('.accordion-icon').style.transform = 'rotate(0deg)';
+                });
+                content.style.maxHeight = content.scrollHeight + "px";
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+    });
+
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        const isOpen = !mobileMenu.classList.contains('hidden');
+        mobileMenu.classList.toggle('hidden');
+        const spans = mobileMenuButton.querySelectorAll('span');
+        if (!isOpen) {
+             spans[1].style.opacity = '0';
+             spans[0].style.transform = 'translateY(8px) rotate(45deg)';
+             spans[2].style.transform = 'translateY(-8px) rotate(-45deg)';
+        } else {
+             spans[1].style.opacity = '1';
+             spans[0].style.transform = 'none';
+             spans[2].style.transform = 'none';
+        }
+    });
+    
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+             if (!mobileMenu.classList.contains('hidden')) {
+                mobileMenuButton.click();
+             }
+        });
+    });
+
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const onScroll = () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            if (pageYOffset >= sectionTop - 80) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').includes(current)) {
+                link.classList.add('active');
+            }
+        });
+    };
+    window.addEventListener('scroll', onScroll);
+
+    applyFilters();
+});
+</script>
+
+</body>
+</html>
