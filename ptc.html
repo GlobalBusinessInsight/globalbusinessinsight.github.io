@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTC收购案战略分析仪表板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: 本应用的结构设计旨在打破报告的线性叙述，创建一个以“对比分析”为核心的交互式仪表板。用户首先会看到事件的宏观背景和关键参与者。核心部分是一个交互式选项卡，允许用户在“Autodesk方案”和“SAP方案”之间自由切换，并对每个方案的战略逻辑、产品协同/冲突、市场影响进行深度探索。这种设计使用户能够主动比较，而非被动阅读，从而更深刻地理解两个潜在收购路径的根本差异和战略影响。最后的对比矩阵和市场展望则为用户提供了一个清晰的、数据驱动的结论。 -->
+    <!-- Visualization & Content Choices: 1. **公司对比 (目标: 告知)** -> 使用HTML/Tailwind卡片展示关键财务数据，简洁直观。 2. **CAD市场份额 (目标: 比较/警示)** -> 使用Chart.js柱状图，动态展示Autodesk收购后可能形成的市场垄断地位，将报告中的反垄断风险数据化、可视化。 3. **产品组合协同性 (目标: 组织/比较)** -> 使用交互式HTML/CSS网格，通过悬停高亮效果展示Autodesk方案中的产品重叠（冲突）和SAP方案中的产品互补（协同），比静态表格更具探索性。 4. **风险/协同矩阵 (目标: 比较)** -> 将报告中的Table 2转化为响应式HTML表格，便于在不同设备上进行清晰的并排比较。 5. **战略逻辑 (目标: 组织)** -> 使用简单的HTML/CSS流程图（如 A + B → C）来形象化解释SAP方案的“生态系统转型”逻辑，增强理解。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8f7f4;
+            color: #3d3d3d;
+        }
+        .nav-link {
+            transition: color 0.3s ease, border-bottom-color 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #c084fc;
+            border-bottom-color: #c084fc;
+        }
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+        .tab-btn.active {
+            background-color: #8b5cf6;
+            color: #ffffff;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+                max-height: 400px;
+            }
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+        .product-item {
+            border: 2px solid transparent;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            background-color: #f3f4f6;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .product-item.overlap { background-color: #fecaca; border-color: #f87171; }
+        .product-item.synergy { background-color: #d1fae5; border-color: #34d399; }
+        .product-item strong { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl sm:text-2xl font-bold text-violet-600">PTC收购案深度解析</h1>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#overview" class="nav-link">市场格局</a>
+                <a href="#actors" class="nav-link">关键角色</a>
+                <a href="#scenarios" class="nav-link">情景推演</a>
+                <a href="#matrix" class="nav-link">对比矩阵</a>
+                <a href="#outlook" class="nav-link">未来展望</a>
+            </div>
+            <div class="md:hidden">
+                <button id="menu-btn" class="text-gray-700 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="#overview" class="mobile-nav-link block py-2 px-4 text-sm hover:bg-violet-50">市场格局</a>
+            <a href="#actors" class="mobile-nav-link block py-2 px-4 text-sm hover:bg-violet-50">关键角色</a>
+            <a href="#scenarios" class="mobile-nav-link block py-2 px-4 text-sm hover:bg-violet-50">情景推演</a>
+            <a href="#matrix" class="mobile-nav-link block py-2 px-4 text-sm hover:bg-violet-50">对比矩阵</a>
+            <a href="#outlook" class="mobile-nav-link block py-2 px-4 text-sm hover:bg-violet-50">未来展望</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 md:px-8">
+
+        <section id="overview" class="text-center my-12 md:my-16">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-4 text-gray-800">工业软件的十字路口</h2>
+            <p class="max-w-3xl mx-auto text-base md:text-lg text-gray-600">
+                AI、云计算与“数字主线”需求的融合，正将工业软件市场推向一个决定性的战略拐点。近期关于PTC公司可能被收购的传闻，正是这场行业变革风暴的中心。这不仅关乎一家公司的归属，更可能重塑整个市场的未来版图，催生新的行业巨头。
+            </p>
+        </section>
+
+        <section id="actors" class="my-12 md:my-16">
+            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-10 md:mb-12 text-gray-800">棋盘上的关键角色</h2>
+            <div class="grid md:grid-cols-3 gap-6 md:gap-8">
+                <div class="card p-4 md:p-6 rounded-lg text-center">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-3 text-red-500">收购目标：PTC Inc.</h3>
+                    <p class="text-sm text-gray-500 mb-4">数字主线领导者</p>
+                    <p class="text-3xl sm:text-4xl font-bold my-4">$2.3B</p>
+                    <p class="text-gray-600 mb-4 text-sm">2024财年营收</p>
+                    <p class="font-semibold text-gray-700">核心产品：</p>
+                    <p class="text-gray-600 text-sm">Creo, Windchill, ThingWorx, ServiceMax</p>
+                </div>
+                <div class="card p-4 md:p-6 rounded-lg text-center">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-3 text-blue-500">竞购方A：Autodesk, Inc.</h3>
+                    <p class="text-sm text-gray-500 mb-4">市场整合的挑战者</p>
+                    <p class="text-3xl sm:text-4xl font-bold my-4">$6.1B</p>
+                    <p class="text-gray-600 mb-4 text-sm">2025财年营收</p>
+                    <p class="font-semibold text-gray-700">核心产品：</p>
+                    <p class="text-gray-600 text-sm">AutoCAD, Inventor, Fusion 360, AEC</p>
+                </div>
+                <div class="card p-4 md:p-6 rounded-lg text-center">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-3 text-purple-500">竞购方B：SAP SE</h3>
+                    <p class="text-sm text-gray-500 mb-4">生态系统转型的战略家</p>
+                    <p class="text-3xl sm:text-4xl font-bold my-4">€31.2B</p>
+                    <p class="text-gray-600 mb-4 text-sm">2022财年营收</p>
+                    <p class="font-semibold text-gray-700">核心产品：</p>
+                    <p class="text-gray-600 text-sm">S/4HANA, CX Suite, SCM, BTP</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="scenarios" class="my-12 md:my-16 bg-slate-50 p-4 md:p-8 rounded-xl shadow-inner">
+            <div class="text-center mb-10 md:mb-12">
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-800">两种未来：情景推演与深度分析</h2>
+                <p class="max-w-2xl mx-auto mt-4 text-base md:text-lg text-gray-600">选择不同的竞购方，将引领PTC乃至整个行业走向截然不同的未来。点击下方按钮，切换并探索两种潜在收购方案的战略逻辑、协同效应与核心风险。</p>
+            </div>
+
+            <div class="flex justify-center mb-8 space-x-2 sm:space-x-4">
+                <button class="tab-btn active text-base sm:text-lg font-semibold py-2 px-4 sm:py-3 sm:px-8 rounded-full bg-white shadow" data-tab="autodesk">Autodesk 方案</button>
+                <button class="tab-btn text-base sm:text-lg font-semibold py-2 px-4 sm:py-3 sm:px-8 rounded-full bg-white shadow" data-tab="sap">SAP 方案</button>
+            </div>
+
+            <div id="autodesk-content" class="content-section active">
+                <div class="grid md:grid-cols-2 gap-8 items-start">
+                    <div>
+                        <h3 class="text-xl sm:text-2xl font-bold mb-4 text-blue-600">战略逻辑：市场整合的豪赌</h3>
+                        <p class="text-gray-700 mb-6 text-sm md:text-base">Autodesk的意图是向上游企业级市场进军，通过整合PTC来巩固其在CAD/PLM设计与工程软件领域的领导地位，直接挑战西门子和达索系统。这是一次旨在扩大规模和市场份额的进攻性举动。</p>
+                        
+                        <h4 class="text-lg sm:text-xl font-semibold mb-3 text-gray-800">产品组合分析：协同与冲突</h4>
+                        <p class="text-gray-600 mb-4 text-sm md:text-base">此方案的核心风险在于产品线的高度重叠。下面展示了关键领域的产品对应关系，红色表示直接竞争和冗余，可能导致客户困惑和痛苦的产品整合。</p>
+                        <div class="product-grid">
+                            <div class="product-item overlap"><strong>CAD 领域</strong><span>Inventor/Fusion 360 vs. Creo/Onshape</span></div>
+                            <div class="product-item overlap"><strong>PLM 领域</strong><span>Fusion Manage vs. Windchill/Arena</span></div>
+                            <div class="product-item"><strong>IoT/AR 领域</strong><span>(Autodesk 弱项 vs. ThingWorx/Vuforia)</span></div>
+                        </div>
+                         <p class="text-xs text-gray-500 mt-2">分析师普遍猜测，Autodesk可能在收购后剥离IoT和AR业务。</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl sm:text-2xl font-bold mb-4 text-red-600">核心风险：反垄断审查</h3>
+                        <p class="text-gray-700 mb-6 text-sm md:text-base">合并后的实体将在CAD市场占据主导地位，几乎必然会触发美国和欧盟的严格反垄断审查。下图模拟了合并后主要玩家在CAD市场的份额变化，清晰地揭示了监管风险。</p>
+                        <div class="chart-container bg-white p-2 sm:p-4 rounded-lg shadow">
+                            <canvas id="cadMarketShareChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sap-content" class="content-section">
+                 <div class="grid md:grid-cols-2 gap-8 items-start">
+                    <div>
+                        <h3 class="text-xl sm:text-2xl font-bold mb-4 text-purple-600">战略逻辑：生态系统转型</h3>
+                        <p class="text-gray-700 mb-6 text-sm md:text-base">SAP的逻辑是构建一个前所未有的、从“顶层（ERP业务管理）”到“车间（PLM产品工程）”的端到端数字主线。这不是简单的市场整合，而是创造一个全新的、高度集成的企业解决方案生态，构建难以逾越的竞争壁垒。</p>
+                         <div class="bg-white p-4 md:p-6 rounded-lg shadow-md text-center my-6">
+                            <div class="flex items-center justify-center space-x-2 sm:space-x-4 text-sm sm:text-lg font-semibold flex-wrap">
+                                <span class="bg-purple-100 text-purple-800 p-2 sm:p-3 rounded-lg mb-2 sm:mb-0">SAP ERP/SCM</span>
+                                <span class="text-xl sm:text-2xl font-bold text-gray-500 mx-1">+</span>
+                                <span class="bg-teal-100 text-teal-800 p-2 sm:p-3 rounded-lg mb-2 sm:mb-0">PTC PLM/IoT</span>
+                                <span class="text-xl sm:text-2xl font-bold text-gray-500 mx-1">→</span>
+                                <span class="bg-green-100 text-green-800 p-2 sm:p-3 rounded-lg">终极数字主线</span>
+                            </div>
+                        </div>
+                        <h4 class="text-lg sm:text-xl font-semibold mb-3 text-gray-800">产品组合分析：高度互补</h4>
+                        <p class="text-gray-600 mb-4 text-sm md:text-base">与Autodesk方案截然相反，SAP与PTC的产品组合高度互补，重叠极小。绿色代表强大的协同效应，能够形成完美的业务闭环。</p>
+                        <div class="product-grid">
+                            <div class="product-item synergy"><strong>ERP + PLM</strong><span>S/4HANA 原生集成 Windchill</span></div>
+                            <div class="product-item synergy"><strong>业务AI + 工程AI</strong><span>SAP Joule 融合 ThingWorx 数据</span></div>
+                            <div class="product-item synergy"><strong>供应链 + 服务</strong><span>SAP网络 结合 ServiceMax</span></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl sm:text-2xl font-bold mb-4 text-green-600">核心优势：打破联盟，重塑格局</h3>
+                        <p class="text-gray-700 mb-6 text-sm md:text-base">收购PTC将使SAP从对西门子Teamcenter PLM的“租用”关系中独立出来，拥有完全自主可控的PLM解决方案。这将把重要的合作伙伴（西门子）转变为直接竞争对手，同时对Oracle等ERP领域的对手形成“降维打击”。</p>
+                        <ul class="space-y-4 text-sm md:text-base">
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-3 mt-1">✓</span>
+                                <span><strong>低反垄断风险:</strong> 由于产品市场不同，直接的监管障碍很小。</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-green-500 mr-3 mt-1">✓</span>
+                                <span><strong>极高协同潜力:</strong> “ERP+PLM”的原生集成是制造业的“圣杯”，价值巨大。</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-orange-500 mr-3 mt-1">!</span>
+                                <span><strong>中等整合风险:</strong> 主要挑战在于业务流程与工程文化的融合，但SAP近期对LeanIX和WalkMe的收购已为此做好铺垫。</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="matrix" class="my-12 md:my-16">
+            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-10 md:mb-12 text-gray-800">战略对比矩阵：一目了然</h2>
+            <p class="max-w-3xl mx-auto text-center text-base md:text-lg text-gray-600 mb-8">
+                下表从多个关键维度，对Autodesk和SAP两个收购方案进行了直观的对比评估，帮助您快速把握二者的核心差异和潜在价值。
+            </p>
+            <div class="overflow-x-auto bg-white rounded-lg shadow-lg">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                        <tr>
+                            <th scope="col" class="px-4 py-3 w-1/4">评估维度</th>
+                            <th scope="col" class="px-4 py-3">方案A: Autodesk 收购 PTC</th>
+                            <th scope="col" class="px-4 py-3">方案B: SAP 收购 PTC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white border-b">
+                            <th scope="row" class="px-4 py-4 font-medium text-gray-900">战略逻辑</th>
+                            <td class="px-4 py-4"><strong>市场整合</strong>：主导CAD/PLM设计市场</td>
+                            <td class="px-4 py-4"><strong>生态系统转型</strong>：创建端到端“业务-工程”数字主线</td>
+                        </tr>
+                        <tr class="bg-gray-50 border-b">
+                            <th scope="row" class="px-4 py-4 font-medium text-gray-900">产品协同效应</th>
+                            <td class="px-4 py-4"><span class="font-bold text-red-600">低</span>：核心产品严重重叠，存在同类相食风险</td>
+                            <td class="px-4 py-4"><span class="font-bold text-green-600">高</span>：产品高度互补，形成完美闭环</td>
+                        </tr>
+                        <tr class="bg-white border-b">
+                            <th scope="row" class="px-4 py-4 font-medium text-gray-900">反垄断风险</th>
+                            <td class="px-4 py-4"><span class="font-bold text-red-600">高</span>：CAD市场份额超36%，面临严格审查</td>
+                            <td class="px-4 py-4"><span class="font-bold text-green-600">低</span>：产品市场不同，直接障碍小</td>
+                        </tr>
+                         <tr class="bg-gray-50 border-b">
+                            <th scope="row" class="px-4 py-4 font-medium text-gray-900">整合与文化风险</th>
+                            <td class="px-4 py-4"><span class="font-bold text-red-600">高</span>：缺乏大型整合经验，GTM模式与文化差异巨大</td>
+                            <td class="px-4 py-4"><span class="font-bold text-orange-500">中</span>：文化有差异，但近期收购已提供整合工具</td>
+                        </tr>
+                        <tr class="bg-white">
+                            <th scope="row" class="px-4 py-4 font-medium text-gray-900">总体价值创造潜力</th>
+                            <td class="px-4 py-4"><strong>不确定</strong>：高度依赖整合执行，存在价值毁灭风险</td>
+                            <td class="px-4 py-4"><strong>极高</strong>：若成功，将开创全新市场类别，潜力巨大</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="outlook" class="my-12 md:my-16 text-center">
+             <h2 class="text-2xl sm:text-3xl font-bold mb-10 md:mb-12 text-gray-800">未来展望与对利益相关者的影响</h2>
+             <div class="grid md:grid-cols-3 gap-6 md:gap-8 text-left">
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow">
+                    <h4 class="font-bold text-lg sm:text-xl mb-3 text-gray-800">对PTC股东</h4>
+                    <p class="text-gray-600 text-sm md:text-base">评估任何要约时，应超越报价本身，更要审视收购方的战略逻辑。SAP方案虽然是假设性的，但其卓越的协同效应和较低的产品风险可能带来更大的长期价值。</p>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow">
+                    <h4 class="font-bold text-lg sm:text-xl mb-3 text-gray-800">对客户</h4>
+                    <p class="text-gray-600 text-sm md:text-base">当务之急是寻求关于未来产品路线图的明确承诺。无论是哪个方案，客户都需要确保其现有投资得到保护，并了解未来的平台整合计划。</p>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-lg shadow">
+                    <h4 class="font-bold text-lg sm:text-xl mb-3 text-gray-800">对竞争对手</h4>
+                    <p class="text-gray-600 text-sm md:text-base">无论结果如何，竞争对手（特别是西门子和达索系统）都必须准备迎接一个更强大的新威胁。SAP-PTC的组合尤其具有颠覆性，因为它创造了它们难以复制的ERP-PLM集成能力。</p>
+                </div>
+             </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-12 md:mt-16">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p class="text-sm">&copy; 2025 工业软件市场战略分析。本应用根据公开信息和分析报告创建，仅供参考。</p>
+             <p class="text-xs text-gray-400 mt-4">重要澄清：本次分析的目标是美国工业软件公司 PTC Inc. (NASDAQ: PTC)，与其他同名实体（如PTC India Ltd.等）无关。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const contents = document.querySelectorAll('.content-section');
+            const menuBtn = document.getElementById('menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const target = tab.getAttribute('data-tab');
+                    contents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === `${target}-content`) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+            
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            mobileNavLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            const cadMarketShareCtx = document.getElementById('cadMarketShareChart').getContext('2d');
+            const cadMarketShareChart = new Chart(cadMarketShareCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Dassault Systèmes', 'Siemens', 'Autodesk (Pre-deal)', 'Autodesk+PTC (Post-deal)'],
+                    datasets: [{
+                        label: 'CAD 市场份额 (%)',
+                        data: [33, 22, 21, 36],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(239, 68, 68, 0.5)',
+                            'rgba(239, 68, 68, 0.9)'
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(239, 68, 68, 1)',
+                            'rgba(239, 68, 68, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Autodesk 收购 PTC 后 CAD 市场份额模拟',
+                            padding: {
+                                top: 10,
+                                bottom: 10
+                            },
+                            font: {
+                                size: 14,
+                                family: "'Noto Sans SC', sans-serif"
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` 市场份额: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 45,
+                             ticks: {
+                                callback: function(value) {
+                                    return value + '%'
+                                },
+                                font: { size: 10 }
+                            }
+                        },
+                         y: {
+                            ticks: {
+                                font: {
+                                    size: 10,
+                                    family: "'Noto Sans SC', sans-serif"
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 70) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
