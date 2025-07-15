@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Chosen Palette: Warm Neutral Harmony (#fdfbf7 background, #2c3e50 text, with muted teal, terracotta, and gold accents) -->
+    <!-- Application Structure Plan: A significantly enhanced single-page dashboard. The structure is deepened with more sub-sections and a new major section for "Trade Environment & Logistics". The flow is: 1) Macro Trends (Quarterly view with narrative context of the four phases), 2) Structural Transformation (deepened with E-commerce), 3) Global Footprint (enriched with BRI/RCEP context and a domestic layout table), 4) NEW: Trade Environment & Arteries (interactive policy viewer and logistics cards), 5) Future Outlook (enriched with detailed analysis). This structure provides a comprehensive, 360-degree view, combining the "what" (data) with the "why" (strategy/policy) and "how" (logistics). -->
+    <!-- Visualization & Content Choices: 
+        - Macro Trend: Retained quarterly line chart with year filter. Added text from the report describing the four distinct growth phases to give context to the chart's fluctuations.
+        - Structural Shift: Added a new card-based component for "Cross-border E-commerce" with key stats (2.38T RMB, 19.6% growth) to reflect its importance highlighted in the new report. Enriched text for other charts.
+        - Global Footprint: Added a new HTML table for the "Top Exporting Provinces" to visualize the domestic layout.
+        - NEW - Trade Environment: Created an interactive tabbed component for major countries' trade policies, directly translating the summary table into a more engaging format.
+        - NEW - Logistics: Added two summary cards for Seaports and China-Europe Railway, using key stats from the report (7/10 top ports, 1.7万+ trains).
+        - All choices adhere to the NO SVG/Mermaid rule. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <title>中国出口十年（2015-2025）从制造到创造的非凡转型</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent-color: #c0392b; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans SC', sans-serif; background-color: #fdfbf7; color: #2c3e50; }
+        .chart-container { position: relative; width: 100%; height: 280px; max-height: 350px; }
+        @media (min-width: 640px) { .chart-container { height: 320px; } }
+        @media (min-width: 1024px) { .chart-container { height: 400px; max-height: 400px; } }
+        .nav-link { transition: color 0.3s, border-color 0.3s; }
+        .nav-link:hover, .nav-link.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
+        .year-filter-btn.active, .policy-tab.active { background-color: var(--accent-color); color: white; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
+        .fade-in { animation: fadeIn 1s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .policy-content { display: none; }
+        .policy-content.active { display: block; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header id="header" class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-lg md:text-2xl font-bold text-[var(--accent-color)]">中国出口十年洞察</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#macro-view" class="nav-link text-gray-600 px-3 py-2 text-sm font-medium border-b-2 border-transparent">宏观十年</a>
+                        <a href="#structural-shift" class="nav-link text-gray-600 px-3 py-2 text-sm font-medium border-b-2 border-transparent">结构转型</a>
+                        <a href="#global-footprint" class="nav-link text-gray-600 px-3 py-2 text-sm font-medium border-b-2 border-transparent">全球布局</a>
+                        <a href="#trade-environment" class="nav-link text-gray-600 px-3 py-2 text-sm font-medium border-b-2 border-transparent">贸易环境</a>
+                        <a href="#future-outlook" class="nav-link text-gray-600 px-3 py-2 text-sm font-medium border-b-2 border-transparent">未来展望</a>
+                    </div>
+                </div>
+                 <div class="md:hidden">
+                    <select id="mobile-nav" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <option value="#macro-view">宏观十年</option>
+                        <option value="#structural-shift">结构转型</option>
+                        <option value="#global-footprint">全球布局</option>
+                        <option value="#trade-environment">贸易环境</option>
+                        <option value="#future-outlook">未来展望</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <section class="text-center py-8 md:py-12 fade-in">
+            <h2 class="text-2xl sm:text-3xl md:text-5xl font-bold tracking-tight mb-4">从制造到创造的非凡十年</h2>
+            <p class="max-w-3xl mx-auto text-gray-500 text-sm sm:text-base md:text-lg">
+                这份深度整合的交互式报告，旨在揭示2015-2025年中国出口从数量到价值、从制造到创造的深刻转型。探索数据背后的驱动力、全球格局的重塑，以及未来的挑战与机遇。
+            </p>
+        </section>
+
+        <!-- Section 1: Macro View -->
+        <section id="macro-view" class="py-12 space-y-12">
+            <div class="text-center fade-in">
+                <h3 class="text-xl sm:text-2xl md:text-3xl font-bold">宏观十年：季度出口趋势与发展阶段</h3>
+                <p class="mt-2 text-gray-500 max-w-3xl mx-auto text-sm sm:text-base">过去十年，中国出口清晰地划分为四个阶段：<strong class="text-gray-700">结构性放缓 (2015-16)</strong>、<strong class="text-gray-700">贸易摩擦中复苏 (2017-19)</strong>、<strong class="text-gray-700">疫情下超常增长 (2020-22)</strong>，以及<strong class="text-gray-700">高质量常态化 (2023至今)</strong>。下方的季度图表精细地展示了这些阶段中的季节性规律和短期波动。</p>
+            </div>
+
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg fade-in">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                    <h4 class="text-base sm:text-lg font-semibold">季度出口总额（2015-2025 Q2）</h4>
+                    <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg self-end sm:self-center">
+                        <button id="currency-rmb" class="px-3 py-1 text-xs sm:text-sm font-medium rounded-md bg-white text-[var(--accent-color)] shadow">人民币</button>
+                        <button id="currency-usd" class="px-3 py-1 text-xs sm:text-sm font-medium rounded-md text-gray-600">美元</button>
+                    </div>
+                </div>
+                <div id="year-filter" class="flex flex-wrap justify-center gap-1 sm:gap-2 my-4"></div>
+                <div class="chart-container">
+                    <canvas id="quarterlyExportChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 border-gray-200">
+
+        <!-- Section 2: Structural Shift -->
+        <section id="structural-shift" class="py-12 space-y-12">
+            <div class="text-center fade-in">
+                <h3 class="text-xl sm:text-2xl md:text-3xl font-bold">结构转型：质量与创新的双引擎</h3>
+                <p class="mt-2 text-gray-500 max-w-2xl mx-auto text-sm sm:text-base">中国出口的内核发生了根本性变化。民营企业成为绝对主力，高技术含量的“新三样”和蓬勃发展的跨境电商，共同定义了增长的新范式。</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg fade-in">
+                    <h4 class="text-base sm:text-lg font-semibold mb-2">引擎室：民营企业的崛起</h4>
+                    <p class="text-sm text-gray-500 mb-4">民营企业已贡献超六成出口额，其活力和韧性是中国外贸的基石。2025上半年，有进出口实绩的民营企业达54.7万家。</p>
+                    <div class="chart-container h-60 sm:h-64 md:h-80">
+                        <canvas id="enterpriseTypeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg fade-in">
+                    <h4 class="text-base sm:text-lg font-semibold mb-2">商品变革：“新三样”引领</h4>
+                    <p class="text-sm text-gray-500 mb-4">机电产品占比突破60%，其中以电动汽车、锂电池、光伏为代表的“新三样”在2023年出口额超万亿，同比增长近30%。</p>
+                    <div class="chart-container h-60 sm:h-64 md:h-80">
+                        <canvas id="commodityEvolutionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 rounded-xl shadow-lg fade-in">
+                <h4 class="text-lg font-semibold mb-4 text-center">新前沿：跨境电商的品牌化力量</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div class="text-center md:text-left">
+                         <p class="text-sm text-gray-500">作为新兴贸易业态，跨境电商为中小企业开辟了直达全球的通道，加速了从“产品出海”到“品牌出海”的进程。</p>
+                         <div class="mt-4 flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-6 justify-center md:justify-start">
+                             <div>
+                                <p class="text-3xl font-bold text-[#16a085]">2.38<span class="text-xl font-normal">万亿</span></p>
+                                <p class="text-xs text-gray-500">2023年跨境电商出口额 (元)</p>
+                             </div>
+                             <div>
+                                <p class="text-3xl font-bold text-[#16a085]">+19.6%</p>
+                                <p class="text-xs text-gray-500">2023年同比增长</p>
+                             </div>
+                         </div>
+                    </div>
+                    <div class="flex justify-center items-center">
+                        <div class="w-48 h-48 bg-teal-50 rounded-full flex items-center justify-center">
+                            <span class="text-6xl">🌐</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+        
+        <hr class="my-12 border-gray-200">
+
+        <!-- Section 3: Global Footprint -->
+        <section id="global-footprint" class="py-12 space-y-12">
+            <div class="text-center fade-in">
+                <h3 class="text-xl sm:text-2xl md:text-3xl font-bold">全球布局：战略性多元化</h3>
+                <p class="mt-2 text-gray-500 max-w-3xl mx-auto text-sm sm:text-base">中国出口目的地已从依赖欧美转向东盟和“一带一路”共建国家。这一战略转移是“双循环”新发展格局的体现，通过RCEP等协定，构建了更具韧性的区域供应链网络。</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <div class="lg:col-span-1 bg-white p-4 sm:p-6 rounded-xl shadow-lg fade-in">
+                    <h4 class="text-base sm:text-lg font-semibold mb-4">主要贸易伙伴对比</h4>
+                    <div id="partner-selector" class="space-y-2">
+                        <button data-partner="ASEAN" class="w-full text-left p-3 rounded-lg bg-[var(--accent-color)] text-white transition text-sm sm:text-base">东盟 (ASEAN)</button>
+                        <button data-partner="EU" class="w-full text-left p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition text-sm sm:text-base">欧盟 (EU)</button>
+                        <button data-partner="US" class="w-full text-left p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition text-sm sm:text-base">美国 (US)</button>
+                        <button data-partner="BRI" class="w-full text-left p-3 rounded-lg bg-gray-100 hover:bg-gray-200 transition text-sm sm:text-base">"一带一路"共建国家</button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 bg-white p-4 sm:p-6 rounded-xl shadow-lg fade-in">
+                    <h4 id="partner-name" class="text-lg sm:text-xl font-bold mb-2">东盟 (ASEAN)</h4>
+                    <p id="partner-description" class="text-gray-500 mb-4 text-sm">2020年起成为中国第一大贸易伙伴，RCEP政策红利持续释放，产业链合作日益紧密。2023年，对“一带一路”国家出口已占总出口47%以上。</p>
+                    <div class="chart-container h-64 sm:h-72">
+                        <canvas id="partnerShareChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg fade-in">
+                <h4 class="text-base sm:text-lg font-semibold mb-4">国内格局：沿海龙头与内陆崛起</h4>
+                 <p class="text-sm text-gray-500 mb-4">广东、浙江、江苏稳居前三，但安徽等内陆省份凭借汽车等先进制造业异军突起，标志着出口地理向“双引擎”驱动转变。</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-4 py-3">排名</th>
+                                <th scope="col" class="px-4 py-3">省份</th>
+                                <th scope="col" class="px-4 py-3">2023年出口额 (万亿元)</th>
+                                <th scope="col" class="px-4 py-3">亮点</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-white border-b"><td class="px-4 py-4 font-medium text-gray-900">1</td><td class="px-4 py-4">广东</td><td class="px-4 py-4">5.3+</td><td class="px-4 py-4">持续领跑，高技术制造业核心</td></tr>
+                            <tr class="bg-gray-50 border-b"><td class="px-4 py-4 font-medium text-gray-900">2</td><td class="px-4 py-4">浙江</td><td class="px-4 py-4">3.57</td><td class="px-4 py-4">历史性超越江苏，跨境电商优势</td></tr>
+                            <tr class="bg-white border-b"><td class="px-4 py-4 font-medium text-gray-900">3</td><td class="px-4 py-4">江苏</td><td class="px-4 py-4">3.37</td><td class="px-4 py-4">外向型经济重镇</td></tr>
+                            <tr class="bg-gray-50"><td class="px-4 py-4 font-medium text-gray-900">10</td><td class="px-4 py-4">安徽</td><td class="px-4 py-4">0.54</td><td class="px-4 py-4 text-green-600 font-semibold">首次跻身十强，汽车出口全国第二</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 border-gray-200">
+        
+        <!-- Section 5: Trade Environment & Arteries -->
+        <section id="trade-environment" class="py-12 space-y-12">
+            <div class="text-center fade-in">
+                <h3 class="text-xl sm:text-2xl md:text-3xl font-bold">贸易环境与动脉</h3>
+                <p class="mt-2 text-gray-500 max-w-3xl mx-auto text-sm sm:text-base">理解出口表现，必须审视其所处的复杂国际政策环境，以及支撑其高效运转的强大物流基础。</p>
+            </div>
+
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg fade-in">
+                <h4 class="text-base sm:text-lg font-semibold mb-4">主要经济体对华贸易政策</h4>
+                <div class="mb-4 border-b border-gray-200">
+                    <div id="policy-tabs" class="flex flex-wrap -mb-px text-sm font-medium text-center">
+                        <button class="policy-tab inline-block p-4 border-b-2 rounded-t-lg" data-target="policy-us">美国</button>
+                        <button class="policy-tab" data-target="policy-eu">欧盟</button>
+                        <button class="policy-tab" data-target="policy-india">印度</button>
+                        <button class="policy-tab" data-target="policy-brazil">巴西</button>
+                    </div>
+                </div>
+                <div id="policy-content-container">
+                    <div id="policy-us" class="policy-content fade-in space-y-2">
+                        <p><strong>措施类型:</strong> 高额关税 (Section 301)；技术出口管制；实体清单。</p>
+                        <p><strong>重点领域:</strong> 电动汽车（高达100%）、锂电池、太阳能电池、半导体、钢铝等。</p>
+                        <p><strong>核心理由:</strong> 国家安全、回应“不公平贸易行为”、保护本土产业。</p>
+                    </div>
+                    <div id="policy-eu" class="policy-content fade-in space-y-2">
+                        <p><strong>措施类型:</strong> 反补贴调查；反倾销调查。</p>
+                        <p><strong>重点领域:</strong> 电动汽车（征收17-38%临时关税）、风力涡轮机、光伏产品。</p>
+                        <p><strong>核心理由:</strong> 维护市场公平竞争，防止政府补贴扭曲市场。</p>
+                    </div>
+                    <div id="policy-india" class="policy-content fade-in space-y-2">
+                        <p><strong>措施类型:</strong> 反倾销调查；非关税壁垒（如提高标准、进口许可）。</p>
+                        <p><strong>重点领域:</strong> 化工、钢铁、纺织、电子元件、太阳能设备等。</p>
+                        <p><strong>核心理由:</strong> 保护国内产业，缓解巨额贸易逆差。</p>
+                    </div>
+                    <div id="policy-brazil" class="policy-content fade-in space-y-2">
+                        <p><strong>措施类型:</strong> 反倾销调查。</p>
+                        <p><strong>重点领域:</strong> 历史上主要集中在钢铁产品，也涉及化工、纺织等。</p>
+                        <p><strong>核心理由:</strong> 保护本土工业体系，应对国内相关行业的游说。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg fade-in">
+                    <h4 class="text-lg font-semibold mb-4">贸易动脉 I：海运霸主</h4>
+                    <div class="flex items-center gap-4">
+                        <span class="text-6xl">🚢</span>
+                        <div>
+                            <p class="text-sm text-gray-600">中国港口在全球海运中占据统治地位，世界十大集装箱港口中独占七席，为海量出口提供了无与伦比的硬件支持。</p>
+                            <p class="mt-2 text-2xl font-bold text-blue-600">2.96亿 <span class="text-base font-normal">TEU</span></p>
+                            <p class="text-xs text-gray-500">2022年全国港口集装箱吞吐量</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg fade-in">
+                    <h4 class="text-lg font-semibold mb-4">贸易动脉 II：新丝绸之路</h4>
+                     <div class="flex items-center gap-4">
+                        <span class="text-6xl">🚂</span>
+                        <div>
+                            <p class="text-sm text-gray-600">中欧班列已发展为连接亚欧的战略陆路通道，为高附加值商品提供了介于海运和空运之间的理想选择。</p>
+                            <p class="mt-2 text-2xl font-bold text-green-600">1.7万+ <span class="text-base font-normal">列</span></p>
+                            <p class="text-xs text-gray-500">2023年全年开行列车数</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-12 border-gray-200">
+
+        <!-- Section 4: Future Outlook -->
+        <section id="future-outlook" class="py-12">
+            <div class="text-center fade-in">
+                <h3 class="text-xl sm:text-2xl md:text-3xl font-bold">未来展望：挑战与机遇并存</h3>
+                 <p class="mt-2 text-gray-500 max-w-2xl mx-auto text-sm sm:text-base">中国出口的下一阶段将在更复杂的全球环境中展开。成功将取决于持续的技术创新、深化与新兴市场的合作，以及驾驭地缘政治风险的能力。</p>
+            </div>
+
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg fade-in">
+                    <h4 class="text-lg sm:text-xl font-semibold text-green-600 mb-4">机遇 ✨</h4>
+                    <ul class="space-y-4">
+                        <li class="flex items-start"><span class="text-green-500 mr-3 mt-1">✔</span><div><h5 class="font-semibold text-sm sm:text-base">绿色转型领导力</h5><p class="text-xs sm:text-sm text-gray-600">在电动汽车、光伏、电池等领域已占全球领先地位，市场需求将持续强劲。</p></div></li>
+                        <li class="flex items-start"><span class="text-green-500 mr-3 mt-1">✔</span><div><h5 class="font-semibold text-sm sm:text-base">深化南南合作</h5><p class="text-xs sm:text-sm text-gray-600">与“一带一路”及其他新兴市场的贸易增长，开辟了广阔的新空间，可对冲传统市场风险。</p></div></li>
+                        <li class="flex items-start"><span class="text-green-500 mr-3 mt-1">✔</span><div><h5 class="font-semibold text-sm sm:text-base">价值链上移</h5><p class="text-xs sm:text-sm text-gray-600">借助跨境电商推动自主品牌出海，拓展服务贸易和高端装备出口，是增长的内在潜力。</p></div></li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg fade-in">
+                    <h4 class="text-lg sm:text-xl font-semibold text-red-600 mb-4">挑战 ❗</h4>
+                    <ul class="space-y-4">
+                        <li class="flex items-start"><span class="text-red-500 mr-3 mt-1">✖</span><div><h5 class="font-semibold text-sm sm:text-base">地缘政治逆风</h5><p class="text-xs sm:text-sm text-gray-600">贸易保护主义、“去风险化”策略及技术管制构成最严峻的外部挑战。</p></div></li>
+                        <li class="flex items-start"><span class="text-red-500 mr-3 mt-1">✖</span><div><h5 class="font-semibold text-sm sm:text-base">全球经济放缓</h5><p class="text-xs sm:text-sm text-gray-600">主要经济体增长前景疲软，意味着外部总需求可能持续走弱。</p></div></li>
+                        <li class="flex items-start"><span class="text-red-500 mr-3 mt-1">✖</span><div><h5 class="font-semibold text-sm sm:text-base">日益激烈的竞争</h5><p class="text-xs sm:text-sm text-gray-600">全球供应链重构，部分产业向越南、墨西哥等国转移，竞争加剧。</p></div></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto px-8 py-4 text-center text-xs sm:text-sm">
+            <p>数据来源：中华人民共和国海关总署 (GACC)、国家统计局 (NBS) 及公开报告。</p>
+            <p>&copy; 2025 交互式分析报告</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chartData = {
+                quarterlyExport: {
+                    labels: ['2015 Q1', 'Q2', 'Q3', 'Q4', '2016 Q1', 'Q2', 'Q3', 'Q4', '2017 Q1', 'Q2', 'Q3', 'Q4', '2018 Q1', 'Q2', 'Q3', 'Q4', '2019 Q1', 'Q2', 'Q3', 'Q4', '2020 Q1', 'Q2', 'Q3', 'Q4', '2021 Q1', 'Q2', 'Q3', 'Q4', '2022 Q1', 'Q2', 'Q3', 'Q4', '2023 Q1', 'Q2', 'Q3', 'Q4', '2024 Q1', 'Q2', 'Q3', 'Q4', '2025 Q1', 'Q2'],
+                    datasets: {
+                        rmb: [3.47, 3.55, 3.54, 3.57, 3.19, 3.54, 3.56, 3.56, 3.71, 3.93, 3.84, 3.85, 3.77, 4.28, 4.27, 4.10, 3.96, 4.51, 4.47, 4.29, 3.87, 4.74, 4.67, 4.65, 4.91, 5.23, 5.46, 6.13, 5.66, 6.06, 6.20, 6.05, 5.95, 6.06, 6.08, 5.68, 5.96, 6.45, 6.54, 6.50, 6.40, 6.60],
+                        usd: [0.56, 0.58, 0.57, 0.56, 0.49, 0.54, 0.53, 0.54, 0.54, 0.58, 0.57, 0.57, 0.60, 0.66, 0.64, 0.58, 0.57, 0.65, 0.65, 0.63, 0.55, 0.67, 0.69, 0.68, 0.76, 0.81, 0.85, 0.94, 0.89, 0.92, 0.92, 0.86, 0.86, 0.87, 0.86, 0.79, 0.83, 0.89, 0.92, 0.94, 0.89, 0.92]
+                    }
+                },
+                enterpriseType: { labels: ['民营企业', '外商投资企业', '国有企业及其他'], data: [65.4, 28.1, 6.5] },
+                commodityEvolution: {
+                    labels: ['2015', '2023', '2025 H1'],
+                    datasets: [
+                        { label: '机电产品', data: [57.7, 58.6, 60.0], backgroundColor: '#2980b9' },
+                        { label: '劳动密集型产品', data: [22.0, 17.4, 15.6], backgroundColor: '#e67e22' },
+                        { label: '其他', data: [20.3, 24.0, 24.4], backgroundColor: '#95a5a6' }
+                    ]
+                },
+                partnerData: {
+                    ASEAN: { name: "东盟 (ASEAN)", description: "2020年起成为中国第一大贸易伙伴，RCEP政策红利持续释放，产业链合作日益紧密。", share: [14.8, 17.8] },
+                    EU: { name: "欧盟 (EU)", description: "中国第二大贸易伙伴，地位稳固，但面临地缘政治的复杂性，增速相对平缓。", share: [17.5, 14.7] },
+                    US: { name: "美国 (US)", description: "贸易战后占比明显下降，关系经历剧烈动荡，降低依赖成为出口多元化的核心动因。", share: [16.8, 11.9] },
+                    BRI: { name: '"一带一路"共建国家', description: "贸易增速持续高于整体，已占中国外贸总值的近半壁江山，成为增长核心引擎。", share: [40, 47] }
+                }
+            };
+            
+            let quarterlyExportChartInstance, enterpriseTypeChartInstance, commodityEvolutionChartInstance, partnerShareChartInstance;
+            let currentCurrency = 'rmb';
+            let activeYears = ['all'];
+
+            const commonChartOptions = {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { font: { family: "'Noto Sans SC', sans-serif" }, boxWidth: 15, padding: 20 } }, tooltip: { titleFont: { family: "'Noto Sans SC', sans-serif" }, bodyFont: { family: "'Noto Sans SC', sans-serif" } } },
+                scales: { x: { ticks: { font: { family: "'Noto Sans SC', sans-serif" } } }, y: { ticks: { font: { family: "'Noto Sans SC', sans-serif" } } } }
+            };
+            
+            function createQuarterlyExportChart() {
+                const fullLabels = chartData.quarterlyExport.labels;
+                const fullData = chartData.quarterlyExport.datasets[currentCurrency];
+                let filteredLabels = [], filteredData = [];
+                if (activeYears.includes('all')) {
+                    filteredLabels = fullLabels;
+                    filteredData = fullData;
+                } else {
+                    fullLabels.forEach((label, index) => {
+                        const year = label.substring(0, 4);
+                        if (activeYears.includes(year)) {
+                            filteredLabels.push(label);
+                            filteredData.push(fullData[index]);
+                        }
+                    });
+                }
+                const ctx = document.getElementById('quarterlyExportChart').getContext('2d');
+                if (quarterlyExportChartInstance) quarterlyExportChartInstance.destroy();
+                quarterlyExportChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: filteredLabels,
+                        datasets: [{
+                            label: `季度出口额 (${currentCurrency === 'rmb' ? '万亿人民币' : '万亿美元'})`,
+                            data: filteredData,
+                            borderColor: 'var(--accent-color)', backgroundColor: 'rgba(192, 57, 43, 0.1)',
+                            fill: true, tension: 0.3, pointRadius: filteredLabels.length < 20 ? 3 : 1, pointHoverRadius: 5
+                        }]
+                    },
+                    options: {...commonChartOptions}
+                });
+            }
+
+            function createEnterpriseTypeChart() {
+                const ctx = document.getElementById('enterpriseTypeChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { labels: chartData.enterpriseType.labels, datasets: [{ data: chartData.enterpriseType.data, backgroundColor: ['#27ae60', '#3498db', '#95a5a6'], hoverOffset: 4 }] },
+                    options: {...commonChartOptions, cutout: '60%'}
+                });
+            }
+            
+            function createCommodityEvolutionChart() {
+                const ctx = document.getElementById('commodityEvolutionChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: chartData.commodityEvolution.labels, datasets: chartData.commodityEvolution.datasets },
+                    options: { ...commonChartOptions, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: value => value + '%' } } } }
+                });
+            }
+
+            function createPartnerShareChart(partnerKey) {
+                 const ctx = document.getElementById('partnerShareChart').getContext('2d');
+                 const partner = chartData.partnerData[partnerKey];
+                 if (partnerShareChartInstance) partnerShareChartInstance.destroy();
+                 const labels = partnerKey === 'BRI' ? ['2022', '2023'] : ['2020', '2025 H1'];
+                 partnerShareChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: labels, datasets: [ { label: `${partner.name} 出口占比 (%)`, data: partner.share, backgroundColor: ['#3498db', '#e74c3c'], barThickness: 50, } ] },
+                    options: { ...commonChartOptions, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, title: { display: true, text: '占总出口比重 (%)' } } } }
+                 });
+            }
+
+            // Currency toggle
+            const currencyRmbBtn = document.getElementById('currency-rmb');
+            const currencyUsdBtn = document.getElementById('currency-usd');
+            currencyRmbBtn.addEventListener('click', () => { currentCurrency = 'rmb'; createQuarterlyExportChart(); currencyRmbBtn.classList.add('active'); currencyUsdBtn.classList.remove('active'); });
+            currencyUsdBtn.addEventListener('click', () => { currentCurrency = 'usd'; createQuarterlyExportChart(); currencyUsdBtn.classList.add('active'); currencyRmbBtn.classList.remove('active'); });
+
+            // Year filter
+            const yearFilterContainer = document.getElementById('year-filter');
+            const years = ['all', ...new Set(chartData.quarterlyExport.labels.map(l => l.substring(0, 4)))];
+            years.forEach(year => {
+                const button = document.createElement('button');
+                button.dataset.year = year; button.textContent = year === 'all' ? '全部' : year;
+                button.className = 'year-filter-btn px-2 py-1 text-xs sm:px-3 sm:py-1 sm:text-sm font-medium rounded-md bg-gray-200 text-gray-700 transition';
+                if (year === 'all') button.classList.add('active');
+                yearFilterContainer.appendChild(button);
+            });
+            yearFilterContainer.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'BUTTON') return;
+                const selectedYear = e.target.dataset.year;
+                if (selectedYear === 'all') { activeYears = ['all']; } 
+                else {
+                    if (activeYears.includes('all')) activeYears = [selectedYear];
+                    else {
+                        const index = activeYears.indexOf(selectedYear);
+                        if (index > -1) activeYears.splice(index, 1);
+                        else activeYears.push(selectedYear);
+                    }
+                }
+                if (activeYears.length === 0) activeYears = ['all'];
+                if (activeYears.length > 1 && activeYears.includes('all')) activeYears = activeYears.filter(y => y !== 'all');
+                yearFilterContainer.querySelectorAll('.year-filter-btn').forEach(btn => btn.classList.toggle('active', activeYears.includes(btn.dataset.year)));
+                createQuarterlyExportChart();
+            });
+
+            // Partner selector
+            const partnerSelector = document.getElementById('partner-selector');
+            partnerSelector.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    const partnerKey = e.target.dataset.partner;
+                    document.getElementById('partner-name').textContent = chartData.partnerData[partnerKey].name;
+                    document.getElementById('partner-description').textContent = chartData.partnerData[partnerKey].description;
+                    partnerSelector.querySelectorAll('button').forEach(btn => btn.classList.remove('bg-[var(--accent-color)]', 'text-white'));
+                    e.target.classList.add('bg-[var(--accent-color)]', 'text-white');
+                    createPartnerShareChart(partnerKey);
+                }
+            });
+
+            // Policy tabs
+            const policyTabsContainer = document.getElementById('policy-tabs');
+            const policyContents = document.querySelectorAll('.policy-content');
+            policyTabsContainer.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    policyTabsContainer.querySelectorAll('.policy-tab').forEach(tab => tab.classList.remove('active', 'border-[var(--accent-color)]', 'text-[var(--accent-color)]'));
+                    e.target.classList.add('active', 'border-[var(--accent-color)]', 'text-[var(--accent-color)]');
+                    policyContents.forEach(content => content.classList.remove('active'));
+                    document.getElementById(e.target.dataset.target).classList.add('active');
+                }
+            });
+            policyTabsContainer.querySelector('.policy-tab').click();
+
+
+            // Initial chart creations
+            createQuarterlyExportChart();
+            createEnterpriseTypeChart();
+            createCommodityEvolutionChart();
+            createPartnerShareChart('ASEAN');
+            
+            // Scrollspy & Mobile Nav
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileNav = document.getElementById('mobile-nav');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href').substring(1) === id));
+                        mobileNav.value = `#${id}`;
+                    }
+                });
+            }, { rootMargin: "-40% 0px -60% 0px" });
+            sections.forEach(section => observer.observe(section));
+            mobileNav.addEventListener('change', (e) => { document.querySelector(e.target.value).scrollIntoView(); });
+        });
+    </script>
+</body>
+</html>
