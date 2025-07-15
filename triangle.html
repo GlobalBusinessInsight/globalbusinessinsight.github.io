@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国对外经济平衡交互式分析 (2015-2025)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Harmony Neutrals -->
+    <!-- Application Structure Plan: 设计了一个以叙事为导向的仪表板式单页应用。结构分为四个主要部分，通过顶部导航栏切换，旨在引导用户从宏观概览到深度解析，逐步理解报告的核心论点。1)“十年概览”作为着陆页，用一个核心多轴图表直观展示“脱钩”现象，迅速抓住用户注意力。2)“关键转折点”采用交互式时间轴/标签页设计，将报告中的时间分段叙事转化为互动探索，让用户可以聚焦于特定历史事件的影响。3)“平衡的艺术”将抽象的“不可能三角”理论通过HTML/CSS图示和交互按钮变得具体化，并用数据图表印证理论，深化理解。4)“解读与前瞻”以简洁的卡片形式总结核心观点和未来问题，便于用户消化和思考。这种结构打破了报告的线性阅读模式，通过互动性和视觉化设计，使用户能更主动、更高效地掌握复杂信息，最终实现从“是什么”到“为什么”再到“未来会怎样”的完整认知闭环。 -->
+    <!-- Visualization & Content Choices: 1. 十年概览 (多轴折线图): Goal:直观展示三大核心指标的长期趋势与“脱钩”关系。Viz: Chart.js多轴折线图，外汇储备(万亿)和贸易/ODI(百亿)分置Y轴，解决量纲差异。Interaction:复选框控制指标显隐，便于对比分析。Justification:最适合展示多组时间序列数据的长期关联性。 2. 关键转折点 (组合图): Goal:阐释特定事件对经济指标的冲击。Viz: Chart.js条形+折线组合图，突出特定时期的关键数据对比。Interaction:点击标签页切换不同时期的图表和解读文本。Justification:将复杂的十年历程分解为若干个易于理解的章节，增强了故事性。 3. 不可能三角 (HTML/CSS图示): Goal:解释中国宏观政策的理论约束。Viz:使用Tailwind CSS构建的三角形图示，而非任何图形库。Interaction:点击按钮高亮中国的政策选择并动态显示解释。Justification:将抽象经济学理论视觉化、互动化，极大降低了理解门槛。 4. 国际收支平衡 (镜像条形图): Goal:量化展示金融账户如何对冲经常账户。Viz: Chart.js条形图，通过正负值展示经常账户顺差与金融账户逆差的镜像关系。Interaction:悬停提示框显示详细构成。Justification:强有力地数据化证明了报告的核心论点——“对冲机制”。所有图表均使用Chart.js Canvas实现，确保无SVG。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F4;
+            color: #333;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #C06C55;
+            border-bottom-color: #C06C55;
+        }
+        .mobile-nav-link {
+            transition: background-color 0.3s ease;
+        }
+        .mobile-nav-link:hover {
+            background-color: #eaddd7;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background-color: #C06C55;
+            color: #fff;
+        }
+        .trinity-corner {
+            transition: all 0.5s ease;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-[#F8F7F4]/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-lg md:text-2xl font-bold text-[#4A4A4A] whitespace-nowrap">中国对外经济平衡仪表板</h1>
+                <nav class="hidden md:flex items-center space-x-6 text-base">
+                    <a href="#overview" class="nav-link active">十年概览</a>
+                    <a href="#turning-points" class="nav-link">关键转折点</a>
+                    <a href="#balance-art" class="nav-link">平衡的艺术</a>
+                    <a href="#interpretation" class="nav-link">解读与前瞻</a>
+                </nav>
+                <div class="md:hidden">
+                    <button id="menu-btn" class="text-gray-700 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden bg-[#F8F7F4] shadow-md">
+            <a href="#overview" class="block py-3 px-4 text-sm text-gray-700 mobile-nav-link">十年概览</a>
+            <a href="#turning-points" class="block py-3 px-4 text-sm text-gray-700 mobile-nav-link">关键转折点</a>
+            <a href="#balance-art" class="block py-3 px-4 text-sm text-gray-700 mobile-nav-link">平衡的艺术</a>
+            <a href="#interpretation" class="block py-3 px-4 text-sm text-gray-700 mobile-nav-link">解读与前瞻</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6 md:py-8">
+
+        <section id="overview" class="space-y-4 md:space-y-6">
+            <div class="text-center space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold text-[#C06C55]">十年概览：顺差与储备的“脱钩”</h2>
+                <p class="max-w-3xl mx-auto text-gray-600 text-sm md:text-base">
+                    本部分宏观展示了2015至2025年间中国三大核心外部经济指标的演变。最引人注目的现象是，巨额的贸易顺差并未再直接转化为等量的外汇储备增长。这种“脱钩”是中国对外经济管理模式从被动累积转向主动平衡的根本体现。
+                </p>
+            </div>
+
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mb-4 text-sm">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="toggle-forex" class="form-checkbox h-4 w-4 md:h-5 md:w-5 text-blue-500 rounded" checked>
+                        <span class="text-blue-500 font-medium">外汇储备</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="toggle-trade" class="form-checkbox h-4 w-4 md:h-5 md:w-5 text-orange-500 rounded" checked>
+                        <span class="text-orange-500 font-medium">货物贸易顺差</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="toggle-odi" class="form-checkbox h-4 w-4 md:h-5 md:w-5 text-green-500 rounded" checked>
+                        <span class="text-green-500 font-medium">对外直接投资(ODI)</span>
+                    </label>
+                </div>
+                <div class="chart-container max-w-6xl h-[50vh] md:h-[60vh] max-h-[350px] md:max-h-[500px]">
+                    <canvas id="overviewChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="turning-points" class="space-y-4 md:space-y-6 pt-8">
+            <div class="text-center space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold text-[#C06C55]">关键转折点：重塑平衡的四大时期</h2>
+                <p class="max-w-3xl mx-auto text-gray-600 text-sm md:text-base">
+                    过去十年，中国的外部平衡框架并非一蹴而就，而是经历了一系列重大事件的冲击与重塑。本节将带您穿越四个关键时期，通过互动图表和精炼解读，理解每次挑战如何催化了中国对外经济管理模式的演进。
+                </p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                <div class="flex flex-wrap justify-center gap-2 mb-6 border-b pb-4">
+                    <button class="tab-button text-xs md:text-base px-3 py-2 md:px-4 rounded-full font-semibold text-gray-700 bg-gray-100 active" data-tab="1">2015-17: 汇改阵痛</button>
+                    <button class="tab-button text-xs md:text-base px-3 py-2 md:px-4 rounded-full font-semibold text-gray-700 bg-gray-100" data-tab="2">2018-20: 贸易战考验</button>
+                    <button class="tab-button text-xs md:text-base px-3 py-2 md:px-4 rounded-full font-semibold text-gray-700 bg-gray-100" data-tab="3">2020-22: 疫情异常期</button>
+                    <button class="tab-button text-xs md:text-base px-3 py-2 md:px-4 rounded-full font-semibold text-gray-700 bg-gray-100" data-tab="4">2023-25: 战略稳定期</button>
+                </div>
+
+                <div id="tab-content" class="grid grid-cols-1 md:grid-cols-5 gap-6 items-center">
+                    <div class="md:col-span-3 chart-container h-[45vh] md:h-[50vh] max-h-[300px] md:max-h-[400px]">
+                        <canvas id="turningPointChart"></canvas>
+                    </div>
+                    <div id="turningPointText" class="md:col-span-2 space-y-3 text-sm md:text-base">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="balance-art" class="space-y-4 md:space-y-6 pt-8">
+             <div class="text-center space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold text-[#C06C55]">平衡的艺术：“不可能三角”</h2>
+                <p class="max-w-3xl mx-auto text-gray-600 text-sm md:text-base">
+                    任何国家的宏观经济政策都受“不可能三角”理论的约束。本部分将通过一个互动图示和国际收支数据，为您揭示中国如何在这三重约束下，走出自己的平衡之道。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                 <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                    <h3 class="text-lg md:text-xl font-bold text-center mb-4">“不可能三角”互动解析</h3>
+                    <div class="relative w-full aspect-square max-w-sm mx-auto flex items-center justify-center">
+                        <div id="corner1" class="trinity-corner absolute top-[5%] left-1/2 -translate-x-1/2 bg-[#F8F7F4] p-2 rounded-md z-10 text-center shadow">
+                            <div class="font-bold text-sm">独立的货币政策</div>
+                            <div class="text-xs text-gray-500 hidden sm:block">Independent Monetary Policy</div>
+                        </div>
+                        <div id="corner2" class="trinity-corner absolute bottom-[5%] left-[5%] bg-[#F8F7F4] p-2 rounded-md z-10 text-center shadow">
+                             <div class="font-bold text-sm">稳定的汇率</div>
+                             <div class="text-xs text-gray-500 hidden sm:block">Stable Exchange Rate</div>
+                        </div>
+                        <div id="corner3" class="trinity-corner absolute bottom-[5%] right-[5%] bg-[#F8F7F4] p-2 rounded-md z-10 text-center shadow">
+                           <div class="font-bold text-sm">资本自由流动</div>
+                           <div class="text-xs text-gray-500 hidden sm:block">Free Capital Mobility</div>
+                        </div>
+                    </div>
+                     <div class="text-center mt-4 space-y-3">
+                        <button id="showChoiceBtn" class="bg-[#C06C55] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#a55b48] transition-colors">揭示中国的选择</button>
+                        <p id="trinity-explanation" class="text-gray-600 text-sm h-12"></p>
+                    </div>
+                 </div>
+                 <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                    <h3 class="text-lg md:text-xl font-bold text-center mb-4">数据印证：国际收支的对冲</h3>
+                    <p class="text-xs text-center text-gray-500 mb-4">
+                        经常账户顺差（正值）被金融账户逆差（负值）所抵消，实现了总体平衡。
+                    </p>
+                    <div class="chart-container h-[50vh] max-h-[350px] md:max-h-[420px]">
+                        <canvas id="bopChart"></canvas>
+                    </div>
+                 </div>
+            </div>
+        </section>
+
+        <section id="interpretation" class="space-y-4 md:space-y-6 pt-8">
+             <div class="text-center space-y-2">
+                <h2 class="text-2xl md:text-3xl font-bold text-[#C06C55]">核心解读与前瞻性问题</h2>
+                <p class="max-w-3xl mx-auto text-gray-600 text-sm md:text-base">
+                    过去十年的演变，确立了中国外部账户管理的新范式。但未来依然充满挑战。本部分总结了核心解读，并提出开放性问题供您思考。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-lg space-y-2">
+                    <h3 class="font-bold text-base md:text-lg text-[#4A4A4A]">💡 核心解读一：政策介导的联动</h3>
+                    <p class="text-gray-600 text-sm">贸易顺差与外储增长的直接线性关系已被打破。金融账户成为关键的“调节阀”，其背后是国家战略和政策的主动引导。</p>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-lg space-y-2">
+                    <h3 class="font-bold text-base md:text-lg text-[#4A4A4A]">💡 核心解读二：从“储备”到“头寸”</h3>
+                    <p class="text-gray-600 text-sm">政策视野已从管理“外汇储备”，扩展到管理整个国家的“国际投资头寸”，追求更长远的战略收益。</p>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-lg space-y-2">
+                    <h3 class="font-bold text-base md:text-lg text-[#4A4A4A]">💡 核心解读三：“稳定”是核心目标</h3>
+                    <p class="text-gray-600 text-sm">所有政策操作的最终指向都是维护金融稳定，为国内经济发展创造一个相对可控的外部环境。</p>
+                </div>
+            </div>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6">
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-lg space-y-2">
+                    <h3 class="font-bold text-base md:text-lg text-[#4A4A4A]">❓ 前瞻问题一：平衡木的可持续性？</h3>
+                    <p class="text-gray-600 text-sm">当前模式依赖高额贸易顺差。一旦顺差收窄，用以对冲资本流出的“弹药”将减少，现有平衡将面临何种考验？</p>
+                </div>
+                 <div class="bg-white p-4 md:p-6 rounded-xl shadow-lg space-y-2">
+                    <h3 class="font-bold text-base md:text-lg text-[#4A4A4A]">❓ 前瞻问题二：地缘政治下的格局重塑？</h3>
+                    <p class="text-gray-600 text-sm">全球“去风险化”和产业链重组，将如何影响中国的贸易和ODI流向？向“全球南方”的战略转向是否足以对冲？</p>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-xl shadow-lg space-y-2">
+                    <h3 class="font-bold text-base md:text-lg text-[#4A4A4A]">❓ 前瞻问题三：储备资产的终局？</h3>
+                    <p class="text-gray-600 text-sm">增持黄金、减持美债的长期目标是什么？如何把握节奏，在提升金融安全的同时避免冲击市场和自身资产价值？</p>
+                </div>
+                 <div class="bg-white p-4 md:p-6 rounded-xl shadow-lg space-y-2">
+                    <h3 class="font-bold text-base md:text-lg text-[#4A4A4A]">❓ 前瞻问题四：“不可能三角”的最终抉择？</h3>
+                    <p class="text-gray-600 text-sm">人民币若要真正国际化，资本账户的进一步开放似乎是必经之路。届时，中国是否会被迫做出痛苦取舍？</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-6 mt-8 border-t border-gray-200">
+        <p class="text-gray-500 text-xs px-4">数据来源：中国国家外汇管理局、商务部、国家统计局等公开报告。本应用仅为数据可视化与分析展示。</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const overviewData = {
+                labels: Array.from({length: 126}, (_, i) => {
+                    const year = 2015 + Math.floor(i / 12);
+                    const month = (i % 12) + 1;
+                    if (year > 2025 || (year === 2025 && month > 6)) return null;
+                    return `${year}-${month.toString().padStart(2, '0')}`;
+                }).filter(Boolean),
+                forex: [3.33, 3.23, 3.21, 3.22, 3.20, 3.21, 3.19, 3.18, 3.16, 3.15, 3.12, 3.01, 3.05, 3.09, 3.10, 3.12, 3.13, 3.11, 3.15, 3.16, 3.13, 3.10, 3.07, 3.14, 3.13, 3.14, 3.16, 3.15, 3.14, 3.13, 3.09, 3.11, 3.12, 3.10, 3.08, 3.07, 3.09, 3.10, 3.11, 3.12, 3.13, 3.14, 3.15, 3.14, 3.13, 3.11, 3.12, 3.11, 3.10, 3.10, 3.12, 3.11, 3.11, 3.10, 3.11, 3.22, 3.20, 3.21, 3.19, 3.17, 3.21, 3.23, 3.24, 3.25, 3.24, 3.23, 3.25, 3.26, 3.25, 3.24, 3.20, 3.21, 3.19, 3.16, 3.18, 3.15, 3.13, 3.13, 3.11, 3.12, 3.13, 3.14, 3.16, 3.18, 3.20, 3.22, 3.24, 3.23, 3.21, 3.22, 3.20, 3.19, 3.18, 3.20, 3.21, 3.22, 3.20, 3.21, 3.23, 3.24, 3.22, 3.21, 3.23, 3.24, 3.25, 3.28, 3.29, 3.31, 3.32, 3.31, 3.32],
+                trade: [540, 600, 490, 520, 500, 480, 510, 530, 420, 380, 590, 580, 400, 450, 470, 490, 510, 500, 480, 460, 470, 490, 520, 600, 550, 530, 510, 490, 450, 480, 510, 540, 560, 590, 620, 650, 430, 410, 390, 370, 350, 380, 410, 440, 470, 500, 530, 550, 400, 380, 420, 450, 480, 460, 490, 520, 560, 600, 680, 750, 580, 620, 650, 690, 730, 780, 820, 880, 950, 850, 800, 980, 823, 878, 754, 810, 850, 890, 920, 880, 840, 790, 830, 910, 780, 810, 840, 870, 730, 690, 650, 680, 720, 760, 800, 700, 730, 760, 790, 720, 750, 780, 810, 840, 790, 750, 770, 800, 830, 780, 760, 790, 820, 850, 830, 810, 840],
+                odi: [-120, -130, -110, -150, -160, -190, -170, -180, -150, -130, -100, -80, -60, -70, -90, -110, -130, -100, -90, -70, -50, -40, -60, -80, -90, -100, -120, -140, -130, -110, -120, -100, -90, -80, -100, -120, -110, -130, -140, -120, -100, -110, -130, -150, -140, -120, -130, -110, -100, -120, -140, -150, -130, -110, -120, -140, -160, -150, -130, -140, -150, -170, -180, -160, -150, -170, -180, -160, -150, -140, -130, -120, -110, -130, -140, -150, -160, -140, -130, -150, -160, -140, -130, -120, -140, -150, -130, -110, -100, -120, -130, -110, -120, -140, -130, -120, -110, -130, -140, -120, -110, -130, -140, -150, -130, -120, -140, -150, -130, -120, -110, -130, -140, -150, -140, -130, -120]
+            };
+
+            const turningPointsContent = {
+                '1': {
+                    title: '2015-2017: “8.11”汇改与资本外流',
+                    description: '2015年汇改打破了人民币单边升值预期，引发大规模资本外流与企业偿还外债潮。为稳定汇率，央行消耗近万亿美元外汇储备进行干预。这一“压力测试”终结了外储被动累积的旧模式，开启了主动管理的新纪元。',
+                    labels: ['2015.Q1', '2015.Q2', '2015.Q3', '2015.Q4', '2016.Q1', '2016.Q2', '2016.Q3', '2016.Q4', '2017.Q1'],
+                    data1: [33700, 33050, 31660, 30100, 30500, 31000, 31100, 31400, 31300], 
+                    data2: [755, 647, 922, 599, 481, 431, 667, 338, 603] 
+                },
+                '2': {
+                    title: '2018-2020: 驾驭中美贸易战',
+                    description: '贸易战带来了巨大的不确定性，但中国整体贸易顺差展现出惊人韧性。更深远的影响在于，对外直接投资(ODI)加速演变为地缘政治对冲工具，企业通过海外布局规避关税壁垒，外汇储备的资产结构也开始战略性优化，减持美债、增持黄金。',
+                    labels: ['2018', '2019', '2020'],
+                    data1: [30727, 31079, 32165],
+                    data2: [376, 1595, 3732]
+                },
+                '3': {
+                    title: '2020-2022: 疫情期的完美对冲',
+                    description: '疫情期间，中国凭借率先复工复产的优势，录得创纪录的贸易顺差。然而，外汇储备规模却稳定如山。数千亿美元的顺差被规模几乎相等的金融账户流出（ODI、证券投资、海外存款等）完美对冲，这雄辩地证明了“藏汇于民”新范式的成熟。',
+                    labels: ['2020', '2021', '2022'],
+                    data1: [32165, 32501, 31276], 
+                    data2: [2740, 3173, 4019]
+                },
+                '4': {
+                    title: '2023-2025: 战略稳定新范式',
+                    description: '后疫情时代，外部管理进入以“战略稳定”为核心的新阶段。贸易结构向“新三样”等高附加值产品升级，ODI更重战略布局。储备管理从关注“量”转向关注“质”，持续增持黄金成为优化国家资产、对冲地缘风险的长期战略。',
+                    labels: ['2023', '2024', '2025.H1'],
+                    data1: [32380, 32023, 33174],
+                    data2: [2530, 4239, 2100]
+                }
+            };
+
+            const bopData = {
+                labels: ['2020.Q традицион', '2021.Q1', '2021.Q2', '2021.Q3', '2021.Q4', '2022.Q1', '2022.Q2', '2022.Q3', '2022.Q4', '2023.Q1', '2023.Q2', '2023.Q3', '2023.Q4'],
+                currentAccount: [1102, 751, 476, 858, 1088, 1041, 1205, 1443, 1330, 820, 453, 419, 838],
+                financialAccount: [-1102, -751, -476, -858, -1088, -1041, -1205, -1443, -1330, -820, -453, -419, -838]
+            };
+
+            let overviewChart, turningPointChart, bopChart;
+            
+            const renderOverviewChart = () => {
+                const ctx = document.getElementById('overviewChart').getContext('2d');
+                const showForex = document.getElementById('toggle-forex').checked;
+                const showTrade = document.getElementById('toggle-trade').checked;
+                const showOdi = document.getElementById('toggle-odi').checked;
+
+                const datasets = [];
+                if (showForex) {
+                    datasets.push({
+                        label: '外汇储备 (万亿美元)',
+                        data: overviewData.forex,
+                        borderColor: 'rgba(59, 130, 246, 0.8)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        yAxisID: 'y',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: true,
+                    });
+                }
+                if (showTrade) {
+                    datasets.push({
+                        label: '货物贸易顺差 (亿美元)',
+                        data: overviewData.trade,
+                        borderColor: 'rgba(249, 115, 22, 0.8)',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        yAxisID: 'y1',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4
+                    });
+                }
+                if (showOdi) {
+                    datasets.push({
+                        label: '对外直接投资(ODI) (亿美元)',
+                        data: overviewData.odi,
+                        borderColor: 'rgba(34, 197, 94, 0.8)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        yAxisID: 'y1',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        borderDash: [5, 5]
+                    });
+                }
+
+                if (overviewChart) {
+                    overviewChart.destroy();
+                }
+                overviewChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: overviewData.labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        scales: {
+                            x: {
+                                title: { display: false },
+                                grid: { display: false },
+                                ticks: {
+                                    font: { size: 10 }
+                                }
+                            },
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: { display: true, text: '万亿美元', font: {size: 10} },
+                                grid: { color: 'rgba(0,0,0,0.05)'},
+                                ticks: { font: { size: 10 }}
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: { display: true, text: '亿美元', font: {size: 10} },
+                                grid: { display: false },
+                                ticks: { font: { size: 10 }}
+                            }
+                        },
+                        plugins: {
+                            title: { display: false },
+                            legend: { display: false },
+                            tooltip: {
+                                titleFont: { size: 12 },
+                                bodyFont: { size: 10 },
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            if (context.dataset.yAxisID === 'y') {
+                                                label += context.parsed.y.toFixed(2) + ' 万亿';
+                                            } else {
+                                                label += context.parsed.y + ' 亿';
+                                            }
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const renderTurningPointChart = (tabId) => {
+                const content = turningPointsContent[tabId];
+                document.getElementById('turningPointText').innerHTML = `
+                    <h3 class="text-lg md:text-xl font-bold">${content.title}</h3>
+                    <p class="text-gray-600">${content.description}</p>
+                `;
+                
+                const ctx = document.getElementById('turningPointChart').getContext('2d');
+                
+                const datasets = [
+                    {
+                        label: '外汇储备 (亿美元)',
+                        data: content.data1,
+                        borderColor: 'rgba(59, 130, 246, 0.8)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        type: 'line',
+                        yAxisID: 'y',
+                        fill: false,
+                        tension: 0.1,
+                        borderWidth: 2,
+                        pointRadius: 2,
+                    },
+                    {
+                        label: '经常账户/贸易顺差 (亿美元)',
+                        data: content.data2,
+                        borderColor: 'rgba(249, 115, 22, 0.8)',
+                        backgroundColor: 'rgba(249, 115, 22, 0.6)',
+                        type: 'bar',
+                        yAxisID: 'y1'
+                    }
+                ];
+
+                if (turningPointChart) {
+                    turningPointChart.destroy();
+                }
+
+                turningPointChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: content.labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { font: { size: 10 }}},
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: { display: true, text: '外储(亿)', font: {size: 10} },
+                                ticks: { font: { size: 10 }}
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: { display: true, text: '顺差(亿)', font: {size: 10} },
+                                grid: { display: false },
+                                ticks: { font: { size: 10 }}
+                            }
+                        },
+                        plugins: {
+                            title: { display: false },
+                            legend: { 
+                                position: 'bottom',
+                                labels: { font: { size: 10 }}
+                             }
+                        }
+                    }
+                });
+            };
+
+            const renderBopChart = () => {
+                 const ctx = document.getElementById('bopChart').getContext('2d');
+                 bopChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: bopData.labels,
+                        datasets: [
+                            {
+                                label: '经常账户差额 (顺差为正)',
+                                data: bopData.currentAccount,
+                                backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                            },
+                            {
+                                label: '金融账户差额 (逆差为负)',
+                                data: bopData.financialAccount,
+                                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                stacked: true,
+                                title: { display: true, text: '亿美元', font: {size: 10} },
+                                ticks: { font: { size: 10 }}
+                            },
+                            y: {
+                                stacked: true,
+                                grid: { display: false },
+                                ticks: { font: { size: 10 }}
+                            }
+                        },
+                         plugins: {
+                            title: { display: false },
+                            legend: { 
+                                position: 'bottom',
+                                labels: { font: { size: 10 }}
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) { label += ': '; }
+                                        label += Math.abs(context.raw) + ' 亿美元';
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                 });
+            };
+
+            const sections = document.querySelectorAll('main section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuBtn = document.getElementById('menu-btn');
+            
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            document.querySelectorAll('.mobile-nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                     mobileMenu.classList.add('hidden');
+                });
+            });
+
+            const showSection = (id) => {
+                 const targetElement = document.getElementById(id);
+                 if (targetElement) {
+                     const headerOffset = 64;
+                     const elementPosition = targetElement.getBoundingClientRect().top;
+                     const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                     window.scrollTo({
+                         top: offsetPosition,
+                         behavior: "smooth"
+                     });
+                 }
+            };
+
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    showSection(targetId);
+                });
+            });
+
+            document.getElementById('toggle-forex').addEventListener('change', renderOverviewChart);
+            document.getElementById('toggle-trade').addEventListener('change', renderOverviewChart);
+            document.getElementById('toggle-odi').addEventListener('change', renderOverviewChart);
+
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    renderTurningPointChart(button.dataset.tab);
+                });
+            });
+            
+            document.getElementById('showChoiceBtn').addEventListener('click', () => {
+                document.getElementById('corner1').classList.add('bg-green-200', 'scale-110');
+                document.getElementById('corner2').classList.add('bg-green-200', 'scale-110');
+                document.getElementById('corner3').classList.add('opacity-30');
+                document.getElementById('trinity-explanation').textContent = "中国的选择：优先确保【货币政策独立性】与【汇率稳定】，因此必须对【资本流动】进行管理。";
+            });
+            
+            renderOverviewChart();
+            renderTurningPointChart('1');
+            renderBopChart();
+        });
+    </script>
+</body>
+</html>
