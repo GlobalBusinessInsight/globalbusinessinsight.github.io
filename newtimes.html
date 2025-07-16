@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新时代思路深度分析 - 交互式报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Vermilion Scroll -->
+    <!-- Application Structure Plan: The SPA uses a thematic, non-linear dashboard structure with a top navigation bar for smooth scrolling to five key sections: Overview, Domestic, Economic, Foreign, and Future. This is chosen over a linear report structure to allow users to quickly grasp the big picture via an initial dashboard, then dive into specific areas of interest. The flow is designed for exploration, with key interactions like clickable framework diagrams, data visualization toggles, and side-by-side comparisons (e.g., Achievements vs. Criticisms) to facilitate a deeper, more synthesized understanding of the complex material. -->
+    <!-- Visualization & Content Choices: Report Info -> Goal -> Viz/Method -> Interaction -> Justification. 1. Ideological Frameworks -> Organize -> Interactive HTML/CSS grid -> Click to reveal text -> More engaging than static text, clarifies complex concepts. 2. Anti-Corruption Data -> Compare/Inform -> Bar Chart (Chart.js) -> Hover for details -> Visually compares the scale of the campaign across different official levels. 3. Economic Trends (Supply-Side Reform) -> Change -> Multi-line Chart (Chart.js) -> Hover for data points -> Shows correlation and policy impact over time. 4. Demographic/Unemployment Challenges -> Compare/Change -> Line & Bar Charts (Chart.js) -> Hover for details -> Juxtaposes long-term (population) and short-term (unemployment) crises for impact. 5. Policy Duality (BRI, Anti-Corruption) -> Compare -> Side-by-side text blocks -> Static -> Presents balanced perspectives (achievements vs. criticisms) directly. All visualizations use Canvas via Chart.js, avoiding SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8f7f2; /* A warm, paper-like off-white */
+            color: #383838;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #c81e1e; /* Vermilion Red */
+            border-bottom-color: #c81e1e;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+        .tab-button {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .tab-button.active {
+            background-color: #c81e1e;
+            color: white;
+        }
+        .framework-item {
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            border: 1px solid #e5e7eb;
+        }
+        .framework-item.active {
+            background-color: #fffbeb;
+            border-color: #c81e1e;
+        }
+        .accordion-header {
+            cursor: pointer;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl font-bold text-gray-800">新时代执政脉络</h1>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#overview" class="nav-link px-2 py-1 text-gray-600 font-medium">执政总览</a>
+                    <a href="#domestic" class="nav-link px-2 py-1 text-gray-600 font-medium">对内方略</a>
+                    <a href="#economic" class="nav-link px-2 py-1 text-gray-600 font-medium">经济脉络</a>
+                    <a href="#foreign" class="nav-link px-2 py-1 text-gray-600 font-medium">外交格局</a>
+                    <a href="#future" class="nav-link px-2 py-1 text-gray-600 font-medium">2035展望</a>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <option value="#overview">执政总览</option>
+                        <option value="#domestic">对内方略</option>
+                        <option value="#economic">经济脉络</option>
+                        <option value="#foreign">外交格局</option>
+                        <option value="#future">2035展望</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <section id="overview" class="pt-16 -mt-16 mb-20 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-900">新时代：愿景、路径与挑战</h2>
+            <p class="max-w-3xl mx-auto text-gray-600 mb-12">
+                本交互式报告旨在深入分析2012年至今习近平总书记的执政思路。我们将通过数据可视化与互动模块，解析其在意识形态、国内治理、经济战略及外交政策上的核心举措，客观展示所取得的成就与面临的挑战，并对2035年的发展前景进行展望。
+            </p>
+            
+            <div class="card p-6 md:p-8 rounded-xl shadow-lg">
+                <h3 class="text-2xl font-semibold mb-2">核心叙事：中国梦与“两个一百年”</h3>
+                <p class="text-gray-500 mb-8">“中国梦”是贯穿新时代的宏大叙事，通过“两个一百年”奋斗目标赋予其明确的时间表和路线图。</p>
+                <div class="relative flex items-center justify-between w-full max-w-2xl mx-auto">
+                    <div class="absolute w-full h-1 bg-gray-200 top-1/2 -translate-y-1/2"></div>
+                    <div class="absolute w-full h-1 bg-red-400 top-1/2 -translate-y-1/2" style="width: 50%;"></div>
+                    <div class="relative z-10 text-center">
+                        <div class="w-6 h-6 rounded-full bg-red-500 mx-auto flex items-center justify-center ring-4 ring-white"></div>
+                        <p class="mt-2 font-bold">2012</p>
+                        <p class="text-sm text-gray-500">提出“中国梦”</p>
+                    </div>
+                    <div class="relative z-10 text-center">
+                        <div class="w-6 h-6 rounded-full bg-red-500 mx-auto flex items-center justify-center ring-4 ring-white"></div>
+                        <p class="mt-2 font-bold">2021</p>
+                        <p class="text-sm text-gray-500">全面建成小康社会</p>
+                    </div>
+                    <div class="relative z-10 text-center">
+                        <div class="w-4 h-4 rounded-full bg-gray-400 mx-auto flex items-center justify-center ring-4 ring-white"></div>
+                        <p class="mt-2 font-bold">2035</p>
+                        <p class="text-sm text-gray-500">基本实现现代化</p>
+                    </div>
+                    <div class="relative z-10 text-center">
+                        <div class="w-4 h-4 rounded-full bg-gray-400 mx-auto flex items-center justify-center ring-4 ring-white"></div>
+                        <p class="mt-2 font-bold">2049</p>
+                        <p class="text-sm text-gray-500">建成现代化强国</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="domestic" class="pt-16 -mt-16 mb-20">
+            <h2 class="text-3xl font-bold text-center mb-4">对内方略：顶层设计与权力重塑</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+                以“五位一体”和“四个全面”为顶层设计，通过反腐败斗争和机构改革，系统性地加强了党的集中统一领导，旨在提升治理效能并应对执政考验。
+            </p>
+            
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <div class="card p-6 rounded-xl">
+                    <h3 class="font-semibold text-xl mb-4 text-center">顶层设计框架（可点击）</h3>
+                    <div class="grid grid-cols-1 gap-4" id="framework-container"></div>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-xl border">
+                    <h4 class="font-semibold text-lg mb-2">释义</h4>
+                    <p id="framework-explanation" class="text-gray-700 h-full">请点击左侧模块查看详细解释。</p>
+                </div>
+            </div>
+
+            <div class="card p-6 md:p-8 rounded-xl shadow-lg">
+                <h3 class="text-2xl font-semibold mb-2 text-center">雷霆反腐：“打虎、拍蝇、猎狐”</h3>
+                 <p class="text-gray-500 mb-8 text-center max-w-2xl mx-auto">这场史无前例的反腐运动旨在净化政治生态、重塑执政合法性，但其选择性和程序透明度也引发了外界讨论。</p>
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h4 class="font-semibold text-lg mb-4">成就与挑战</h4>
+                        <div class="space-y-4">
+                            <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+                                <h5 class="font-bold">成就：净化生态</h5>
+                                <p class="text-sm text-gray-600">有效遏制了公款消费等不正之风，极大震慑了腐败行为，赢得了部分民心，巩固了党的执政基础。</p>
+                            </div>
+                            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg">
+                                <h5 class="font-bold">问题：权力工具</h5>
+                                <p class="text-sm text-gray-600">被外界批评为具有选择性，是清除政治异己、巩固个人权威的工具。对司法独立性的影响也备受关注。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="corruptionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="economic" class="pt-16 -mt-16 mb-20">
+            <h2 class="text-3xl font-bold text-center mb-4">经济脉络：从高速增长到高质量发展</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+                中国经济正经历从追求速度到注重质量的深刻转型。一方面，通过结构性改革和科技创新寻求新动能；另一方面，也面临着房地产、地方债务和人口结构等多重严峻挑战。
+            </p>
+            <div class="text-center mb-8">
+                <button class="tab-button bg-gray-200 px-4 py-2 rounded-l-md" data-tab="new-development">新发展理念</button>
+                <button class="tab-button bg-gray-200 px-4 py-2 rounded-r-md" data-tab="challenges">结构性挑战</button>
+            </div>
+            
+            <div id="new-development-content" class="tab-content">
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div class="chart-container">
+                        <canvas id="supplySideChart"></canvas>
+                    </div>
+                    <div>
+                         <h3 class="font-semibold text-xl mb-4">供给侧改革与科技自强</h3>
+                         <p class="text-gray-600 mb-4">以“三去一降一补”为核心的供给侧结构性改革，旨在优化经济结构。同时，面对外部压力，“双循环”和科技自立自强被提升至国家战略高度，在5G、航天等领域取得重大突破。</p>
+                         <p class="text-gray-600">然而，在芯片制造等“卡脖子”领域，对外部技术的依赖依然是巨大挑战。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="challenges-content" class="tab-content hidden">
+                 <div class="grid md:grid-cols-2 gap-8 items-start">
+                    <div class="card p-6 rounded-xl">
+                        <h3 class="font-semibold text-lg mb-2 text-center">人口结构与青年就业</h3>
+                        <p class="text-sm text-gray-500 mb-4 text-center">“未富先老”与青年失业率高企构成双重压力。</p>
+                        <div class="chart-container h-64 md:h-80">
+                           <canvas id="unemploymentChart"></canvas>
+                        </div>
+                    </div>
+                     <div class="card p-6 rounded-xl">
+                        <h3 class="font-semibold text-lg mb-2 text-center">历史性成就与持续性危机</h3>
+                         <p class="text-sm text-gray-500 mb-4 text-center">成功消除绝对贫困，但房地产危机和地方债务风险凸显。</p>
+                         <div class="chart-container h-64 md:h-80">
+                           <canvas id="populationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="foreign" class="pt-16 -mt-16 mb-20">
+             <h2 class="text-3xl font-bold text-center mb-4">外交格局：从韬光养晦到奋发有为</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+               外交政策转向更加积极主动，以“人类命运共同体”为顶层设计，通过“一带一路”等倡议扩大全球影响力，同时在核心利益问题上展现出前所未有的强硬姿态。
+            </p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="card p-6 md:p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-center">全球大战略：“一带一路”</h3>
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                            <h5 class="font-bold">成就：影响力投射</h5>
+                            <p class="text-sm text-gray-600">已成为全球规模最大的合作平台，改善了沿线国家基建，构建了庞大的经济伙伴网络，有效扩大了中国的贸易与政治影响力。</p>
+                        </div>
+                        <div class="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-lg">
+                            <h5 class="font-bold">批评：地缘政治关切</h5>
+                            <p class="text-sm text-gray-600">面临“债务陷阱外交”的指责，项目透明度、环境标准和对当地经济的实际贡献也备受争议。</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="card p-6 md:p-8 rounded-xl shadow-lg">
+                     <h3 class="text-2xl font-semibold mb-4 text-center">大国关系与地区热点</h3>
+                     <div class="space-y-3">
+                         <div class="p-3 border rounded-lg">
+                             <span class="font-bold">中美关系：</span>
+                             <span class="text-gray-700">从合作尝试走向全面战略竞争。</span>
+                         </div>
+                         <div class="p-3 border rounded-lg">
+                             <span class="font-bold">南海问题：</span>
+                              <span class="text-gray-700">通过“既成事实”强化主权声索，立场强硬。</span>
+                         </div>
+                          <div class="p-3 border rounded-lg">
+                             <span class="font-bold">人权议题：</span>
+                              <span class="text-gray-700">将外部批评视为干涉内政，成为主要外交摩擦点。</span>
+                         </div>
+                     </div>
+                 </div>
+            </div>
+        </section>
+        
+        <section id="future" class="pt-16 -mt-16 mb-20">
+            <h2 class="text-3xl font-bold text-center mb-4">2035之路：走在钢丝上的新长征</h2>
+             <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+                迈向2035年的“中等发达国家”目标，中国必须在一系列相互关联的挑战中寻求艰难的平衡。这场新征程的成败，不仅决定中国的未来，也将深刻塑造21世纪的全球格局。
+            </p>
+            <div class="max-w-4xl mx-auto">
+                <div id="accordion-container" class="space-y-2">
+                    <!-- Accordion items will be injected here by JS -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm">
+            <p>交互式报告根据公开资料分析生成，仅供研究参考。</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const appData = {
+        frameworks: [
+            {
+                id: 'five-in-one',
+                title: '“五位一体”总体布局',
+                explanation: '指经济建设、政治建设、文化建设、社会建设、生态文明建设。它界定了国家发展的全面范畴，回答了“建设什么样的社会主义现代化强国”的问题。'
+            },
+            {
+                id: 'four-comprehensives',
+                title: '“四个全面”战略布局',
+                explanation: '指全面建成小康社会、全面深化改革、全面依法治国、全面从严治党。它明确了实现目标的战略举措，回答了“怎样建设社会主义现代化强国”的问题。其中，“全面从严治党”被置于决定性地位。'
+            }
+        ],
+        corruptionData: {
+            labels: ['省部级', '厅局级', '县处级', '乡科级'],
+            datasets: [{
+                label: '2025年第一季度处分人数',
+                data: [14, 910, 7216, 23000],
+                backgroundColor: '#ef4444',
+                borderColor: '#c81e1e',
+                borderWidth: 1
+            }]
+        },
+        supplySideData: {
+            labels: ['2016', '2017', '2018', '2019', '2020', '2021', '2022'],
+            datasets: [
+                {
+                    label: '工业产能利用率 (%)',
+                    data: [73.3, 77.0, 76.5, 76.6, 74.5, 77.5, 75.6],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: '新兴产业占GDP比重 (%)',
+                    data: [8.0, 9.2, 10.5, 11.5, 12.8, 15.1, 17.4],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }
+            ]
+        },
+        unemploymentData: {
+            labels: ['2018', '2019', '2020', '2021', '2022', '2023'],
+            datasets: [
+                {
+                    label: '16-24岁青年失业率',
+                    data: [10.9, 12.6, 13.8, 14.3, 18.2, 21.3],
+                    borderColor: '#f97316',
+                    backgroundColor: '#f97316',
+                },
+                {
+                    label: '城镇总体失业率',
+                    data: [4.9, 5.2, 5.6, 5.1, 5.5, 5.2],
+                    borderColor: '#6b7280',
+                    backgroundColor: '#6b7280',
+                }
+            ]
+        },
+        populationData: {
+            labels: ['0-14岁', '15-59岁', '60岁以上'],
+            datasets: [
+                {
+                    label: '2020年占比',
+                    data: [17.95, 63.35, 18.7],
+                    backgroundColor: '#3b82f6',
+                },
+                {
+                    label: '2035年预测占比',
+                    data: [13.8, 58.5, 27.7],
+                    backgroundColor: '#ef4444',
+                }
+            ]
+        },
+        futureOutlook: [
+            {
+                title: '经济轨迹预测',
+                content: '增长速度将持续放缓，进入一个波动性更大但可能质量更高的发展阶段。能否成功转向消费和创新驱动模式是关键。'
+            },
+            {
+                title: '政治轨迹预测',
+                content: '权力集中趋势预计将深化，党对社会经济的控制将进一步加强。未来政治交接存在不确定性。'
+            },
+            {
+                title: '社会轨迹预测',
+                content: '“共同富裕”将转变为更具体的再分配政策。应对老龄化和管理青年一代的期望成为重大考验。'
+            },
+            {
+                title: '国际轨迹预测',
+                content: '与美国的战略竞争将是决定性特征。中国将继续构建发展中国家伙伴网络，挑战美国主导的秩序。'
+            }
+        ]
+    };
+
+    const initCharts = () => {
+        const defaultChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    boxPadding: 3,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#e5e7eb' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        };
+
+        new Chart(document.getElementById('corruptionChart'), {
+            type: 'bar',
+            data: appData.corruptionData,
+            options: { ...defaultChartOptions, indexAxis: 'y' }
+        });
+
+        new Chart(document.getElementById('supplySideChart'), {
+            type: 'line',
+            data: appData.supplySideData,
+            options: defaultChartOptions
+        });
+        
+        new Chart(document.getElementById('unemploymentChart'), {
+            type: 'line',
+            data: appData.unemploymentData,
+            options: defaultChartOptions
+        });
+
+        new Chart(document.getElementById('populationChart'), {
+            type: 'bar',
+            data: appData.populationData,
+            options: { ...defaultChartOptions, 
+                indexAxis: 'x',
+                scales: {
+                    x: { stacked: false, grid: { display: false } },
+                    y: { stacked: false, grid: { color: '#e5e7eb' }, ticks: { callback: value => value + '%' } }
+                }
+             }
+        });
+    };
+
+    const setupNavigation = () => {
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('main section');
+        const mobileNav = document.getElementById('mobile-nav');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                    });
+                    mobileNav.value = `#${entry.target.id}`;
+                }
+            });
+        }, { rootMargin: '-50% 0px -50% 0px' });
+
+        sections.forEach(section => observer.observe(section));
+
+        mobileNav.addEventListener('change', (e) => {
+            const targetId = e.target.value;
+            document.querySelector(targetId).scrollIntoView({ behavior: 'smooth' });
+        });
+    };
+
+    const setupTabs = () => {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.dataset.tab;
+                
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                tabContents.forEach(content => {
+                    if (content.id === `${targetTab}-content`) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+        });
+        document.querySelector('.tab-button[data-tab="new-development"]').click();
+    };
+    
+    const setupFrameworks = () => {
+        const container = document.getElementById('framework-container');
+        const explanationEl = document.getElementById('framework-explanation');
+        
+        container.innerHTML = appData.frameworks.map(f => `
+            <div class="framework-item p-4 rounded-lg" data-id="${f.id}">
+                <h5 class="font-bold text-lg">${f.title}</h5>
+            </div>
+        `).join('');
+        
+        const items = container.querySelectorAll('.framework-item');
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                const frameworkId = item.dataset.id;
+                const frameworkData = appData.frameworks.find(f => f.id === frameworkId);
+                
+                items.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                explanationEl.textContent = frameworkData.explanation;
+            });
+        });
+
+        items[0].click();
+    };
+
+    const setupAccordion = () => {
+        const container = document.getElementById('accordion-container');
+        container.innerHTML = appData.futureOutlook.map((item, index) => `
+            <div class="border rounded-lg bg-white">
+                <div class="accordion-header flex justify-between items-center p-4">
+                    <h4 class="font-semibold text-lg">${item.title}</h4>
+                    <span class="text-xl text-gray-400 transform transition-transform duration-300">+</span>
+                </div>
+                <div class="accordion-content px-4">
+                    <p class="py-4 border-t text-gray-600">${item.content}</p>
+                </div>
+            </div>
+        `).join('');
+
+        container.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                const icon = header.querySelector('span');
+                const isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
+
+                if (isOpen) {
+                    content.style.maxHeight = '0px';
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    icon.style.transform = 'rotate(45deg)';
+                }
+            });
+        });
+    };
+
+    initCharts();
+    setupNavigation();
+    setupTabs();
+    setupFrameworks();
+    setupAccordion();
+});
+</script>
+
+</body>
+</html>
