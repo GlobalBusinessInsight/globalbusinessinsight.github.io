@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式报告：稳定币与全球货币战争</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Neutral Harmony -->
+    <!-- Application Structure Plan: The application is designed as a narrative journey, guiding the user from the foundational concepts to future implications. It starts with a hero section to grab attention, followed by "The Battlefield" to establish the core conflict (SWIFT vs. Stablecoins). The main section, "The Contenders," uses a tabbed interface for direct comparison of the US, China, and EU strategies, which is more intuitive for analysis than a linear report format. This is complemented by an interactive chart that visually reinforces the strategic differences. A new "In-depth Analysis" section with an accordion UI addresses specific user queries. The "Future Scenarios" section uses interactive cards to make future possibilities more engaging. This structure was chosen to transform the dense report into an exploratory experience, allowing users to compare, contrast, and synthesize information non-linearly, enhancing understanding and retention. -->
+    <!-- Visualization & Content Choices: 
+        1. USD Stablecoin Dominance (Report Info: >99% market share) -> Goal: Inform -> Viz: Donut Chart -> Interaction: Hover for details -> Justification: Immediately shows the scale of US dominance in the new ecosystem. -> Library: Chart.js.
+        2. SWIFT vs. Stablecoins (Report Info: Table 1) -> Goal: Compare -> Viz: Side-by-side animated cards -> Interaction: Content visible on load -> Justification: A more visually engaging way to present the core value proposition than a static table. -> Library/Method: HTML/Tailwind CSS.
+        3. Contender Strategies (Report Info: Sections 4, 5, 6) -> Goal: Organize & Compare -> Viz: Tabbed layout with strategy diagrams (HTML/CSS) and an interactive Bar Chart. -> Interaction: Clicking tabs changes displayed text/diagrams and updates the bar chart data. -> Justification: Allows direct, apples-to-apples comparison of complex strategies. -> Library/Method: Chart.js, JS, HTML/Tailwind.
+        4. In-depth Analysis (User Query) -> Goal: Explain -> Viz: Accordion/Expandable Cards -> Interaction: Click to expand -> Justification: Provides detailed answers to specific, complex questions without cluttering the main view. -> Library/Method: HTML/Tailwind/JS.
+        5. Future Scenarios (Report Info: Section 7) -> Goal: Inform -> Viz: Clickable Cards -> Interaction: Click to expand -> Justification: Encourages user engagement and breaks down complex future outlooks into manageable pieces. -> Library/Method: HTML/Tailwind/JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 320px;
+            width: 100%;
+            max-width: 500px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+        }
+        .nav-link.active {
+            color: #2563eb; /* text-blue-600 */
+            border-bottom-color: #2563eb;
+        }
+        .tab-button.active {
+            background-color: #1e40af; /* bg-blue-800 */
+            color: white;
+        }
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .scenario-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .scenario-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="text-xl font-bold text-slate-900">货币新地缘政治</div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#battlefield" class="nav-link text-slate-600 hover:text-blue-600 border-b-2 border-transparent">新旧战场</a>
+                    <a href="#contenders" class="nav-link text-slate-600 hover:text-blue-600 border-b-2 border-transparent">主要玩家</a>
+                    <a href="#analysis" class="nav-link text-slate-600 hover:text-blue-600 border-b-2 border-transparent">深度剖析</a>
+                    <a href="#scenarios" class="nav-link text-slate-600 hover:text-blue-600 border-b-2 border-transparent">未来情景</a>
+                    <a href="#conclusion" class="nav-link text-slate-600 hover:text-blue-600 border-b-2 border-transparent">结论</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-slate-600 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+             <div id="mobile-menu" class="hidden md:hidden py-4">
+                <a href="#battlefield" class="block py-2 px-4 text-slate-600 hover:bg-slate-100 rounded">新旧战场</a>
+                <a href="#contenders" class="block py-2 px-4 text-slate-600 hover:bg-slate-100 rounded">主要玩家</a>
+                <a href="#analysis" class="block py-2 px-4 text-slate-600 hover:bg-slate-100 rounded">深度剖析</a>
+                <a href="#scenarios" class="block py-2 px-4 text-slate-600 hover:bg-slate-100 rounded">未来情景</a>
+                <a href="#conclusion" class="block py-2 px-4 text-slate-600 hover:bg-slate-100 rounded">结论</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+
+        <!-- Hero Section -->
+        <section class="text-center py-12 md:py-20 fade-in">
+            <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 mb-4">稳定币：旧瓶装新酒吗<br class="hidden md:block" /><span class="text-blue-600">巩固者</span>还是<span class="text-red-600">颠覆者</span>？</h1>
+            <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-600">
+                一份关于数字货币、国家战略与全球金融未来的交互式报告。探索稳定币如何以“特洛伊木马”之姿，在短期内巩固美元地位，却为长期的权力转移埋下伏笔。
+            </p>
+        </section>
+
+        <!-- The Battlefield Section -->
+        <section id="battlefield" class="py-12 md:py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900">新旧支付战场的对决</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">稳定币正在以其在速度、成本和可及性上的颠覆性优势，对传统的SWIFT体系发起根本性挑战。</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                    <h3 class="text-2xl font-bold mb-4 text-center text-slate-700">传统体系 (SWIFT)</h3>
+                    <ul class="space-y-4 text-slate-600">
+                        <li class="flex items-start"><span class="text-red-500 font-bold text-xl mr-3">●</span><div><strong>速度慢:</strong> 结算需1-5个工作日，受银行营业时间限制。</div></li>
+                        <li class="flex items-start"><span class="text-red-500 font-bold text-xl mr-3">●</span><div><strong>成本高:</strong> 涉及多家中间机构，费用高昂。</div></li>
+                        <li class="flex items-start"><span class="text-red-500 font-bold text-xl mr-3">●</span><div><strong>不透明:</strong> 复杂的“菊花链”式清算流程。</div></li>
+                        <li class="flex items-start"><span class="text-red-500 font-bold text-xl mr-3">●</span><div><strong>中心化:</strong> 依赖传统银行账户和基础设施。</div></li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                    <h3 class="text-2xl font-bold mb-4 text-center text-blue-600">稳定币体系 (区块链)</h3>
+                    <ul class="space-y-4 text-slate-600">
+                        <li class="flex items-start"><span class="text-green-500 font-bold text-xl mr-3">●</span><div><strong>近乎即时:</strong> 24/7/365运行，以秒/分钟计。</div></li>
+                        <li class="flex items-start"><span class="text-green-500 font-bold text-xl mr-3">●</span><div><strong>成本极低:</strong> 绕过中间环节，仅需网络交易费。</div></li>
+                        <li class="flex items-start"><span class="text-green-500 font-bold text-xl mr-3">●</span><div><strong>高透明度:</strong> 所有交易记录在公共账本上。</div></li>
+                        <li class="flex items-start"><span class="text-green-500 font-bold text-xl mr-3">●</span><div><strong>去中心化:</strong> 仅需数字钱包和互联网。</div></li>
+                    </ul>
+                </div>
+            </div>
+
+             <div class="mt-16 bg-white p-6 rounded-lg shadow-lg border border-slate-200">
+                 <h3 class="text-2xl font-bold mb-4 text-center text-slate-900">当前格局：美元的数字延伸</h3>
+                 <p class="text-center text-slate-600 mb-6">尽管稳定币技术是中立的，但目前市场被美元稳定币绝对主导，这在短期内反而强化了美元的网络效应。</p>
+                <div class="chart-container">
+                    <canvas id="dominanceChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contenders Section -->
+        <section id="contenders" class="py-12 md:py-20 bg-slate-100 -mx-4 px-4 rounded-lg">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900">棋盘上的主要玩家</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">美国、中国和欧盟正采取截然不同的战略，争夺未来全球货币体系的主导权。</p>
+            </div>
+
+            <div id="tabs-container" class="flex justify-center mb-8 space-x-2 md:space-x-4 bg-white p-2 rounded-full shadow-md max-w-md mx-auto">
+                <button data-contender="us" class="tab-button w-full text-center px-4 py-2 rounded-full transition-colors duration-300 font-semibold">美国</button>
+                <button data-contender="china" class="tab-button w-full text-center px-4 py-2 rounded-full transition-colors duration-300 font-semibold">中国</button>
+                <button data-contender="eu" class="tab-button w-full text-center px-4 py-2 rounded-full transition-colors duration-300 font-semibold">欧盟</button>
+            </div>
+
+            <div class="grid lg:grid-cols-5 gap-8 items-start">
+                <div id="contender-details" class="lg:col-span-3 bg-white p-6 rounded-lg shadow-lg">
+                    <!-- Dynamic Content Here -->
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold text-center mb-4">战略对比</h3>
+                    <div class="chart-container !h-96 md:!h-[450px]">
+                        <canvas id="strategyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- In-depth Analysis Section -->
+        <section id="analysis" class="py-12 md:py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900">深度剖析：关键问题与影响</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">探索稳定币在具体应用场景中的机遇、挑战与深远影响。</p>
+            </div>
+            <div id="accordion-container" class="max-w-4xl mx-auto space-y-4">
+                <!-- Accordion items will be injected by JS -->
+            </div>
+        </section>
+
+
+        <!-- Future Scenarios Section -->
+        <section id="scenarios" class="py-12 md:py-20">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-900">推演未来：三种可能的情景</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">全球货币体系的未来将取决于技术、监管和国家实力之间复杂的相互作用。点击卡片查看详情。</p>
+            </div>
+            <div id="scenarios-grid" class="grid md:grid-cols-3 gap-8">
+                <!-- Scenario Cards will be injected here by JS -->
+            </div>
+        </section>
+
+        <!-- Conclusion Section -->
+        <section id="conclusion" class="py-12 md:py-20 bg-slate-800 text-white -mx-4 px-4 rounded-lg">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold">结论：现代化的“特洛伊木马”</h2>
+            </div>
+            <div class="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-2xl font-bold mb-4 text-blue-300">一个核心悖论</h3>
+                    <p class="text-slate-300">
+                        稳定币技术，特别是目前由美元主导的稳定币，正扮演着“特洛伊木马”的角色。它之所以被全球金融体系所接纳，是因为它提供了不可否认的效率提升，并帮助美元完成了支付轨道的现代化升级。
+                    </p>
+                </div>
+                 <div>
+                    <h3 class="text-2xl font-bold mb-4 text-blue-300">未来的变数</h3>
+                    <p class="text-slate-300">
+                        然而，一旦这套基于区块链的新型金融基础设施被广泛采纳，转换到非美元稳定币的技术和心理门槛将大大降低。今天的竞争看似是关于使用哪种货币的稳定币，但其本质是关于谁能控制明天的底层支付轨道。
+                    </p>
+                </div>
+            </div>
+            <div class="text-center mt-12">
+                <p class="text-lg text-slate-400">美元凭借其先发优势和体系惯性，短期内地位稳固。然而，数字货币的博弈已经开启，为五十多年来对美元霸权最重大的潜在挑战铺平了道路。</p>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="text-center py-6 bg-slate-100">
+        <p class="text-slate-500">基于报告《数字货币的博弈：稳定币、美元霸权与货币新地缘政治》的交互式分析。</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Data Store
+            const contenderData = {
+                us: {
+                    title: '美国：收编革命以巩固霸权',
+                    goal: '延伸并现代化美元霸权',
+                    tools: '私营美元稳定币 + 监管框架 (GENIUS & CLARITY法案)',
+                    stance: '进攻性 / 主动塑造',
+                    description: '美国的战略核心是“公私合营霸权”。通过立法为私营部门创新（如Circle的USDC）设定规则，旨在将受监管的美元稳定币打造为其金融影响力的延伸，从而“收编”这场技术革命，同时立法阻止发行官方的数字美元。',
+                    diagram: `
+                        <div class="border-2 border-dashed border-slate-300 p-4 rounded-lg text-center mt-4">
+                            <div class="font-bold text-lg text-slate-800">美国模式：公私合营霸权</div>
+                            <div class="text-2xl my-2">↓</div>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div class="bg-blue-100 p-2 rounded">
+                                    <div class="font-semibold">政府 (设定规则)</div>
+                                    <div>《GENIUS法案》</div>
+                                    <div>《CLARITY法案》</div>
+                                </div>
+                                <div class="bg-green-100 p-2 rounded">
+                                    <div class="font-semibold">私营部门 (创新)</div>
+                                    <div>Visa, PayPal</div>
+                                    <div>Circle (USDC)</div>
+                                </div>
+                            </div>
+                             <div class="text-2xl my-2">↓</div>
+                            <div class="bg-blue-600 text-white p-3 rounded-lg font-bold">
+                                强化的数字美元生态
+                            </div>
+                        </div>
+                    `
+                },
+                china: {
+                    title: '中国：双轨挑战构建平行体系',
+                    goal: '构建平行的非美元体系，推进人民币国际化',
+                    tools: 'e-CNY (央行数字货币) + 香港稳定币门户',
+                    stance: '进攻性 / 寻求规避',
+                    description: '中国推行“国家队”与“市场化”结合的双轨战略。一方面在国内大力推进主权数字货币（e-CNY），另一方面利用香港作为“金融气闸”，发展受监管的稳定币市场，意图在不完全开放资本账户的前提下，构建一个独立于美元的平行结算生态系统。',
+                    diagram: `
+                        <div class="border-2 border-dashed border-slate-300 p-4 rounded-lg text-center mt-4">
+                            <div class="font-bold text-lg text-slate-800">中国模式：金融气闸</div>
+                             <div class="text-2xl my-2">↓</div>
+                            <div class="grid grid-cols-3 gap-2 items-center text-sm">
+                                <div class="bg-red-100 p-2 rounded h-full flex items-center justify-center">
+                                    <div class="font-semibold">大陆 (e-CNY)</div>
+                                    <div>严格管制</div>
+                                </div>
+                                <div class="font-bold text-2xl text-slate-500">↔</div>
+                                <div class="bg-yellow-100 p-2 rounded h-full flex items-center justify-center">
+                                    <div class="font-semibold">香港 (枢纽)</div>
+                                    <div>受监管稳定币</div>
+                                </div>
+                            </div>
+                            <div class="text-2xl my-2">↓</div>
+                            <div class="bg-red-600 text-white p-3 rounded-lg font-bold">
+                                人民币国际化 + 非美元体系
+                            </div>
+                        </div>
+                    `
+                },
+                eu: {
+                    title: '欧盟：防御姿态以捍卫主权',
+                    goal: '捍卫欧元区货币主权',
+                    tools: '监管堡垒 (MiCA法规)',
+                    stance: '防御性 / 被动反应',
+                    description: '欧盟的立场主要是防御性的，其核心目标是防止“数字美元化”侵蚀其货币主权。通过《加密资产市场法规》(MiCA) 建立“监管堡垒”，严格限制非欧元稳定币的潜在威胁，而非主动争夺全球数字货币的主导权。其自身的数字欧元项目进展缓慢且设计受限。',
+                    diagram: `
+                         <div class="border-2 border-dashed border-slate-300 p-4 rounded-lg text-center mt-4">
+                            <div class="font-bold text-lg text-slate-800">欧盟模式：监管堡垒</div>
+                             <div class="text-2xl my-2">↓</div>
+                             <div class="bg-yellow-400 p-3 rounded-lg text-center">
+                                <div class="font-bold text-yellow-900">《MiCA法规》</div>
+                                <div class="text-sm text-yellow-800">严格监管，保护内部市场</div>
+                            </div>
+                            <div class="flex justify-around mt-4 text-sm">
+                                <div class="text-center text-red-600">
+                                    <span class="text-3xl">↓</span><br>
+                                    <span class="font-semibold">限制</span><br>
+                                    <span>美元稳定币</span>
+                                </div>
+                                <div class="text-center text-green-600">
+                                     <span class="text-3xl">↓</span><br>
+                                    <span class="font-semibold">保护</span><br>
+                                    <span>欧元主权</span>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                }
+            };
+            
+            const scenariosData = [
+                {
+                    title: "情景A：霸权2.0",
+                    subtitle: "美元的平台重塑",
+                    icon: "👑",
+                    description: "在此情景中，美国的战略取得压倒性成功。受监管的美元稳定币成为全球数字支付的默认轨道，美元的全球主导地位在数字时代得到加强和现代化，继续享有其“嚣张的特权”。",
+                    color: "blue"
+                },
+                {
+                    title: "情景B：数字铁幕",
+                    subtitle: "分裂的数字世界",
+                    icon: "🧱",
+                    description: "全球金融体系演变为两个基本不兼容的数字货币集团：一个是以美国为核心的美元稳定币集团，另一个是以中国为核心、覆盖“一带一路”和“全球南方”的非美元集团。全球化金融秩序发生根本性颠覆。",
+                     color: "red"
+                },
+                {
+                    title: "情景C：碎片化多极",
+                    subtitle: "混乱的多极体系",
+                    icon: "🌐",
+                    description: "没有任何单一力量能取得绝对主导。美元、人民币、欧元以及其他主要经济体的数字货币生态系统并存，全球流动性被分割在多个平台之间，国际贸易的复杂性和成本可能增加。",
+                    color: "yellow"
+                }
+            ];
+
+            const analysisData = [
+                {
+                    title: "中国外贸企业的机遇与挑战",
+                    content: `
+                        <p class="mb-4">对于寻求效率和降低成本的中国外贸企业而言，稳定币提供了一个充满诱惑但又布满荆棘的选择。</p>
+                        <h4 class="font-bold text-lg mb-2">机遇：</h4>
+                        <ul class="list-disc list-inside space-y-2 mb-4 text-slate-600">
+                            <li><strong>结算效率：</strong>理论上，企业可以利用稳定币（如USDC）实现近乎即时的跨境货款结算，彻底摆脱传统银行体系的延迟和高昂手续费，尤其是在与金融基础设施不发达地区的伙伴交易时优势明显。</li>
+                            <li><strong>小额高频支付：</strong>对于需要处理大量小额、高频支付的业务（如跨境电商、自由职业者平台），稳定币提供了极具成本效益的解决方案。</li>
+                        </ul>
+                        <h4 class="font-bold text-lg mb-2">挑战与风险：</h4>
+                        <ul class="list-disc list-inside space-y-2 text-slate-600">
+                            <li><strong>合规风险（核心障碍）：</strong>在中国大陆现行的法律框架下，任何绕过国家外汇管理局（SAFE）监管的资本跨境流动都是非法的。企业通过稳定币收付款，本质上构成了对资本管制的规避，面临极高的法律和合规风险。一旦被查实，可能面临罚款、吊销执照甚至刑事责任。</li>
+                            <li><strong>税务复杂性：</strong>将稳定币兑换为人民币的过程缺乏合规的报税渠道，企业难以进行合法的会计处理和税务申报。</li>
+                            <li><strong>操作与安全风险：</strong>企业需要具备管理数字钱包、应对私钥安全、防范钓鱼诈骗等新的能力，否则极易造成资产损失。</li>
+                        </ul>
+                        <p class="mt-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded"><strong>结论：</strong>在当前监管环境下，中国大陆企业直接使用稳定币进行贸易结算存在根本性的法律障碍。合规路径可能存在于香港——企业可通过其在香港的合规实体，在香港监管框架下使用稳定币，但这并未解决资金如何合法回流内地的核心问题。因此，稳定币对多数外贸企业而言，仍是“看上去很美”的灰色地带。</li>
+                    `
+                },
+                {
+                    title: "人民币与稳定币的未来关系",
+                    content: `
+                        <p class="mb-4">人民币与稳定币的关系是复杂且动态的，体现了中国“双轨战略”的精髓：既要防御风险，又要主动出击。</p>
+                        <h4 class="font-bold text-lg mb-2">被动防御 vs. 积极利用</h4>
+                        <p class="mb-4 text-slate-600">关系走向并非二选一，而是“内外有别”。<strong>对内，是绝对的被动防御。</strong>中国大陆严禁任何私营稳定币的发行和流通，以维护人民币的法定货币地位和金融稳定，e-CNY是唯一的官方选择。<strong>对外，则是积极的探索和利用。</strong>通过香港的“金融气闸”，中国正在为受监管的、可能与离岸人民币（CNH）挂钩的稳定币创造发展空间，将其作为人民币国际化的一个潜在助推器。</p>
+                        <h4 class="font-bold text-lg mb-2">稳定币的机会在哪里？</h4>
+                        <p class="mb-4 text-slate-600">在现有监管框架下，稳定币的机会几乎全部集中在香港。机会点包括：</p>
+                        <ul class="list-disc list-inside space-y-2 mb-4 text-slate-600">
+                            <li><strong>连接传统与加密世界：</strong>香港的合规稳定币可以成为连接中国内地金融体系（通过e-CNY）与全球DeFi生态的桥梁。</li>
+                            <li><strong>人民币国际化的新工具：</strong>CNH稳定币可以为国际投资者提供一种更便捷、更低成本的人民币敞口和支付工具，特别是在“一带一路”贸易和数字资产交易场景中。</li>
+                        </ul>
+                        <h4 class="font-bold text-lg mb-2">挑战还是融入？</h4>
+                        <p class="p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-800 rounded">稳定币对中国金融体系既是挑战，也是潜在的融入对象。它挑战了传统的资本账户管理模式，但通过香港这一战略设计，中国正试图将其“收编”，使其成为服务于国家战略（人民币国际化）的、可控的外部工具，而非颠覆内部秩序的破坏性力量。最终目标是实现一种“可控的融入”。</p>
+                    `
+                },
+                {
+                    title: "谁是稳定币浪潮中的受损者？",
+                    content: `
+                        <p class="mb-4">任何颠覆性技术都会带来赢家和输家。在稳定币推动的金融变革中，以下各方可能成为主要的受损者：</p>
+                        <ul class="list-none space-y-4 text-slate-600">
+                            <li class="flex items-start">
+                                <span class="text-2xl mr-4">🏦</span>
+                                <div>
+                                    <h4 class="font-bold text-lg">传统银行，特别是中小银行</h4>
+                                    <p>稳定币绕过了银行的传统支付和汇款业务，直接侵蚀了其最有利可图的中间业务收入（如电汇费、货币兑换费）。大型跨国银行尚能通过自身技术投入参与到新体系中，但缺乏资源和技术能力的中小银行将面临客户和业务流失的双重打击。</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-2xl mr-4">💸</span>
+                                <div>
+                                    <h4 class="font-bold text-lg">传统汇款服务商</h4>
+                                    <p>像西联（Western Union）、MoneyGram这样的传统汇款公司，其商业模式建立在高昂的收费和缓慢的流程之上。稳定币提供的低成本、高效率的替代方案对其构成了生存性威胁。</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-2xl mr-4">📉</span>
+                                <div>
+                                    <h4 class="font-bold text-lg">货币主权脆弱的国家</h4>
+                                    <p>对于那些本国货币不稳定、通货膨胀严重的国家，民众和企业有强烈的动机转向更稳定的价值储存方式。美元稳定币的易得性会加剧这些国家的“数字美元化”进程，进一步削弱其央行的货币政策效力，使其经济和金融主权受制于人。</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="text-2xl mr-4">👤</span>
+                                <div>
+                                    <h4 class="font-bold text-lg">缺乏风险意识的个人投资者</h4>
+                                    <p>尽管名为“稳定币”，但并非所有稳定币都同样安全。算法稳定币的崩盘（如Terra/Luna）已造成巨额损失。此外，用户还面临着欺诈、黑客攻击和平台倒闭的风险。在监管尚不完善的环境下，缺乏专业知识的个人用户是潜在的受害者。</p>
+                                </div>
+                            </li>
+                        </ul>
+                    `
+                }
+            ];
+
+            // Chart Configurations
+            const dominanceCtx = document.getElementById('dominanceChart').getContext('2d');
+            new Chart(dominanceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['美元稳定币', '其他稳定币'],
+                    datasets: [{
+                        data: [99, 1],
+                        backgroundColor: ['#2563eb', '#d1d5db'],
+                        borderColor: ['#ffffff', '#ffffff'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: '全球稳定币市场份额',
+                            font: { size: 16 }
+                        }
+                    }
+                }
+            });
+
+            const strategyCtx = document.getElementById('strategyChart').getContext('2d');
+            const strategyChart = new Chart(strategyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['私营稳定币立场', '央行数字货币(CBDC)立场', '地缘政治姿态'],
+                    datasets: []
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            min: -1,
+                            max: 1,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    if (value === 1) return '进攻/支持';
+                                    if (value === 0) return '中立/观望';
+                                    if (value === -1) return '防御/反对';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    const value = context.raw;
+                                    if (value === 1) label += '进攻/支持';
+                                    if (value === 0) label += '中立/观望';
+                                    if (value === -1) label += '防御/反对';
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Interaction Logic
+            const tabsContainer = document.getElementById('tabs-container');
+            const contenderDetailsContainer = document.getElementById('contender-details');
+
+            function updateContenderView(contenderKey) {
+                const data = contenderData[contenderKey];
+                
+                contenderDetailsContainer.innerHTML = `
+                    <div class="fade-in">
+                        <h3 class="text-2xl font-bold mb-2">${data.title}</h3>
+                        <div class="flex flex-wrap gap-x-4 gap-y-2 text-sm mb-4">
+                            <span class="font-semibold text-blue-600">目标: ${data.goal}</span>
+                            <span class="font-semibold text-green-600">姿态: ${data.stance}</span>
+                        </div>
+                        <p class="text-slate-600 mb-4">${data.description}</p>
+                        ${data.diagram}
+                    </div>
+                `;
+
+                const strategyScores = {
+                    us: [1, -1, 1],
+                    china: [-1, 1, 1],
+                    eu: [-1, 0, -1]
+                };
+                
+                strategyChart.data.datasets = [{
+                    label: data.title,
+                    data: strategyScores[contenderKey],
+                    backgroundColor: contenderKey === 'us' ? 'rgba(37, 99, 235, 0.7)' : (contenderKey === 'china' ? 'rgba(220, 38, 38, 0.7)' : 'rgba(250, 204, 21, 0.7)'),
+                }];
+                strategyChart.update();
+                
+                tabsContainer.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.contender === contenderKey);
+                });
+            }
+
+            tabsContainer.addEventListener('click', (e) => {
+                if (e.target.matches('.tab-button')) {
+                    const contenderKey = e.target.dataset.contender;
+                    updateContenderView(contenderKey);
+                }
+            });
+
+            // Scenarios Logic
+            const scenariosGrid = document.getElementById('scenarios-grid');
+            scenariosData.forEach(scenario => {
+                const card = document.createElement('div');
+                card.className = `scenario-card border-t-4 p-6 bg-white rounded-lg shadow-md cursor-pointer`;
+                const borderColor = scenario.color === 'blue' ? 'border-blue-600' : (scenario.color === 'red' ? 'border-red-600' : 'border-yellow-400');
+                card.classList.add(borderColor);
+                
+                card.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <span class="text-3xl mr-4">${scenario.icon}</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">${scenario.title}</h3>
+                            <p class="text-sm font-semibold text-slate-500">${scenario.subtitle}</p>
+                        </div>
+                    </div>
+                    <div class="scenario-description text-slate-600" style="display: none;">
+                        <p>${scenario.description}</p>
+                    </div>
+                `;
+                scenariosGrid.appendChild(card);
+            });
+
+            scenariosGrid.addEventListener('click', (e) => {
+                const card = e.target.closest('.scenario-card');
+                if(card) {
+                    const description = card.querySelector('.scenario-description');
+                    const isVisible = description.style.display === 'block';
+                    description.style.display = isVisible ? 'none' : 'block';
+                    card.classList.toggle('shadow-xl', !isVisible);
+                }
+            });
+
+            // Accordion Logic for Analysis Section
+            const accordionContainer = document.getElementById('accordion-container');
+            analysisData.forEach((item, index) => {
+                const accordionItem = document.createElement('div');
+                accordionItem.className = 'bg-white rounded-lg shadow-md border border-slate-200';
+                accordionItem.innerHTML = `
+                    <button class="accordion-button w-full flex justify-between items-center text-left p-5 font-semibold text-lg text-slate-800">
+                        <span>${item.title}</span>
+                        <span class="accordion-icon transform transition-transform duration-300">
+                            <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </span>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="p-5 pt-0 text-slate-600">
+                            ${item.content}
+                        </div>
+                    </div>
+                `;
+                accordionContainer.appendChild(accordionItem);
+            });
+
+            accordionContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('.accordion-button');
+                if (button) {
+                    const content = button.nextElementSibling;
+                    const icon = button.querySelector('.accordion-icon');
+                    const isOpening = content.style.maxHeight === '0px' || !content.style.maxHeight;
+
+                    // Close all other accordions
+                    accordionContainer.querySelectorAll('.accordion-content').forEach(c => {
+                        if (c !== content) {
+                            c.style.maxHeight = '0px';
+                            c.previousElementSibling.querySelector('.accordion-icon').classList.remove('rotate-180');
+                        }
+                    });
+
+                    // Open or close the clicked one
+                    if (isOpening) {
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        icon.classList.add('rotate-180');
+                    } else {
+                        content.style.maxHeight = '0px';
+                        icon.classList.remove('rotate-180');
+                    }
+                }
+            });
+
+            // Mobile menu
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // Nav link active state on scroll
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            const targetId = entry.target.id;
+                            const linkHref = link.getAttribute('href').substring(1);
+                            link.classList.toggle('active', linkHref === targetId);
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // Initial load
+            updateContenderView('us');
+        });
+    </script>
+</body>
+</html>
