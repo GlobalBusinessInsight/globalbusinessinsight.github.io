@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>融合版：中国企业管理百年史与案例对标（最终版）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Unified Professional (Deep Blue, Cool Gray, with Energetic Orange Accents) -->
+    <!-- Application Structure Plan: A unified single-page application with a primary vertical timeline structure. This timeline will cover the major historical eras. Within the "Reform" and "New Era" sections, interactive modules for company case studies will be embedded. These modules will feature category filters (e.g., Energy, Tech) to manage the large number of cases. Clicking a company logo will trigger an expanding section displaying detailed analysis and a comparative radar chart. A dedicated, detailed section on SASAC's influence will be integrated chronologically within the timeline. This fusion creates a seamless narrative, allowing users to flow from macro history to micro-analysis without leaving the context. -->
+    <!-- Visualization & Content Choices: Report Info: Historical Eras & Company Cases. -> Goal: Integrate/Compare/Organize. -> Viz/Presentation: A main timeline (HTML/CSS) embeds interactive company grids (HTML/JS) with category filters. Clicking a company opens a detailed view with a Radar Chart (Chart.js/Canvas). -> Interaction: Scroll navigation, category filtering, clicking company cards to dynamically load data and charts. -> Justification: This structure tells a coherent story, connecting historical context directly to specific corporate examples and their global standing, while filtering manages complexity. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f0f2f5;
+            color: #1a202c;
+        }
+        html { scroll-behavior: smooth; }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            background-color: #dd6b20;
+            border: 4px solid #f0f2f5;
+            top: 1rem;
+            left: -0.625rem;
+            z-index: 10;
+        }
+        .nav-link.active {
+            color: #dd6b20;
+            font-weight: 600;
+        }
+        .company-card {
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .company-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .company-card.active {
+             box-shadow: 0 0 0 3px #dd6b20;
+             border-color: #dd6b20;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+            height: 320px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 380px;
+            }
+        }
+        .section-title {
+            border-left: 5px solid #dd6b20;
+            padding-left: 1rem;
+        }
+        .detail-card {
+            background-color: #ffffff;
+            border-left: 4px solid;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .detail-card-management { border-color: #3182ce; }
+        .detail-card-globalization { border-color: #38a169; }
+        .detail-card-digitalization { border-color: #f6ad55; }
+        .detail-card-lessons { border-color: #718096; }
+        .filter-btn {
+            transition: all 0.2s ease;
+        }
+        .filter-btn.active {
+            background-color: #dd6b20;
+            color: white;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <header class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-3">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800">中国企业管理百年融合史</h1>
+                    <p class="text-xs md:text-sm text-gray-500">从宏大叙事到微观洞察</p>
+                </div>
+                <nav id="navbar" class="flex space-x-4 text-sm font-medium text-gray-600 overflow-x-auto no-scrollbar whitespace-nowrap">
+                    <a href="#intro" class="nav-link hover:text-orange-600 py-2 px-2">引言</a>
+                    <a href="#global" class="nav-link hover:text-orange-600 py-2 px-2">全球背景</a>
+                    <a href="#pre-1978" class="nav-link hover:text-orange-600 py-2 px-2">前改革时期</a>
+                    <a href="#reform-era" class="nav-link hover:text-orange-600 py-2 px-2">改革与转型</a>
+                    <a href="#new-era" class="nav-link hover:text-orange-600 py-2 px-2">新时代探索</a>
+                    <a href="#sasac" class="nav-link hover:text-orange-600 py-2 px-2">国资委专题</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-8xl mx-auto p-4 md:p-8 mt-4">
+        <section id="intro" class="bg-white p-6 md:p-8 rounded-xl shadow-md mb-12">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4 section-title">引言：一部融合的史诗</h2>
+            <p class="text-base text-gray-700 leading-relaxed">中国企业管理的演进，是一部宏大历史背景与鲜活企业实践相互交织的史诗。它并非孤立的理论变迁，而是国家意志、全球浪潮与无数企业家在市场一线“摸着石头过河”的集体创造。本应用将历史脉络与企业案例融为一体，旨在揭示宏观变革如何体现在微观实践中，而微观的创新又如何汇聚成时代的洪流。在这里，您可以沿着时间轴探索百年变迁，并随时深入剖析定义了各个时代的关键企业。</p>
+        </section>
+
+        <div class="relative border-l-4 border-gray-300 ml-4 md:ml-0">
+            <section id="global" class="pt-16 -mt-16 timeline-item pl-8 md:pl-12 pb-12">
+                <h2 class="text-2xl md:text-3xl font-extrabold text-gray-800 mb-6">全球管理思想背景 (20世纪)</h2>
+                <p class="mb-8 text-base md:text-lg text-gray-600">为理解中国管理变革，我们需先了解20世纪全球主流的管理理论。它们如同一个丰富的工具箱，在不同时期为中国企业提供了思想资源和实践参照。这些理论围绕效率、组织、人本、目标等核心问题展开，共同构成了现代管理学的基础。</p>
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h4 class="font-bold text-lg md:text-xl text-gray-800 mb-2">科学管理 (泰勒)</h4>
+                        <p class="text-sm md:text-base text-gray-600">核心是追求机械效率，通过时间-动作研究等方法，实现生产标准化和效率最大化。</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h4 class="font-bold text-lg md:text-xl text-gray-800 mb-2">行政管理 (法约尔)</h4>
+                        <p class="text-sm md:text-base text-gray-600">核心是追求结构秩序，提出计划、组织、指挥等五大管理职能，构建科层体系。</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h4 class="font-bold text-lg md:text-xl text-gray-800 mb-2">人际关系 (梅奥)</h4>
+                        <p class="text-sm md:text-base text-gray-600">核心是追求社会和谐，通过霍桑实验发现心理和人际关系对生产效率的关键影响。</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h4 class="font-bold text-lg md:text-xl text-gray-800 mb-2">现代管理 (德鲁克)</h4>
+                        <p class="text-sm md:text-base text-gray-600">核心是追求目标有效性，提出目标管理、知识工作者等概念，强调成果导向。</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h4 class="font-bold text-lg md:text-xl text-gray-800 mb-2">精益生产 (丰田)</h4>
+                        <p class="text-sm md:text-base text-gray-600">核心是追求无浪费的价值流，通过准时化生产(JIT)和自働化，消除一切浪费。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pre-1978" class="pt-16 -mt-16 timeline-item pl-8 md:pl-12 pb-12">
+                <h2 class="text-2xl md:text-3xl font-extrabold text-gray-800 mb-6">第一篇章：前改革时期的探索 (1978年以前)</h2>
+                <div class="space-y-8">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="font-bold text-lg md:text-xl text-orange-700">前现代中国的先声 (1912年以前)</h3>
+                        <p class="text-sm md:text-base text-gray-600 mt-2">在西方管理学传入前，中国已在明清时期发展出以“信任”为核心的精巧商业管理体系，尤以晋商的“山西票号”为巅峰。其以“银股”与“身股”实现所有权与经营权的早熟分离，并通过“身股”分红激励职业经理人。但其成功建立在基于乡缘、血缘的封闭信任网络之上，最终难敌现代股份制银行的开放市场规则。</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="font-bold text-lg md:text-xl text-orange-700">民国时期现代工业的曙光 (1912-1949)</h3>
+                        <p class="text-sm md:text-base text-gray-600 mt-2">在内忧外患的夹缝中，以荣氏家族等为代表的民族资本家开启了中国艰难的工业化探索。他们的管理实践是一种在传统社会关系与现代工厂制度之间求生存的“混合模式”，是用内化的、基于关系的信任，来替代缺失的外部法律秩序。</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="font-bold text-lg md:text-xl text-orange-700">苏联模式及其中国式改造 (1949-1976)</h3>
+                        <p class="text-sm md:text-base text-gray-600 mt-2">新中国成立后，企业管理全面转向。初期全盘引进苏联“一长制”，强调技术官僚和集中领导。随后，出于意识形态的反思，诞生了强调“群众路线”的“鞍钢宪法”。这一时期的核心冲突是“专业逻辑”与“政治逻辑”对企业主导权的争夺，最终在文革中以后者的极端化而告终。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="reform-era" class="pt-16 -mt-16 timeline-item pl-8 md:pl-12 pb-12">
+                <h2 class="text-2xl md:text-3xl font-extrabold text-gray-800 mb-6">第二篇章：改革、开放与转型 (1978-2010)</h2>
+                <p class="mb-8 text-base md:text-lg text-gray-600">改革开放开启了中国企业管理的根本性转向。国企在“扩权让利”和建立现代企业制度的道路上艰难转型，民营企业则在市场中“野蛮生长”，并最终孕育出具有全球竞争力的企业。点击下方企业，探索它们的转型之路。</p>
+                <div id="case-study-container-reform"></div>
+            </section>
+
+            <section id="new-era" class="pt-16 -mt-16 timeline-item pl-8 md:pl-12 pb-12">
+                <h2 class="text-2xl md:text-3xl font-extrabold text-gray-800 mb-6">第三篇章：新时代的探索与自信 (2010年至今)</h2>
+                <p class="mb-8 text-base md:text-lg text-gray-600">数字化转型成为核心催化剂。一批顶尖民营企业摆脱模仿，发展出高度原创的治理体系。国企改革则进入新阶段，强调将党的领导融入公司治理。点击下方企业，洞察它们的创新模式。</p>
+                 <div id="case-study-container-new-era"></div>
+            </section>
+            
+            <section id="sasac" class="pt-16 -mt-16 timeline-item pl-8 md:pl-12 pb-12">
+                <h2 class="text-2xl md:text-3xl font-extrabold text-gray-800 mb-6">专题：国资委——从“管家”到“操盘手”的艰难转身</h2>
+                <p class="mb-8 text-base md:text-lg text-gray-600">自2003年成立以来，国资委深刻地重塑了中央企业的管理逻辑与战略走向。其角色演进，是一部在市场化改革与加强国家控制之间不断寻求平衡的历史。</p>
+                <div class="space-y-10 border-l-2 border-blue-400 pl-6">
+                    <div>
+                        <h3 class="font-bold text-xl md:text-2xl text-blue-600">第一阶段 (2003-2008): 奠定基础，规范治理</h3>
+                        <p class="text-base text-gray-700 mt-2 mb-4">核心任务是解决“九龙治水”的混乱局面，实现“政企分开”，建立规范的现代企业制度。国资委作为出资人代表，开始推动央企建立规范的董事会，明晰权责边界。</p>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h4 class="font-semibold text-lg">关键举措与案例：</h4>
+                            <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1 text-sm">
+                                <li><strong>董事会试点:</strong> 以宝钢、华能等为试点，向央企派出外部董事和独立董事，旨在形成有效的决策制衡机制，改变过去“一把手”说了算的局面。</li>
+                                <li><strong>主辅分离:</strong> 推动央企剥离非主业资产和办社会职能，使其聚焦主业，减轻历史包袱。</li>
+                                <li><strong>业绩考核:</strong> 建立以EVA（经济增加值）为核心的业绩考核体系，引导企业关注价值创造，而非单纯的规模扩张。</li>
+                            </ul>
+                        </div>
+                        <div class="bg-gray-100 border-l-4 border-gray-400 p-4 rounded-r-lg mt-4">
+                            <h4 class="font-semibold text-gray-800">客观评论：</h4>
+                            <p class="text-sm text-gray-700">国资委的成立虽解决了“谁是老板”的问题，但也创造了一个权力空前集中的“超级婆婆”。所谓的“政企分开”并不彻底，国资委对央企的人事任免、薪酬、重大投资仍有绝对控制权，行政干预换了件“出资人”的外衣。董事会试点中，外部董事的独立性和话语权长期不足，难以对强大的执行层形成有效制衡。</p>
+                        </div>
+                    </div>
+                     <div>
+                        <h3 class="font-bold text-xl md:text-2xl text-blue-600">第二阶段 (2008-2015): 应对危机，战略重组</h3>
+                        <p class="text-base text-gray-700 mt-2 mb-4">为应对全球金融危机，以及解决央企间严重的同质化竞争，国资委主导了一系列大规模的战略性重组，旨在“做强做优做大”，培育具有国际竞争力的“国家队”。</p>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h4 class="font-semibold text-lg">关键举措与案例：</h4>
+                            <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1 text-sm">
+                                <li><strong>合并同类项:</strong> 推动中国南车与中国北车合并为中国中车，结束海外恶性竞争；中国远洋与中国海运重组为中远海运，打造全球航运巨头。</li>
+                                <li><strong>产业链整合:</strong> 围绕核心企业进行上下游整合，如中国五矿与中冶集团的重组，旨在打通金属矿产领域的全产业链。</li>
+                                <li><strong>推动信息化建设:</strong> 发布指导意见，要求央企加强信息化顶层设计，推动ERP等核心系统的普及和深化应用，提升集团管控能力。</li>
+                            </ul>
+                        </div>
+                         <div class="bg-gray-100 border-l-4 border-gray-400 p-4 rounded-r-lg mt-4">
+                            <h4 class="font-semibold text-gray-800">客观评论：</h4>
+                            <p class="text-sm text-gray-700">这一时期的重组多为行政主导的“拉郎配”，重“物理合并”而轻“化学反应”。重组后的企业规模巨大，但内部整合极其困难，文化冲突、业务掣肘长期存在，并未能有效实现“1+1>2”的协同效应。这种以行政命令代替市场选择的做法，在一定程度上抑制了竞争，保护了落后，并可能导致新的垄断和效率损失。</p>
+                        </div>
+                    </div>
+                     <div>
+                        <h3 class="font-bold text-xl md:text-2xl text-blue-600">第三阶段 (2015-至今): 管资本为主，聚焦核心</h3>
+                        <p class="text-base text-gray-700 mt-2 mb-4">改革进入深水区，国资委的职能开始向“管资本”为主转变。通过组建国有资本投资、运营公司（“两类公司”），探索更为市场化的国有资本运作模式，同时将党的领导深度融入公司治理，并要求央企聚焦主责主业，服务国家战略。</p>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h4 class="font-semibold text-lg">关键举措与案例：</h4>
+                            <ul class="list-disc list-inside text-gray-600 mt-2 space-y-1 text-sm">
+                                <li><strong>“两类公司”试点:</strong> 以诚通集团、中国国新为国有资本运营公司试点，以宝武集团、华润集团等为国有资本投资公司试点，授权其进行市场化的资本运作和股权管理。</li>
+                                <li><strong>党的领导融入治理:</strong> 全面要求在公司章程中明确党组织的法定地位，落实党委研究讨论作为董事会、经理层决策重大事项的前置程序。</li>
+                                <li><strong>强力推进数字化转型:</strong> 将数字化转型作为“一把手”工程，进行专项考核。推动央企建设工业互联网平台，发展“智慧+”业务，如国家电网的“数字新基建”和中国石化的“工业互联网平台”。</li>
+                            </ul>
+                        </div>
+                         <div class="bg-gray-100 border-l-4 border-gray-400 p-4 rounded-r-lg mt-4">
+                            <h4 class="font-semibold text-gray-800">客观评论：</h4>
+                            <p class="text-sm text-gray-700">“管资本”的转型知易行难。国资委在授权与监管之间依然摇摆，对“两类公司”的干预时有发生，市场化运作的独立性受限。全面加强党的领导，在统一思想、强化执行力的同时，也可能固化决策体系，使企业在快速变化的市场中反应迟钝。对数字化转型的强力推动，在部分企业中也异化为追求报表好看的“形象工程”，而非真正服务于业务的深度变革。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    
+    <footer class="text-center py-6 mt-12 bg-white border-t">
+        <p class="text-gray-500 text-sm">融合历史与案例的互动式解读应用</p>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const companiesData = {
+        // Reform Era
+        'sinopec': {
+            era: 'reform', category: 'energy', name: '中国石化', logo: '⛽️', competitor: '埃克森美孚',
+            management: '从高度集中的计划管理，向事业部制和专业化公司转型。关键变革是2000年上市，倒逼其建立现代公司治理。优秀实践是“价值导向”的精细化成本管控和HSE（健康、安全、环境）管理体系。',
+            globalization: '早期侧重于海外上游油气资源并购（如收购Addax石油）。近年更注重在“一带一路”沿线进行炼化工程服务和成品油销售网络布局，实现全产业链输出。局限性在于海外运营的文化整合能力不足，且易受地缘政治风险影响。',
+            digitalization: '启动“PROMISE”计划，打造覆盖全产业链的统一ERP平台，提升了集团管控效率。利用AI和大数据优化炼化装置运行参数，提升效率和收率。构建“易捷”新零售生态，探索油非互促，但数据驱动的消费者运营能力仍有待提升。',
+            lessons: '国际化并购中对地缘政治风险和文化整合的复杂性认识不足。内部数据孤岛问题突出，实现全产业链数据贯通是巨大挑战。',
+            comparison: [4, 3, 3, 4, 4], competitor_comparison: [5, 5, 5, 4, 5]
+        },
+        'lenovo': {
+            era: 'reform', category: 'tech', name: '联想集团', logo: '💻', competitor: '戴尔',
+            management: '从“贸工技”路线胜出，核心是强大的渠道管理和供应链效率。管理精髓是“建班子、定战略、带队伍”。',
+            globalization: '教科书级案例是2005年收购IBM PC业务，一举成为全球PC巨头。后续又收购摩托罗拉移动和IBM x86服务器业务。局限性在于品牌整合难度大，未能有效扭转移动业务的颓势。',
+            digitalization: '从内部IT支撑，转向“新IT”战略，对外提供“端-边-云-网-智”的全要素解决方案。利用自身作为大型制造企业的转型经验，为其他企业提供智能化转型服务，实现商业模式升级。',
+            lessons: '对移动互联网浪潮的反应迟缓，错失智能手机发展黄金期。向高利润服务转型之路充满挑战，对核心技术的投入相对不足。',
+            comparison: [5, 3, 5, 4, 5], competitor_comparison: [5, 3, 5, 4, 4]
+        },
+        'icbc': {
+            era: 'reform', category: 'finance', name: '工商银行', logo: '🏦', competitor: '摩根大通',
+            management: '从国家专业银行向现代商业银行转型。通过股份制改革和上市，建立了现代公司治理架构。管理核心是强大的风险控制体系和庞大的客户基础。',
+            globalization: '通过收购南非标准银行股权等方式，积极布局非洲和“一带一路”沿线。局限性在于海外业务仍以服务中资企业为主，对当地市场的渗透和本土化经营能力有待加强。',
+            digitalization: '在国内银行业中率先进行IT架构大集中，构建了强大的核心银行系统。近年大力发展线上银行、手机银行，并利用大数据进行精准营销和风险控制。数字化是其应对互联网金融冲击的关键。',
+            lessons: '作为大型国有银行，机构臃肿，决策流程长，对市场变化的反应速度慢于股份制银行。创新业务的开展受到严格监管的制约。',
+            comparison: [3, 3, 4, 4, 3], competitor_comparison: [5, 4, 4, 5, 5]
+        },
+        'weichai': {
+            era: 'reform', category: 'manufacturing', name: '潍柴集团', logo: '⚙️', competitor: '康明斯',
+            management: '从濒临破产的国企，通过大刀阔斧的内部改革（“约法三章”）和市场化运作重获新生。核心管理特色是“客户满意是我们的宗旨”的价值观和强大的激励机制。',
+            globalization: '经典案例是2012年收购德国凯傲集团（KION），进入高端液压和叉车领域。后续又收购林德液压、美国PSI等。并购逻辑清晰，旨在获取核心技术，弥补产业链短板。局限性在于整合后的跨文化管理和技术协同仍面临挑战。',
+            digitalization: '大力推进智能制造，打造“潍柴工业4.0”示范基地。利用物联网技术对发动机进行远程监控和预测性维护。数字化提升了产品质量和生产效率，并创造了新的服务模式。',
+            lessons: '高度依赖重卡市场，周期性风险大。向非道路、大缸径等新业务领域的拓展需要持续投入和市场培育。',
+            comparison: [4, 4, 4, 4, 4], competitor_comparison: [5, 5, 5, 4, 5]
+        },
+        'cmg': {
+            era: 'reform', category: 'finance', name: '招商局集团', logo: '⚓️', competitor: '和记黄埔',
+            management: '作为央企中的市场化先锋，管理上强调“时间就是金钱，效率就是生命”。开创了“蛇口模式”，在公司治理和市场化运作上长期领先于其他央企。',
+            globalization: '利用其在港口、航运领域的优势，在全球范围内投资和运营港口（如斯里兰卡汉班托塔港），是“一带一路”战略的重要执行者。局限性在于其多元化业务板块间的协同效应有待加强。',
+            digitalization: '积极推动传统产业的数字化升级。招商港口打造“智慧港口”解决方案，提升码头自动化水平和运营效率。招商蛇口则探索智慧园区和智慧社区的建设。',
+            lessons: '作为百年企业，部分传统业务板块存在创新动力不足的问题。如何在保持市场化活力的同时，平衡好作为央企的政治任务，是其长期课题。',
+            comparison: [4, 3, 4, 4, 4], competitor_comparison: [5, 3, 4, 3, 4]
+        },
+        'cr': {
+            era: 'reform', category: 'finance', name: '华润集团', logo: '🏢', competitor: '通用电气(前)',
+            management: '典型的多元化投资控股集团管理模式。总部作为战略和资本中心，对下属各业务单元（华润万家、雪花啤酒、华润置地等）充分授权，并进行严格的财务和业绩监控。',
+            globalization: '全球化主要体现在资本运作和国际采购层面，而非大规模的自有品牌出海。局限性在于各业务板块相对独立，未能形成强大的全球统一品牌形象。',
+            digitalization: '在零售、地产等领域积极应用数字化。华润万家推进线上线下一体化，发展O2O业务。华润置地则在商业地产中引入智慧运营系统。但集团层面的数字化协同和数据资产管理仍是挑战。',
+            lessons: '多元化战略虽然分散了风险，但也可能导致资源不聚焦。在部分充分竞争的领域，面临来自更专业、更灵活的民营企业的激烈挑战。',
+            comparison: [3, 3, 3, 3, 4], competitor_comparison: [5, 4, 4, 4, 5]
+        },
+        // New Era
+        'haier': {
+            era: 'new-era', category: 'tech', name: '海尔集团', logo: '�', competitor: '惠而浦',
+            management: '从OEC管理法，进化为“人单合一”模式。核心是打破科层制，将企业变为创业平台，员工成为自负盈亏的“创客”。',
+            globalization: '标志性案例是收购日本三洋、美国GE家电。并购逻辑是获取技术、渠道和本土化能力，并用“人单合一”模式对其改造赋能。局限性在于“人单合一”模式在不同文化背景下的推广和复制难度极大。',
+            digitalization: '核心是打造COSMOPlat工业互联网平台，实现了从大规模制造向大规模定制（C2M）的转型，并对外赋能。数字化打通了用户需求与生产制造的全流程，是其管理模式的底层支撑。',
+            lessons: '“人单合一”对员工素质要求极高，并非所有业务和地区都能成功实施。早期全球化曾因不解当地市场而受挫，学会“先难后易”战略。',
+            comparison: [5, 4, 4, 5, 5], competitor_comparison: [4, 3, 4, 3, 4]
+        },
+        'byd': {
+            era: 'new-era', category: 'manufacturing', name: '比亚迪', logo: '🚗', competitor: '特斯拉',
+            management: '典型的工程师文化和创始人驱动。核心是“垂直整合”战略，从电池、电机到半导体，几乎全部自研自产，形成强大成本控制和技术迭代能力。',
+            globalization: '新能源汽车全球化采取“公交先行”策略，先通过电动大巴在海外建立品牌口碑，再逐步导入乘用车。局限性在于乘用车海外品牌形象仍较弱，高端市场突破困难。',
+            digitalization: '重点投入研发和生产环节。自主研发BMS和整车控制系统，发布“e平台3.0”和“DiLink”智能网联系统，构建技术生态。数字化是其垂直整合战略得以高效运作的关键。',
+            lessons: '早期“山寨”模式带来品牌形象负面影响。垂直整合模式资产重，在市场需求剧烈波动时，供应链弹性面临考验。',
+            comparison: [4, 5, 5, 4, 4], competitor_comparison: [5, 5, 4, 5, 5]
+        },
+        'baowu': {
+            era: 'new-era', category: 'materials', name: '宝武集团', logo: '🏭', competitor: '安赛乐米塔尔',
+            management: '通过国家主导的战略性重组（宝钢、武钢、马钢等）形成。管理核心是整合后的文化融合与集中管控，推行“一总部多基地”模式，实现采购、研发、销售的统一协同。',
+            globalization: '全球化主要体现在上游原材料的全球采购与布局（如西芒杜铁矿），以及高端钢材产品的出口。局限性在于海外生产基地布局相对薄弱，与安赛乐米塔尔的全球制造网络有差距。',
+            digitalization: '大力推进“智慧制造”，打造“黑灯工厂”。其宝山基地的1580热轧产线是行业标杆。推出“欧冶云商”工业互联网平台，整合钢铁生态链，从钢铁制造商向服务商转型。数字化显著提升了生产效率和管理透明度。',
+            lessons: '多次重组后的文化融合与组织整合是巨大挑战。在非钢产业的多元化探索中，存在资源分散、协同效应不明显的风险。',
+            comparison: [3, 4, 4, 5, 3], competitor_comparison: [5, 3, 4, 4, 4]
+        },
+        'sany': {
+            era: 'new-era', category: 'manufacturing', name: '三一重工', logo: '🏗️', competitor: '卡特彼勒',
+            management: '以强大的执行力和营销体系著称，内部推行精益生产和严格的绩效考核。创始人主导的家长式管理色彩较浓。',
+            globalization: '标志性事件是2012年收购德国普茨迈斯特（“大象”），获取了混凝土机械的顶尖技术和全球品牌。在印度、美国等地建有研发制造基地。局限性在于海外市场仍以发展中国家为主，高端市场品牌影响力待提升。',
+            digitalization: '是工程机械行业数字化转型的先行者。打造“树根互联”工业互联网平台，通过物联网技术连接超过数十万台设备，实现远程监控、故障预警和智能调度，创造了新的服务收入模式。数字化重塑了其售后服务和商业模式。',
+            lessons: '收购普茨迈斯特后的文化整合过程漫长而艰难。对核心零部件（如高端液压件）的依赖进口，是其供应链的薄弱环节。',
+            comparison: [4, 4, 4, 5, 4], competitor_comparison: [5, 5, 5, 5, 5]
+        },
+        'xiaomi': {
+            era: 'new-era', category: 'tech', name: '小米集团', logo: '📱', competitor: '三星电子',
+            management: '以“互联网思维”改造传统制造业，核心是“专注、极致、口碑、快”的七字诀。采用“生态链”模式，投资孵化数百家硬件公司，形成庞大的产品矩阵。',
+            globalization: '早期通过高性价比模式迅速占领印度等新兴市场。近年在欧洲市场也取得突破。局限性在于高端市场品牌形象不足，且在全球面临激烈的专利诉讼和地缘政治风险。',
+            digitalization: '数字化是其商业模式的基石。通过MIUI操作系统连接海量用户，获取数据反馈，指导产品迭代。打造“小米商城”直销平台，实现高效的C2M模式。其“新零售”战略旨在打通线上线下数据和体验。',
+            lessons: '坚持“性价比”导致利润微薄，研发投入强度受限，冲击高端市场难度大。生态链模式虽然扩大了版图，但也带来了品控和品牌管理的复杂性。',
+            comparison: [5, 3, 4, 5, 4], competitor_comparison: [5, 5, 5, 4, 5]
+        },
+        'stategrid': {
+            era: 'new-era', category: 'energy', name: '国家电网', logo: '⚡️', competitor: '法国电力(EDF)',
+            management: '典型的超大型国企管理模式，实行高度集中的垂直一体化管理。管理核心是保障电网安全稳定运行，具有强烈的社会责任和公共事业属性。',
+            globalization: '全球化战略以投资和运营海外骨干能源网为主，如巴西、菲律宾、澳大利亚等国电网。输出特高压（UHV）技术和标准是其特色。局限性在于投资易受地缘政治和投资国监管政策变化影响。',
+            digitalization: '大力推进“数字新基建”，构建以特高压为骨干网架、各级电网协调发展的能源互联网。利用大数据、云计算进行负荷预测、智能调度和资产管理，数字化是其提升电网效率和安全性的核心手段。',
+            lessons: '作为自然垄断企业，市场化改革动力不足，运营效率和服务意识有待提高。在推动能源转型中，如何平衡传统火电与新能源的接入是巨大挑战。',
+            comparison: [4, 4, 3, 5, 2], competitor_comparison: [4, 4, 4, 4, 4]
+        },
+        'mindray': {
+            era: 'new-era', category: 'tech', name: '深圳迈瑞', logo: '🩺', competitor: '美敦力',
+            management: '以研发为驱动，建立了高效的产品开发流程（IPD）。管理上强调市场导向和快速响应，形成了强大的销售网络和直销体系。',
+            globalization: '通过收购美国Datascope的监护业务等一系列并购，快速获取了海外技术和渠道。产品销往全球多个国家。局限性在于品牌在欧美高端市场的影响力仍弱于国际巨头。',
+            digitalization: '将数字化应用于研发、制造和营销全流程。利用数字化模拟进行产品设计和测试。打造“瑞影云++”等智慧医疗解决方案，将设备、数据与临床应用连接起来，从设备商向服务商转型。',
+            lessons: '早期产品以模仿和低价竞争为主，品牌形象建立过程漫长。海外并购后的整合，尤其是在研发体系和企业文化上的融合，是长期挑战。',
+            comparison: [4, 4, 4, 4, 5], competitor_comparison: [5, 5, 5, 4, 5]
+        },
+        'geely': {
+            era: 'new-era', category: 'manufacturing', name: '吉利控股', logo: '🚙', competitor: '大众集团',
+            management: '从“造老百姓买得起的好车”起步，管理上灵活务实，创始人李书福的战略洞察和决断力是核心驱动力。',
+            globalization: '最经典的案例是2010年“蛇吞象”式收购沃尔沃汽车，并成功保持其独立运营和品牌价值。后续又入股戴姆勒、收购宝腾路特斯，构建了庞大的全球品牌矩阵。局限性在于多品牌间的协同效应和管理复杂性巨大。',
+            digitalization: '积极拥抱电动化和智能化。推出“浩瀚”智能进化体验架构（SEA），并打造极氪等高端智能电动品牌。数字化是其从传统车企向出行科技公司转型的核心战略。',
+            lessons: '早期产品质量问题曾严重影响品牌声誉。多品牌、多技术路线的全球布局，对集团的资本运作和管理协同能力提出了极高要求。',
+            comparison: [5, 4, 4, 4, 4], competitor_comparison: [5, 5, 5, 4, 4]
+        },
+    };
+
+    function createCaseStudySection(containerId, era) {
+        const container = document.getElementById(containerId);
+        const companiesOfEra = Object.keys(companiesData).filter(key => companiesData[key].era === era);
+        const categories = {
+            'all': '全部',
+            'energy': '能源化工',
+            'manufacturing': '装备制造与汽车',
+            'tech': '科技与消费',
+            'materials': '材料与资源',
+            'finance': '金融与综合'
+        };
+
+        // Create filter buttons
+        const filterContainer = document.createElement('div');
+        filterContainer.className = 'flex flex-wrap gap-2 mb-6';
+        Object.keys(categories).forEach((catKey, index) => {
+            const button = document.createElement('button');
+            button.className = `filter-btn px-3 py-1.5 text-xs md:text-sm font-semibold rounded-full bg-white shadow-sm hover:bg-orange-100 ${index === 0 ? 'active' : ''}`;
+            button.dataset.filter = catKey;
+            button.textContent = categories[catKey];
+            filterContainer.appendChild(button);
+        });
+        container.appendChild(filterContainer);
+
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4 mb-8';
+        
+        companiesOfEra.forEach(key => {
+            const company = companiesData[key];
+            const card = document.createElement('button');
+            card.className = 'company-card bg-white p-2 md:p-3 rounded-lg shadow flex flex-col items-center justify-center text-center h-24';
+            card.dataset.companyId = key;
+            card.dataset.category = company.category;
+            card.innerHTML = `<span class="text-3xl md:text-4xl mb-1">${company.logo}</span><h4 class="font-semibold text-xs">${company.name}</h4>`;
+            grid.appendChild(card);
+        });
+        
+        const detailView = document.createElement('div');
+        detailView.id = `detail-view-${era}`;
+        detailView.className = 'hidden bg-gray-50 p-4 md:p-6 rounded-lg shadow-inner mt-6';
+        
+        container.appendChild(grid);
+        container.appendChild(detailView);
+
+        // Filter logic
+        filterContainer.addEventListener('click', (e) => {
+            const button = e.target.closest('.filter-btn');
+            if (button) {
+                const filter = button.dataset.filter;
+                filterContainer.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                grid.querySelectorAll('.company-card').forEach(card => {
+                    if (filter === 'all' || card.dataset.category === filter) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+        });
+
+        grid.addEventListener('click', (e) => {
+            const card = e.target.closest('.company-card');
+            if (card) {
+                const companyId = card.dataset.companyId;
+                
+                grid.querySelectorAll('.company-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                
+                renderDetailView(detailView, companyId);
+            }
+        });
+    }
+
+    let comparisonChart;
+    function renderDetailView(viewContainer, companyId) {
+        const companyData = companiesData[companyId];
+        viewContainer.innerHTML = `
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <div class="lg:col-span-3 space-y-4">
+                    <h3 class="text-2xl md:text-3xl font-bold text-orange-700">${companyData.name} <span class="text-gray-500 text-lg md:text-xl font-normal">vs ${companyData.competitor}</span></h3>
+                    <div class="detail-card detail-card-management">
+                        <h4 class="font-bold text-blue-800">管理变革与实践</h4>
+                        <p class="text-sm text-gray-700 mt-1">${companyData.management}</p>
+                    </div>
+                    <div class="detail-card detail-card-globalization">
+                        <h4 class="font-bold text-green-800">全球化战略与局限</h4>
+                        <p class="text-sm text-gray-700 mt-1">${companyData.globalization}</p>
+                    </div>
+                    <div class="detail-card detail-card-digitalization">
+                        <h4 class="font-bold text-yellow-800">数字化转型与影响</h4>
+                        <p class="text-sm text-gray-700 mt-1">${companyData.digitalization}</p>
+                    </div>
+                     <div class="detail-card detail-card-lessons">
+                        <h4 class="font-bold text-gray-800">主要经验教训</h4>
+                        <p class="text-sm text-gray-700 mt-1">${companyData.lessons}</p>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow">
+                     <h4 class="text-center font-bold mb-2">中外对标雷达图</h4>
+                    <div class="chart-container">
+                        <canvas id="chart-${companyId}"></canvas>
+                    </div>
+                </div>
+            </div>
+        `;
+        viewContainer.classList.remove('hidden');
+
+        const chartCtx = document.getElementById(`chart-${companyId}`).getContext('2d');
+        if (comparisonChart) comparisonChart.destroy();
+        
+        comparisonChart = new Chart(chartCtx, {
+            type: 'radar',
+            data: {
+                labels: ['全球化', '技术创新', '供应链', '数字化', '治理'],
+                datasets: [
+                    {
+                        label: companyData.name,
+                        data: companyData.comparison,
+                        backgroundColor: 'rgba(49, 130, 206, 0.2)',
+                        borderColor: 'rgba(49, 130, 206, 1)',
+                        pointBackgroundColor: 'rgba(49, 130, 206, 1)',
+                        borderWidth: 2,
+                    },
+                    {
+                        label: companyData.competitor,
+                        data: companyData.competitor_comparison,
+                        backgroundColor: 'rgba(221, 107, 32, 0.2)',
+                        borderColor: 'rgba(221, 107, 32, 1)',
+                        pointBackgroundColor: 'rgba(221, 107, 32, 1)',
+                        borderWidth: 2,
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                        pointLabels: { font: { size: 12 } },
+                        ticks: { beginAtZero: true, max: 5, stepSize: 1, backdropColor: 'transparent' }
+                    }
+                },
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 12 } } } }
+            }
+        });
+    }
+    
+    createCaseStudySection('case-study-container-reform', 'reform');
+    createCaseStudySection('case-study-container-new-era', 'new-era');
+
+    const sections = document.querySelectorAll('main > section[id], main > div > section[id]');
+    const navLinks = document.querySelectorAll('#navbar a');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === entry.target.id) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+    }, { rootMargin: "-30% 0px -70% 0px" });
+
+    sections.forEach(section => observer.observe(section));
+});
+</script>
+
+</body>
+</html>
+�
