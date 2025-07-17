@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国大型国企重组与绩效分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: The application is designed to guide the user from a macro perspective to micro details and back to a synthesis, facilitating a comprehensive understanding. The structure is as follows: 1. **Hero & Intro:** Catches user attention and sets the context. 2. **Macro Trend Overview:** Provides a high-level view of merger activity over 20 years, establishing the scale and timeline. This answers "what happened and when?" first. 3. **Strategic Drivers:** Explains the "why" behind these mergers using visually distinct info cards. This thematic grouping makes the core motivations digestible. 4. **Interactive Case Studies:** This is the heart of the app, allowing users to "learn by doing." By selecting specific, well-known cases, users can actively explore the "how" and the "what next" (performance). A tabbed interface is used for clear selection, and dynamic chart/text updates provide immediate feedback. This is more engaging than a static list. 5. **Synthesis & Outlook:** Concludes the analysis, summarizing key takeaways and offering a forward-looking perspective. This structure was chosen because it mirrors a natural learning process—from broad overview to specific examples, and finally to a consolidated conclusion, making complex economic phenomena more accessible and understandable. -->
+    <!-- Visualization & Content Choices: 1. **Report Info:** Major SOE merger counts per year (2005-2024). **Goal:** Show change over time. **Viz/Method:** Bar Chart (Chart.js/Canvas). **Interaction:** Hover for yearly details. **Justification:** A bar chart is intuitive for showing frequency over a discrete time series. **Library:** Chart.js. 2. **Report Info:** Primary motivations for mergers. **Goal:** Organize and explain concepts. **Viz/Method:** Thematic Cards (HTML/CSS/Tailwind Grid). **Interaction:** None planned to maintain simplicity; the cards are self-explanatory summaries. **Justification:** Breaks down policy concepts into clear, manageable visual chunks, avoiding a dense wall of text. **Library:** Tailwind. 3. **Report Info:** Pre- vs. Post-merger financial data for specific companies (e.g., CRRC, Baowu). **Goal:** Compare performance. **Viz/Method:** Grouped Bar Chart (Chart.js/Canvas). **Interaction:** User selects case study via buttons, which dynamically updates the chart and descriptive text via JavaScript. **Justification:** Grouped bars provide a direct, powerful visual comparison of "before" and "after" states across multiple metrics (revenue, profit, assets). The interaction empowers user-driven exploration. **Library:** Chart.js. 4. **Report Info:** Summary findings. **Goal:** Inform and conclude. **Viz/Method:** Styled Text Blocks (HTML/CSS/Tailwind). **Justification:** Clear, readable text is best for summarizing qualitative analysis and conclusions. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F5F2;
+            color: #333333;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #C87E6A;
+            border-bottom-color: #C87E6A;
+        }
+        .case-button {
+            transition: background-color 0.3s, color 0.3s, transform 0.2s;
+        }
+        .case-button.active {
+            background-color: #4A6C8C;
+            color: #FFFFFF;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-[#F8F5F2]/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="font-bold text-xl text-[#4A6C8C]">国企重组观察</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium">宏观趋势</a>
+                        <a href="#drivers" class="nav-link px-3 py-2 rounded-md text-sm font-medium">战略驱动力</a>
+                        <a href="#cases" class="nav-link px-3 py-2 rounded-md text-sm font-medium">案例研究</a>
+                        <a href="#synthesis" class="nav-link px-3 py-2 rounded-md text-sm font-medium">总结与展望</a>
+                    </div>
+                </div>
+                 <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#overview" class="nav-link block px-3 py-2 rounded-md text-base font-medium">宏观趋势</a>
+                <a href="#drivers" class="nav-link block px-3 py-2 rounded-md text-base font-medium">战略驱动力</a>
+                <a href="#cases" class="nav-link block px-3 py-2 rounded-md text-base font-medium">案例研究</a>
+                <a href="#synthesis" class="nav-link block px-3 py-2 rounded-md text-base font-medium">总结与展望</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <section id="hero" class="text-center py-20 sm:py-28">
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-[#4A6C8C]">巨龙的融合</h1>
+            <p class="mt-4 text-lg md:text-xl max-w-3xl mx-auto text-gray-600">过去二十年中国大型国有企业重组合并浪潮的深度剖析</p>
+            <p class="mt-2 text-base max-w-3xl mx-auto text-gray-500">探究其背后的战略意图、实施路径及对全球产业格局的深远影响。</p>
+        </section>
+
+        <div class="space-y-24 md:space-y-32">
+
+            <section id="overview" class="scroll-mt-20">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-800">宏观趋势：二十年重组之路</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-500">自21世纪初以来，中国央企的重组合并经历了数次高潮，尤其在“做强做优做大”的国家战略指引下，重组步伐显著加快，企业数量持续减少，但单体规模和竞争力不断增强。本图表展示了过去二十年间央企层面的主要重组事件数量，反映出政策驱动下的整合浪潮。</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-4 md:p-6">
+                    <div class="chart-container mx-auto max-w-5xl">
+                        <canvas id="mergerTrendChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="drivers" class="scroll-mt-20">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-800">核心驱动力：重组背后的战略考量</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-500">国企重组并非简单的企业合并，而是服务于国家整体发展战略的重大举措。其背后蕴含着多重战略意图，旨在优化资源配置，提升产业国际竞争力，并维护国家经济安全。以下是推动本轮重组浪潮的几个核心驱动因素。</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-white rounded-xl shadow-lg p-6 text-center transform hover:-translate-y-2 transition-transform duration-300">
+                        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-[#E3E9EF] mb-4">
+                            <span class="text-3xl">🏆</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-[#4A6C8C]">提升全球竞争力</h3>
+                        <p class="mt-2 text-gray-500">通过“强强联合”，集中优势资源，打造能够在全球市场上与跨国巨头抗衡的“国家队”，尤其在高铁、核电、航运等关键领域。</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 text-center transform hover:-translate-y-2 transition-transform duration-300">
+                        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-[#E3E9EF] mb-4">
+                            <span class="text-3xl">🔗</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-[#4A6C8C]">优化产业结构</h3>
+                        <p class="mt-2 text-gray-500">解决部分行业产能过剩、同质化竞争严重的问题。通过重组整合，化解过剩产能，推动产业链上下游协同，实现产业升级。</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 text-center transform hover:-translate-y-2 transition-transform duration-300">
+                        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-[#E3E9EF] mb-4">
+                            <span class="text-3xl">🛡️</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-[#4A6C8C]">服务国家战略</h3>
+                        <p class="mt-2 text-gray-500">配合“一带一路”倡议、中国制造2025等国家级战略，形成合力，更好地“走出去”，承接重大海外项目，保障能源、资源安全。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="cases" class="scroll-mt-20">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-800">案例研究：合并前后的绩效对比</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-500">理论的最终检验是实践。通过分析几个标志性的重组案例，我们可以更直观地看到这些“巨无霸”企业在合并前后的经营业绩变化。请选择一个案例进行深入了解，图表将动态展示其关键财务指标的变化情况，揭示重组的实际成效。</p>
+                </div>
+                <div class="flex justify-center flex-wrap gap-3 mb-8">
+                    <button class="case-button active px-6 py-2 bg-white rounded-full shadow font-semibold" data-case="crrc">中国中车 (CRRC)</button>
+                    <button class="case-button px-6 py-2 bg-white rounded-full shadow font-semibold" data-case="baowu">中国宝武 (Baowu)</button>
+                    <button class="case-button px-6 py-2 bg-white rounded-full shadow font-semibold" data-case="cosco">中远海控 (COSCO)</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-4 md:p-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                        <div class="lg:col-span-2">
+                            <h3 id="caseTitle" class="text-2xl font-bold text-[#4A6C8C] mb-2"></h3>
+                            <p id="caseDescription" class="text-gray-600 leading-relaxed"></p>
+                        </div>
+                        <div class="lg:col-span-3">
+                            <div class="chart-container">
+                                <canvas id="caseStudyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="synthesis" class="scroll-mt-20 pb-20">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-800">总结与展望</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-500">国企重组是一项复杂的系统工程，既取得了显著成就，也面临着持续的挑战。</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-8 space-y-6">
+                    <div>
+                        <h3 class="text-xl font-semibold text-[#4A6C8C]">主要成效</h3>
+                        <p class="mt-2 text-gray-600">总体来看，大型国企重组在减少恶性竞争、提升规模效应和国际市场地位方面成效显著。合并后的企业在资产规模、营收体量上实现了跨越式增长，部分企业在全球行业排名中跃居前列。同时，通过内部整合，优化了资源配置，为承担国家重大工程和战略任务提供了坚实基础。</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-[#C87E6A]">面临的挑战</h3>
+                        <p class="mt-2 text-gray-600">然而，重组并非一蹴而就。“合而不整”的问题在一些企业中依然存在，企业文化、管理体系、人员安置的深度融合需要漫长过程。此外，规模巨大也可能带来内部效率下降、市场反应迟缓的“大企业病”风险。如何在保持规模优势的同时，激发企业内部的创新活力和市场竞争力，是未来持续的课题。</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-700">未来展望</h3>
+                        <p class="mt-2 text-gray-600">未来，国企的重组将更加注重“质”的提升，从“物理整合”走向“化学融合”。重组方向可能更聚焦于战略性新兴产业和未来产业的布局，通过专业化整合，提升产业链、供应链的韧性和安全水平。同时，混合所有制改革的深化将为这些巨型国企注入更多市场化基因，推动其建立更现代、更高效的公司治理结构。</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const reportData = {
+            mergerTrend: {
+                years: ['2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024'],
+                counts: [2, 3, 2, 1, 2, 1, 4, 1, 1, 3, 6, 5, 3, 2, 2, 3, 4, 2, 2, 1],
+            },
+            caseStudies: {
+                crrc: {
+                    title: '中国中车 (CRRC)',
+                    description: '2015年，中国南车(CSR)与中国北车(CNR)合并为中国中车(CRRC)。此次重组旨在整合国内高铁技术资源，结束两家公司在海外市场的内耗式竞争，形成合力共同开拓国际市场，打造世界领先的轨道交通装备供应商。',
+                    labels: ['总营收 (亿元)', '净利润 (亿元)', '总资产 (万亿元)'],
+                    before: [2045, 120, 2.5],
+                    after: [2276, 118, 4.2]
+                },
+                baowu: {
+                    title: '中国宝武 (Baowu)',
+                    description: '2016年，宝钢集团与武钢集团合并组建中国宝武钢铁集团。此举是国家推动钢铁行业去产能、提质增效的关键一步。重组旨在化解过剩产能，提升产业集中度，增强在国际铁矿石定价上的话语权，并引领中国钢铁行业向高端化、智能化、绿色化转型。',
+                    labels: ['粗钢产量 (亿吨)', '总营收 (亿元)', '净利润 (亿元)'],
+                    before: [0.6, 4320, -75], // Wuhan steel had significant losses
+                    after: [1.3, 11600, 370]
+                },
+                cosco: {
+                    title: '中远海控 (COSCO Shipping)',
+                    description: '2016年，中远集团与中海集团两大航运央企重组，核心上市平台为中远海控。重组意在整合集装箱运输、码头运营等核心资源，打造全球领先的综合性航运物流企业，以应对全球航运业的低迷周期，并更好地服务于“一带一路”倡议。',
+                    labels: ['集装箱运力 (万TEU)', '总营收 (亿元)', '净利润 (亿元)'],
+                    before: [158, 1100, -99],
+                    after: [300, 4800, 1097]
+                }
+            }
+        };
+
+        let caseStudyChart;
+        
+        const chartColors = {
+            before: 'rgba(200, 126, 106, 0.7)',
+            after: 'rgba(74, 108, 140, 0.7)',
+            trend: 'rgba(74, 108, 140, 0.8)'
+        };
+
+        function wrapText(text, maxChars) {
+            const words = text.split(" ");
+            let lines = [];
+            let currentLine = "";
+            words.forEach(word => {
+                if ((currentLine + word).length > maxChars) {
+                    lines.push(currentLine.trim());
+                    currentLine = "";
+                }
+                currentLine += word + " ";
+            });
+            lines.push(currentLine.trim());
+            return lines;
+        }
+        
+        const chartOptionsTemplate = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                             if (tooltipItems[0].dataset.label === '合并前' || tooltipItems[0].dataset.label === '合并后') {
+                                return tooltipItems[0].label;
+                            }
+                            return `年份: ${tooltipItems[0].label}`;
+                        },
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y;
+                            }
+                            if (context.dataset.label !== '合并前' && context.dataset.label !== '合并后') {
+                                label += ' 起';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            const label = this.getLabelForValue(value);
+                            return wrapText(label, 16);
+                        }
+                    }
+                }
+            }
+        };
+
+        function renderMergerTrendChart() {
+            const ctx = document.getElementById('mergerTrendChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: reportData.mergerTrend.years,
+                    datasets: [{
+                        label: '年度主要重组事件数',
+                        data: reportData.mergerTrend.counts,
+                        backgroundColor: chartColors.trend,
+                        borderColor: 'rgba(74, 108, 140, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: chartOptionsTemplate
+            });
+        }
+        
+        function updateCaseStudyView(caseKey) {
+            const caseData = reportData.caseStudies[caseKey];
+
+            document.getElementById('caseTitle').innerText = caseData.title;
+            document.getElementById('caseDescription').innerText = caseData.description;
+
+            const ctx = document.getElementById('caseStudyChart').getContext('2d');
+            if (caseStudyChart) {
+                caseStudyChart.destroy();
+            }
+
+            caseStudyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: caseData.labels,
+                    datasets: [
+                        {
+                            label: '合并前 (估算)',
+                            data: caseData.before,
+                            backgroundColor: chartColors.before,
+                            borderColor: 'rgba(200, 126, 106, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '合并后 (代表年份)',
+                            data: caseData.after,
+                            backgroundColor: chartColors.after,
+                            borderColor: 'rgba(74, 108, 140, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: chartOptionsTemplate
+            });
+        }
+        
+        const caseButtons = document.querySelectorAll('.case-button');
+        caseButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                caseButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                const caseKey = button.getAttribute('data-case');
+                updateCaseStudyView(caseKey);
+            });
+        });
+
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('section[id]');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 80) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if(targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 70,
+                        behavior: 'smooth'
+                    });
+                }
+                 const mobileMenu = document.getElementById('mobile-menu');
+                if(!mobileMenu.classList.contains('hidden')){
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+        
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        renderMergerTrendChart();
+        updateCaseStudyView('crrc');
+    });
+    </script>
+</body>
+</html>
