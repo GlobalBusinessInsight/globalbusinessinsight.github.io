@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAP架构演进综合报告：从R/3到智能企业</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Professional Tech Blue -->
+    <!-- Application Structure Plan: 本应用的架构设计为一个分层探索模型，旨在引导用户从宏观到微观，层层递进地理解SAP的演进。
+        1. 顶层导航 (时间轴): 用户首先通过选择主时代 (R/3, ECC, S/4HANA) 来设定全局上下文。这是最高级别的过滤器。
+        2. 主题区域 (垂直布局): 页面垂直划分为七大主题区域：“市场地位与客户演进”、“架构与客户规模”、“SAP与企业架构的共生演进”、“核心架构演进”、“功能设计革命”、“竞争格局分析”和“未来展望”。这种结构将庞大的信息分解为逻辑清晰、易于消化的模块。
+        3. 交互式图表与卡片: 在各个区域，通过Chart.js动态图表、交互式卡片、并列对比网格等形式，直观展示数据和信息。
+        4. 用户流: 用户可以先选择一个时代（如S/4HANA），然后垂直滚动浏览该时代在所有主题下的相关信息，也可以固定在一个主题区域，通过切换顶层时代导航来对比不同时代的差异。这种双重探索路径提供了极大的灵活性和深度。
+        该结构旨在将一份复杂的、多维度的报告，转化为一个非线性的、由用户主导的交互式探索体验。 -->
+    <!-- Visualization & Content Choices: 
+        1. 报告信息: 功能架构示意图。 -> 目标: 可视化展示从“烟囱式”到“数字核心”的架构转变。 -> 呈现方式: 使用HTML和Tailwind CSS构建的并列对比图。 -> 交互: 无，静态但信息丰富的可视化。 -> 理由: 示意图能最直观地传达核心架构理念的根本性差异，是纯文本无法比拟的。
+        2. 报告信息: 详细功能对比。 -> 目标: 深度剖析各业务领域的功能演进。 -> 呈现方式: 详细的HTML表格，分栏对比ECC和S/4HANA。 -> 交互: 内容根据主时代选择动态更新。 -> 理由: 表格形式结构清晰，便于逐项对比，深入了解细节。
+        3. 报告信息: SAP与企业架构(EA)的关系。 -> 目标: 阐述SAP在客户IT蓝图中的角色变迁。 -> 呈现方式: 带有TOGAF等理论框架图标的说明性卡片。 -> 交互: 内容根据主时代选择动态更新。 -> 理由: 将抽象的EA理论与SAP的具体实践相结合，清晰地揭示其战略价值。
+        4. 报告信息: 市场、客户、竞争、技术架构等。 -> 目标: 提供全面的上下文。 -> 呈现方式: 动态图表、交互卡片、对比网格。 -> 理由: 综合运用多种可视化手段，丰富报告的维度和深度。
+        -> Library/Method: Chart.js (Canvas), Tailwind CSS, Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans SC', sans-serif; background-color: #f4f7f9; }
+        .timeline-btn { transition: all 0.3s ease; border-bottom: 4px solid transparent; }
+        .timeline-btn.active { border-bottom-color: #1e40af; color: #1e40af; transform: translateY(-2px); font-weight: 600; }
+        .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07); transition: transform 0.3s ease, box-shadow 0.3s ease; border: 1px solid #e5e7eb; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.05); }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 45vh; }
+        .fade-in { animation: fadeIn 0.6s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .icon-bg { background-color: #dbeafe; color: #1e40af; }
+        .case-card-title { color: #1e3a8a; }
+        .comparison-grid h3 { color: #111827; font-weight: 600; }
+        .comparison-grid .old-paradigm { border-right: 1px solid #ddd; }
+        .competitor-card { display: flex; flex-direction: column; background-color: #ffffff; border-radius: 0.5rem; border: 1px solid #e2e8f0; }
+        .competitor-card h4 { color: #1e40af; }
+        .competitor-card .content { flex-grow: 1; }
+        .ea-icon { font-size: 1.5rem; margin-right: 0.75rem; color: #3b82f6; }
+        .diagram-box { border: 2px solid; padding: 0.5rem 1rem; text-align: center; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 500; }
+        .diagram-arrow { position: relative; width: 100%; height: 2rem; }
+        .diagram-arrow::after { content: '▼'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #ef4444; font-size: 1.5rem; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body class="text-gray-700">
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <header class="text-center my-8 md:my-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">SAP架构演进：从R/3到智能企业</h1>
+            <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">一场跨越三十年的技术、功能与市场战略的综合变革</p>
+        </header>
+
+        <nav id="timeline-nav" class="sticky top-0 z-10 bg-white/80 backdrop-blur-md shadow-sm flex justify-center mb-12">
+            <button data-era="r3" class="timeline-btn text-lg text-gray-600 py-4 px-5 md:px-8">R/3 时代</button>
+            <button data-era="ecc" class="timeline-btn text-lg text-gray-600 py-4 px-5 md:px-8">ECC 时代</button>
+            <button data-era="s4hana" class="timeline-btn text-lg text-gray-600 py-4 px-5 md:px-8 active">S/4HANA 时代</button>
+        </nav>
+
+        <main class="space-y-16 md:space-y-24">
+
+            <section id="market-section">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-900">市场地位与客户演进</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-600">SAP的架构演进与其市场领导地位和客户的现实需求紧密相连。本章将从宏观视角，审视其市场份额变化并剖析真实的客户升级案例。</p>
+                </div>
+                <div class="grid md:grid-cols-5 gap-8 items-center">
+                    <div class="md:col-span-3 card p-6">
+                         <h3 class="text-xl font-semibold text-center mb-4 text-gray-800">全球ERP市场份额演变</h3>
+                        <div class="chart-container" style="height: 320px;">
+                            <canvas id="marketShareChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="market-share-text" class="md:col-span-2 text-gray-700 text-sm"></div>
+                </div>
+                <div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div id="case-microsoft" class="card p-6"></div>
+                    <div id="case-basf" class="card p-6"></div>
+                    <div id="case-walgreens" class="card p-6"></div>
+                </div>
+            </section>
+
+            <section id="customer-scale-section">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-900">架构与客户规模</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-600">每一代技术架构都吸引了特定类型的“奠基客户”，并影响着客户群体的增长与演变趋势。</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div id="foundation-customers" class="card p-6"></div>
+                    <div id="customer-trends" class="card p-6"></div>
+                </div>
+            </section>
+
+            <section id="ea-integration-section">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-900">SAP与企业架构的共生演进</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-600">SAP不仅是应用软件，更是企业IT架构的核心组成部分。它的演进与企业整体IT架构的转型相互驱动、共生发展。</p>
+                </div>
+                <div id="ea-content" class="card p-8"></div>
+            </section>
+            
+            <section id="architecture-section">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-900">核心架构演进</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-600">从数据库到编程范式，S/4HANA对底层技术进行了彻底的重塑，这是其所有上层功能创新的基石。</p>
+                </div>
+                <div id="architecture-comparison" class="space-y-8"></div>
+            </section>
+
+            <section id="functional-section">
+                 <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-900">功能设计革命</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-600">技术架构的变革最终体现在业务流程的重塑上。以下示意图与详细对比，揭示了S/4HANA如何在核心业务领域实现设计思想的飞跃。</p>
+                </div>
+                
+                <div class="card p-6 md:p-8">
+                    <h3 class="text-2xl font-bold text-center mb-6 text-gray-800">功能架构示意图：从“烟囱式”到“数字核心”</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- ECC Architecture Diagram -->
+                        <div class="text-center">
+                            <h4 class="font-bold text-lg mb-4">ECC 时代: 烟囱式架构</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="diagram-box border-red-500 text-red-700 bg-red-50">总账 (FI-GL)</div>
+                                    <div class="diagram-box border-red-500 text-red-700 bg-red-50">成本中心 (CO-OM)</div>
+                                    <div class="diagram-box border-red-500 text-red-700 bg-red-50">利润中心 (PCA)</div>
+                                    <div class="diagram-box border-red-500 text-red-700 bg-red-50">资产会计 (AA)</div>
+                                </div>
+                                <div class="diagram-arrow"></div>
+                                <div class="diagram-box border-gray-400 text-gray-600">复杂的期末对账 (FI-CO)</div>
+                                
+                                <div class="diagram-box border-blue-500 text-blue-700 bg-blue-50 mt-4">物料分类账 (ML)</div>
+                                <div class="diagram-arrow"></div>
+                                <div class="diagram-box border-gray-400 text-gray-600">期末成本核算 (CKMLCP)</div>
+
+                                <div class="diagram-box border-green-500 text-green-700 bg-green-50 mt-4">总计/索引表</div>
+                                <p class="text-xs text-gray-500">BSIS, BSAS, FAGLFLEXT, COSP, COSS...</p>
+                            </div>
+                            <p class="text-sm mt-4 text-gray-600">数据分散在不同模块的表中，存在大量冗余，依赖耗时的批处理作业进行对账和计算。</p>
+                        </div>
+                        <!-- S/4HANA Architecture Diagram -->
+                        <div class="text-center">
+                             <h4 class="font-bold text-lg mb-4">S/4HANA 时代: 数字核心</h4>
+                             <div class="bg-green-50 p-4 rounded-lg border-2 border-green-500 relative">
+                                <h5 class="font-bold text-green-800 text-xl">通用日记账 (ACDOCA)</h5>
+                                <p class="text-xs text-green-700 mb-4">单一事实来源</p>
+                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-6xl text-green-200 opacity-50">⚙️</div>
+                                <div class="relative z-10 grid grid-cols-2 gap-3">
+                                    <div class="diagram-box border-green-600">总账</div>
+                                    <div class="diagram-box border-green-600">成本中心</div>
+                                    <div class="diagram-box border-green-600">利润中心</div>
+                                    <div class="diagram-box border-green-600">资产会计</div>
+                                    <div class="diagram-box border-green-600">物料分类账</div>
+                                    <div class="diagram-box border-green-600">获利能力分析</div>
+                                </div>
+                                <div class="mt-4 text-center text-sm text-green-800 font-semibold">
+                                    <p>实时集成，无需对账</p>
+                                    <p>动态计算，无需总计表</p>
+                                </div>
+                             </div>
+                             <p class="text-sm mt-4 text-gray-600">所有明细统一于一张“宽表”，数据天然一致，通过内存计算实时生成聚合视图。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="functional-comparison-table" class="mt-12"></div>
+                
+                <div id="s4-paradigm-enhancements" class="mt-12">
+                    <h3 class="text-2xl font-bold text-center mb-6 text-gray-800">S/4HANA 范式增强：从记录系统到智能系统</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="card p-6">
+                            <h4 class="font-bold text-lg text-blue-800 mb-2">📊 嵌入式分析 (Embedded Analytics)</h4>
+                            <p class="text-sm"><strong>转变:</strong> 将分析能力直接嵌入到业务交易的Fiori应用中。用户在处理订单时，可以即时看到相关的KPI、图表和洞察，无需切换到独立的BI系统。</p>
+                            <p class="text-sm mt-2"><strong>价值:</strong> 实现了从“事后报告”到“事中决策”的飞跃，数据驱动决策成为日常操作的一部分。</p>
+                        </div>
+                        <div class="card p-6">
+                            <h4 class="font-bold text-lg text-blue-800 mb-2">🔔 状况处理 (Situation Handling)</h4>
+                            <p class="text-sm"><strong>转变:</strong> 系统不再被动等待用户查询，而是主动识别业务中的“状况”（如合同即将到期、供应商延迟交货），并通过Fiori通知推送给相关用户，并提供建议的解决方案。</p>
+                            <p class="text-sm mt-2"><strong>价值:</strong> 将ERP从被动的记录工具，转变为主动的业务助手，帮助用户聚焦于紧急和重要事项，防患于未然。</p>
+                        </div>
+                        <div class="card p-6">
+                            <h4 class="font-bold text-lg text-blue-800 mb-2">🚀 预测性MRP (pMRP)</h4>
+                            <p class="text-sm"><strong>转变:</strong> 在正式MRP运行前，提供强大的模拟能力。计划员可以模拟不同需求场景对未来产能的影响，提前识别潜在瓶颈并进行调整。</p>
+                            <p class="text-sm mt-2"><strong>价值:</strong> 变被动的、反应式的计划为主动的、预测式的规划，提升了供应链的韧性和敏捷性。</p>
+                        </div>
+                        <div class="card p-6">
+                            <h4 class="font-bold text-lg text-blue-800 mb-2">🏛️ 中央财务 (Central Finance)</h4>
+                            <p class="text-sm"><strong>转变:</strong> 提供一种非颠覆性的部署模式，允许大型集团在不替换现有异构ERP系统的情况下，将全球财务数据实时复制到中央的S/4HANA系统中，形成统一的财务视图。</p>
+                            <p class="text-sm mt-2"><strong>价值:</strong> 为拥有复杂IT架构的企业提供了一条通向S/4HANA财务转型的捷径，实现了快速的集团管控和报告合并。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="competitor-section">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-900">竞争格局分析</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-600">SAP的变革并非在真空中发生。了解主要竞争对手的架构演进，有助于更全面地评估SAP的战略选择。</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="competitor-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-center">SAP</h3>
+                        <div class="content space-y-4 text-sm">
+                            <p><strong>技术架构:</strong> S/4HANA基于HANA内存数据库，采用简化的列式数据模型(ACDOCA)和“代码下推”编程范式。BTP平台则用于“并排”扩展，实现“净核心”。</p>
+                            <p><strong>云的态度与应用:</strong> 提供多种云部署选项（公有云、私有云RISE），策略核心是推动庞大的本地部署客户群向云端迁移，同时保持本地部署选项以满足特定客户需求。</p>
+                            <p><strong>AI能力与演进:</strong> 通过在S/4HANA中嵌入AI场景（如智能对账）和推出生成式AI助手Joule，将AI融入核心业务流程。未来方向是利用业务数据优势，提供更深度的预测性洞察和流程自动化。</p>
+                            <p><strong>未来业务设计:</strong> 强调“可组合式ERP”，以S/4HANA为稳定核心，通过BTP平台灵活集成SAP及第三方应用，实现业务能力的敏捷组合与重构。</p>
+                        </div>
+                    </div>
+                    <div class="competitor-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-center">Oracle</h3>
+                        <div class="content space-y-4 text-sm">
+                            <p><strong>技术架构:</strong> Fusion Cloud ERP是彻底的云原生重写，基于其自有的Oracle数据库和云基础设施(OCI)，采用标准化的多租户、微服务架构。</p>
+                            <p><strong>云的态度与应用:</strong> “云优先”甚至“唯云”战略。大力推动客户从传统的E-Business Suite(EBS)等产品转向全新的Fusion Cloud SaaS应用，弱化本地部署。</p>
+                            <p><strong>AI能力与演进:</strong> 将AI和机器学习深度集成在Fusion Cloud应用中，提供如智能预算、供应商推荐等原生功能。强调其AI能力的开箱即用和全栈优化（从芯片到应用）。</p>
+                            <p><strong>未来业务设计:</strong> 推动“无接触流程”（Touchless Operations），利用AI和自动化最大限度地减少人工干预。通过统一的数据模型和季度更新，为客户提供持续的、无缝的创新。</p>
+                        </div>
+                    </div>
+                    <div class="competitor-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-center">Workday</h3>
+                        <div class="content space-y-4 text-sm">
+                            <p><strong>技术架构:</strong> 纯云原生架构，以独特的“对象模型”而非传统关系表来组织数据，所有客户运行在同一版本代码上。专注于HCM（人力资本管理）和财务领域。</p>
+                            <p><strong>云的态度与应用:</strong> 纯粹的SaaS（软件即服务）提供商，没有本地部署版本。其成功的关键在于提供了极致简洁、易用的用户体验。</p>
+                            <p><strong>AI能力与演进:</strong> 将ML/AI称为其架构的“DNA”，用于技能推荐、人才流动性预测、异常检测等。强调其AI应用的道德性和可解释性。</p>
+                            <p><strong>未来业务设计:</strong> 持续扩展其财务和人力资源的应用边界，通过开放的平台和API与外部系统集成。核心理念是构建一个以“员工”为中心的、智能化的工作体验平台。</p>
+                        </div>
+                    </div>
+                    <div class="competitor-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-center">Salesforce</h3>
+                        <div class="content space-y-4 text-sm">
+                            <p><strong>技术架构:</strong> 以CRM为核心，构建在多租户的Force.com（现为Lightning Platform）平台上。通过收购（如MuleSoft, Tableau, Slack）不断扩展其平台能力，形成“客户30”生态。</p>
+                            <p><strong>云的态度与应用:</strong> 云计算的先驱和最坚定的倡导者。其整个商业模式都建立在SaaS和PaaS（平台即服务）之上。</p>
+                            <p><strong>AI能力与演进:</strong> AI能力集中体现在其Einstein AI平台中，为销售、服务、营销等各个环节提供预测评分、智能推荐等功能。近期大力投入生成式AI，推出Einstein GPT。</p>
+                            <p><strong>未来业务设计:</strong> 核心是“以客户为中心”，通过整合销售、服务、营销、电商等所有触点的数据，构建统一的客户视图。通过收购Slack，致力于打造以协作为核心的“数字总部”。</p>
+                        </div>
+                    </div>
+                    <div class="competitor-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-center">Infor</h3>
+                        <div class="content space-y-4 text-sm">
+                            <p><strong>技术架构:</strong> 其CloudSuite产品基于多租户架构，并托管在AWS上。强调“行业专属”，为不同行业提供预置了最佳实践的云ERP解决方案。</p>
+                            <p><strong>云的态度与应用:</strong> 积极拥抱云，但与其他厂商不同，其策略是深度绑定AWS，利用AWS的全球基础设施和PaaS服务来构建其行业云解决方案。</p>
+                            <p><strong>AI能力与演进:</strong> 其AI平台Coleman旨在提供预测性洞察和流程自动化，并支持对话式交互。AI应用与其行业解决方案深度结合，例如在制造业中用于预测性维护。</p>
+                            <p><strong>未来业务设计:</strong> 坚持“行业深度优于功能广度”的理念。未来将继续深化其在制造、分销、零售等优势行业的解决方案，提供更贴近客户业务流程的开箱即用功能。</p>
+                        </div>
+                    </div>
+                     <div class="competitor-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-center">Microsoft</h3>
+                        <div class="content space-y-4 text-sm">
+                            <p><strong>技术架构:</strong> Dynamics 365构建在Azure云平台和Dataverse（原Common Data Service）之上，将传统的ERP和CRM功能分解为一系列可独立部署的模块化应用。</p>
+                            <p><strong>云的态度与应用:</strong> 完全拥抱云，并利用其在Azure、Office 365和Power Platform（低代码平台）上的巨大优势，构建一个无缝集成的智能商业云。</p>
+                            <p><strong>AI能力与演进:</strong> 其AI能力体现在内置的AI Builder和与Azure AI服务的深度集成上。Copilot作为其生成式AI助手，被广泛嵌入到Dynamics 365的各个应用中，用于起草邮件、生成摘要等。</p>
+                            <p><strong>未来业务设计:</strong> 核心是“打破数据孤岛”，通过统一的Dataverse数据平台，实现ERP、CRM、Office工具和自定义应用之间的数据无缝流动，并借助Power Platform赋予业务人员低代码开发的能力。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="future-section">
+                 <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-gray-900">设计哲学与未来展望</h2>
+                    <p class="mt-3 max-w-2xl mx-auto text-gray-600">雷达图直观地总结了设计理念的转变。而“净核心”与“可组合式ERP”则指明了SAP的未来方向——一个更智能、更敏捷、可持续演进的未来。</p>
+                </div>
+                <div class="grid md:grid-cols-5 gap-8 items-center">
+                    <div class="md:col-span-3 card p-6">
+                        <h3 class="text-xl font-semibold text-center mb-4 text-gray-800">设计理念转变可视化</h3>
+                        <div class="chart-container">
+                            <canvas id="philosophyRadarChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 space-y-4">
+                        <div class="card p-5">
+                            <h4 class="font-bold text-lg text-blue-800">💡 净核心 (Clean Core)</h4>
+                            <p class="text-sm mt-1">保持核心系统标准，通过SAP BTP进行“并排”扩展，确保核心稳定与外围敏捷的分离，实现可持续升级。</p>
+                        </div>
+                         <div class="card p-5">
+                            <h4 class="font-bold text-lg text-blue-800">� 可组合式ERP</h4>
+                            <p class="text-sm mt-1">以S/4HANA为核心，通过API灵活“组装”各类云服务，像搭积木一样构建和重构业务能力，应对市场变化。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-24 py-8 border-t border-gray-200">
+            <p class="text-gray-500">交互式综合报告由AI生成 | 数据与案例截至2024</p>
+        </footer>
+    </div>
+
+    <script>
+    const contentData = {
+        r3: {
+            marketShare: { value: 22, text: '<strong>R/3时代 (1992-2004):</strong> SAP通过革命性的三层客户端/服务器架构和“AnyDB”策略，迅速占领大型企业市场，确立了其全球ERP领导者的地位。市场份额在此期间稳步增长，成为行业事实标准。' },
+            cases: {
+                microsoft: { title: "微软：奠定全球化运营基础", pain: "<strong>挑战:</strong> 在R/3时代之前，微软依赖分散的、区域性的财务系统，难以支持其快速的全球业务扩张。", gain: "<strong>价值:</strong> 实施R/3为微软提供了第一个全球统一的ERP平台，标准化了核心财务和人力资源流程，为其在90年代成为全球科技巨头奠定了坚实的IT基础。" },
+                basf: { title: "巴斯夫：标准化核心流程", pain: "<strong>挑战:</strong> 作为一家历史悠久的化工巨头，巴斯夫在全球拥有众多子公司，流程各异，系统林立。", gain: "<strong>价值:</strong> R/3的实施帮助巴斯夫在集团层面首次实现了核心业务流程（如订单到收款）的标准化，提升了内部运营效率和数据透明度。" },
+                walgreens: { title: "沃博联的前身：起步数字化", pain: "<strong>挑战:</strong> 面对日益激烈的零售竞争，传统的手工和半手工流程已无法满足业务需求。", gain: "<strong>价值:</strong> 早期采用R/3使其能够实现库存管理、采购和财务的系统化，是其迈向现代化零售管理的第一步。" }
+            },
+            foundation: { title: "奠基客户：大型跨国制造商", text: "R/3的奠基客户主要是大型、复杂的跨国制造企业（如化工、汽车、石油天然气）。他们的核心诉求是在全球范围内统一和标准化核心业务流程（财务、生产、采购），以取代之前各自为政、功能分散的旧系统。他们最看重的是系统的稳定性、功能的深度以及对复杂业务场景的支持能力。" },
+            trends: { title: "客户趋势：爆炸式增长", text: "这是SAP客户数量爆炸式增长的时期。凭借其架构的先进性和强大的销售网络，SAP迅速成为大型企业的首选，客户流失率极低。企业一旦采用R/3，高昂的实施成本和业务流程的深度绑定，形成了极高的转换壁垒，奠定了其庞大而忠诚的客户基础。" },
+            ea: {
+                title: "SAP作为“事实上的”企业架构",
+                text: `<div class="space-y-4 text-sm">
+                        <p>在R/3时代，对于许多大型制造企业而言，实施SAP的过程本身就是一次全面的企业架构(EA)重塑。SAP不仅仅是一个软件，它输出了一整套基于“德国最佳实践”的业务流程、数据标准和技术规范。</p>
+                        <div class="flex items-start"><span class="ea-icon">🏢</span><div><strong>业务架构 (TOGAF B):</strong> SAP的最佳实践流程（如订单到收款、采购到付款）常常成为客户的业务流程标准，企业需要“削足适履”来适应系统。</div></div>
+                        <div class="flex items-start"><span class="ea-icon">📊</span><div><strong>数据架构 (TOGAF C):</strong> SAP定义了核心业务对象（如物料、客户）的数据结构，成为企业主数据的唯一来源和标准。</div></div>
+                        <div class="flex items-start"><span class="ea-icon">💻</span><div><strong>技术架构 (TOGAF D):</strong> 其标准化的三层客户端/服务器模型，成为客户IT基础设施的核心。</div></div>
+                        <p>在这个阶段，SAP的架构是内向和封闭的，它强大到足以定义和主导客户的IT架构，而不是被动地融入。企业架构的价值在于实现标准化和效率，而SAP恰好提供了实现这一目标的强大工具。</p>
+                    </div>`
+            },
+            architecture: {
+                database: { old: "奠基：AnyDB理念", newText: "支持多种第三方关系型数据库（Oracle, DB2等）。数据库被视为被动的“数据桶”，应用层负责所有计算，导致数据移动瓶颈。" },
+                dataModel: { old: "起步：为报表而设计", newText: "数据模型相对复杂，已包含为提升报表性能而设计的总计表和索引表，奠定了后续ECC模型的基础。" },
+                ux: { old: "经典：SAP GUI", newText: "引入了经典的SAP GUI，在当时是革命性的，但以今天的标准看，界面陈旧，基于事务代码操作，学习曲线陡峭。" },
+                programming: { old: "范式确立：Data-to-Code", newText: "确立了“数据到代码”的ABAP编程范式。即从数据库抓取大量数据到应用服务器的内表中，再通过循环进行处理。" }
+            },
+            philosophy: [7, 3, 8, 4, 2] // 兼容性, 实时性, 复杂性, UX, 智能
+        },
+        ecc: {
+            marketShare: { value: 24, text: '<strong>ECC时代 (2004-2015):</strong> 随着NetWeaver平台的推出，ECC成为SAP的核心产品。通过增强包(EHP)策略持续提供非颠覆性创新，SAP的市场份额达到顶峰，成为全球大型企业无可争议的首选。' },
+            cases: {
+                microsoft: { title: "微软：陷入定制化泥潭", pain: "<strong>痛点:</strong> 为满足复杂的业务需求，微软的ECC系统经过了大量的深度定制，导致系统僵化、复杂，每次升级都成为一个耗资巨大的项目。", gain: "<strong>寻求变革:</strong> 这种“成功的陷阱”促使微软下定决心，在S/4HANA时代彻底拥抱“净核心”理念，寻求业务流程的根本性简化和标准化。" },
+                basf: { title: "巴斯夫：实时性瓶颈凸显", pain: "<strong>痛点:</strong> ECC系统稳定，但其底层架构无法提供实时的全球供应链可见性。MRP运算需要通宵运行，计划员基于的是过时的数据。", gain: "<strong>寻求变革:</strong> 对实时数据和敏捷决策的渴望，成为巴斯夫向S/4HANA迁移，以构建“单一全球实例”的核心业务驱动力。" },
+                walgreens: { title: "沃博联：并购后的数据孤岛", pain: "<strong>痛点:</strong> 经过多次大型并购，集团内部存在多个版本的ECC和其他ERP系统，形成了严重的数据孤岛。全球财务报表合并耗时数周。", gain: "<strong>寻求变革:</strong> 整合全球财务数据、实现快速精准的集团报告，成为其必须解决的战略问题，从而推动了其采用S/4HANA中央财经方案。" }
+            },
+            foundation: { title: "奠基客户：各行业的巨头企业", text: "ECC时代的客户基础扩展到几乎所有行业的巨头企业。这些客户的特点是业务规模庞大，流程高度复杂，并且已经在SAP系统上进行了巨额投资。他们将ECC视为保障企业稳定运行的“记录系统(System of Record)”，其首要任务是维持稳定，而非追求敏捷创新。大量的定制化开发是这个时代客户的普遍特征。" },
+            trends: { title: "客户趋势：稳定增长与“锁定效应”", text: "客户群体持续稳定增长，并表现出极强的“锁定效应”。由于系统已深度融入企业的核心运营，且替换成本极高，客户流失率非常低。但与此同时，系统的复杂性和僵化也开始成为企业数字化转型的障碍，为后续的变革埋下了伏笔。" },
+            ea: {
+                title: "被动演进：成为异构架构中的“核心”",
+                text: `<div class="space-y-4 text-sm">
+                        <p>在ECC时代，客户的IT架构变得日益复杂。企业开始采纳“最佳实践(Best-of-Breed)”策略，并引入面向服务的架构(SOA)。SAP被动地适应这一趋势。</p>
+                        <div class="flex items-start"><span class="ea-icon">🔗</span><div><strong>被动集成:</strong> 客户IT架构的演进，迫使SAP必须提供更强的集成能力。NetWeaver平台的推出，尤其是其流程集成(PI/PO)组件，正是为了满足SAP与大量外围系统（如CRM, MES, WMS）集成的需求。SAP从“宇宙的中心”变成了复杂的“中心-辐射”式架构中的“枢纽”。</div></div>
+                        <div class="flex items-start"><span class="ea-icon">🏛️</span><div><strong>架构的僵化:</strong> 从TOGAF的视角看，大量的点对点集成和核心系统的深度定制，导致企业架构的“技术债”急剧增加。这使得架构的变更（TOGAF H阶段）变得极其困难和昂贵，敏捷性丧失。</div></div>
+                        <p>这个阶段，SAP的价值在于其无与伦比的稳定性和流程深度，但其庞大和封闭的特性也使其成为企业IT敏捷化转型的最大障碍。客户对敏捷性的追求，反向推动SAP必须进行下一代架构的革命。</p>
+                    </div>`
+            },
+            architecture: {
+                database: { old: "AnyDB的成熟与瓶颈", newText: "与R/3相同，支持多种第三方数据库。虽然稳定，但“数据到代码”模式下的数据移动瓶颈日益凸显，成为系统性能的最大制约。" },
+                dataModel: { old: "复杂的顶峰", newText: "数据模型最为复杂。为提升性能，引入了大量总计表(如GLT0)和索引表(如BSIS/BSAS)，导致数据冗余和巨大的数据足迹。" },
+                ux: { old: "SAP GUI + Web尝试", newText: "主要仍是SAP GUI，但开始引入NetWeaver Business Client (NWBC)和Web Dynpro等Web技术，作为向现代化UI过渡的尝试。" },
+                programming: { old: "Data-to-Code", newText: "依然是“数据到代码”范式。开发者习惯于将所有逻辑在ABAP中实现，系统性能优化的重点在于减少数据库访问次数和优化内表循环。" }
+            },
+            philosophy: [8, 4, 9, 5, 3]
+        },
+        s4hana: {
+            marketShare: { value: 25, text: '<strong>S/4HANA时代 (2015-至今):</strong> 面对云计算和新竞争者的挑战，SAP推出S/4HANA作为其下一代智能ERP。通过强制要求HANA数据库和革命性的架构简化，S/4HANA旨在为客户提供前所未有的实时性和智能。市场正在从存量客户的升级和新客户的采纳中稳步增长。' },
+            cases: {
+                microsoft: { title: "微软：拥抱净核心的财务转型", pain: "<strong>旧时代痛点:</strong> ECC系统过度定制，升级困难，财务关账流程缓慢。", gain: "<strong>S/4HANA价值:</strong> 实施S/4HANA Cloud，拥抱“净核心”。财务关账时间从数周缩短至数天。IT敏捷性极大提升，能够快速采纳SAP的最新云创新。" },
+                basf: { title: "巴斯夫：迈向实时智能供应链", pain: "<strong>旧时代痛点:</strong> ECC无法提供实时全球库存可见性，MRP运算基于过时数据。", gain: "<strong>S/4HANA价值:</strong> MRP运算时间从24+小时缩短至3小时内。实现了端到端的供应链透明化，计划员能基于实时数据进行模拟和决策。" },
+                walgreens: { title: "沃博联：实现全球财务整合", pain: "<strong>旧时代痛点:</strong> 并购导致系统林立，数据孤岛严重，全球财报合并耗时数周。", gain: "<strong>S/4HANA价值:</strong> 通过中央财务(Central Finance)方案，实时整合全球子公司财务数据。集团财报合并时间缩短至几天，为精准决策和合规提供了坚实基础。" }
+            },
+            foundation: { title: "奠基客户：业务转型的先行者", text: "S/4HANA的早期采纳者通常是那些面临强烈数字化转型压力的企业，或希望通过技术获得竞争优势的行业领导者。他们的特点是：具有清晰的业务转型目标（如实时决策、改善客户体验），并且愿意对业务流程进行重塑和简化。他们看重的是S/4HANA带来的敏捷性、实时洞察和现代化用户体验，而不仅仅是替换旧系统。" },
+            trends: { title: "客户趋势：分化与加速", text: "客户群体出现分化。一方面，大量ECC客户因迁移成本和业务风险而持“观望”态度，形成了所谓的“创新鸿沟”。另一方面，随着2027年ECC主流维护到期的临近，以及S/4HANA云版本的成熟，客户的迁移决策正在显著加速。新客户则更倾向于直接采用云版本的S/4HANA，体现了市场向云端迁移的大趋势。" },
+            ea: {
+                title: "主动驱动：成为可组合式架构的“数字核心”",
+                text: `<div class="space-y-4 text-sm">
+                        <p>S/4HANA的推出，是SAP从被动适应到主动驱动客户IT架构转型的标志。它不再仅仅是一个应用，而是推广一套全新的、现代化的企业架构模式。</p>
+                        <div class="flex items-start"><span class="ea-icon">🧼</span><div><strong>“净核心”架构模式:</strong> SAP大力倡导的“净核心(Clean Core)”理念，其本质就是一个企业架构原则。它将IT架构清晰地划分为两个层面：一个是由S/4HANA构成的、保持标准化的、稳定的“记录与执行核心”；另一个是由BTP平台构成的、用于敏捷开发和差异化创新的“扩展与创新平台”。</div></div>
+                        <div class="flex items-start"><span class="ea-icon">🧩</span><div><strong>赋能可组合式企业 (Composable Enterprise):</strong> 这种双平台战略，是实现Gartner提出的“可组合式企业”理念的技术基础。企业可以将S/4HANA作为其最关键的“打包的业务能力(Packed Business Capability)”，同时通过BTP快速开发、集成或订阅其他的业务能力，实现IT架构的即插即用和灵活重构。</div></div>
+                        <p>S/4HANA的价值不再仅仅是运行业务，而是为企业提供一个稳定、实时、智能的“数字核心”，并以此为基础，构建一个能够快速响应变化的、敏捷的、可持续演进的现代化企业IT架构。</p>
+                    </div>`
+            },
+            architecture: {
+                database: { old: "HANA原生，深度协同", newText: "唯一且必须运行在SAP HANA内存数据库之上。数据库即是计算引擎，应用与数据库深度协同，彻底消除数据移动瓶颈。" },
+                dataModel: { old: "革命性的简化", newText: "以“通用日记账”(ACDOCA)为核心，废除了所有冗余的总计表和索引表，建立“单一事实来源”，极大缩小了数据足迹。" },
+                ux: { old: "Fiori原生体验", newText: "以SAP Fiori为原生用户体验，提供基于角色的、现代化的、跨设备的响应式Web UI，操作直观，极大地降低了使用门槛。" },
+                programming: { old: "代码下推 (Code-to-Data)", newText: "将数据密集型计算逻辑通过CDS视图和AMDP等新工具，“下推”到HANA数据库层执行，充分利用其并行计算能力。" }
+            },
+            philosophy: [4, 10, 2, 10, 8]
+        }
+    };
+
+    const functionalData = {
+        gl: { title: "总账与多准则核算", icon: "💰", ecc: "使用平行分类账，为不同会计准则存储完整的数据副本，导致冗余。FI与CO分离，需期末对账。", s4: "通用日记账(ACDOCA)统一FI/CO，消除对账。扩展分类账仅记录差异，极大减少冗余。", thought: "从物理复制到虚拟计算" },
+        ml: { title: "物料成本核算", icon: "📦", ecc: "物料分类账是可选的复杂附加件，实际成本计算是耗时的期末批处理作业。", s4: "物料账强制启用并集成到ACDOCA，可实时进行实际成本核算。", thought: "从期末批处理到实时流程" },
+        bp: { title: "客户/供应商主数据", icon: "🤝", ecc: "客户和供应商是独立的主数据对象，数据分散且易不一致。", s4: "强制使用业务伙伴(BP)模型，以统一的实体和不同的角色进行管理，确保数据唯一性。", thought: "从面向角色到面向实体" },
+        credit: { title: "信贷管理", icon: "💳", ecc: "经典的FI-AR-CR信贷管理，与订单处理分离，数据更新存在延迟，风险控制不及时。", s4: "全新的FSCM-CR信贷管理，与订单流程实时集成，能基于最新数据自动检查和冻结订单。", thought: "从静态检查到动态风险控制" },
+        asset: { title: "资产会计", icon: "🏢", ecc: "资产价值通过多个折旧范围存储，数据分散。折旧过账是期末批处理作业。", s4: "资产会计数据完全整合进ACDOCA，实时过账折旧，无需Delta折旧范围。", thought: "从事后核算到实时价值跟踪" },
+        inventory: { title: "库存管理", icon: "📊", ecc: "库存数据分散在超过20张表中(如MKPF, MSEG)，且包含大量聚合表(如MARD)，结构复杂。", s4: "引入单一物料凭证表MATDOC，极大简化数据模型，所有库存信息实时更新。", thought: "从复杂聚合到单一事实来源" },
+        mrp: { title: "物料需求计划(MRP)", icon: "⚙️", ecc: "经典的MRP运行是耗时的后台作业，通常在夜间运行，无法对需求变化做快速响应。", s4: "推出MRP Live，利用HANA的计算能力，实现近乎实时的MRP运算，并提供需求模拟功能。", thought: "从隔夜计划到即时响应" },
+        atp: { title: "可用性检查(ATP)", icon: "✅", ecc: "基本的ATP检查，功能有限，无法处理复杂的分配和优先级场景。", s4: "引入先进的可用性检查(aATP)，支持更复杂的规则、产品分配和替代策略。", thought: "从简单确认到智能承诺" }
+    };
+    
+    const architectureData = {
+         database: { title: "数据库层", icon: "🗄️" },
+         dataModel: { title: "数据模型", icon: "📄" },
+         ux: { title: "用户体验 (UX)", icon: "🖥️" },
+         programming: { title: "编程范式", icon: "⚙️" }
+    };
+
+    let marketShareChart, philosophyRadarChart;
+    let currentEra = 's4hana';
+
+    function createComparisonCard(category, topic, eraData) {
+        const info = architectureData[topic];
+        const data = eraData[category][topic];
+        const s4hanaData = contentData.s4hana[category][topic];
+        return `
+            <div class="card p-6 comparison-grid">
+                <div class="flex items-center mb-4">
+                    <div class="icon-bg w-12 h-12 rounded-full flex items-center justify-center mr-4 text-2xl">${info.icon}</div>
+                    <h3 class="text-xl font-semibold text-gray-800">${info.title}</h3>
+                </div>
+                <div class="grid md:grid-cols-2 gap-x-6">
+                    <div class="old-paradigm pr-4">
+                        <h4 class="font-semibold text-gray-500 mb-2 text-sm">旧模式 (${data.old})</h4>
+                        <p class="text-sm text-gray-600">${data.newText}</p>
+                    </div>
+                    <div class="new-paradigm pt-4 md:pt-0">
+                         <h4 class="font-bold text-blue-700 mb-2 text-sm">S/4HANA 新范式</h4>
+                        <p class="text-sm text-gray-800">${s4hanaData.newText}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function updatePage(era) {
+        currentEra = era;
+        const data = contentData[era];
+        
+        document.querySelectorAll('#timeline-nav .timeline-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.era === era));
+        document.getElementById('market-share-text').innerHTML = data.marketShare.text;
+        updateMarketShareChart(era);
+
+        ['microsoft', 'basf', 'walgreens'].forEach(caseKey => {
+            const caseData = data.cases[caseKey];
+            document.getElementById(`case-${caseKey}`).innerHTML = `
+                <h4 class="case-card-title font-bold text-lg mb-2">${caseData.title}</h4>
+                <div class="text-sm space-y-2">
+                    <p><strong class="text-gray-500">${era === 's4hana' ? '旧时代痛点' : '挑战'}:</strong> ${caseData.pain}</p>
+                    <p><strong class="${era === 's4hana' ? 'text-green-600' : 'text-blue-600'}">${era === 's4hana' ? 'S/4HANA价值' : '价值'}:</strong> ${caseData.gain}</p>
+                </div>
+            `;
+        });
+
+        document.getElementById('foundation-customers').innerHTML = `<h4 class="case-card-title font-bold text-lg mb-2">${data.foundation.title}</h4><p class="text-sm">${data.foundation.text}</p>`;
+        document.getElementById('customer-trends').innerHTML = `<h4 class="case-card-title font-bold text-lg mb-2">${data.trends.title}</h4><p class="text-sm">${data.trends.text}</p>`;
+        
+        const eaContent = document.getElementById('ea-content');
+        eaContent.innerHTML = `<h3 class="text-2xl font-bold text-gray-800 mb-4">${data.ea.title}</h3><div>${data.ea.text}</div>`;
+
+        const archContainer = document.getElementById('architecture-comparison');
+        archContainer.innerHTML = Object.keys(architectureData).map(key => createComparisonCard('architecture', key, data)).join('');
+
+        const funcTableContainer = document.getElementById('functional-comparison-table');
+        let tableHTML = `<div class="card overflow-x-auto"><table class="w-full text-sm text-left">
+            <thead class="bg-gray-100 text-gray-600 uppercase">
+                <tr>
+                    <th class="p-4">功能领域</th>
+                    <th class="p-4">ECC 模式 (旧范式)</th>
+                    <th class="p-4">S/4HANA 模式 (新范式)</th>
+                    <th class="p-4">设计思想转变</th>
+                </tr>
+            </thead>
+            <tbody>`;
+        for (const key in functionalData) {
+            const item = functionalData[key];
+            tableHTML += `<tr class="border-b">
+                <td class="p-4 font-semibold whitespace-nowrap"><div class="flex items-center">${item.icon}<span class="ml-2">${item.title}</span></div></td>
+                <td class="p-4">${item.ecc}</td>
+                <td class="p-4">${item.s4}</td>
+                <td class="p-4 font-medium text-blue-700">${item.thought}</td>
+            </tr>`;
+        }
+        tableHTML += `</tbody></table></div>`;
+        funcTableContainer.innerHTML = tableHTML;
+
+        document.getElementById('s4-paradigm-enhancements').style.display = era === 's4hana' ? 'block' : 'none';
+
+        updateRadarChart(era);
+
+        document.querySelectorAll('section').forEach(sec => {
+            sec.classList.remove('fade-in');
+            void sec.offsetWidth;
+            sec.classList.add('fade-in');
+        });
+    }
+    
+    function initCharts() {
+        const marketCtx = document.getElementById('marketShareChart').getContext('2d');
+        marketShareChart = new Chart(marketCtx, {
+            type: 'bar',
+            data: {
+                labels: ['R/3 时代', 'ECC 时代', 'S/4HANA 时代'],
+                datasets: [{
+                    label: '全球ERP市场份额(估算)',
+                    data: [contentData.r3.marketShare.value, contentData.ecc.marketShare.value, contentData.s4hana.marketShare.value],
+                    backgroundColor: ['#93c5fd', '#60a5fa', '#2563eb'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { suggestedMax: 30, grid: { drawOnChartArea: false } }, y: { grid: { display: false } } }
+            }
+        });
+
+        const philosophyCtx = document.getElementById('philosophyRadarChart').getContext('2d');
+        philosophyRadarChart = new Chart(philosophyCtx, {
+            type: 'radar',
+            data: {
+                labels: ['兼容性', '实时性', '架构复杂性', '用户体验', '内嵌智能'],
+                datasets: [{
+                    label: '', data: [],
+                    backgroundColor: 'rgba(30, 64, 175, 0.2)',
+                    borderColor: 'rgba(30, 64, 175, 1)',
+                    borderWidth: 2, pointBackgroundColor: 'rgba(30, 64, 175, 1)',
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: true, position: 'top' } },
+                scales: { r: { angleLines: { color: 'rgba(0, 0, 0, 0.1)' }, grid: { color: 'rgba(0, 0, 0, 0.1)' }, pointLabels: { font: { size: 12 } }, ticks: { beginAtZero: true, max: 10, stepSize: 2, backdropColor: 'rgba(255, 255, 255, 0.6)' } } }
+            }
+        });
+    }
+
+    function updateMarketShareChart(era) {
+        const eraMap = { r3: 0, ecc: 1, s4hana: 2 };
+        const index = eraMap[era];
+        marketShareChart.data.datasets[0].backgroundColor = ['#93c5fd', '#60a5fa', '#3b82f6'].map((color, i) => i === index ? '#1e40af' : color);
+        marketShareChart.update();
+    }
+
+    function updateRadarChart(era) {
+        philosophyRadarChart.data.datasets[0].data = contentData[era].philosophy;
+        philosophyRadarChart.data.datasets[0].label = `${era.toUpperCase()} 设计哲学`;
+        philosophyRadarChart.update();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initCharts();
+        updatePage(currentEra);
+        
+        document.getElementById('timeline-nav').addEventListener('click', (e) => {
+            if (e.target && e.target.matches('button.timeline-btn')) {
+                updatePage(e.target.dataset.era);
+            }
+        });
+    });
+    </script>
+</body>
+</html>
+�
