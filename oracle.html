@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oracle ERP 演进与未来趋势分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Corporate Clarity -->
+    <!-- Application Structure Plan: The application is designed as a single-page, scrollable narrative with a sticky top navigation bar for quick access to seven key analytical sections. This structure allows users to either follow the story chronologically or jump directly to topics of interest. The flow starts with historical context (EBS, Acquisitions), moves to modern challenges and strategies (Fusion, NetSuite, Verticals), analyzes the current competitive landscape, and concludes with a future outlook. This guided narrative approach was chosen because the source report follows a logical progression from past to future, making it ideal for storytelling. Interactions are designed to reveal deeper information on demand (e.g., clicking timeline points, toggling analysis cards), keeping the main interface clean while providing depth for interested users. -->
+    <!-- Visualization & Content Choices: 
+        1. EBS Evolution: Report Info -> Technical/functional evolution of EBS. Goal -> Show change over time. Viz/Method -> Interactive HTML/CSS timeline. Interaction -> Click points to reveal detailed descriptions. Justification -> Intuitive for historical data. Library -> Vanilla JS.
+        2. Acquisitions: Report Info -> Vision vs. reality of PeopleSoft, JDE, Siebel acquisitions. Goal -> Compare vision with outcome. Viz/Method -> Horizontal Bar Chart for acquisition years and interactive info cards. Interaction -> Hover/click cards to see analysis. Justification -> Chart gives quick context; cards allow for detailed comparison. Library -> Chart.js, Vanilla JS.
+        3. Fusion Cloud: Report Info -> Challenges of Fusion Cloud. Goal -> Organize complex problems. Viz/Method -> Tabbed content area. Interaction -> Click tabs to switch between different problem analyses. Justification -> Breaks down a complex topic into digestible parts. Library -> Vanilla JS.
+        4. NetSuite: Report Info -> NetSuite strategy and progress. Goal -> Show strategic path. Viz/Method -> HTML/CSS roadmap diagram and a donut chart for market focus. Interaction -> Click roadmap stages for details. Justification -> Roadmap is a strong visual for strategy; donut chart clarifies target market. Library -> Chart.js, Vanilla JS.
+        5. Vertical Apps (Aconex): Report Info -> Value vs. risk of vertical acquisitions. Goal -> Compare pros and cons. Viz/Method -> Two-column "Value vs. Risk" layout. Interaction -> Static display for clear comparison. Justification -> Direct side-by-side comparison is most effective for this topic. Library -> N/A.
+        6. Market Position: Report Info -> Comparison with SAP, market share, feedback. Goal -> Compare competitors. Viz/Method -> Radar chart for multi-dimensional comparison. Interaction -> Hover for tooltips. Justification -> Radar chart excels at comparing multiple entities across various metrics. Library -> Chart.js.
+        7. Future Outlook: Report Info -> Oracle's overall attitude and expectations. Goal -> Summarize and conclude. Viz/Method -> Styled summary cards. Interaction -> Static. Justification -> Provides a clear, impactful conclusion to the narrative. Library -> N/A.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #D92B2F;
+            border-bottom-color: #D92B2F;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+            padding-left: 2.5rem;
+        }
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+        .timeline-marker {
+            position: absolute;
+            left: 0;
+            top: 0.25rem;
+            height: 1.25rem;
+            width: 1.25rem;
+            background-color: #ffffff;
+            border: 3px solid #6b7280;
+            border-radius: 9999px;
+            z-index: 10;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 0.5rem;
+            top: 0.25rem;
+            bottom: 0;
+            width: 2px;
+            background-color: #e5e7eb;
+        }
+        .tab-button.active {
+            background-color: #D92B2F;
+            color: white;
+            border-color: #D92B2F;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-[#D92B2F]">Oracle ERP</span>
+                    <span class="text-xl font-semibold text-gray-700 ml-2">战略分析</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#section1" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">历史演进</a>
+                        <a href="#section2" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">并购之路</a>
+                        <a href="#section3" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Fusion挑战</a>
+                        <a href="#section4" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">NetSuite战略</a>
+                        <a href="#section5" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">垂直整合</a>
+                        <a href="#section6" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">市场格局</a>
+                        <a href="#section7" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">未来展望</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500">
+                        <option value="section1">历史演进</option>
+                        <option value="section2">并购之路</option>
+                        <option value="section3">Fusion挑战</option>
+                        <option value="section4">NetSuite战略</option>
+                        <option value="section5">垂直整合</option>
+                        <option value="section6">市场格局</option>
+                        <option value="section7">未来展望</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div id="section1" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">技术与功能的演进之路</h2>
+                <p class="mt-4 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">本部分追溯Oracle ERP从其核心产品E-Business Suite (EBS)开始的技术架构和功能演变。通过一个交互式时间线，您可以探索从传统的C/S架构到现代云原生平台的关键技术拐点和功能迭代，理解Oracle ERP产品思想的变迁。</p>
+            </div>
+            <div id="timeline-container" class="max-w-4xl mx-auto"></div>
+        </div>
+
+        <div id="section2" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">并购之路：理想与现实</h2>
+                <p class="mt-4 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">Oracle的帝国建立在一系列大胆的并购之上。本节将深入探讨对Peoplesoft、JDE、Siebel等关键公司的收购，分析Oracle最初的战略设想与整合过程中遭遇的现实挑战。通过图表和卡片式分析，揭示这些并购如何塑造了今天的Oracle，以及其“应用无限(Application Unlimited)”承诺背后的复杂性。</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="space-y-6" id="acquisitions-container"></div>
+                <div>
+                    <div class="chart-container h-[400px] md:h-[450px]">
+                        <canvas id="acquisitionsChart"></canvas>
+                    </div>
+                    <p class="text-center mt-2 text-sm text-gray-500">Oracle主要ERP相关收购时间线</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="section3" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Fusion Cloud：宏大愿景与市场困境</h2>
+                <p class="mt-4 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">Oracle Fusion Cloud被誉为重塑企业应用的革命性产品，其设计理念先进，目标是统一所有收购的产品线。然而，它的市场推广步伐却异常缓慢。本部分通过交互式选项卡，剖析Fusion Cloud在技术、市场和客户迁移方面遇到的核心问题，理解其从诞生之初就面临的结构性挑战。</p>
+            </div>
+            <div class="max-w-5xl mx-auto">
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="md:w-1/3">
+                        <div id="fusion-tabs" class="flex md:flex-col flex-wrap gap-2"></div>
+                    </div>
+                    <div class="md:w-2/3">
+                        <div id="fusion-content" class="bg-white p-6 rounded-lg shadow-md min-h-[300px]"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="section4" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">NetSuite战略：云时代的奇兵</h2>
+                <p class="mt-4 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">收购NetSuite是Oracle云战略的关键一步，它填补了中小企业市场的空白。本节将展示Oracle对NetSuite的战略设想、实现路径和当前发展阶段。通过一个战略路线图和市场定位图，您可以清晰地看到NetSuite如何成为Oracle云收入增长的重要引擎，以及它未来的发展方向。</p>
+            </div>
+             <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+                <div class="lg:col-span-3">
+                    <div id="netsuite-roadmap" class="space-y-4"></div>
+                </div>
+                <div class="lg:col-span-2">
+                    <div class="chart-container h-[300px] md:h-[350px]">
+                        <canvas id="netsuiteChart"></canvas>
+                    </div>
+                     <p class="text-center mt-2 text-sm text-gray-500">NetSuite 市场定位</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="section5" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">垂直整合：Aconex案例分析</h2>
+                <p class="mt-4 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">除了通用的ERP，Oracle也在积极布局垂直行业应用，收购Aconex（建筑行业）是典型案例。本节分析Oracle收购这类垂直应用的需求、做法、价值和风险。通过“价值 vs. 风险”的对比分析，揭示Oracle试图通过行业深度来构建护城河，并锁定高价值客户的战略意图。</p>
+            </div>
+            <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-lg">
+                    <h3 class="text-2xl font-semibold text-green-800 mb-4">价值 (Value)</h3>
+                    <ul id="aconex-value" class="space-y-3 text-green-700"></ul>
+                </div>
+                <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-lg">
+                    <h3 class="text-2xl font-semibold text-red-800 mb-4">风险 (Risk)</h3>
+                    <ul id="aconex-risk" class="space-y-3 text-red-700"></ul>
+                </div>
+            </div>
+        </div>
+        
+        <div id="section6" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">市场格局与竞争分析</h2>
+                <p class="mt-4 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">在企业应用市场，Oracle与SAP的竞争是永恒的主题。本节将分析Oracle Enterprise Cloud系列产品当前的市场占有率、客户反馈，并将其与SAP等老对手进行多维度比较。通过一个雷达图，直观展示双方在云转型、市场覆盖、产品广度等方面的优劣势。</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="chart-container h-[400px] md:h-[500px]">
+                    <canvas id="competitorChart"></canvas>
+                </div>
+                <div id="competitor-analysis" class="space-y-4"></div>
+            </div>
+        </div>
+        
+        <div id="section7" class="content-section">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">未来展望：Oracle的终局之战</h2>
+                <p class="mt-4 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">综合以上分析，我们最终要回答一个问题：Oracle对ERP及整个企业应用市场的真实态度和最终期望是什么？本节将进行总结性分析，探讨Oracle未来的核心战略方向，以及它希望在这个由数据、AI和云构成的时代扮演何种角色。</p>
+            </div>
+            <div id="outlook-container" class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sections = document.querySelectorAll('.content-section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileNav = document.getElementById('mobile-nav');
+
+            const data = {
+                timeline: [
+                    { year: '1998 - EBS 11', title: 'C/S架构与套装软件时代', content: '基于Client/Server架构，以Oracle Forms为主要开发工具。功能上开始整合财务、分销、制造、人力资源等核心模块，形成初步的“套装软件”概念。技术栈相对封闭，定制化复杂。' },
+                    { year: '2004 - EBS 11i', title: '走向互联网架构', content: '引入“i”代表互联网。技术上从C/S转向B/S架构，引入自服务(Self-Service)功能，用户通过浏览器即可访问。这是EBS历史上的一次重大技术飞跃，奠定了其后十年的架构基础。' },
+                    { year: '2007 - EBS R12', title: '技术优化与财务革新', content: '引入全新的子分类帐会计(SLA)架构，极大增强了财务核算的灵活性。技术上开始大量使用OA Framework (OAF)，进一步提升了Web界面的用户体验和开发效率。功能覆盖面和深度达到顶峰。' },
+                    { year: '2013 - Fusion诞生', title: '面向未来的服务化架构', content: '作为EBS的继任者，Fusion从零开始构建。基于SOA（面向服务架构）和ADF（应用开发框架），旨在统一所有收购的应用。它是一个100%开放标准、模块化的应用套件，为云而生。' },
+                    { year: '2018 - 云原生与自治', title: 'ERP与自治数据库的结合', content: 'Oracle将ERP与旗舰产品自治数据库(Autonomous Database)深度整合，利用AI和机器学习实现数据库的自管理、自修复。这标志着ERP开始从一个应用系统，转变为一个智能化的数据平台。' }
+                ],
+                acquisitions: [
+                    { name: 'PeopleSoft (2005, $10.3B)', vision: '消除HCM和学生系统领域的头号竞争对手，获取其庞大的客户群。', reality: '整合极其困难，激起客户强烈反弹。Oracle被迫推出“应用无限”政策，承诺无限期支持Peoplesoft产品，导致产品线臃肿，也催生了Fusion项目。' },
+                    { name: 'Siebel (2006, $5.8B)', vision: '获取CRM市场的领导地位，挑战SAP。', reality: '整合相对成功，Siebel的技术和理念被部分融入Fusion CRM。但Siebel本身也面临被Salesforce等云原生CRM颠覆的困境，Oracle的CRM业务至今仍在追赶。' },
+                    { name: 'JDE (2005, via PeopleSoft)', vision: '获取在制造业和分销业中拥有深厚根基的中端市场客户。', reality: 'JDE拥有极为忠诚的客户群。与Peoplesoft类似，Oracle选择继续支持JDE，使其成为产品组合中一个独特的存在，但这也增加了整体的复杂性。' }
+                ],
+                fusion: [
+                    { id: 'tech', title: '技术架构的复杂性', content: 'Fusion的SOA架构虽然先进，但也极其复杂，对实施和运维人员要求很高。早期的性能问题和稳定性也影响了市场信心。从庞大而稳定的EBS迁移到一个全新的平台，对客户来说技术风险巨大。' },
+                    { id: 'market', title: '市场迁移的缓慢', content: 'EBS客户群体庞大，系统运行稳定，且经过深度定制。他们缺乏足够的动力和预算去进行一次颠覆性的“重装”。Oracle的销售策略在Fusion初期也不够清晰，导致市场观望情绪浓厚。' },
+                    { id: 'custom', title: '云与定制化的矛盾', content: 'Fusion Cloud作为SaaS产品，其标准化特性与传统ERP客户深度定制的需求存在天然矛盾。虽然提供了PaaS平台进行扩展，但这增加了成本和复杂性，削弱了SaaS“开箱即用”的优势。' }
+                ],
+                netsuite: {
+                    roadmap: [
+                        { stage: '第一阶段：收购与整合 (2016-2018)', description: '以93亿美元收购，保持NetSuite独立运营，避免重蹈Fusion整合的覆辙。目标是迅速获取一个成熟的、真正的多租户云ERP平台和庞大的中小企业客户群。' },
+                        { stage: '第二阶段：市场扩张 (2018-2022)', description: '利用Oracle的全球销售网络和品牌影响力，将NetSuite推向更广泛的国际市场。发布“SuiteSuccess”行业解决方案，加速客户上线和价值实现。' },
+                        { stage: '第三阶段：生态与协同 (2023-至今)', description: '将NetSuite与Oracle的云基础设施(OCI)和其他SaaS应用（如HCM, CX）进行更深度的协同。利用Oracle的AI和数据分析能力，为NetSuite客户提供增值服务，构建更强的生态护城河。' },
+                        { stage: '未来展望：智能与自动化', description: '未来的NetSuite将更加智能化，通过生成式AI等技术，实现财务流程的“自主”运行。它将继续作为Oracle在中端市场的核心，并成为新技术商业化的试验田。' }
+                    ],
+                    chartData: {
+                        labels: ['中小企业 (SMB)', '中大型企业', '大型企业 (Fusion/EBS)'],
+                        data: [75, 20, 5]
+                    }
+                },
+                aconex: {
+                    value: [
+                        '<strong>行业深度与壁垒:</strong> 获取建筑工程领域20多年的知识积累和流程最佳实践，这是通用ERP难以企及的。高转换成本，强客户粘性。',
+                        '<strong>市场领导地位:</strong> Aconex是建筑项目管理云解决方案的领导者，收购直接带来了市场份额和品牌声誉。',
+                        '<strong>交叉销售机会:</strong> 将Aconex客户转化为Oracle核心ERP、财务或HCM云的客户，实现“向上销售”。',
+                        '<strong>数据资产价值:</strong> 获取海量的项目数据，可用于训练行业AI模型，提供更精准的预测和分析。'
+                    ],
+                    risk: [
+                        '<strong>整合难度:</strong> 垂直应用与核心ERP的整合可能只是“表面功夫”，数据层面的深度打通充满挑战。',
+                        '<strong>市场规模有限:</strong> 垂直市场的天花板低于通用市场，可能无法支撑起高昂的收购成本和持续的研发投入。',
+                        '<strong>文化冲突:</strong> 敏捷的垂直应用公司与庞大的Oracle集团之间可能存在文化冲突，导致人才流失。',
+                        '<strong>技术债务:</strong> 收购来的应用可能基于不同的技术栈，长期来看会形成新的技术孤岛和维护负担。'
+                    ]
+                },
+                competitor: {
+                    analysis: [
+                        { feature: '云转型速度', oracle: 'Oracle在IaaS/PaaS层发展迅猛，SaaS应用（Fusion/NetSuite）增长迅速，策略激进。', sap: 'SAP的云转型相对保守，S/4HANA Cloud的推广面临挑战，但其“RISE with SAP”计划正在加速进程。' },
+                        { feature: '大企业市场', oracle: '在数据库和部分应用领域有传统优势，Fusion Cloud正努力争取EBS和SAP客户。', sap: '在大型企业ERP市场拥有绝对的领导地位和客户忠诚度，S/4HANA是其核心护城河。' },
+                        { feature: '中小企业市场', oracle: '通过NetSuite占据了云ERP的领先地位，策略清晰且有效。', sap: '通过Business One和Business ByDesign应对，但市场声量和增长速度不及NetSuite。' },
+                        { feature: '产品线广度', oracle: '从底层IaaS到上层SaaS，拥有业界最完整的技术堆栈，可提供“一站式”解决方案。', sap: '聚焦于企业应用软件，但在底层基础设施上依赖合作伙伴（如Azure, AWS）。' }
+                    ],
+                    chartData: {
+                        labels: ['云转型速度', '大企业市场', '中小企业市场', '产品线广度', '技术栈完整性', '客户生态'],
+                        oracle: [9, 7, 9, 8, 10, 7],
+                        sap: [7, 10, 6, 8, 6, 9]
+                    }
+                },
+                outlook: [
+                    { title: '云是唯一方向', content: '无论是公有云还是“Cloud@Customer”，Oracle的未来所有业务都将围绕云展开。它的核心目标是将庞大的本地部署客户群迁移到OCI和Fusion/NetSuite Cloud上。', icon: '☁️' },
+                    { title: '技术栈为王', content: 'Oracle坚信，同时拥有IaaS、PaaS、SaaS和数据库的公司才能赢得最终胜利。它会不断强化技术栈的协同效应，用底层技术优势（如自治数据库）来反哺上层应用。', icon: '⚙️' },
+                    { title: 'AI驱动的智能企业', content: 'Oracle的期望是超越传统的流程自动化，利用AI和机器学习构建能自我驱动、自我优化的“智能企业应用”。生成式AI将被嵌入到所有核心产品中。', icon: '🧠' },
+                    { title: '数据是终极护城河', content: 'Oracle的最终态度是成为企业数据的“守护者”和“运营者”。通过掌控企业最核心的数据（财务、人力、客户），提供无可替代的洞察和价值，从而实现永久的客户锁定。', icon: '🛡️' },
+                    { title: '行业垂直将深化', content: '收购Aconex只是开始。Oracle会继续在金融、零售、医疗等关键行业进行垂直布局，构建“通用平台 + 行业应用”的模式，与SAP等对手进行差异化竞争。', icon: '🏢' },
+                    { title: '无情的商业机器', content: 'Oracle的态度始终如一：以利润和市场份额为导向。它会继续通过激进的销售策略、强势的法务和持续的并购来维持其市场地位，无论外界评价如何。', icon: '⚖️' }
+                ]
+            };
+
+            function showSection(id) {
+                sections.forEach(section => {
+                    section.style.display = 'none';
+                    section.classList.remove('active');
+                });
+                const activeSection = document.getElementById(id);
+                if (activeSection) {
+                    activeSection.style.display = 'block';
+                    activeSection.classList.add('active');
+                }
+
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === `#${id}`) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+                
+                if(mobileNav.value !== id) {
+                    mobileNav.value = id;
+                }
+            }
+            
+            function handleNav(event) {
+                event.preventDefault();
+                const id = event.target.getAttribute('href').substring(1);
+                showSection(id);
+                window.location.hash = id;
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', handleNav);
+            });
+            
+            mobileNav.addEventListener('change', (e) => {
+                const id = e.target.value;
+                showSection(id);
+                window.location.hash = id;
+            });
+
+            function initTimeline() {
+                const container = document.getElementById('timeline-container');
+                let html = '<div class="relative">';
+                html += '<div class="timeline-line"></div>';
+                data.timeline.forEach(item => {
+                    html += `
+                        <div class="timeline-item cursor-pointer" onclick="this.querySelector('.timeline-content').classList.toggle('hidden')">
+                            <div class="timeline-marker"></div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold text-gray-800">${item.year}</h3>
+                                <p class="text-xl font-bold text-[#D92B2F]">${item.title}</p>
+                                <p class="mt-2 text-gray-600 timeline-content hidden">${item.content}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+                container.querySelector('.timeline-content').classList.remove('hidden');
+            }
+
+            function initAcquisitions() {
+                const container = document.getElementById('acquisitions-container');
+                let html = '';
+                data.acquisitions.forEach(item => {
+                    html += `
+                        <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                            <h3 class="text-xl font-bold text-gray-800">${item.name}</h3>
+                            <p class="mt-2 text-gray-700"><strong class="text-blue-600">设想:</strong> ${item.vision}</p>
+                            <p class="mt-2 text-gray-700"><strong class="text-red-600">现实:</strong> ${item.reality}</p>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+
+                const ctx = document.getElementById('acquisitionsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.acquisitions.map(a => a.name.split(' ')[0]),
+                        datasets: [{
+                            label: '收购金额 ($B)',
+                            data: [10.3, 5.8, 0],
+                            backgroundColor: ['#D92B2F', '#FF6384', '#36A2EB'],
+                            borderColor: 'white',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: '主要收购案金额' }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                title: { display: true, text: '十亿美元' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function initFusion() {
+                const tabsContainer = document.getElementById('fusion-tabs');
+                const contentContainer = document.getElementById('fusion-content');
+                let tabsHtml = '';
+                data.fusion.forEach((tab, index) => {
+                    tabsHtml += `<button class="tab-button w-full text-left p-3 rounded-md border-2 border-gray-200 transition ${index === 0 ? 'active' : ''}" data-id="${tab.id}">${tab.title}</button>`;
+                });
+                tabsContainer.innerHTML = tabsHtml;
+
+                function showFusionContent(id) {
+                    const content = data.fusion.find(t => t.id === id).content;
+                    contentContainer.innerHTML = `<p>${content}</p>`;
+                    tabsContainer.querySelectorAll('.tab-button').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.id === id);
+                    });
+                }
+
+                tabsContainer.addEventListener('click', (e) => {
+                    if (e.target.matches('.tab-button')) {
+                        showFusionContent(e.target.dataset.id);
+                    }
+                });
+                
+                showFusionContent(data.fusion[0].id);
+            }
+            
+            function initNetSuite() {
+                const roadmapContainer = document.getElementById('netsuite-roadmap');
+                let html = '';
+                data.netsuite.roadmap.forEach((item, index) => {
+                    html += `
+                        <div class="relative pl-8">
+                            <div class="absolute top-1 left-0 h-full w-px bg-gray-300"></div>
+                            <div class="absolute top-1 left-[-8px] h-4 w-4 rounded-full bg-red-500 border-2 border-white"></div>
+                            <h4 class="font-semibold text-lg">${item.stage}</h4>
+                            <p class="text-gray-600">${item.description}</p>
+                        </div>
+                    `;
+                });
+                roadmapContainer.innerHTML = html;
+
+                const ctx = document.getElementById('netsuiteChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.netsuite.chartData.labels,
+                        datasets: [{
+                            data: data.netsuite.chartData.data,
+                            backgroundColor: ['#36A2EB', '#FFCE56', '#FF6384'],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            }
+
+            function initAconex() {
+                document.getElementById('aconex-value').innerHTML = data.aconex.value.map(item => `<li>${item}</li>`).join('');
+                document.getElementById('aconex-risk').innerHTML = data.aconex.risk.map(item => `<li>${item}</li>`).join('');
+            }
+            
+            function initCompetitor() {
+                const analysisContainer = document.getElementById('competitor-analysis');
+                let html = '';
+                data.competitor.analysis.forEach(item => {
+                    html += `
+                        <div class="bg-white p-4 rounded-lg shadow">
+                           <h4 class="font-bold text-lg text-gray-800">${item.feature}</h4>
+                           <p class="text-sm mt-2"><strong class="text-red-600">Oracle:</strong> ${item.oracle}</p>
+                           <p class="text-sm mt-1"><strong class="text-blue-600">SAP:</strong> ${item.sap}</p>
+                        </div>
+                    `;
+                });
+                analysisContainer.innerHTML = html;
+
+                const ctx = document.getElementById('competitorChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: data.competitor.chartData.labels,
+                        datasets: [
+                            {
+                                label: 'Oracle',
+                                data: data.competitor.chartData.oracle,
+                                backgroundColor: 'rgba(217, 43, 47, 0.2)',
+                                borderColor: 'rgba(217, 43, 47, 1)',
+                                borderWidth: 2
+                            },
+                            {
+                                label: 'SAP',
+                                data: data.competitor.chartData.sap,
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 10,
+                                pointLabels: { font: { size: 12 } }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function initOutlook() {
+                const container = document.getElementById('outlook-container');
+                let html = '';
+                data.outlook.forEach(item => {
+                    html += `
+                        <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+                           <div class="text-3xl mb-3">${item.icon}</div>
+                           <h4 class="font-bold text-xl text-gray-800">${item.title}</h4>
+                           <p class="text-gray-600 mt-2">${item.content}</p>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+
+            function init() {
+                initTimeline();
+                initAcquisitions();
+                initFusion();
+                initNetSuite();
+                initAconex();
+                initCompetitor();
+                initOutlook();
+                
+                const hash = window.location.hash.substring(1);
+                if (hash) {
+                    showSection(hash);
+                } else {
+                    showSection('section1');
+                }
+            }
+            init();
+        });
+    </script>
+</body>
+</html>
