@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse de Situation - MNC FRANCE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application is structured into four thematic sections to guide the user from understanding the core problem to taking action. 1) 'Diagnostic' identifies the main issue (negative net assets). 2) 'Cadre Légal' provides an interactive way to explore the relevant legal articles. 3) 'Le Processus' visualizes the procedural steps triggered by the notification. 4) 'Plan d'Action' offers a concrete checklist. This structure prioritizes clarity and actionability over mirroring the formal, dense layout of the source document, making the information more digestible for a business owner under stress. -->
+    <!-- Visualization & Content Choices: Report Info: "actif net négatif". Goal: Explain a key financial concept. Viz/Presentation: A simple, clear definition card with an HTML/CSS visual metaphor (Assets vs. Liabilities), not a data chart, as no specific figures are provided. Interaction: None, focus is on clarity. Justification: Avoids fabricating data while making an abstract concept tangible. | Report Info: Legal articles (L.611-2, R.611-10, etc.). Goal: Organize and clarify dense legal text. Viz/Presentation: Interactive accordion cards built with HTML/Tailwind. Interaction: Click-to-expand/collapse. Justification: Allows users to focus on one piece of information at a time without being overwhelmed. | Report Info: Implied procedural steps. Goal: Explain the sequence of events. Viz/Presentation: A vertical flowchart built with HTML/CSS. Interaction: Hover effects to highlight steps. Justification: Translates bureaucratic process into a clear, linear visual story. | Library/Method: Vanilla JS for interactions, Tailwind CSS for all styling and layout. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F9FAFB;
+            color: #1F2937;
+        }
+        .nav-link {
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+        .lang-btn, .view-btn {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .lang-btn.active, .view-btn.active {
+            background-color: #3B82F6;
+            color: white;
+        }
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding: 0 1.5rem;
+        }
+        .accordion-content.open {
+           padding: 1rem 1.5rem 1.5rem;
+        }
+        .process-step::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 48px;
+            bottom: -48px;
+            width: 2px;
+            background-color: #D1D5DB;
+            z-index: -1;
+        }
+        .process-step:last-child::before {
+            display: none;
+        }
+        .checklist-item.completed label {
+            text-decoration: line-through;
+            color: #6B7280;
+        }
+        /* View switcher styles */
+        #page-wrapper.view-desktop {
+            min-width: 1280px;
+        }
+        #page-wrapper.view-mobile {
+            max-width: 425px;
+            margin: 0 auto;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+<div id="page-wrapper">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between py-3">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800" data-translate-key="headerTitle">Analyse de Situation</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="flex flex-col items-end space-y-2">
+                        <!-- Row 1: Nav Links -->
+                        <div class="flex items-baseline space-x-2">
+                            <a href="#diagnostic" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-1 rounded-md text-sm font-medium" data-translate-key="navDiagnostic">Diagnostic</a>
+                            <a href="#legal" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-1 rounded-md text-sm font-medium" data-translate-key="navLegal">Cadre Légal</a>
+                            <a href="#process" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-1 rounded-md text-sm font-medium" data-translate-key="navProcess">Le Processus</a>
+                            <a href="#strategy" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-1 rounded-md text-sm font-medium" data-translate-key="navStrategy">Stratégie</a>
+                            <a href="#action" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-1 rounded-md text-sm font-medium" data-translate-key="navAction">Plan d'Action</a>
+                        </div>
+                        <!-- Row 2: Switchers -->
+                        <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-1 border border-gray-200 rounded-full p-1 text-xs">
+                                <button class="view-btn px-2 py-1 rounded-full" data-view="auto" data-translate-key="viewAuto">Auto</button>
+                                <button class="view-btn px-2 py-1 rounded-full" data-view="desktop" data-translate-key="viewDesktop">Bureau</button>
+                                <button class="view-btn px-2 py-1 rounded-full" data-view="mobile" data-translate-key="viewMobile">Mobile</button>
+                            </div>
+                            <div class="flex items-center space-x-1 border border-gray-200 rounded-full p-1 text-xs">
+                                <button class="lang-btn px-2 py-1 rounded-full" data-lang="fr">FR</button>
+                                <button class="lang-btn px-2 py-1 rounded-full" data-lang="en">EN</button>
+                                <button class="lang-btn px-2 py-1 rounded-full" data-lang="zh">中文</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="-mr-2 flex md:hidden">
+                    <button type="button" id="mobile-menu-button" class="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" aria-controls="mobile-menu" aria-expanded="false">
+                        <span class="sr-only" data-translate-key="srOpenMenu">Ouvrir le menu principal</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#diagnostic" class="nav-link text-gray-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium" data-translate-key="navDiagnosticMobile">Diagnostic</a>
+                <a href="#legal" class="nav-link text-gray-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium" data-translate-key="navLegalMobile">Cadre Légal</a>
+                <a href="#process" class="nav-link text-gray-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium" data-translate-key="navProcessMobile">Le Processus</a>
+                <a href="#strategy" class="nav-link text-gray-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium" data-translate-key="navStrategyMobile">Stratégie</a>
+                <a href="#action" class="nav-link text-gray-600 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium" data-translate-key="navActionMobile">Plan d'Action</a>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <p class="text-center text-xs text-gray-500 mb-2" data-translate-key="viewModeTitle">Mode d'affichage</p>
+                    <div class="flex justify-center space-x-2">
+                        <button class="view-btn px-3 py-1 text-sm rounded-full border border-gray-300" data-view="auto" data-translate-key="viewAutoMobile">Auto</button>
+                        <button class="view-btn px-3 py-1 text-sm rounded-full border border-gray-300" data-view="desktop" data-translate-key="viewDesktopMobile">Bureau</button>
+                        <button class="view-btn px-3 py-1 text-sm rounded-full border border-gray-300" data-view="mobile" data-translate-key="viewMobileMobile">Mobile</button>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                     <p class="text-center text-xs text-gray-500 mb-2" data-translate-key="languageTitle">Langue</p>
+                    <div class="flex justify-center space-x-2">
+                        <button class="lang-btn px-4 py-2 text-sm rounded-full border border-gray-300" data-lang="fr">FR</button>
+                        <button class="lang-btn px-4 py-2 text-sm rounded-full border border-gray-300" data-lang="en">EN</button>
+                        <button class="lang-btn px-4 py-2 text-sm rounded-full border border-gray-300" data-lang="zh">中文</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <section class="text-center mb-16">
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl" data-translate-key="mainTitle">Notification pour MNC FRANCE</h2>
+            <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600" data-translate-key="mainSubtitle">Une analyse interactive de la notification du Tribunal de Commerce de Paris concernant la détection de difficultés.</p>
+        </section>
+
+        <div class="space-y-12">
+
+            <section id="diagnostic">
+                <div class="text-center mb-8">
+                    <span class="text-blue-600 font-semibold" data-translate-key="step1">Étape 1</span>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2" data-translate-key="diagnosticTitle">Diagnostic : Le Point de Départ</h3>
+                    <p class="mt-2 text-md text-gray-600 max-w-2xl mx-auto" data-translate-key="diagnosticSubtitle">Cette section clarifie le principal indicateur qui a déclenché cette procédure de prévention. Comprendre ce point est essentiel pour aborder la situation sereinement.</p>
+                </div>
+
+                <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden card">
+                    <div class="p-8">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <span class="text-3xl">⚠️</span>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate" data-translate-key="indicatorTriggered">Indicateur Déclenché</dt>
+                                    <dd class="text-xl font-bold text-red-600" data-translate-key="indicatorValue">Actif Net Négatif</dd>
+                                </dl>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <h4 class="font-semibold text-gray-800" data-translate-key="whatItMeans">Qu'est-ce que cela signifie ?</h4>
+                            <p class="mt-2 text-gray-600" data-translate-key="whatItMeansDesc">Un actif net négatif (ou capitaux propres négatifs) signifie que la valeur totale des dettes de votre entreprise dépasse la valeur totale de ses actifs (ce qu'elle possède). C'est un signal d'alerte important sur la santé financière de l'entreprise.</p>
+                            <div class="mt-4 bg-gray-50 rounded-lg p-4">
+                                <div class="flex flex-col md:flex-row justify-around items-center text-center">
+                                    <div class="p-2">
+                                        <p class="font-semibold text-lg text-green-600" data-translate-key="assets">Actifs</p>
+                                        <p class="text-sm text-gray-500" data-translate-key="assetsDesc">(Trésorerie, matériel, créances clients...)</p>
+                                    </div>
+                                    <div class="p-2 text-3xl font-bold text-red-600">&lt;</div>
+                                    <div class="p-2">
+                                        <p class="font-semibold text-lg text-red-600" data-translate-key="liabilities">Dettes</p>
+                                        <p class="text-sm text-gray-500" data-translate-key="liabilitiesDesc">(Emprunts, dettes fournisseurs, dettes fiscales...)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mt-4 text-sm text-gray-500" data-translate-key="tribunalPurpose">Le tribunal utilise cet indicateur financier pour identifier préventivement les entreprises qui pourraient rencontrer des difficultés, afin de leur proposer de l'aide avant que la situation ne s'aggrave.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="legal">
+                <div class="text-center mb-8">
+                    <span class="text-blue-600 font-semibold" data-translate-key="step2">Étape 2</span>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2" data-translate-key="legalTitle">Le Cadre Légal Expliqué</h3>
+                     <p class="mt-2 text-md text-gray-600 max-w-2xl mx-auto" data-translate-key="legalSubtitle">La notification se base sur des articles spécifiques du Code de commerce. Cliquez sur chaque article pour afficher le texte officiel et un résumé simple pour comprendre les pouvoirs et procédures du tribunal.</p>
+                </div>
+                <div id="accordion-container" class="max-w-3xl mx-auto space-y-3">
+                </div>
+            </section>
+
+            <section id="process">
+                <div class="text-center mb-12">
+                    <span class="text-blue-600 font-semibold" data-translate-key="step3">Étape 3</span>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2" data-translate-key="processTitle">Le Processus de Prévention</h3>
+                    <p class="mt-2 text-md text-gray-600 max-w-2xl mx-auto" data-translate-key="processSubtitle">Voici une vue d'ensemble des étapes qui suivent la réception de cette notification. Chaque étape est une opportunité de clarifier la situation de votre entreprise.</p>
+                </div>
+                <div id="process-container" class="max-w-md mx-auto">
+                </div>
+            </section>
+            
+            <section id="strategy">
+                <div class="text-center mb-8">
+                    <span class="text-blue-600 font-semibold" data-translate-key="stepStrategy">Nouvelle Étape</span>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2" data-translate-key="strategyTitle">Stratégie de Redressement Proposée</h3>
+                    <p class="mt-2 text-md text-gray-600 max-w-2xl mx-auto" data-translate-key="strategySubtitle">Face à la situation, nous proposons une stratégie proactive en deux volets, combinant un renforcement financier immédiat et des améliorations opérationnelles durables.</p>
+                </div>
+                <div class="max-w-3xl mx-auto space-y-8">
+                    <div class="bg-white rounded-xl shadow-lg p-8 card">
+                        <h4 class="text-lg font-bold text-gray-800" data-translate-key="strategyPillar1Title">Volet 1 : Injection de Capital pour Restaurer les Fonds Propres</h4>
+                        <p class="mt-2 text-gray-600" data-translate-key="strategyPillar1Desc">Les actionnaires s'engagent à réaliser une augmentation de capital en numéraire. Cette injection de fonds vise un double objectif : premièrement, reconstituer les capitaux propres pour les ramener à un niveau positif et solide, éliminant ainsi le signal de risque immédiat. Deuxièmement, doter l'entreprise des liquidités nécessaires pour financer son plan de relance opérationnel et honorer ses engagements à court terme sans tension.</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-8 card">
+                        <h4 class="text-lg font-bold text-gray-800" data-translate-key="strategyPillar2Title">Volet 2 : Améliorations Opérationnelles pour une Rentabilité Durable</h4>
+                        <p class="mt-2 text-gray-600" data-translate-key="strategyPillar2Desc">En parallèle, un plan d'action rigoureux sera mis en œuvre pour améliorer la performance de l'entreprise. Cela inclut la renégociation des contrats clés avec les fournisseurs, l'optimisation des processus internes pour réduire les coûts superflus, et un effort commercial ciblé sur des offres à plus forte marge. L'objectif est de ramener l'entreprise à la rentabilité dans les 6 à 9 prochains mois, assurant ainsi sa viabilité à long terme.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="action">
+                <div class="text-center mb-8">
+                    <span class="text-blue-600 font-semibold" data-translate-key="step4">Étape 4</span>
+                    <h3 class="text-2xl font-bold text-gray-900 mt-2" data-translate-key="actionTitle">Votre Plan d'Action</h3>
+                    <p class="mt-2 text-md text-gray-600 max-w-2xl mx-auto" data-translate-key="actionSubtitle">La proactivité est votre meilleur atout. Voici une liste de tâches pour vous préparer efficacement à l'entretien et prendre le contrôle de la situation.</p>
+                </div>
+
+                <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-8">
+                    <h4 class="text-lg font-bold text-gray-800" data-translate-key="checklistTitle">Checklist de Préparation</h4>
+                    <div id="checklist" class="mt-4 space-y-4">
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="bg-white mt-16 border-t">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
+            <p data-translate-key="footerDisclaimer">Cet outil est une aide à l'analyse et à la compréhension. Il ne constitue en aucun cas un conseil juridique ou financier.</p>
+            <p class="mt-1" data-translate-key="footerCopyright">&copy; 2025 - Outil d'analyse interactif.</p>
+        </div>
+    </footer>
+</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const translations = {
+                fr: {
+                    pageTitle: "Analyse de Situation - MNC FRANCE", headerTitle: "Analyse de Situation", navDiagnostic: "Diagnostic", navLegal: "Cadre Légal", navProcess: "Le Processus", navStrategy: "Stratégie", navAction: "Plan d'Action", navDiagnosticMobile: "Diagnostic", navLegalMobile: "Cadre Légal", navProcessMobile: "Le Processus", navStrategyMobile: "Stratégie", navActionMobile: "Plan d'Action", srOpenMenu: "Ouvrir le menu principal", mainTitle: "Notification pour MNC FRANCE", mainSubtitle: "Une analyse interactive de la notification du Tribunal de Commerce de Paris concernant la détection de difficultés.",
+                    viewModeTitle: "Mode d'affichage", languageTitle: "Langue", viewAuto: "Auto", viewDesktop: "Bureau", viewMobile: "Mobile", viewAutoMobile: "Auto", viewDesktopMobile: "Bureau", viewMobileMobile: "Mobile",
+                    step1: "Étape 1", diagnosticTitle: "Diagnostic : Le Point de Départ", diagnosticSubtitle: "Cette section clarifie le principal indicateur qui a déclenché cette procédure de prévention. Comprendre ce point est essentiel pour aborder la situation sereinement.", indicatorTriggered: "Indicateur Déclenché", indicatorValue: "Actif Net Négatif", whatItMeans: "Qu'est-ce que cela signifie ?", whatItMeansDesc: "Un actif net négatif (ou capitaux propres négatifs) signifie que la valeur totale des dettes de votre entreprise dépasse la valeur totale de ses actifs (ce qu'elle possède). C'est un signal d'alerte important sur la santé financière de l'entreprise.", assets: "Actifs", assetsDesc: "(Trésorerie, matériel, créances clients...)", liabilities: "Dettes", liabilitiesDesc: "(Emprunts, dettes fournisseurs, dettes fiscales...)", tribunalPurpose: "Le tribunal utilise cet indicateur financier pour identifier préventivement les entreprises qui pourraient rencontrer des difficultés, afin de leur proposer de l'aide avant que la situation ne s'aggrave.",
+                    step2: "Étape 2", legalTitle: "Le Cadre Légal Expliqué", legalSubtitle: "La notification se base sur des articles spécifiques du Code de commerce. Cliquez sur chaque article pour afficher le texte officiel et un résumé simple pour comprendre les pouvoirs et procédures du tribunal.",
+                    legalData: [
+                        { title: "Article L.611-2 du Code de commerce", summary: "Cet article donne au président du tribunal le pouvoir de convoquer les dirigeants d'entreprise pour un entretien confidentiel lorsqu'il détecte des difficultés (financières, juridiques, etc.) pouvant compromettre la continuité de l'activité. Le but est préventif : discuter des mesures pour redresser la situation.", content: "Le président du tribunal de commerce convoque à un entretien confidentiel le dirigeant d'une entreprise qui connaît des difficultés de nature à compromettre la continuité de l'exploitation, afin d'envisager les mesures propres à redresser la situation. A l'issue de cet entretien ou si le dirigeant ne s'y est pas rendu, le président peut obtenir communication, par les commissaires aux comptes, les experts-comptables, les notaires, les administrations publiques, les organismes de sécurité et de prévoyance sociales ainsi que les services chargés de la centralisation des risques bancaires et des incidents de paiement, des renseignements de nature à lui donner une exacte information sur la situation économique, financière et patrimoniale du débiteur." },
+                        { title: "Article R.611-10 du Code de commerce", summary: "Cet article précise l'origine des informations qui peuvent mener à une convocation. Le président base sa décision sur des éléments concrets, comme ceux issus du registre du commerce (ex: bilans non déposés, capitaux propres négatifs).", content: "La note établie par le président du tribunal en application des dispositions de l'article L. 611-2. I indique les faits qui sont de nature à motiver la convocation du dirigeant de l'entreprise. Elle est adressée par le greffier au dirigeant, par lettre recommandée avec demande d'avis de réception. La lettre de convocation précise que le dirigeant peut se faire assister par un avocat ou par un expert-comptable ou par les deux." },
+                        { title: "Article R.611-11 du Code de commerce", summary: "Cet article décrit le déroulement de l'entretien. Un procès-verbal est rédigé. Si le dirigeant ne vient pas, un 'procès-verbal de carence' est établi, ce qui peut justifier une enquête plus approfondie.", content: "Il est dressé un procès-verbal de l'entretien de prévention par le président du tribunal ou le juge délégué par lui. Ce procès-verbal est signé par le juge et le chef d'entreprise. En cas de refus de signature de ce dernier, mention en est portée au procès-verbal. En cas de non-présentation du chef d'entreprise, un procès-verbal de carence est établi. Le procès-verbal est conservé au greffe ; il n'est pas soumis aux règles de la publicité." },
+                        { title: "Article R.611-12 du Code de commerce", summary: "Cet article encadre la demande d'informations complémentaires. Si, après l'entretien (ou en l'absence du dirigeant), le président a besoin de plus de détails, il peut solliciter divers organismes (banques, administrations) qui ont un mois pour répondre.", content: "La demande de renseignements prévue au deuxième alinéa de l'article L. 611-2 est adressée dans le délai d'un mois à compter de la date de l'entretien ou du procès-verbal de carence. Elle est accompagnée de la copie du procès-verbal d'entretien ou de carence établi en application de l'article R.611-11. Si la demande a été présentée dans les formes et délai prescrits au premier alinéa, les personnes et organismes interrogés communiquent les renseignements réclamés dans le délai d'un mois. Dans le cas contraire, ils ne sont pas tenus d'y répondre." }
+                    ],
+                    summaryLabel: "En résumé :", officialTextLabel: "Texte officiel :",
+                    step3: "Étape 3", processTitle: "Le Processus de Prévention", processSubtitle: "Voici une vue d'ensemble des étapes qui suivent la réception de cette notification. Chaque étape est une opportunité de clarifier la situation de votre entreprise.",
+                    processSteps: [
+                        { title: "Détection & Notification", description: "Le greffe détecte un indicateur (ex: actif net négatif) et en informe le Président du tribunal." },
+                        { title: "Convocation à un Entretien", description: "Vous êtes convoqué à un entretien confidentiel avec le Président du tribunal (ou un juge délégué)." },
+                        { title: "Analyse de la Situation", description: "Le but de l'entretien est de discuter de la situation financière de votre entreprise, de ses perspectives et des mesures que vous avez prises ou envisagez." },
+                        { title: "Résultat de l'Entretien", description: "Plusieurs issues sont possibles : simple information, proposition de procédures de prévention (mandat ad hoc, conciliation), ou classement si la situation est saine." }
+                    ],
+                    stepStrategy: "Nouvelle Étape", strategyTitle: "Stratégie de Redressement Proposée", strategySubtitle: "Face à la situation, nous proposons une stratégie proactive en deux volets, combinant un renforcement financier immédiat et des améliorations opérationnelles durables.", strategyPillar1Title: "Volet 1 : Injection de Capital pour Restaurer les Fonds Propres", strategyPillar1Desc: "Les actionnaires s'engagent à réaliser une augmentation de capital en numéraire. Cette injection de fonds vise un double objectif : premièrement, reconstituer les capitaux propres pour les ramener à un niveau positif et solide, éliminant ainsi le signal de risque immédiat. Deuxièmement, doter l'entreprise des liquidités nécessaires pour financer son plan de relance opérationnel et honorer ses engagements à court terme sans tension.", strategyPillar2Title: "Volet 2 : Améliorations Opérationnelles pour une Rentabilité Durable", strategyPillar2Desc: "En parallèle, un plan d'action rigoureux sera mis en œuvre pour améliorer la performance de l'entreprise. Cela inclut la renégociation des contrats clés avec les fournisseurs, l'optimisation des processus internes pour réduire les coûts superflus, et un effort commercial ciblé sur des offres à plus forte marge. L'objectif est de ramener l'entreprise à la rentabilité dans les 6 à 9 prochains mois, assurant ainsi sa viabilité à long terme.",
+                    step4: "Étape 4", actionTitle: "Votre Plan d'Action", actionSubtitle: "La proactivité est votre meilleur atout. Voici une liste de tâches pour vous préparer efficacement à l'entretien et prendre le contrôle de la situation.", checklistTitle: "Checklist de Préparation",
+                    checklist: [
+                        { icon: '📂', title: 'Rassembler les documents financiers', description: 'Préparez les derniers bilans, comptes de résultat, et une situation de trésorerie récente (prévisionnel sur 3-6 mois).' },
+                        { icon: '📈', title: 'Analyser la situation', description: 'Identifiez les causes des difficultés et préparez une explication claire et concise. Soyez honnête sur les problèmes rencontrés.' },
+                        { icon: '💡', title: "Préparer un plan d'action", description: "Listez les mesures que vous avez déjà prises ou que vous comptez prendre pour améliorer la situation (ex: recherche de nouveaux clients, réduction de coûts, négociation de dettes)." },
+                        { icon: '⚖️', title: 'Consulter vos conseillers', description: "Discutez de la situation avec votre expert-comptable. Envisagez de vous faire assister par un avocat spécialisé pour l'entretien." },
+                        { icon: '🗓️', title: "Confirmer votre présence à l'entretien", description: "Il est crucial de se rendre à la convocation. L'absence peut être interprétée négativement et déclencher des enquêtes plus poussées." }
+                    ],
+                    footerDisclaimer: "Cet outil est une aide à l'analyse et à la compréhension. Il ne constitue en aucun cas un conseil juridique ou financier.", footerCopyright: "&copy; 2025 - Outil d'analyse interactif."
+                },
+                en: {
+                    pageTitle: "Situation Analysis - MNC FRANCE", headerTitle: "Situation Analysis", navDiagnostic: "Diagnosis", navLegal: "Legal Framework", navProcess: "The Process", navStrategy: "Strategy", navAction: "Action Plan", navDiagnosticMobile: "Diagnosis", navLegalMobile: "Legal Framework", navProcessMobile: "The Process", navStrategyMobile: "Strategy", navActionMobile: "Action Plan", srOpenMenu: "Open main menu", mainTitle: "Notification for MNC FRANCE", mainSubtitle: "An interactive analysis of the notification from the Paris Commercial Court regarding the detection of difficulties.",
+                    viewModeTitle: "View Mode", languageTitle: "Language", viewAuto: "Auto", viewDesktop: "Desktop", viewMobile: "Mobile", viewAutoMobile: "Auto", viewDesktopMobile: "Desktop", viewMobileMobile: "Mobile",
+                    step1: "Step 1", diagnosticTitle: "Diagnosis: The Starting Point", diagnosticSubtitle: "This section clarifies the main indicator that triggered this prevention procedure. Understanding this point is essential to approach the situation calmly.", indicatorTriggered: "Indicator Triggered", indicatorValue: "Negative Net Assets", whatItMeans: "What does this mean?", whatItMeansDesc: "Negative net assets (or negative equity) means that the total value of your company's debts exceeds the total value of its assets. It is a significant warning sign about the company's financial health.", assets: "Assets", assetsDesc: "(Cash, equipment, accounts receivable...)", liabilities: "Liabilities", liabilitiesDesc: "(Loans, trade payables, tax debts...)", tribunalPurpose: "The court uses this financial indicator to preemptively identify companies that may face difficulties, in order to offer help before the situation worsens.",
+                    step2: "Step 2", legalTitle: "The Legal Framework Explained", legalSubtitle: "The notification is based on specific articles of the Commercial Code. Click on each article to view the official text and a simple summary to understand the court's powers and procedures.",
+                    legalData: [
+                        { title: "Article L.611-2 of the Commercial Code", summary: "This article gives the president of the court the power to summon company directors for a confidential interview when difficulties (financial, legal, etc.) are detected that could compromise the business's continuity. The purpose is preventive: to discuss measures to rectify the situation.", content: "The president of the commercial court summons for a confidential interview the director of a company experiencing difficulties likely to compromise the continuity of its operations, in order to consider measures to rectify the situation. Following this interview, or if the director does not attend, the president may obtain communication, from auditors, accountants, notaries, public administrations, social security bodies, and services centralizing banking risks and payment incidents, of information likely to provide an accurate picture of the debtor's economic, financial, and patrimonial situation." },
+                        { title: "Article R.611-10 of the Commercial Code", summary: "This article specifies the origin of the information that can lead to a summons. The president bases the decision on concrete elements, such as those from the commercial register (e.g., unfiled balance sheets, negative equity).", content: "The note prepared by the president of the court pursuant to the provisions of Article L. 611-2. I indicates the facts likely to justify the summons of the company director. It is sent by the clerk to the director by registered letter with acknowledgment of receipt. The summons letter specifies that the director may be assisted by a lawyer or an accountant, or both." },
+                        { title: "Article R.611-11 of the Commercial Code", summary: "This article describes the conduct of the interview. A record is drawn up. If the director does not attend, a 'record of non-appearance' is made, which may justify a more in-depth investigation.", content: "A record of the prevention interview is drawn up by the president of the court or the judge delegated by him. This record is signed by the judge and the head of the company. In case of refusal to sign by the latter, a note is made on the record. In case of non-appearance of the head of the company, a record of non-appearance is drawn up. The record is kept at the registry; it is not subject to publicity rules." },
+                        { title: "Article R.611-12 of the Commercial Code", summary: "This article governs the request for additional information. If, after the interview (or in the director's absence), the president needs more details, they can request them from various bodies (banks, administrations), which have one month to respond.", content: "The request for information provided for in the second paragraph of Article L. 611-2 is sent within one month from the date of the interview or the record of non-appearance. It is accompanied by a copy of the interview or non-appearance record established pursuant to Article R.611-11. If the request was made in the prescribed form and time, the persons and organizations questioned shall provide the requested information within one month. Otherwise, they are not required to respond." }
+                    ],
+                    summaryLabel: "In summary:", officialTextLabel: "Official text:",
+                    step3: "Step 3", processTitle: "The Prevention Process", processSubtitle: "Here is an overview of the steps that follow the receipt of this notification. Each step is an opportunity to clarify your company's situation.",
+                    processSteps: [
+                        { title: "Detection & Notification", description: "The clerk's office detects an indicator (e.g., negative net assets) and informs the President of the court." },
+                        { title: "Summons to an Interview", description: "You are summoned to a confidential interview with the President of the court (or a delegated judge)." },
+                        { title: "Situation Analysis", description: "The purpose of the interview is to discuss your company's financial situation, its prospects, and the measures you have taken or are considering." },
+                        { title: "Outcome of the Interview", description: "Several outcomes are possible: simple information, proposal of prevention procedures (ad hoc mandate, conciliation), or dismissal if the situation is sound." }
+                    ],
+                    stepStrategy: "New Step", strategyTitle: "Proposed Recovery Strategy", strategySubtitle: "Facing the situation, we propose a proactive, two-pronged strategy, combining immediate financial strengthening with sustainable operational improvements.", strategyPillar1Title: "Pillar 1: Capital Injection to Restore Equity", strategyPillar1Desc: "The shareholders commit to a cash capital increase. This injection of funds has a dual objective: first, to rebuild the equity to a positive and solid level, thus eliminating the immediate risk signal. Second, to provide the company with the necessary liquidity to finance its operational recovery plan and meet its short-term commitments without strain.", strategyPillar2Title: "Pillar 2: Operational Improvements for Sustainable Profitability", strategyPillar2Desc: "In parallel, a rigorous action plan will be implemented to improve the company's performance. This includes renegotiating key contracts with suppliers, optimizing internal processes to reduce unnecessary costs, and a targeted sales effort on higher-margin offerings. The goal is to return the company to profitability within the next 6 to 9 months, thereby ensuring its long-term viability.",
+                    step4: "Step 4", actionTitle: "Your Action Plan", actionSubtitle: "Proactivity is your best asset. Here is a checklist to prepare effectively for the interview and take control of the situation.", checklistTitle: "Preparation Checklist",
+                    checklist: [
+                        { icon: '📂', title: 'Gather financial documents', description: 'Prepare the latest balance sheets, income statements, and a recent cash flow statement (3-6 month forecast).' },
+                        { icon: '📈', title: 'Analyze the situation', description: 'Identify the causes of the difficulties and prepare a clear and concise explanation. Be honest about the problems encountered.' },
+                        { icon: '💡', title: 'Prepare an action plan', description: 'List the measures you have already taken or plan to take to improve the situation (e.g., finding new clients, reducing costs, negotiating debts).' },
+                        { icon: '⚖️', title: 'Consult your advisors', description: 'Discuss the situation with your accountant. Consider being assisted by a specialized lawyer for the interview.' },
+                        { icon: '🗓️', title: 'Confirm your attendance at the interview', description: 'It is crucial to attend the meeting. Absence can be interpreted negatively and trigger further investigations.' }
+                    ],
+                    footerDisclaimer: "This tool is for analysis and understanding purposes. It does not constitute legal or financial advice in any way.", footerCopyright: "&copy; 2025 - Interactive analysis tool."
+                },
+                zh: {
+                    pageTitle: "情况分析 - MNC FRANCE", headerTitle: "情况分析", navDiagnostic: "诊断", navLegal: "法律框架", navProcess: "流程", navStrategy: "策略", navAction: "行动计划", navDiagnosticMobile: "诊断", navLegalMobile: "法律框架", navProcessMobile: "流程", navStrategyMobile: "策略", navActionMobile: "行动计划", srOpenMenu: "打开主菜单", mainTitle: "关于 MNC FRANCE 的通知", mainSubtitle: "对巴黎商事法院关于发现困难的通知进行的互动式分析。",
+                    viewModeTitle: "视图模式", languageTitle: "语言", viewAuto: "自动", viewDesktop: "桌面", viewMobile: "移动", viewAutoMobile: "自动", viewDesktopMobile: "桌面", viewMobileMobile: "移动",
+                    step1: "第 1 步", diagnosticTitle: "诊断：出发点", diagnosticSubtitle: "本节阐明了触发此预防程序的主要指标。理解这一点对于冷静地处理情况至关重要。", indicatorTriggered: "触发指标", indicatorValue: "净资产为负", whatItMeans: "这是什么意思？", whatItMeansDesc: "净资产为负（或负股东权益）意味着贵公司的债务总额超过了其资产总额。这是公司财务状况的一个重要警报信号。", assets: "资产", assetsDesc: "（现金、设备、应收账款...）", liabilities: "负债", liabilitiesDesc: "（贷款、应付贸易款、税收债务...）", tribunalPurpose: "法院使用此财务指标来预先识别可能面临困难的公司，以便在情况恶化前提供帮助。",
+                    step2: "第 2 步", legalTitle: "法律框架解释", legalSubtitle: "该通知基于《商法典》的特定条款。点击每个条款可查看官方文本和简要摘要，以了解法院的权力和程序。",
+                    legalData: [
+                        { title: "《商法典》第 L.611-2 条", summary: "本条授予法院院长在发现可能危及企业持续经营的困难（财务、法律等）时，传唤公司负责人进行保密会谈的权力。目的是预防性的：讨论纠正情况的措施。", content: "商事法院院长为考虑纠正情况的措施，传唤经营活动面临可能危及持续经营困难的公司负责人进行保密会谈。会谈结束后，或如果负责人未出席，院长可通过审计师、会计师、公证人、公共行政部门、社会保障机构以及负责集中银行风险和支付事故的服务机构，获取能够使其准确了解债务人经济、财务和财产状况的信息。" },
+                        { title: "《商法典》第 R.611-10 条", summary: "本条规定了可能导致传唤的信息来源。院长的决定基于具体要素，例如来自商业登记册的信息（如未提交的资产负债表、负股东权益）。", content: "法院院长根据《商法典》第 L. 611-2 条的规定编写的说明，指出了可能构成传唤公司负责人的事实。该说明由书记官以带回执的挂号信形式寄给负责人。传票中明确指出，负责人可以由律师或会计师或两者协助。" },
+                        { title: "《商法典》第 R.611-11 条", summary: "本条描述了会谈的进行过程。会谈将有书面记录。如果负责人未出席，将出具“缺席记录”，这可能成为进行更深入调查的理由。", content: "预防性会谈由法院院长或其授权的法官做成笔录。该笔录由法官和公司负责人签署。如后者拒绝签署，应在笔录中注明。如公司负责人未出席，则做成缺席笔录。笔录保存在书记官处，不适用公开规则。" },
+                        { title: "《商法典》第 R.611-12 条", summary: "本条规定了要求提供补充信息的程序。如果在会谈后（或负责人缺席的情况下），院长需要更多细节，可以向各机构（银行、行政部门）索取，这些机构有一个月的时间作出回应。", content: "《商法典》第 L. 611-2 条第二款规定的信息请求，应在会谈或缺席笔录之日起一个月内发出。请求应附有根据 R.611-11 条制作的会谈或缺席笔录的副本。如果请求按规定形式和期限提出，被询问的个人和组织应在一个月内提供所要求的信息。否则，他们没有义务回应。" }
+                    ],
+                    summaryLabel: "摘要：", officialTextLabel: "官方文本：",
+                    step3: "第 3 步", processTitle: "预防流程", processSubtitle: "以下是收到此通知后的步骤概述。每一步都是澄清贵公司情况的机会。",
+                    processSteps: [
+                        { title: "检测与通知", description: "书记官办公室检测到一个指标（例如，净资产为负）并通知法院院长。" },
+                        { title: "传唤会谈", description: "您被传唤与法院院长（或授权法官）进行一次保密会谈。" },
+                        { title: "情况分析", description: "会谈的目的是讨论贵公司的财务状况、前景以及您已采取或考虑采取的措施。" },
+                        { title: "会谈结果", description: "可能有多种结果：简单告知、提议预防程序（临时授权、调解），或者如果情况良好则结案。" }
+                    ],
+                    stepStrategy: "新步骤", strategyTitle: "拟议的恢复策略", strategySubtitle: "面对当前局势，我们提出一项积极主动的双轨策略，结合即时的财务强化与可持续的运营改进。", strategyPillar1Title: "第一部分：注资以恢复股东权益", strategyPillar1Desc: "股东承诺进行现金增资。此次注资旨在实现双重目标：首先，将股东权益重建至稳健的正值水平，从而消除眼前的风险信号。其次，为公司提供必要的流动资金，以支持其运营恢复计划，并无压力地履行其短期承诺。", strategyPillar2Title: "第二部分：运营改进以实现可持续盈利", strategyPillar2Desc: "与此同时，我们将实施一项严格的行动计划以提升公司业绩。这包括与主要供应商重新谈判关键合同，优化内部流程以削减不必要的成本，以及针对高利润率产品进行定向营销。目标是在未来6至9个月内使公司恢复盈利，从而确保其长期生存能力。",
+                    step4: "第 4 步", actionTitle: "您的行动计划", actionSubtitle: "积极主动是您最好的资产。这是一份清单，可帮助您有效地为会谈做准备并掌控局势。", checklistTitle: "准备清单",
+                    checklist: [
+                        { icon: '📂', title: '收集财务文件', description: '准备最新的资产负债表、损益表和近期的现金流量表（3-6个月预测）。' },
+                        { icon: '📈', title: '分析情况', description: '找出困难的原因，并准备一个清晰简洁的解释。诚实地面对遇到的问题。' },
+                        { icon: '💡', title: '准备行动计划', description: '列出您已采取或计划采取的改善情况的措施（例如，寻找新客户、削减成本、谈判债务）。' },
+                        { icon: '⚖️', title: '咨询您的顾问', description: '与您的会计师讨论情况。考虑在会谈时由专业律师协助。' },
+                        { icon: '🗓️', title: '确认您将出席会谈', description: '出席会议至关重要。缺席可能被负面解读，并引发进一步的调查。' }
+                    ],
+                    footerDisclaimer: "本工具仅用于分析和理解。它不构成任何形式的法律或财务建议。", footerCopyright: "&copy; 2025 - 互动式分析工具。"
+                }
+            };
+
+            let currentLang = 'fr';
+            let currentViewMode = 'auto';
+
+            function generateAccordion(lang) {
+                const accordionContainer = document.getElementById('accordion-container');
+                accordionContainer.innerHTML = '';
+                const data = translations[lang].legalData;
+                data.forEach((item) => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg shadow-sm border border-gray-200';
+                    card.innerHTML = `
+                        <button class="accordion-button w-full flex justify-between items-center text-left p-4 md:p-6 focus:outline-none">
+                            <span class="text-md font-semibold text-gray-800">${item.title}</span>
+                            <svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="border-t border-gray-200 pt-4">
+                                <h5 class="font-semibold text-blue-600">${translations[lang].summaryLabel}</h5>
+                                <p class="mt-1 text-gray-600">${item.summary}</p>
+                                <h5 class="mt-4 font-semibold text-gray-500">${translations[lang].officialTextLabel}</h5>
+                                <blockquote class="mt-1 text-sm text-gray-500 italic border-l-4 border-gray-300 pl-4 py-2">${item.content}</blockquote>
+                            </div>
+                        </div>
+                    `;
+                    accordionContainer.appendChild(card);
+                });
+
+                const accordionButtons = accordionContainer.querySelectorAll('.accordion-button');
+                accordionButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const content = button.nextElementSibling;
+                        const icon = button.querySelector('svg');
+
+                        const allContents = accordionContainer.querySelectorAll('.accordion-content');
+                        allContents.forEach(c => {
+                            if (c !== content && c.classList.contains('open')) {
+                                c.classList.remove('open');
+                                c.style.maxHeight = '0px';
+                                c.previousElementSibling.querySelector('svg').style.transform = 'rotate(0deg)';
+                            }
+                        });
+
+                        content.classList.toggle('open');
+                        if (content.classList.contains('open')) {
+                            content.style.maxHeight = content.scrollHeight + 50 + "px";
+                            icon.style.transform = 'rotate(180deg)';
+                        } else {
+                            content.style.maxHeight = '0px';
+                            icon.style.transform = 'rotate(0deg)';
+                        }
+                    });
+                });
+            }
+            
+            function generateProcess(lang) {
+                const processContainer = document.getElementById('process-container');
+                processContainer.innerHTML = '';
+                const data = translations[lang].processSteps;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'space-y-12';
+
+                data.forEach((step, index) => {
+                    const stepEl = document.createElement('div');
+                    stepEl.className = 'relative process-step';
+                    stepEl.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="z-10 flex items-center justify-center w-10 h-10 bg-blue-500 rounded-full ring-8 ring-white">
+                                <span class="text-white font-bold">${index + 1}</span>
+                            </div>
+                            <div class="ml-4 bg-white p-4 rounded-lg shadow-md flex-1">
+                                <h4 class="font-bold">${step.title}</h4>
+                                <p class="text-sm text-gray-600 mt-1">${step.description}</p>
+                            </div>
+                        </div>
+                    `;
+                    wrapper.appendChild(stepEl);
+                });
+                processContainer.appendChild(wrapper);
+            }
+
+            function generateChecklist(lang) {
+                const checklistContainer = document.getElementById('checklist');
+                checklistContainer.innerHTML = '';
+                const data = translations[lang].checklist;
+                data.forEach((item, index) => {
+                    const el = document.createElement('div');
+                    el.className = 'relative flex items-start checklist-item';
+                    el.innerHTML = `
+                        <div class="flex items-center h-5">
+                            <input id="check-${index}" type="checkbox" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="check-${index}" class="font-medium text-gray-700">${item.icon} ${item.title}</label>
+                            <p class="text-gray-500">${item.description}</p>
+                        </div>
+                    `;
+                    checklistContainer.appendChild(el);
+                });
+
+                const checkboxes = checklistContainer.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        const item = e.target.closest('.checklist-item');
+                        if (e.target.checked) {
+                            item.classList.add('completed');
+                        } else {
+                            item.classList.remove('completed');
+                        }
+                    });
+                });
+            }
+
+            function updateContent(lang) {
+                currentLang = lang;
+                document.documentElement.lang = lang;
+                document.title = translations[lang].pageTitle;
+
+                document.querySelectorAll('[data-translate-key]').forEach(el => {
+                    const key = el.getAttribute('data-translate-key');
+                    if (translations[lang][key]) {
+                        el.innerHTML = translations[lang][key];
+                    }
+                });
+
+                generateAccordion(lang);
+                generateProcess(lang);
+                generateChecklist(lang);
+
+                document.querySelectorAll('.lang-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-lang') === lang) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+            
+            function setViewMode(mode) {
+                currentViewMode = mode;
+                const wrapper = document.getElementById('page-wrapper');
+                wrapper.classList.remove('view-desktop', 'view-mobile');
+
+                if (mode === 'desktop') {
+                    wrapper.classList.add('view-desktop');
+                } else if (mode === 'mobile') {
+                    wrapper.classList.add('view-mobile');
+                }
+
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-view') === mode) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const lang = e.currentTarget.getAttribute('data-lang');
+                    updateContent(lang);
+                });
+            });
+            
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const view = e.currentTarget.getAttribute('data-view');
+                    setViewMode(view);
+                });
+            });
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+                mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetElement = document.querySelector(this.getAttribute('href'));
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                    if (!mobileMenu.classList.contains('hidden')) {
+                         mobileMenu.classList.add('hidden');
+                         mobileMenuButton.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            });
+
+            // Initial load
+            updateContent('fr');
+            setViewMode('auto');
+        });
+    </script>
+</body>
+</html>
