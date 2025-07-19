@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>爱泼斯坦案例全景扫描（深度分析版）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Somber Neutrals -->
+    <!-- Application Structure Plan: The application is structured as a single-page, scrolling narrative with a fixed top navigation bar for quick access to key sections. This design allows users to either follow the story chronologically or jump to specific areas of interest (Timeline, Network, Key Figures). The structure avoids a simple chapter-by-chapter layout, instead opting for thematic sections that break down the complex case into digestible parts. The core user flow is discovery-oriented: an overview leads to a detailed timeline, which provides context for the character profiles and the network visualization. This approach was chosen to manage the vast amount of information, guiding the user from a general understanding to specific, interactive data exploration, which is more effective for a multifaceted topic like this than a linear text document. A new analytical section, "American Pathology," is added to provide deeper context without disrupting the factual flow. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Case chronological history -> Goal: Show sequence -> Viz: Interactive vertical timeline (HTML/CSS/JS) -> Interaction: Click to expand details -> Justification: Best for narrative flow and clarity, avoids clutter.
+        - Report Info: Epstein's network of associates -> Goal: Illustrate connections -> Viz: Filterable Bubble Chart (Chart.js) -> Interaction: Hover for tooltips, click buttons to filter by category -> Justification: Visually represents the 'web of influence' without overwhelming complexity.
+        - Report Info: Key individuals -> Goal: Organize main actors -> Viz: Grid of profile cards (HTML/CSS) -> Interaction: Filter buttons -> Justification: Provides a clear 'dramatis personae'.
+        - Report Info: Societal/Cultural Analysis -> Goal: Explain root causes -> Viz: Thematic text cards (HTML/CSS) -> Interaction: None needed, focus on readability -> Justification: Separates deep analysis from factual reporting, allowing users to choose their level of engagement.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. All visuals are built with HTML/CSS/Tailwind or rendered on a Canvas element by Chart.js. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+            scroll-behavior: smooth;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 50vh;
+            max-height: 500px;
+        }
+        .timeline-item-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .timeline-item-content.expanded {
+            max-height: 500px;
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #1e3a8a;
+            font-weight: 500;
+        }
+        .filter-btn.active {
+            background-color: #1e3a8a;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <header class="bg-white/90 backdrop-blur-md shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800">爱泼斯坦案例</h1>
+                </div>
+                <div class="hidden lg:block">
+                    <div class="ml-10 flex items-baseline space-x-4" id="desktop-nav">
+                        <a href="#intro" class="nav-link text-gray-600 px-3 py-2 rounded-md text-sm font-medium">概述</a>
+                        <a href="#analysis" class="nav-link text-gray-600 px-3 py-2 rounded-md text-sm font-medium">美国病理</a>
+                        <a href="#timeline" class="nav-link text-gray-600 px-3 py-2 rounded-md text-sm font-medium">时间线</a>
+                        <a href="#network" class="nav-link text-gray-600 px-3 py-2 rounded-md text-sm font-medium">关系网络</a>
+                        <a href="#figures" class="nav-link text-gray-600 px-3 py-2 rounded-md text-sm font-medium">核心人物</a>
+                        <a href="#locations" class="nav-link text-gray-600 px-3 py-2 rounded-md text-sm font-medium">犯罪版图</a>
+                        <a href="#documents" class="nav-link text-gray-600 px-3 py-2 rounded-md text-sm font-medium">解封文件</a>
+                        <a href="#death" class="nav-link text-gray-600 px-3 py-2 rounded-md text-sm font-medium">死亡之谜</a>
+                    </div>
+                </div>
+                <div class="lg:hidden">
+                    <select id="mobile-nav" class="bg-white border border-gray-300 rounded-md p-2">
+                        <option value="#intro">概述</option>
+                        <option value="#analysis">美国病理</option>
+                        <option value="#timeline">时间线</option>
+                        <option value="#network">关系网络</option>
+                        <option value="#figures">核心人物</option>
+                        <option value="#locations">犯罪版图</option>
+                        <option value="#documents">解封文件</option>
+                        <option value="#death">死亡之谜</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <section id="intro" class="my-12 scroll-mt-20">
+            <div class="text-center bg-white p-8 rounded-lg shadow-lg">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">爱泼斯坦案：一个并非偶然的怪物</h2>
+                <p class="text-lg text-gray-600 max-w-4xl mx-auto">
+                    杰弗里·爱泼斯坦案的骇人之处，不在于出现了一个道德沦丧的掠食者，而在于这个掠食者竟能在一个号称拥有健全法治的国家里，构建起一个工业规模的犯罪帝国，并安然运作数十年。他更像是一面棱镜，折射出美国社会制度与文化基因中最深层的病理。本页面旨在剖析是怎样的“美国病”——财富崇拜、精英豁免、制度失灵——共同滋养了爱泼斯坦这个怪物。
+                </p>
+            </div>
+        </section>
+        
+        <section id="analysis" class="my-12 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">美国病理：制度与文化剖析</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">一、财富崇拜与“美国梦”的阴暗面</h3>
+                    <p class="text-gray-700 mb-4">在美国文化中，巨额财富本身就是一张通行证，能自动赋予持有者智慧、能力甚至德行的光环。爱泼斯坦正是利用了这一点。</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-start"><span class="text-blue-500 font-bold mr-2">●</span><div><strong class="text-gray-800">财富作为道德“防弹衣”</strong>：通过向哈佛等顶尖学府捐款，爱泼斯坦成功用金钱购买了知识界的背书，为自己披上了一件刀枪不入的道德“防弹衣”。</div></li>
+                        <li class="flex items-start"><span class="text-blue-500 font-bold mr-2">●</span><div><strong class="text-gray-800">“美国梦”的武器化</strong>：他向出身贫寒的少女兜售虚假的“美国梦”——金钱、机遇、进入上流社会的机会，将她们的梦想武器化，变成了诱其进入陷阱的诱饵。</div></li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">二、精英豁免与“两个美国”的司法现实</h3>
+                    <p class="text-gray-700 mb-4">2008年臭名昭著的《不起诉协议》宣告了美国存在两套并行的司法系统：一套为普通人准备，另一套则为权贵精英量身定做。</p>
+                     <ul class="space-y-3">
+                        <li class="flex items-start"><span class="text-blue-500 font-bold mr-2">●</span><div><strong class="text-gray-800">司法的“私有化”交易</strong>：爱泼斯坦凭借其“梦之队”律师，将刑事诉讼变成了一场可以私下交易的商业谈判，为整个犯罪网络购买了“集体豁免”。</div></li>
+                        <li class="flex items-start"><span class="text-blue-500 font-bold mr-2">●</span><div><strong class="text-gray-800">“精英互保”的文化基因</strong>：一个由政客、富商、学者组成的跨国网络，形成了一个心照不宣的利益共同体。他们的沉默、纵容和社交背书，为罪行提供了土壤。</div></li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3">三、制度失灵与被“俘获”的看门人</h3>
+                    <p class="text-gray-700 mb-4">本应作为社会“看门人”的各类机构，在爱泼斯坦的金钱和人脉面前系统性失灵。</p>
+                     <ul class="space-y-3">
+                        <li class="flex items-start"><span class="text-blue-500 font-bold mr-2">●</span><div><strong class="text-gray-800">被“俘获”的机构</strong>：哈佛大学、摩根大通等机构，在追逐资金和资源的压力下，从社会的监督者沦为其犯罪企业的协作者。</div></li>
+                        <li class="flex items-start"><span class="text-blue-500 font-bold mr-2">●</span><div><strong class="text-gray-800">“司法管辖区套利”</strong>：他将犯罪活动分散在全球多地，利用不同司法管辖区的法律漏洞，极大地增加了执法部门调查的难度。</div></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="timeline" class="my-12 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">案件关键时间线</h2>
+            <div class="relative wrap overflow-hidden p-4 md:p-10 h-full">
+                <div class="border-2-2 absolute border-opacity-20 border-gray-700 h-full border" style="left: 50%"></div>
+                <div id="timeline-container" class="space-y-8">
+                </div>
+            </div>
+        </section>
+
+        <section id="network" class="my-12 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">庞杂的关系网络</h2>
+            <div class="text-center mb-8 max-w-3xl mx-auto">
+                <p class="text-gray-600">
+                    爱泼斯坦的传奇并非建立在金融天赋之上，而是一场精心策划的骗局。他利用财富和影响力，与全球范围内的政界、商界、科技界和皇室精英建立了联系。本节通过交互式图表展示其社交网络。
+                </p>
+            </div>
+            <div class="text-center mb-6 space-x-1 sm:space-x-2">
+                <button class="filter-btn bg-blue-800 text-white px-3 py-2 rounded-md shadow text-sm" data-filter="all">全部</button>
+                <button class="filter-btn bg-white text-blue-800 px-3 py-2 rounded-md shadow text-sm" data-filter="政治">政治</button>
+                <button class="filter-btn bg-white text-blue-800 px-3 py-2 rounded-md shadow text-sm" data-filter="商业/金融">商业/金融</button>
+                <button class="filter-btn bg-white text-blue-800 px-3 py-2 rounded-md shadow text-sm" data-filter="皇室">皇室</button>
+                <button class="filter-btn bg-white text-blue-800 px-3 py-2 rounded-md shadow text-sm" data-filter="科技/学术">科技/学术</button>
+                 <button class="filter-btn bg-white text-blue-800 px-3 py-2 rounded-md shadow text-sm" data-filter="娱乐/时尚">娱乐/时尚</button>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-lg">
+                <div class="chart-container">
+                    <canvas id="networkChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="figures" class="my-12 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">案件核心人物</h2>
+             <div class="text-center mb-6 space-x-1 sm:space-x-2" id="figures-filter-container">
+                 <button class="figure-filter-btn bg-blue-800 text-white px-3 py-2 rounded-md shadow text-sm" data-figure-filter="all">全部</button>
+                 <button class="figure-filter-btn bg-white text-blue-800 px-3 py-2 rounded-md shadow text-sm" data-figure-filter="主犯">主犯</button>
+                 <button class="figure-filter-btn bg-white text-blue-800 px-3 py-2 rounded-md shadow text-sm" data-figure-filter="关键同伙">关键同伙</button>
+                 <button class="figure-filter-btn bg-white text-blue-800 px-3 py-2 rounded-md shadow text-sm" data-figure-filter="指控者">指控者</button>
+                 <button class="figure-filter-btn bg-white text-blue-800 px-3 py-2 rounded-md shadow text-sm" data-figure-filter="其他">其他</button>
+            </div>
+            <div id="figures-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        </section>
+
+        <section id="locations" class="my-12 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">罪恶的地理版图</h2>
+            <div id="locations-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            </div>
+        </section>
+
+        <section id="documents" class="my-12 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">解封文件解读</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <input type="text" id="document-search" class="w-full p-3 border border-gray-300 rounded-md mb-4" placeholder="搜索姓名或关键词...">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="py-2 px-4 text-left text-gray-600 font-bold">姓名</th>
+                                <th class="py-2 px-4 text-left text-gray-600 font-bold">身份/职业</th>
+                                <th class="py-2 px-4 text-left text-gray-600 font-bold">在文件中被提及的背景（基于公开报道）</th>
+                            </tr>
+                        </thead>
+                        <tbody id="documents-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="death" class="my-12 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">掠食者之死：自杀还是灭口？</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h3 class="text-xl font-bold text-blue-800 mb-4 border-b-2 border-blue-200 pb-2">官方结论：上吊自杀</h3>
+                        <p class="text-gray-700">纽约市首席法医办公室裁定其死亡是“一场完美的搞砸风暴”的结果。然而，监狱安保系统性的崩溃，加上法医学上的疑点，共同催生了全球性的文化现象。</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-red-800 mb-4 border-b-2 border-red-200 pb-2">疑点与争议</h3>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start"><span class="text-red-500 font-bold mr-2">●</span><strong>警卫失职与监控失效</strong></li>
+                            <li class="flex items-start"><span class="text-red-500 font-bold mr-2">●</span><strong>违反规定的单独监禁</strong></li>
+                            <li class="flex items-start"><span class="text-red-500 font-bold mr-2">●</span><strong>法医争议：颈部舌骨骨折</strong></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="border-t pt-6">
+                    <h3 class="text-xl font-bold text-center text-gray-800 mb-3">结论：“爱泼斯坦没有自杀”——一个时代的隐喻</h3>
+                    <p class="text-center text-gray-600 max-w-3xl mx-auto">这个网络迷因的全球性传播，已超越了对死因本身的怀疑，而是对整个美国体制——从司法部到华尔街——彻底的不信任。它象征着公众认为，那个由权贵精英组成的“深层国家”拥有能力和动机去“抹掉”一个知道太多秘密的人。爱泼斯坦的阴影，将继续成为美国挥之不去的梦魇。</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white py-6">
+        <div class="container mx-auto text-center px-4">
+            <p>免责声明：本页面信息均整理自公开的法庭文件、飞行日志及权威新闻机构的报道，仅供信息参考和教育目的。提及任何个人姓名不代表其已被定罪或承认有不当行为。</p>
+            <p class="text-sm text-gray-400 mt-2">© 2024 交互式案例分析</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const timelineData = [
+                { year: '1988', title: '创立J. Epstein & Co.', content: '爱泼斯坦离开贝尔斯登后创立了自己的金融咨询公司，J. Epstein & Co.，开始为亿万富翁客户提供服务，积累了巨额财富。', side: 'left' },
+                { year: '1996', title: '公司迁往避税天堂', content: '他将公司更名为“金融信托公司”并迁往美属维尔京群岛，利用当地宽松的监管和税收政策来隐藏其财富和业务。', side: 'right' },
+                { year: '2005', title: '首次面临性侵指控', content: '佛罗里达州棕榈滩警方开始调查关于爱泼斯坦性侵未成年少女的指控。一名14岁女孩的父母报案，引发了后续调查。', side: 'left' },
+                { year: '2008', title: '达成备受争议的不起诉协议', content: '爱泼斯坦与时任迈阿密联邦检察官亚历山大·阿科斯塔达成了一项秘密的联邦不起诉协议。他承认了两项州级卖淫指控，服刑13个月，并赔偿受害者。该协议保护了他和他的同谋免受联邦起诉。', side: 'right' },
+                { year: '2018', title: '《迈阿密先驱报》重启调查', content: '该报发表系列报道《权力倒错》，揭露了2008年协议的内幕，引发全国性关注，并促使司法部门重启调查。', side: 'left' },
+                { year: '2019年7月6日', title: '因联邦性交易指控被捕', content: '爱泼斯坦在纽约被捕，被控在2002年至2005年间经营一个涉及数十名未成年少女的性交易网络。', side: 'right' },
+                { year: '2019年8月10日', title: '在狱中死亡', content: '爱泼斯坦被发现死于曼哈顿大都会惩教中心的牢房中。纽约市法医裁定其死因为上吊自杀，但这一结论引发了广泛的争议和阴谋论。', side: 'left' },
+                { year: '2020年7月', title: '吉斯莱恩·麦克斯韦被捕', content: '爱泼斯坦的前女友和长期伙伴吉斯莱恩·麦克斯韦被捕，被控诱骗未成年少女并协助爱泼斯坦实施性虐待。', side: 'right' },
+                { year: '2021年12月', title: '麦克斯韦被判有罪', content: '经过审判，吉斯莱恩·麦克斯韦被判犯有性贩运未成年人等多项罪名，最终于2022年被判处20年监禁。', side: 'left' },
+                { year: '2024年1月', title: '相关法律文件大量解封', content: '数千页与弗吉尼亚·朱弗尔对麦克斯韦的民事诉讼相关的文件被解封，其中提到了超过170名与爱泼斯坦有关联的人，再次引发公众对该案的高度关注。', side: 'right' }
+            ];
+
+            const timelineContainer = document.getElementById('timeline-container');
+            timelineData.forEach((item, index) => {
+                const alignment = index % 2 === 0 ? 'mb-8 flex justify-between items-center w-full right-timeline' : 'mb-8 flex justify-between flex-row-reverse items-center w-full left-timeline';
+                const itemDiv = document.createElement('div');
+                itemDiv.className = alignment;
+                itemDiv.innerHTML = `
+                    <div class="order-1 w-5/12"></div>
+                    <div class="z-20 flex items-center order-1 bg-gray-800 shadow-xl w-8 h-8 rounded-full">
+                        <h1 class="mx-auto font-semibold text-lg text-white">${index + 1}</h1>
+                    </div>
+                    <div class="order-1 bg-white rounded-lg shadow-xl w-5/12 px-6 py-4 timeline-item-container cursor-pointer">
+                        <h3 class="font-bold text-gray-800 text-xl">${item.year} - ${item.title}</h3>
+                        <div class="timeline-item-content">
+                            <p class="text-sm leading-snug tracking-wide text-gray-600 text-opacity-100 mt-2">${item.content}</p>
+                        </div>
+                    </div>
+                `;
+                timelineContainer.appendChild(itemDiv);
+            });
+
+            document.querySelectorAll('.timeline-item-container').forEach(item => {
+                item.addEventListener('click', () => {
+                    item.querySelector('.timeline-item-content').classList.toggle('expanded');
+                });
+            });
+
+            const networkData = {
+                all: [
+                    { name: '比尔·克林顿', category: '政治', context: '美国前总统，多次乘坐爱泼斯坦的私人飞机。' },
+                    { name: '唐纳德·特朗普', category: '政治', context: '美国前总统，曾在社交场合与爱泼斯坦同框，并乘坐其飞机。' },
+                    { name: '安德鲁王子', category: '皇室', context: '英国王子，因与爱泼斯坦的关系及相关指控而辞去皇室公职。' },
+                    { name: '埃胡德·巴拉克', category: '政治', context: '以色列前总理，与爱泼斯坦有商业往来。' },
+                    { name: '莱斯利·韦克斯纳', category: '商业/金融', context: 'L Brands创始人，曾是爱泼斯坦唯一的客户，关系密切，是其财富重要来源。' },
+                    { name: '比尔·盖茨', category: '科技/学术', context: '微软创始人，在爱泼斯坦性犯罪定罪后仍与其多次会面。' },
+                    { name: '斯蒂芬·霍金', category: '科技/学术', context: '著名物理学家，曾参加在爱泼斯坦私人岛屿举办的科学会议。' },
+                    { name: '让-吕克·布鲁内尔', category: '娱乐/时尚', context: '法国模特经纪人，被控为爱泼斯坦招募少女，后在狱中自杀。' },
+                    { name: '娜奥米·坎贝尔', category: '娱乐/时尚', context: '超级名模，曾乘坐爱泼斯坦的飞机。' },
+                    { name: '伍迪·艾伦', category: '娱乐/时尚', context: '著名导演，曾参加爱泼斯坦举办的晚宴。' },
+                    { name: '利昂·布莱克', category: '商业/金融', context: '阿波罗全球管理公司联合创始人，向爱泼斯坦支付了数千万美元的咨询费。' },
+                    { name: '马文·明斯基', category: '科技/学术', context: '人工智能先驱，被指控在爱泼斯坦的岛上与未成年人发生性关系。' },
+                    { name: '乔治·米切尔', category: '政治', context: '美国前参议院多数党领袖，名字出现在飞行日志中。' }
+                ]
+            };
+            
+            const ctx = document.getElementById('networkChart').getContext('2d');
+            let networkChart;
+
+            const createChart = (filter = 'all') => {
+                const filteredData = filter === 'all' ? networkData.all : networkData.all.filter(p => p.category === filter);
+
+                const data = {
+                    datasets: [{
+                        label: '人物',
+                        data: filteredData.map(p => ({
+                            x: Math.random() * 100,
+                            y: Math.random() * 100,
+                            r: 15 + Math.random() * 10,
+                            ...p
+                        })),
+                        backgroundColor: (context) => {
+                            const category = context.raw.category;
+                            switch (category) {
+                                case '政治': return 'rgba(59, 130, 246, 0.7)';
+                                case '商业/金融': return 'rgba(16, 185, 129, 0.7)';
+                                case '皇室': return 'rgba(147, 51, 234, 0.7)';
+                                case '科技/学术': return 'rgba(239, 68, 68, 0.7)';
+                                case '娱乐/时尚': return 'rgba(245, 158, 11, 0.7)';
+                                default: return 'rgba(107, 114, 128, 0.7)';
+                            }
+                        },
+                    }]
+                };
+
+                const options = {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const item = context.raw;
+                                    const lines = [];
+                                    lines.push(`姓名: ${item.name}`);
+                                    lines.push(`类别: ${item.category}`);
+                                    const contextLines = item.context.match(/.{1,20}/g) || [];
+                                    contextLines.forEach(line => lines.push(`背景: ${line}`));
+                                    return lines;
+                                }
+                            },
+                            bodyFont: { size: 12 },
+                            titleFont: { size: 14, weight: 'bold' },
+                            padding: 10,
+                            backgroundColor: 'rgba(0,0,0,0.8)'
+                        }
+                    },
+                    scales: {
+                        x: { display: false, min: 0, max: 100 },
+                        y: { display: false, min: 0, max: 100 }
+                    }
+                };
+
+                if (networkChart) networkChart.destroy();
+                networkChart = new Chart(ctx, { type: 'bubble', data, options });
+            };
+
+            document.querySelectorAll('.filter-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(btn => {
+                        btn.classList.remove('active', 'bg-blue-800', 'text-white');
+                        btn.classList.add('bg-white', 'text-blue-800');
+                    });
+                    button.classList.add('active', 'bg-blue-800', 'text-white');
+                    button.classList.remove('bg-white', 'text-blue-800');
+                    createChart(button.dataset.filter);
+                });
+            });
+
+            createChart();
+
+            const figuresData = [
+                { name: '杰弗里·爱泼斯坦', role: '主犯', description: '金融家，性犯罪者。利用其财富和权力网络，在数十年间建立了一个针对未成年少女的性交易团伙。', image: 'https://placehold.co/400x400/2d3748/FFFFFF?text=JE' },
+                { name: '吉斯莱恩·麦克斯韦', role: '关键同伙', description: '英国社交名媛，爱泼斯坦的首席招募官和核心同伙。因协助爱泼斯坦招募、控制和虐待未成年少女而被判有罪。', image: 'https://placehold.co/400x400/4a5568/FFFFFF?text=GM' },
+                { name: '弗吉尼亚·朱弗尔', role: '指控者', description: '最知名的受害者和指控者之一。她声称在未成年时被贩运给爱泼斯坦的权贵朋友。她的诉讼是案件取得突破的关键。', image: 'https://placehold.co/400x400/718096/FFFFFF?text=VG' },
+                { name: '让-吕克·布鲁内尔', role: '关键同伙', description: '法国模特经纪公司老板，被控为爱泼斯坦物色年轻女性和少女。他在法国被捕候审期间自杀。', image: 'https://placehold.co/400x400/4a5568/FFFFFF?text=JLB' },
+                { name: '莎拉·凯伦', role: '关键同伙', description: '爱泼斯坦的豪宅管家和日程安排者，被指控协助管理和招募受害者。在2008年的不起诉协议中获得豁免。', image: 'https://placehold.co/400x400/4a5568/FFFFFF?text=SK' },
+                { name: '亚历山大·阿科斯塔', role: '其他', description: '前劳工部长，在担任迈阿密联邦检察官时，主导达成了2008年对爱泼斯坦极具争议的宽大不起诉协议，后因此事辞职。', image: 'https://placehold.co/400x400/a0aec0/FFFFFF?text=AA' }
+            ];
+
+            const figuresGrid = document.getElementById('figures-grid');
+            
+            const renderFigures = (filter) => {
+                figuresGrid.innerHTML = '';
+                const filtered = filter === 'all' ? figuresData : figuresData.filter(f => f.role === filter);
+                filtered.forEach(figure => {
+                    const figureCard = document.createElement('div');
+                    figureCard.className = 'bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300';
+                    figureCard.innerHTML = `
+                        <img class="w-full h-56 object-cover object-center" src="${figure.image}" alt="${figure.name}" onerror="this.onerror=null;this.src='https://placehold.co/400x400/cccccc/FFFFFF?text=Image+Not+Found';">
+                        <div class="p-6">
+                            <h3 class="text-2xl font-bold text-gray-900">${figure.name}</h3>
+                            <span class="inline-block bg-blue-200 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded-full mb-2">${figure.role}</span>
+                            <p class="text-gray-700 mt-2">${figure.description}</p>
+                        </div>
+                    `;
+                    figuresGrid.appendChild(figureCard);
+                });
+            }
+
+            document.querySelectorAll('.figure-filter-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.figure-filter-btn').forEach(btn => {
+                        btn.classList.remove('active', 'bg-blue-800', 'text-white');
+                        btn.classList.add('bg-white', 'text-blue-800');
+                    });
+                    button.classList.add('active', 'bg-blue-800', 'text-white');
+                    button.classList.remove('bg-white', 'text-blue-800');
+                    renderFigures(button.dataset.figureFilter);
+                });
+            });
+
+            renderFigures('all');
+
+            const locationsData = [
+                { name: '小圣詹姆斯岛，美属维尔京群岛', title: '“罪恶之岛”', description: '爱泼斯坦的私人岛屿，被外界称为“萝莉岛”。这里是其犯罪网络的核心，一个与世隔绝的堡垒。岛上建有宏伟主宅、多栋别墅、直升机坪，以及一座用途成谜的蓝白条纹“神庙”式建筑。这里被严密监控，对受害者而言是一座无法逃离的华丽监狱。', image: 'https://placehold.co/600x400/1a202c/FFFFFF?text=罪恶之岛' },
+                { name: '纽约东71街豪宅', title: '权力的宫殿', description: '位于曼哈顿的七层豪宅，是其财富和地位的终极象征。内部装饰怪诞，充满了主人的扭曲心理：入口挂满眼球模型，客厅摆放着穿着暴露的员工棋子。这里既是虐待场所，也是他招待权贵、巩固权力网络的社交舞台。', image: 'https://placehold.co/600x400/2d3748/FFFFFF?text=纽约豪宅' },
+                { name: '佛罗里达州棕榈滩庄园', title: '罪行的起点', description: '这处位于亿万富翁聚居区的豪宅，是爱泼斯坦案最初引发警方调查的地点。2005年，正是在这里，一名14岁女孩的父母报案，揭开了罪恶的冰山一角。', image: 'https://placehold.co/600x400/4a5568/FFFFFF?text=棕榈滩庄园' },
+                { name: '新墨西哥州Zorro牧场', title: '沙漠中的巢穴', description: '这处占地广阔的牧场是爱泼斯坦另一个隐秘的巢穴。其全球化的地产布局，被认为是一种“司法管辖区套利”策略，通过在不同地区分散资产和活动，增加执法部门调查的复杂性。', image: 'https://placehold.co/600x400/718096/FFFFFF?text=Zorro牧场' }
+            ];
+
+            const locationsGrid = document.getElementById('locations-grid');
+            locationsData.forEach(loc => {
+                const locCard = document.createElement('div');
+                locCard.className = 'bg-white rounded-lg shadow-lg overflow-hidden';
+                locCard.innerHTML = `
+                    <img class="w-full h-64 object-cover" src="${loc.image}" alt="${loc.name}" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/FFFFFF?text=Image+Not+Found';">
+                    <div class="p-6">
+                        <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">${loc.name}</h4>
+                        <h3 class="text-2xl font-bold text-gray-900 mt-1">${loc.title}</h3>
+                        <p class="text-gray-700 mt-4">${loc.description}</p>
+                    </div>
+                `;
+                locationsGrid.appendChild(locCard);
+            });
+
+            const documentsData = [
+                { name: '比尔·克林顿', role: '美国前总统', context: '在文件中被多次提及，主要与乘坐爱泼斯坦的私人飞机有关。文件中一份证词称克林顿“喜欢年轻女孩”，但没有提供具体不当行为的证据。克林顿方面始终否认对爱泼斯坦的非法活动知情。' },
+                { name: '安德鲁王子', role: '英国王子', context: '文件中包含大量关于安德鲁王子的指控，主要来自弗吉尼亚·朱弗尔，她声称被迫与王子发生性关系。文件还包括了安德鲁王子与朱弗尔的合影。安德鲁王子最终与朱弗尔达成庭外和解。' },
+                { name: '斯蒂芬·霍金', role: '理论物理学家', context: '文件中一份邮件显示，爱泼斯坦曾计划悬赏以驳斥有关霍金参与“未成年人狂欢”的指控。霍金曾于2006年到访爱泼斯坦的私人岛屿参加科学会议。目前没有证据表明霍金有任何不当行为。' },
+                { name: '迈克尔·杰克逊', role: '流行音乐天王', context: '一名证人称曾在棕榈滩的爱泼斯坦住所见过杰克逊，但该证人补充说，杰克逊没有参与任何不当行为。' },
+                { name: '大卫·科波菲尔', role: '著名魔术师', context: '证人称科波菲尔曾是爱泼斯坦的朋友，并在一次晚宴上表演过魔术。文件中他还被问及是否目睹过爱泼斯坦与未成年少女有不当行为，他表示没有。' },
+                { name: '唐纳德·特朗普', role: '美国前总统', context: '文件中提到，一名证人被指示去特朗普在新泽西州的一家赌场。但没有证据表明特朗普参与或知晓爱泼斯坦的罪行。特朗普曾表示与爱泼斯坦“闹翻了”。' }
+            ];
+
+            const documentsTableBody = document.getElementById('documents-table-body');
+            const documentSearch = document.getElementById('document-search');
+
+            const renderDocuments = (searchTerm = '') => {
+                documentsTableBody.innerHTML = '';
+                const lowerCaseSearchTerm = searchTerm.toLowerCase();
+                const filtered = documentsData.filter(doc => 
+                    doc.name.toLowerCase().includes(lowerCaseSearchTerm) ||
+                    doc.role.toLowerCase().includes(lowerCaseSearchTerm) ||
+                    doc.context.toLowerCase().includes(lowerCaseSearchTerm)
+                );
+
+                if (filtered.length === 0) {
+                     documentsTableBody.innerHTML = `<tr><td colspan="3" class="text-center py-4">未找到匹配结果</td></tr>`;
+                     return;
+                }
+
+                filtered.forEach(doc => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="py-3 px-4 font-medium">${doc.name}</td>
+                        <td class="py-3 px-4">${doc.role}</td>
+                        <td class="py-3 px-4 text-sm">${doc.context}</td>
+                    `;
+                    documentsTableBody.appendChild(row);
+                });
+            };
+
+            documentSearch.addEventListener('keyup', (e) => {
+                renderDocuments(e.target.value);
+            });
+
+            renderDocuments();
+            
+            const mobileNav = document.getElementById('mobile-nav');
+            mobileNav.addEventListener('change', (e) => {
+                const target = document.querySelector(e.target.value);
+                if(target) target.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            const navLinks = document.querySelectorAll('#desktop-nav a');
+            const sections = document.querySelectorAll('main section');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+                 // Also update mobile nav selection
+                if (mobileNav.value !== `#${current}`) {
+                    mobileNav.value = `#${current}`;
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>
