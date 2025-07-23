@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雅江集团 - AI驱动的企业门户 (CEO版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0d1117;
+            --bg-widget: #161b22;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --border-color: #30363d;
+            --accent-primary: #58a6ff;
+            --accent-secondary: #56d364;
+            --accent-glow: rgba(88, 166, 255, 0.5);
+        }
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+        }
+        .widget {
+            background-color: var(--bg-widget);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        .kpi-dial {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+        .kpi-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .agent-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        .status-light {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        .status-light.ok { background-color: #22c55e; box-shadow: 0 0 6px #22c55e; }
+        .status-light.warn { background-color: #eab308; box-shadow: 0 0 6px #eab308; }
+        .status-light.error { background-color: #ef4444; box-shadow: 0 0 6px #ef4444; }
+        .arch-module {
+            position: relative;
+            padding-left: 16px;
+        }
+        .arch-module .status-light {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+            padding-left: 2.5rem;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            top: 0.5rem;
+            bottom: 0;
+            width: 2px;
+            background-color: var(--border-color);
+        }
+        .timeline-icon {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2.25rem;
+            height: 2.25rem;
+        }
+        .wbs-item { cursor: pointer; }
+        .wbs-item:hover { background-color: #30363d; }
+        .turbine-part {
+            position: absolute;
+            background-color: rgba(88, 166, 255, 0.2);
+            border: 1px solid var(--accent-primary);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .turbine-part:hover, .turbine-part.active {
+            background-color: rgba(88, 166, 255, 0.5);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+    <div class="flex h-screen bg-[var(--bg-main)]">
+        <!-- Sidebar -->
+        <aside class="w-20 lg:w-64 bg-[var(--bg-widget)] flex-shrink-0 border-r border-[var(--border-color)] flex flex-col">
+            <div class="h-20 flex items-center justify-center border-b border-[var(--border-color)]">
+                <h1 class="text-2xl lg:text-3xl font-bold text-white">雅江集团</h1>
+            </div>
+            <nav id="main-nav" class="mt-8 flex-1 px-2 lg:px-4 space-y-2">
+                <a href="#dashboard" class="flex items-center p-3 rounded-lg text-white bg-indigo-600">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <span class="ml-4 hidden lg:block font-semibold">CEO驾驶舱</span>
+                </a>
+                <a href="#asset_status" class="flex items-center p-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white">
+                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                    <span class="ml-4 hidden lg:block">资产全生命周期态势</span>
+                </a>
+                 <a href="#supply_chain_status" class="flex items-center p-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white">
+                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
+                    <span class="ml-4 hidden lg:block">供应链全过程追踪</span>
+                </a>
+                 <a href="#dam_status" class="flex items-center p-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white">
+                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span class="ml-4 hidden lg:block">大坝与水文态势</span>
+                </a>
+                <a href="#system_status" class="flex items-center p-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white">
+                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 00-4-4H3V9h2a4 4 0 004-4V3l4 4-4 4zM19 17v-2a4 4 0 00-4-4h-2V9h2a4 4 0 004-4V3l4 4-4 4z" /></svg>
+                    <span class="ml-4 hidden lg:block">数字化架构实时态势</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-[var(--border-color)]">
+                <div class="flex items-center">
+                    <img src="https://placehold.co/48x48/4f46e5/eef2ff?text=CEO" class="rounded-full" alt="CEO Avatar">
+                    <div class="ml-3 hidden lg:block">
+                        <p class="font-semibold text-sm text-white">集团CEO</p>
+                        <p class="text-xs text-gray-400">在线</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto">
+            <header class="bg-[var(--bg-widget)]/80 backdrop-blur-sm sticky top-0 z-10 p-4 border-b border-[var(--border-color)] flex justify-between items-center">
+                <h2 id="header-title" class="text-xl font-semibold text-white">CEO 战略驾驶舱</h2>
+                <div id="dateTime" class="text-sm text-gray-400"></div>
+            </header>
+            
+            <main id="main-content" class="p-6 md:p-8">
+                <!-- CEO Dashboard Section -->
+                <section id="dashboard" class="space-y-8">
+                    <!-- KPI Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
+                        <div class="widget p-4 flex flex-col items-center justify-center">
+                            <h3 class="text-sm font-medium text-gray-400">工程总体进度</h3>
+                            <div class="kpi-dial my-2"><canvas id="progressDial"></canvas></div>
+                            <p class="text-xs text-gray-400">SPI: <span class="font-bold text-yellow-400">0.98</span></p>
+                        </div>
+                        <div class="widget p-4 flex flex-col items-center justify-center">
+                            <h3 class="text-sm font-medium text-gray-400">预算执行率</h3>
+                            <div class="kpi-dial my-2"><canvas id="budgetDial"></canvas></div>
+                            <p class="text-xs text-gray-400">已支出: <span class="font-bold text-white">¥850亿</span></p>
+                        </div>
+                        <div class="widget p-4 flex flex-col items-center justify-center">
+                            <h3 class="text-sm font-medium text-gray-400">安全生产指数</h3>
+                            <div class="kpi-dial my-2"><canvas id="safetyDial"></canvas></div>
+                            <p class="text-xs text-gray-400">百万工时零伤害</p>
+                        </div>
+                        <div class="widget p-4 flex flex-col items-center justify-center">
+                            <h3 class="text-sm font-medium text-gray-400">发电量达成率</h3>
+                            <div class="kpi-dial my-2"><canvas id="powerDial"></canvas></div>
+                            <p class="text-xs text-gray-400">YTD: <span class="font-bold text-white">28.5 TWh</span></p>
+                        </div>
+                        <div class="widget p-4 flex flex-col items-center justify-center">
+                            <h3 class="text-sm font-medium text-gray-400">集团利润率</h3>
+                            <div class="kpi-dial my-2"><canvas id="profitDial"></canvas></div>
+                            <p class="text-xs text-gray-400">vs. 去年: <span class="font-bold text-green-400">+1.5%</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Main Dashboard Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Left Column -->
+                        <div class="lg:col-span-2 space-y-8">
+                            <div class="widget p-6">
+                                <h3 class="font-semibold mb-4 text-white">“一库五站”工程组合进度</h3>
+                                <div class="h-96"><canvas id="projectGanttChart"></canvas></div>
+                            </div>
+                            <div class="widget p-6">
+                                <h3 class="font-semibold mb-4 text-white">集团财务健康度 (季度)</h3>
+                                <div class="h-80"><canvas id="financeChart"></canvas></div>
+                            </div>
+                        </div>
+                        <!-- Right Column -->
+                        <div class="lg:col-span-1 space-y-8">
+                            <div class="widget p-6">
+                                <h3 class="font-semibold mb-4 text-white">待办中心 (Action Center)</h3>
+                                <ul class="space-y-3">
+                                    <li class="p-3 bg-red-900/50 rounded-md flex justify-between items-center"><div><p class="font-semibold text-red-300">5份文件待批阅</p><p class="text-xs text-gray-400">含1份紧急变更</p></div><button class="text-sm text-red-400 font-bold">→</button></li>
+                                    <li class="p-3 bg-blue-900/50 rounded-md flex justify-between items-center"><div><p class="font-semibold text-blue-300">3个会议即将开始</p><p class="text-xs text-gray-400">今日下午</p></div><button class="text-sm text-blue-400 font-bold">→</button></li>
+                                    <li class="p-3 bg-yellow-900/50 rounded-md flex justify-between items-center"><div><p class="font-semibold text-yellow-300">12个项目问题待关注</p><p class="text-xs text-gray-400">T-05B段隧洞风险升级</p></div><button class="text-sm text-yellow-400 font-bold">→</button></li>
+                                </ul>
+                            </div>
+                            <div class="widget p-6">
+                                <h3 class="font-semibold mb-4 text-white">战略目标跟踪</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1"><p class="text-gray-400">清洁能源占比</p><p class="font-semibold text-white">95% / 90% (目标)</p></div>
+                                        <div class="w-full bg-gray-700 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: 95%"></div></div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1"><p class="text-gray-400">技术国产化率</p><p class="font-semibold text-white">88% / 85% (目标)</p></div>
+                                        <div class="w-full bg-gray-700 rounded-full h-2.5"><div class="bg-indigo-500 h-2.5 rounded-full" style="width: 88%"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="widget p-6">
+                                <h3 class="font-semibold mb-4 text-white">资本开支构成</h3>
+                                <div class="h-48"><canvas id="capexChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Agents & What-if Simulation -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="widget p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">AI 助手集群 (AI Agent Swarm)</h3>
+                            <div class="space-y-4">
+                                <div class="agent-card bg-gray-800 p-4 rounded-lg border-l-4 border-rose-500">
+                                    <h4 class="font-bold text-white">工程风险洞察</h4>
+                                    <p class="text-sm text-gray-400 mt-1">AI分析发现：T-05B隧洞地质应力异常，建议提升支护等级。风险概率<span class="font-bold text-red-400">上升15%</span>。</p>
+                                </div>
+                                <div class="agent-card bg-gray-800 p-4 rounded-lg border-l-4 border-amber-500">
+                                    <h4 class="font-bold text-white">供应链瓶颈预测</h4>
+                                    <p class="text-sm text-gray-400 mt-1">预测未来60天，高标号特种水泥需求将超出当前物流运力<span class="font-bold">25%</span>。建议立即启动备用物流方案。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="widget p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4">What-if 情景模拟</h3>
+                            <div class="space-y-3">
+                                <p class="text-sm text-gray-400">选择一个模拟情景，AI将推演其对核心指标的影响：</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <button class="what-if-btn bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm hover:bg-indigo-600 hover:text-white">工程延期6个月</button>
+                                    <button class="what-if-btn bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm hover:bg-indigo-600 hover:text-white">投资超支10%</button>
+                                    <button class="what-if-btn bg-gray-700 text-gray-300 px-3 py-1 rounded-full text-sm hover:bg-indigo-600 hover:text-white">上网电价下调5%</button>
+                                </div>
+                                <div id="simulation-result" class="mt-4 p-4 bg-gray-800 rounded-lg">
+                                    <h4 class="font-semibold text-indigo-400">模拟结果</h4>
+                                    <p class="text-sm text-indigo-300 mt-2">请选择一个情景开始模拟。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Asset Status Section -->
+                <section id="asset_status" class="hidden space-y-8">
+                    <div class="widget p-6">
+                        <h3 class="text-xl font-semibold text-white mb-4">资产WBS浏览器</h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-1 bg-gray-800 p-4 rounded-lg h-96 overflow-y-auto">
+                                <ul id="wbs-tree" class="space-y-2 text-sm text-gray-300">
+                                    <li class="wbs-item font-bold" data-id="root">雅江下游水电工程</li>
+                                    <li class="wbs-item pl-4" data-id="dam"> L-01 龙头水库大坝</li>
+                                    <li class="wbs-item pl-8" data-id="dam-body"> L-01.1 坝体工程</li>
+                                    <li class="wbs-item pl-4 font-semibold" data-id="station1"> S-01 1#梯级电站</li>
+                                    <li class="wbs-item pl-8" data-id="station1-turbine1"> S-01.1 1#水轮发电机组</li>
+                                    <li class="wbs-item pl-8" data-id="station1-transformer"> S-01.2 主变压器</li>
+                                </ul>
+                            </div>
+                            <div id="asset-details" class="lg:col-span-2 bg-gray-800 p-4 rounded-lg">
+                                <h4 class="font-bold text-lg mb-2 text-white">请选择一个资产查看详情</h4>
+                                <p class="text-gray-400">...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget p-6">
+                         <h3 class="text-xl font-semibold text-white mb-4">资产Agent (AI查询)</h3>
+                         <div class="bg-gray-800 p-4 rounded-lg">
+                            <div id="ai-chat-box" class="h-48 overflow-y-auto mb-4 space-y-2">
+                                <p class="text-sm text-gray-400"><b>资产Agent:</b> 您好，CEO。我可以回答任何关于雅江集团资产的问题。请问您想了解什么？</p>
+                            </div>
+                            <div class="flex">
+                                <input type="text" id="ai-query-input" class="flex-1 p-2 border border-gray-600 bg-gray-700 text-white rounded-l-md" placeholder="例如: 1#水轮机组的累计运行时长是多少？">
+                                <button id="ai-query-btn" class="bg-indigo-600 text-white px-4 rounded-r-md font-semibold">发送</button>
+                            </div>
+                         </div>
+                    </div>
+                </section>
+
+                <!-- Supply Chain Status Section -->
+                <section id="supply_chain_status" class="hidden">
+                    <div class="widget p-6">
+                        <h3 class="text-xl font-semibold text-white mb-4">关键设备供应链全过程追踪：S-01.1 1#水轮发电机组</h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="relative h-96 bg-gray-800 rounded-lg flex items-center justify-center">
+                                <!-- Turbine Schematic -->
+                                <div class="turbine-part" data-part="runner" style="width: 120px; height: 120px; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                                <div class="turbine-part" data-part="stator" style="width: 220px; height: 220px; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                                <div class="turbine-part" data-part="shaft" style="width: 30px; height: 150px; top: 15%; left: 50%; transform: translateX(-50%);"></div>
+                                <p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold z-10">转轮</p>
+                                <p class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[5rem] text-white font-bold z-10">主轴</p>
+                                <p class="absolute top-1/2 left-1/2 -translate-x-[6rem] -translate-y-1/2 text-white font-bold z-10">定子</p>
+                            </div>
+                            <div id="supply-chain-details" class="bg-gray-800 p-4 rounded-lg">
+                                <h4 class="font-bold text-lg mb-4 text-white">请点击左侧部件查看供应链详情</h4>
+                                <p class="text-gray-400">...</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Dam Status Section -->
+                <section id="dam_status" class="hidden space-y-8">
+                     <div class="widget p-6">
+                        <h3 class="text-xl font-semibold text-white mb-4">龙头水库大坝实时态势</h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="h-96 bg-gray-800 rounded-lg p-4 relative overflow-hidden">
+                                <h4 class="font-bold text-center text-white">大坝数字孪生与水情模拟</h4>
+                                <!-- Dam Body -->
+                                <div class="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-gray-600 to-gray-500" style="clip-path: polygon(0% 100%, 100% 100%, 85% 10%, 15% 10%);"></div>
+                                <!-- Water Level -->
+                                <div class="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-blue-700 to-blue-500 opacity-70"></div>
+                                <div class="absolute bottom-40 left-0 right-0 border-t-2 border-dashed border-cyan-300">
+                                    <span class="absolute -top-3 left-2 text-xs text-cyan-300">当前水位: 2985.5m</span>
+                                </div>
+                                <!-- Sensor Data -->
+                                <div class="absolute top-1/2 left-1/4 text-xs bg-black/50 p-1 rounded text-white">应力: 15.2 MPa <span class="text-green-400">(正常)</span></div>
+                                <div class="absolute top-2/3 left-2/3 text-xs bg-black/50 p-1 rounded text-white">渗压: 0.8 KPa <span class="text-green-400">(正常)</span></div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="h-48"><canvas id="hydrologyChart"></canvas></div>
+                                <div class="p-4 bg-gray-800 rounded-lg">
+                                    <h4 class="font-semibold text-white">AI模拟分析</h4>
+                                    <p class="text-sm text-gray-400 mt-2">模拟“极端洪水事件”：</p>
+                                    <p class="text-sm text-cyan-300">结果: 水位将达到<span class="font-bold">2995m</span>，低于<span class="font-bold">3000m</span>安全阈值。风险等级: <span class="font-bold text-green-400">可控</span>。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- System Status Section -->
+                <section id="system_status" class="hidden">
+                    <div class="widget p-6">
+                        <h3 class="text-xl font-semibold text-center mb-6 text-white">“四横三纵”数字化架构实时态势</h3>
+                        <div class="grid grid-cols-3 gap-6 text-left text-white">
+                            <!-- Three Verticals -->
+                            <div class="space-y-4 bg-gray-800/50 p-4 rounded-lg">
+                                <h4 class="font-bold text-lg pb-2 border-b border-gray-700">智慧管理域</h4>
+                                <div class="arch-module"><div class="status-light ok"></div>财务共享(FSSC)</div>
+                                <div class="arch-module"><div class="status-light ok"></div>人力资本(HCM)</div>
+                                <div class="arch-module"><div class="status-light warn"></div>智能供应链(SCM+)</div>
+                            </div>
+                            <div class="space-y-4 bg-gray-800/50 p-4 rounded-lg">
+                                <h4 class="font-bold text-lg pb-2 border-b border-gray-700">资产全生命周期平台</h4>
+                                <div class="arch-module"><div class="status-light ok"></div>5D BIM管控</div>
+                                <div class="arch-module"><div class="status-light error"></div>智慧工地(AIoT)</div>
+                                <div class="arch-module"><div class="status-light ok"></div>数字交付</div>
+                            </div>
+                            <div class="space-y-4 bg-gray-800/50 p-4 rounded-lg">
+                                <h4 class="font-bold text-lg pb-2 border-b border-gray-700">智慧运营域</h4>
+                                <div class="arch-module"><div class="status-light ok"></div>数字孪生(DT)</div>
+                                <div class="arch-module"><div class="status-light ok"></div>预测性维护(PdM)</div>
+                                <div class="arch-module"><div class="status-light ok"></div>AI联合优化调度</div>
+                            </div>
+
+                            <!-- Four Horizontals -->
+                            <div class="col-span-3 mt-6 space-y-4 bg-gray-800/50 p-4 rounded-lg">
+                                <h4 class="font-bold text-lg pb-2 border-b border-gray-700">共享平台层</h4>
+                                <div class="grid grid-cols-4 gap-4">
+                                    <div class="arch-module"><div class="status-light ok"></div>业务中台</div>
+                                    <div class="arch-module"><div class="status-light error"></div>数据中台</div>
+                                    <div class="arch-module"><div class="status-light warn"></div>技术中台</div>
+                                    <div class="arch-module"><div class="status-light ok"></div>基础设施平台</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Date & Time Update
+    const dateTimeEl = document.getElementById('dateTime');
+    function updateDateTime() {
+        const now = new Date();
+        dateTimeEl.textContent = now.toLocaleString('zh-CN', { dateStyle: 'full', timeStyle: 'short' });
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+
+    // Navigation
+    const navLinks = document.querySelectorAll('#main-nav a');
+    const mainContent = document.getElementById('main-content');
+    const headerTitle = document.getElementById('header-title');
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', e => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href').substring(1);
+            
+            mainContent.querySelectorAll('section').forEach(sec => {
+                sec.classList.toggle('hidden', sec.id !== targetId);
+            });
+            
+            navLinks.forEach(l => {
+                l.classList.remove('bg-indigo-600', 'text-white');
+                l.classList.add('text-gray-400', 'hover:bg-gray-800', 'hover:text-white');
+            });
+            link.classList.add('bg-indigo-600', 'text-white');
+            link.classList.remove('text-gray-400', 'hover:bg-gray-800');
+            
+            headerTitle.textContent = link.querySelector('span').textContent;
+        });
+    });
+    document.querySelector('a[href="#dashboard"]').click();
+
+
+    // Chart.js Global Config
+    Chart.defaults.font.family = "'Inter', 'Noto Sans SC', sans-serif";
+    Chart.defaults.color = '#8b949e';
+    Chart.defaults.borderColor = '#30363d';
+
+    // KPI Dials
+    function createKpiDial(canvasId, value, color) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const textCenter = {
+            id: 'textCenter',
+            afterDatasetsDraw(chart, args, pluginOptions) {
+                const { ctx, data } = chart;
+                ctx.save();
+                ctx.font = 'bold 1.5rem Inter';
+                ctx.fillStyle = 'white';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const text = data.datasets[0].data[0] + '%';
+                ctx.fillText(text, chart.getDatasetMeta(0).data[0].x, chart.getDatasetMeta(0).data[0].y);
+            }
+        }
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [value, 100 - value],
+                    backgroundColor: [color, '#374151'],
+                    borderColor: [color, '#374151'],
+                    borderWidth: 0,
+                    cutout: '80%',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                animation: { animateRotate: true, animateScale: true }
+            },
+            plugins: [textCenter]
+        });
+    }
+    createKpiDial('progressDial', 35, '#f59e0b');
+    createKpiDial('budgetDial', 95, '#4f46e5');
+    createKpiDial('safetyDial', 99, '#22c55e');
+    createKpiDial('powerDial', 108, '#3b82f6');
+    createKpiDial('profitDial', 112, '#10b981');
+
+
+    // Project Gantt Chart
+    const ganttCtx = document.getElementById('projectGanttChart').getContext('2d');
+    new Chart(ganttCtx, {
+        type: 'bar',
+        data: {
+            labels: ['龙头水库大坝', '1#电站', '2#电站', '3#电站', '4#电站', '5#电站', '引水隧洞工程'],
+            datasets: [{
+                label: '已完成',
+                data: [
+                    [new Date('2025-07-19').getTime(), new Date('2028-10-01').getTime()],
+                    [new Date('2026-01-01').getTime(), new Date('2027-06-01').getTime()],
+                    [],[],[],[],
+                    [new Date('2025-09-01').getTime(), new Date('2027-12-01').getTime()],
+                ],
+                backgroundColor: 'rgba(79, 70, 229, 0.7)',
+                barPercentage: 0.6,
+            }, {
+                label: '计划中',
+                data: [
+                    [new Date('2028-10-01').getTime(), new Date('2032-12-31').getTime()],
+                    [new Date('2027-06-01').getTime(), new Date('2030-12-31').getTime()],
+                    [new Date('2027-01-01').getTime(), new Date('2031-12-31').getTime()],
+                    [new Date('2028-01-01').getTime(), new Date('2032-12-31').getTime()],
+                    [new Date('2029-01-01').getTime(), new Date('2033-06-30').getTime()],
+                    [new Date('2029-06-01').getTime(), new Date('2033-12-31').getTime()],
+                    [new Date('2027-12-01').getTime(), new Date('2032-06-30').getTime()],
+                ],
+                backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                barPercentage: 0.6,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { type: 'time', time: { unit: 'year' }, min: new Date('2025-01-01').getTime(), max: new Date('2034-12-31').getTime() },
+                y: { stacked: true }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const start = new Date(context.raw[0]).toLocaleDateString();
+                            const end = new Date(context.raw[1]).toLocaleDateString();
+                            return `${context.dataset.label}: ${start} - ${end}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Finance Chart
+    const financeCtx = document.getElementById('financeChart').getContext('2d');
+    new Chart(financeCtx, {
+        type: 'line',
+        data: {
+            labels: ['2025 Q3', '2025 Q4', '2026 Q1', '2026 Q2', '2026 Q3', '2026 Q4'],
+            datasets: [{
+                label: '营收',
+                data: [50, 80, 120, 150, 180, 220],
+                borderColor: '#4f46e5',
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(79, 70, 229, 0.2)',
+            }, {
+                label: '利润',
+                data: [10, 15, 25, 35, 40, 55],
+                borderColor: '#10b981',
+                tension: 0.4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { callback: value => `${value}亿` } } }
+        }
+    });
+    
+    // Capex Chart
+    const capexCtx = document.getElementById('capexChart').getContext('2d');
+    new Chart(capexCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['土建工程', '机电设备', '移民环保', '其他'],
+            datasets: [{
+                data: [55, 30, 10, 5],
+                backgroundColor: ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc'],
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, color: '#e6edf3' } } }
+        }
+    });
+    
+    // What-if Simulation
+    const simBtns = document.querySelectorAll('.what-if-btn');
+    const simResultEl = document.getElementById('simulation-result');
+    simBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const scenario = btn.textContent;
+            let resultHtml = `<h4 class="font-semibold text-indigo-400">模拟结果: ${scenario}</h4>`;
+            if (scenario.includes('延期') || scenario.includes('delay')) {
+                resultHtml += `<p class="text-sm text-indigo-300 mt-2">预计总投资回报率(ROI)下降 <span class="font-bold text-red-400">0.8%</span>, 最终利润减少约 <span class="font-bold text-red-400">96亿</span>。</p>`;
+            } else if (scenario.includes('超支') || scenario.includes('overrun')) {
+                resultHtml += `<p class="text-sm text-indigo-300 mt-2">预计总投资回报率(ROI)下降 <span class="font-bold text-red-400">1.2%</span>, 项目盈亏平衡点推迟 <span class="font-bold text-red-400">9个月</span>。</p>`;
+            } else if (scenario.includes('电价') || scenario.includes('tariff')) {
+                resultHtml += `<p class="text-sm text-indigo-300 mt-2">预计年均营收减少 <span class="font-bold text-red-400">75亿</span>, 但对清洁能源目标贡献不变。</p>`;
+            }
+            simResultEl.innerHTML = resultHtml;
+        });
+    });
+
+    // Asset Lifecycle WBS Interaction
+    const wbsItems = document.querySelectorAll('.wbs-item');
+    const assetDetailsEl = document.getElementById('asset-details');
+    const assetData = {
+        'dam': { title: 'L-01 龙头水库大坝', status: '施工中', progress: '45%', health: '99.8%', cost: 'CPI: 1.02' },
+        'station1-turbine1': { title: 'S-01.1 1#水轮发电机组', status: '待安装', progress: '95% (已到场)', health: 'N/A', cost: '采购完成' }
+    };
+    wbsItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const id = item.dataset.id;
+            const data = assetData[id];
+            if (data) {
+                assetDetailsEl.innerHTML = `
+                    <h4 class="font-bold text-lg mb-2 text-white">${data.title}</h4>
+                    <p class="text-gray-300"><strong>状态:</strong> ${data.status}</p>
+                    <p class="text-gray-300"><strong>进度:</strong> ${data.progress}</p>
+                    <p class="text-gray-300"><strong>健康度:</strong> ${data.health}</p>
+                    <p class="text-gray-300"><strong>成本绩效:</strong> ${data.cost}</p>
+                `;
+            } else {
+                 assetDetailsEl.innerHTML = `<h4 class="font-bold text-lg mb-2 text-white">请选择一个具体资产查看详情</h4><p class="text-gray-400">...</p>`;
+            }
+        });
+    });
+
+    // Asset Agent Chat
+    const aiQueryBtn = document.getElementById('ai-query-btn');
+    const aiQueryInput = document.getElementById('ai-query-input');
+    const aiChatBox = document.getElementById('ai-chat-box');
+    aiQueryBtn.addEventListener('click', () => {
+        const query = aiQueryInput.value;
+        if (!query) return;
+        aiChatBox.innerHTML += `<p class="text-right text-sm text-white"><b>您:</b> ${query}</p>`;
+        aiQueryInput.value = '';
+        setTimeout(() => {
+            aiChatBox.innerHTML += `<p class="text-sm text-gray-400"><b>资产Agent:</b> 正在查询... 1#水轮机组累计运行时长为0小时，当前状态为“待安装”。</p>`;
+            aiChatBox.scrollTop = aiChatBox.scrollHeight;
+        }, 1000);
+    });
+
+    // Hydrology Chart
+    const hydrologyCtx = document.getElementById('hydrologyChart').getContext('2d');
+    new Chart(hydrologyCtx, {
+        type: 'line',
+        data: {
+            labels: ['-6h', '-5h', '-4h', '-3h', '-2h', '-1h', '实时'],
+            datasets: [
+                { label: '入库流量(m³/s)', data: [1200, 1250, 1300, 1280, 1260, 1240, 1230], borderColor: '#3b82f6', tension: 0.1 },
+                { label: '出库流量(m³/s)', data: [1100, 1100, 1150, 1150, 1120, 1100, 1100], borderColor: '#10b981', tension: 0.1 }
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'top', labels: { color: '#e6edf3' } } },
+        scales: { x: { ticks: { color: '#8b949e' } }, y: { ticks: { color: '#8b949e' } } }
+     }
+    });
+
+    // Supply Chain Interaction
+    const turbineParts = document.querySelectorAll('.turbine-part');
+    const supplyChainDetailsEl = document.getElementById('supply-chain-details');
+    const supplyData = {
+        'runner': { title: '转轮', status: '生产中 (75%)', qc: '通过', delivery: '2027-Q4' },
+        'stator': { title: '定子', status: '已完成', qc: '通过', delivery: '2027-Q3' },
+        'shaft': { title: '主轴', status: '待生产', qc: 'N/A', delivery: '2028-Q1' }
+    };
+    turbineParts.forEach(part => {
+        part.addEventListener('click', () => {
+            turbineParts.forEach(p => p.classList.remove('active'));
+            part.classList.add('active');
+            const id = part.dataset.part;
+            const data = supplyData[id];
+            if (data) {
+                supplyChainDetailsEl.innerHTML = `
+                    <h4 class="font-bold text-lg mb-4 text-white">${data.title}</h4>
+                    <p class="text-gray-300"><strong>状态:</strong> ${data.status}</p>
+                    <p class="text-gray-300"><strong>质检:</strong> ${data.qc}</p>
+                    <p class="text-gray-300"><strong>预计交付:</strong> ${data.delivery}</p>
+                `;
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>
