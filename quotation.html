@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN" class="scroll-smooth">
 <head>
-      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
      crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -74,23 +75,16 @@
         .calc-value { font-weight: 600; color: #1e293b; }
         .calc-formula { font-size: 0.75rem; color: #94a3b8; text-align: right; }
         
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 100;
-        }
-        .modal-content {
-            background-color: white; padding: 2rem; border-radius: 0.5rem;
-            width: 90%; max-width: 600px;
-        }
-        .modal-textarea {
-            width: 100%; height: 200px; margin: 1rem 0; padding: 0.5rem;
-            border: 1px solid #d1d5db; border-radius: 0.375rem;
-        }
         .slider-group label { display: block; margin-bottom: 0.5rem; font-weight: 500;}
         .slider-group input[type="range"] { width: 100%;}
         .slider-group .slider-value { font-weight: bold; color: #3b82f6; }
+        .investment-batch {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -114,17 +108,6 @@
         </div>
     </div>
     
-    <div id="export-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h3 class="text-lg font-bold">导出数据</h3>
-            <textarea id="export-textarea" class="modal-textarea"></textarea>
-            <div class="flex justify-end space-x-4">
-                <button id="copy-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">复制到剪贴板</button>
-                <button id="close-modal-btn" class="px-4 py-2 bg-slate-200 rounded-md hover:bg-slate-300">关闭</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             Chart.register(ChartDataLabels);
@@ -136,7 +119,8 @@
                 quoteParams: null,
                 internalParams: null,
                 quoteResult: null,
-                internalResult: null
+                internalResult: null,
+                cashflowResults: null
             };
             let charts = {};
 
@@ -147,7 +131,8 @@
                         tractionHeadCost: 450000, trailerCost: 80000, depreciationYears: 3, depreciationRate: 0.95,
                         tripDays: 2, driverDailySalary: 600, insurancePerYear: 25000, workDaysPerYear: 310,
                         managementCost3Years: 180000, electricityPrice: 0.6, serviceFee: 0.3,
-                        maintenancePerKm: 0.5, payloadTons: 33, tripDistanceOneWay: 480
+                        maintenancePerKm: 0.5, payloadTons: 33, tripDistanceOneWay: 480,
+                        heavyLoadOutbound: 1.6, motherSonReturn: 0.8
                     }
                 },
                 internal: {
@@ -156,43 +141,56 @@
                         tractionHeadCost: 450000, trailerCost: 80000, depreciationYears: 5, depreciationRate: 1.0,
                         tripDays: 1.5, driverDailySalary: 600, insurancePerYear: 25000, workDaysPerYear: 310,
                         managementCost3Years: 180000, electricityPrice: 0.45, serviceFee: 0.3,
-                        maintenancePerKm: 0.5, payloadTons: 33, tripDistanceOneWay: 480
+                        maintenancePerKm: 0.5, payloadTons: 33, tripDistanceOneWay: 480,
+                        heavyLoadOutbound: 1.6, motherSonReturn: 0.8
                     }
                 }
             };
             
-            const ENERGY_MODELS = {
-                standard: { goHeavy: 2.30, goLight: 1.43, backMotherSon: 1.76 },
-                winter: { goHeavy: 2.88, goLight: 1.79, backMotherSon: 2.20 }
-            };
+            const ENERGY_WINTER_MULTIPLIER = 1.25;
 
             function calculateCosts(params, condition) {
-                const energyModel = ENERGY_MODELS[condition];
+                const winterMultiplier = condition === 'winter' ? ENERGY_WINTER_MULTIPLIER : 1.0;
+                
+                const heavyLoadConsumption = params.heavyLoadOutbound * winterMultiplier;
+                const motherSonReturnConsumption = params.motherSonReturn * winterMultiplier;
+
                 const vehicleCost = params.tractionHeadCost + params.trailerCost;
-                const goEnergy = (params.tripDistanceOneWay * energyModel.goHeavy) + (params.tripDistanceOneWay * energyModel.goLight);
-                const backEnergy = params.tripDistanceOneWay * energyModel.backMotherSon;
-                const totalEnergyKwh = goEnergy + backEnergy;
+                const totalEnergyKwh = (params.tripDistanceOneWay * heavyLoadConsumption) + (params.tripDistanceOneWay * motherSonReturnConsumption);
                 const comprehensiveElectricityPrice = params.electricityPrice + params.serviceFee;
                 const totalEnergyCost = totalEnergyKwh * comprehensiveElectricityPrice;
-                const totalDistance = params.tripDistanceOneWay * 3;
-                const totalMaintenanceCost = totalDistance * params.maintenancePerKm;
-                const totalDriverCost = params.driverDailySalary * params.tripDays * 2;
+                
+                const maintenanceCost = params.tripDistanceOneWay * 2 * params.maintenancePerKm;
+                const driverCost = params.driverDailySalary * params.tripDays;
                 const dailyDepreciation = (params.workDaysPerYear > 0 && params.depreciationYears > 0) ? (vehicleCost * params.depreciationRate / params.depreciationYears) / params.workDaysPerYear : 0;
-                const totalDepreciationCost = dailyDepreciation * params.tripDays * 2;
+                const depreciationCost = dailyDepreciation * params.tripDays;
                 const dailyInsurance = params.insurancePerYear / 365;
-                const totalInsuranceCost = dailyInsurance * params.tripDays * 2;
+                const insuranceCost = dailyInsurance * params.tripDays;
                 const dailyManagement = (params.workDaysPerYear > 0) ? (params.managementCost3Years / 3) / params.workDaysPerYear : 0;
-                const totalManagementCost = dailyManagement * params.tripDays * 2;
+                const managementCost = dailyManagement * params.tripDays;
 
                 const costs = {
-                    energy: totalEnergyCost / 2, maintenance: totalMaintenanceCost / 2,
-                    driver: totalDriverCost / 2, depreciation: totalDepreciationCost / 2,
-                    insurance: totalInsuranceCost / 2, management: totalManagementCost / 2,
+                    energy: totalEnergyCost,
+                    maintenance: maintenanceCost,
+                    driver: driverCost,
+                    depreciation: depreciationCost,
+                    insurance: insuranceCost,
+                    management: managementCost,
                 };
                 
                 costs.total = Object.values(costs).reduce((sum, val) => sum + val, 0);
                 costs.perTon = costs.total / (params.payloadTons || 1);
                 costs.perTonKm = costs.perTon / (params.tripDistanceOneWay || 1);
+                
+                costs.formulas = {
+                    energy: `(${totalEnergyKwh.toFixed(0)} kWh * ${comprehensiveElectricityPrice.toFixed(2)}元)`,
+                    maintenance: `(${params.tripDistanceOneWay * 2} km * ${params.maintenancePerKm.toFixed(2)}元)`,
+                    driver: `(${params.driverDailySalary}元 * ${params.tripDays}天)`,
+                    depreciation: `(${vehicleCost/10000}万*${params.depreciationRate*100}%÷${params.depreciationYears}年÷${params.workDaysPerYear}天)*${params.tripDays}天`,
+                    insurance: `(${params.insurancePerYear/10000}万÷365天)*${params.tripDays}天`,
+                    management: `(${params.managementCost3Years/10000}万÷3年÷${params.workDaysPerYear}天)*${params.tripDays}天`,
+                };
+
                 return costs;
             }
 
@@ -203,9 +201,9 @@
                         ${renderSingleCalculator('internal', '内部成本估算')}
                     </div>
                     <div class="mt-8 flex justify-end space-x-4">
-                        <button id="export-quote-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">导出报价</button>
-                        <button id="export-internal-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">导出成本</button>
-                        <button id="export-all-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">全部导出</button>
+                        <button id="export-quote-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">导出报价 (Excel)</button>
+                        <button id="export-internal-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">导出成本 (Excel)</button>
+                        <button id="export-all-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">全部导出 (Excel)</button>
                     </div>
                 `;
                 contentView.innerHTML = viewHTML;
@@ -249,9 +247,10 @@
                     depreciationYears: '折旧年限 (年)', depreciationRate: '折旧率 (%)', tripDays: '单次任务天数',
                     driverDailySalary: '司机日薪 (元)', electricityPrice: '电价 (元/度)', serviceFee: '服务费 (元/度)',
                     maintenancePerKm: '维保 (元/km)', managementCost3Years: '管理成本 (元/3年)', workDaysPerYear: '年工作天数',
-                    insurancePerYear: '年保险 (元)', payloadTons: '载重 (吨)'
+                    insurancePerYear: '年保险 (元)', payloadTons: '载重 (吨)',
+                    heavyLoadOutbound: '重载去程能耗 (kWh/km)', motherSonReturn: '子母车返程能耗 (kWh/km)'
                 };
-                const step = (id.includes('Price') || id.includes('Fee') || id.includes('PerKm') || id.includes('Days')) ? 0.01 : 1;
+                const step = (id.includes('Price') || id.includes('Fee') || id.includes('PerKm') || id.includes('Days') || id.includes('heavy') || id.includes('mother')) ? 0.01 : 1;
                 const displayValue = id === 'depreciationRate' ? value * 100 : value;
                 return `<div class="input-field"><label for="${type}-${id}">${labels[id]}</label><input type="number" id="${type}-${id}" value="${displayValue}" step="${step}"></div>`;
             }
@@ -262,7 +261,7 @@
                 const resultsHTML = `
                     <h3 class="font-bold text-lg mb-2">${scenarioTitle} - 成本明细</h3>
                     <div class="space-y-2 text-sm">
-                        ${Object.keys(costs).filter(k => !['total', 'perTon', 'perTonKm'].includes(k)).map(key => renderCalcRow(key, costs[key])).join('')}
+                        ${Object.keys(costs).filter(k => !['total', 'perTon', 'perTonKm', 'formulas'].includes(k)).map(key => renderCalcRow(key, costs[key], costs.formulas[key])).join('')}
                     </div>
                     <div class="mt-4 pt-4 border-t-2 border-slate-200 space-y-2 font-semibold">
                         ${renderTotalRow('单车单次任务总成本', costs.total, 'text-blue-600 text-xl')}
@@ -273,9 +272,16 @@
                 updateCostChart(type, costs);
             }
             
-            function renderCalcRow(label, value) {
+            function renderCalcRow(label, value, formula) {
                 const labels = { energy: '能源成本', maintenance: '维修及轮胎', driver: '司机成本', depreciation: '车辆折旧', insurance: '保险费用', management: '管理成本' };
-                return `<div class="calc-row"><span class="calc-label">${labels[label]}</span><span class="calc-value">${value.toFixed(2)} 元</span></div>`;
+                return `
+                    <div class="calc-row">
+                        <span class="calc-label">${labels[label]}</span>
+                        <div>
+                            <span class="calc-value">${value.toFixed(2)} 元</span>
+                            <p class="calc-formula">${formula}</p>
+                        </div>
+                    </div>`;
             }
 
             function renderTotalRow(label, value, customClass = '') {
@@ -399,7 +405,7 @@
                 document.getElementById('internal_driverDailySalary-value').textContent = newDriverSalary.toFixed(0);
 
                 let simulatedInternalParams = { ...appState.internalParams };
-                simulatedInternalParams.electricityPrice = newElecPrice - simulatedInternalParams.serviceFee;
+                simulatedInternalParams.electricityPrice = newElecPrice - (appState.internalParams.serviceFee || 0);
                 simulatedInternalParams.driverDailySalary = newDriverSalary;
 
                 const internalResult = calculateCosts(simulatedInternalParams, 'standard');
@@ -439,97 +445,229 @@
                         <h2 class="text-2xl font-bold text-slate-800 mb-4">现金流模拟</h2>
                         <div class="grid lg:grid-cols-2 gap-8 xl:gap-12">
                             <div>
-                                <h3 class="font-bold text-lg mb-4">模拟参数</h3>
-                                <div class="input-group">
-                                    ${renderInputField('cf', 'initialInvestment', '车队初始投资 (元)', 1060000)}
-                                    ${renderInputField('cf', 'tripsPerMonth', '月均运输次数/车', 10)}
-                                    ${renderInputField('cf', 'fleetSize', '车队规模 (台)', 2)}
-                                    <div class="input-field">
-                                        <label for="cf-paymentCycle">客户付款周期</label>
-                                        <select id="cf-paymentCycle"><option value="30" selected>月结</option><option value="90">季结</option><option value="7">周结</option></select>
+                                <div id="cashflow-inputs">
+                                    <h3 class="font-bold text-lg mb-4 border-b pb-2">资本投资计划 (CapEx)</h3>
+                                    <div id="investment-batches" class="space-y-4 mb-4"></div>
+                                    <button id="add-investment-batch" class="text-sm px-4 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 mb-6">+ 添加投资批次</button>
+
+                                    <h3 class="font-bold text-lg mb-4 border-b pb-2">运营收入与支出</h3>
+                                    <div class="input-group">
+                                        <div class="input-field"><label for="cf-tripsPerMonth">月均运输次数/车</label><input type="number" id="cf-tripsPerMonth" value="10"></div>
+                                        <div class="input-field">
+                                            <label for="cf-paymentCycleSelect">客户回款周期</label>
+                                            <select id="cf-paymentCycleSelect"><option value="7">周结</option><option value="30" selected>月结</option><option value="90">季结</option><option value="custom">自定义</option></select>
+                                        </div>
+                                        <div class="input-field hidden" id="cf-paymentCycleCustom-wrapper"><label for="cf-paymentCycleCustom">自定义天数</label><input type="number" id="cf-paymentCycleCustom" value="45"></div>
+                                        <div class="input-field">
+                                            <label for="cf-salaryCycleSelect">司机工资支付周期</label>
+                                            <select id="cf-salaryCycleSelect"><option value="7">周付</option><option value="30" selected>月付</option><option value="custom">自定义</option></select>
+                                        </div>
+                                        <div class="input-field hidden" id="cf-salaryCycleCustom-wrapper"><label for="cf-salaryCycleCustom">自定义天数</label><input type="number" id="cf-salaryCycleCustom" value="15"></div>
                                     </div>
-                                    <div class="input-field">
-                                        <label for="cf-salaryCycle">司机工资周期</label>
-                                        <select id="cf-salaryCycle"><option value="30" selected>月付</option><option value="7">周付</option></select>
+                                    <p class="text-xs text-slate-500 mb-4">注：能源和维保成本实时发生，保险和管理成本按月支付。</p>
+                                    
+                                    <h3 class="font-bold text-lg mb-4 border-b pb-2">模拟设置</h3>
+                                    <div class="input-group">
+                                        <div class="input-field"><label for="cf-simulationMonths">模拟月数</label><input type="number" id="cf-simulationMonths" value="36"></div>
+                                        <div class="input-field">
+                                            <label for="cf-period">图表周期</label>
+                                            <select id="cf-period"><option value="month" selected>月</option><option value="quarter">季度</option><option value="year">年</option></select>
+                                        </div>
                                     </div>
-                                    ${renderInputField('cf', 'simulationMonths', '模拟月数', 24)}
                                 </div>
-                                <button id="run-cashflow-sim" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">运行模拟</button>
+                                <div class="flex space-x-4">
+                                    <button id="run-cashflow-sim" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">运行模拟</button>
+                                    <button id="export-cashflow-btn" class="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">导出模拟 (Excel)</button>
+                                </div>
                             </div>
                             <div>
-                                <h3 class="font-bold text-lg mb-4">模拟结果：累计现金流</h3>
-                                <div class="chart-container h-80">
-                                    <canvas id="cashflowChart"></canvas>
+                                <h3 class="font-bold text-lg mb-4">模拟结果</h3>
+                                <div class="chart-container h-64 mb-8">
+                                    <p class="text-center font-semibold text-slate-700">累计现金流</p>
+                                    <canvas id="cumulativeCashflowChart"></canvas>
+                                </div>
+                                <div class="chart-container h-64">
+                                     <p class="text-center font-semibold text-slate-700">分期现金流</p>
+                                    <canvas id="periodicCashflowChart"></canvas>
                                 </div>
                             </div>
                         </div>
                     </div>`;
                 contentView.innerHTML = viewHTML;
-                document.getElementById('run-cashflow-sim').addEventListener('click', runCashflowSimulation);
+                addInvestmentBatch(); // Add the first batch by default
+                attachCashflowEventListeners();
             }
             
-            function runCashflowSimulation() {
-                const initialInvestment = parseFloat(document.getElementById('cf-initialInvestment').value);
-                const tripsPerMonth = parseFloat(document.getElementById('cf-tripsPerMonth').value);
-                const fleetSize = parseInt(document.getElementById('cf-fleetSize').value);
-                const paymentCycle = parseInt(document.getElementById('cf-paymentCycle').value);
-                const salaryCycle = parseInt(document.getElementById('cf-salaryCycle').value);
-                const simulationMonths = parseInt(document.getElementById('cf-simulationMonths').value);
+            let investmentBatchId = 0;
+            function addInvestmentBatch() {
+                investmentBatchId++;
+                const batchHtml = `
+                    <div class="investment-batch" data-batch-id="${investmentBatchId}">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="input-field"><label>投资类型</label><select class="investment-type"><option value="truck" selected>车辆</option><option value="station">充电桩</option></select></div>
+                            <div class="input-field"><label>投资月份</label><input type="number" class="investment-month" value="${investmentBatchId === 1 ? 1 : 12}"></div>
+                            <div class="input-field"><label>数量</label><input type="number" class="investment-units" value="${investmentBatchId === 1 ? 2 : 1}"></div>
+                            <div class="input-field"><label>单位成本</label><input type="number" class="investment-unit-cost" value="${investmentBatchId === 1 ? 530000 : 1000000}"></div>
+                            <div class="input-field"><label>自有资金比例 (%)</label><input type="number" class="investment-downpayment-rate" value="30"></div>
+                            <div class="input-field"><label>贷款期限 (月)</label><input type="number" class="investment-loan-term" value="36"></div>
+                            <div class="input-field col-span-2"><label>月还款额 (元)</label><input type="number" class="investment-monthly-payment" value="11500"></div>
+                        </div>
+                    </div>`;
+                document.getElementById('investment-batches').insertAdjacentHTML('beforeend', batchHtml);
+            }
 
-                if (!appState.quoteResult || !appState.internalResult) {
+            function attachCashflowEventListeners() {
+                document.getElementById('add-investment-batch').addEventListener('click', addInvestmentBatch);
+                document.getElementById('run-cashflow-sim').addEventListener('click', runCashflowSimulation);
+                document.getElementById('export-cashflow-btn').addEventListener('click', exportCashflowToExcel);
+                document.getElementById('cf-paymentCycleSelect').addEventListener('change', (e) => {
+                    document.getElementById('cf-paymentCycleCustom-wrapper').classList.toggle('hidden', e.target.value !== 'custom');
+                });
+                document.getElementById('cf-salaryCycleSelect').addEventListener('change', (e) => {
+                    document.getElementById('cf-salaryCycleCustom-wrapper').classList.toggle('hidden', e.target.value !== 'custom');
+                });
+            }
+
+            function runCashflowSimulation() {
+                if (!appState.quoteResult || !appState.internalResult || !appState.internalParams) {
                     alert("请先在“报价与成本”标签页计算成本。");
                     return;
                 }
-
-                const revenuePerTrip = appState.quoteResult.total;
-                const internalCosts = appState.internalResult;
-                const energyCostPerTrip = internalCosts.energy;
-                const maintCostPerTrip = internalCosts.maintenance;
-                const driverCostPerTrip = internalCosts.driver;
-                const monthlyFixedCostPerVehicle = (internalCosts.depreciation + internalCosts.insurance + internalCosts.management) / (appState.internalParams.tripDays) * 30;
-
-                let cashBalance = -initialInvestment;
-                let accountsReceivable = 0;
-                let accruedSalary = 0;
                 
-                const labels = [];
-                const data = [];
-                data.push(cashBalance);
-                labels.push('初始');
+                const simParams = {
+                    investmentBatches: [],
+                    tripsPerMonthPerVehicle: parseFloat(document.getElementById('cf-tripsPerMonth').value),
+                    paymentCycle: document.getElementById('cf-paymentCycleSelect').value === 'custom' ? parseInt(document.getElementById('cf-paymentCycleCustom').value) : parseInt(document.getElementById('cf-paymentCycleSelect').value),
+                    salaryCycle: document.getElementById('cf-salaryCycleSelect').value === 'custom' ? parseInt(document.getElementById('cf-salaryCycleCustom').value) : parseInt(document.getElementById('cf-salaryCycleSelect').value),
+                    simulationMonths: parseInt(document.getElementById('cf-simulationMonths').value),
+                    period: document.getElementById('cf-period').value
+                };
+                
+                document.querySelectorAll('.investment-batch').forEach(batchEl => {
+                    simParams.investmentBatches.push({
+                        type: batchEl.querySelector('.investment-type').value,
+                        month: parseInt(batchEl.querySelector('.investment-month').value),
+                        units: parseInt(batchEl.querySelector('.investment-units').value),
+                        unitCost: parseFloat(batchEl.querySelector('.investment-unit-cost').value),
+                        downPaymentRate: parseFloat(batchEl.querySelector('.investment-downpayment-rate').value) / 100,
+                        loanTerm: parseInt(batchEl.querySelector('.investment-loan-term').value),
+                        monthlyPayment: parseFloat(batchEl.querySelector('.investment-monthly-payment').value)
+                    });
+                });
 
-                for (let day = 1; day <= simulationMonths * 30; day++) {
-                    const tripsToday = (tripsPerMonth * fleetSize / 2) / 30;
-                    accountsReceivable += revenuePerTrip * tripsToday;
-                    cashBalance -= (energyCostPerTrip + maintCostPerTrip) * tripsToday;
-                    accruedSalary += driverCostPerTrip * tripsToday;
-                    
-                    if (day % paymentCycle === 0) {
-                        cashBalance += accountsReceivable;
-                        accountsReceivable = 0;
-                    }
+                const results = performCashflowCalculation(simParams);
+                appState.cashflowResults = results; // Save for export
 
-                    if (day % salaryCycle === 0) {
-                        cashBalance -= accruedSalary;
-                        accruedSalary = 0;
-                    }
-                    
-                    if (day % 30 === 0) {
-                        cashBalance -= monthlyFixedCostPerVehicle * fleetSize;
-                        labels.push(`第${day/30}月`);
-                        data.push(cashBalance);
-                    }
-                }
-
-                const cashflowChartCtx = document.getElementById('cashflowChart').getContext('2d');
-                if (charts.cashflow) charts.cashflow.destroy();
-                charts.cashflow = new Chart(cashflowChartCtx, {
+                const cumulativeCtx = document.getElementById('cumulativeCashflowChart').getContext('2d');
+                if (charts.cumulative) charts.cumulative.destroy();
+                charts.cumulative = new Chart(cumulativeCtx, {
                     type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{ label: '累计现金流', data: data, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.1 }]
-                    },
+                    data: { labels: results.labels, datasets: [{ label: '累计现金流', data: results.cumulativeData, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.1 }] },
                     options: { responsive: true, maintainAspectRatio: false }
                 });
+
+                const periodicCtx = document.getElementById('periodicCashflowChart').getContext('2d');
+                if (charts.periodic) charts.periodic.destroy();
+                charts.periodic = new Chart(periodicCtx, {
+                    type: 'bar',
+                    data: { labels: results.labels, datasets: [ { label: '现金流入', data: results.periodicInflowData, backgroundColor: '#10b981' }, { label: '现金流出', data: results.periodicOutflowData, backgroundColor: '#ef4444' } ] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+                });
+            }
+
+            function performCashflowCalculation(params) {
+                const { investmentBatches, tripsPerMonthPerVehicle, paymentCycle, salaryCycle, simulationMonths, period } = params;
+                const periodMonths = { month: 1, quarter: 3, year: 12 }[period];
+
+                const revenuePerTrip = appState.quoteResult.total;
+                const { energy, maintenance, driver } = appState.internalResult;
+                const tripDays = appState.internalParams.tripDays;
+                
+                const variableCostPerTrip = energy + maintenance;
+                const driverCostPerDay = tripDays > 0 ? driver / tripDays : 0;
+                
+                let cashBalance = 0;
+                let accountsReceivable = 0;
+                let accruedSalary = 0;
+                let operatingFleetSize = 0;
+                let totalMonthlyLoanPayment = 0;
+
+                const cumulativeData = [0];
+                const periodicInflowData = [];
+                const periodicOutflowData = [];
+                const labels = ['初始'];
+                const detailedData = [];
+                
+                let periodicInflow = 0;
+                let periodicOutflow = 0;
+                let periodicNet = 0;
+                let openingBalance = 0;
+
+                for (let month = 1; month <= simulationMonths; month++) {
+                    let monthlyInflow = 0;
+                    let monthlyOutflow = 0;
+
+                    const activeLoanPayments = investmentBatches.filter(b => month >= b.month && month < b.month + b.loanTerm).reduce((sum, b) => sum + b.monthlyPayment * b.units, 0);
+
+                    investmentBatches.forEach(batch => {
+                        if (batch.month === month) {
+                            const totalCost = batch.units * batch.unitCost;
+                            const downPayment = totalCost * batch.downPaymentRate;
+                            monthlyOutflow += downPayment;
+                            if (batch.type === 'truck') {
+                                operatingFleetSize += batch.units;
+                            }
+                        }
+                    });
+
+                    const totalTripsThisMonth = tripsPerMonthPerVehicle * operatingFleetSize;
+                    const monthlyRevenue = revenuePerTrip * totalTripsThisMonth;
+                    const monthlyVariableCosts = variableCostPerTrip * totalTripsThisMonth;
+                    const monthlyDriverCosts = driverCostPerDay * tripDays * totalTripsThisMonth;
+                    const monthlyFixedCosts = (appState.internalResult.insurance + appState.internalResult.management) / tripDays * 30 * operatingFleetSize;
+                    
+                    accountsReceivable += monthlyRevenue;
+                    accruedSalary += monthlyDriverCosts;
+                    
+                    monthlyOutflow += monthlyVariableCosts;
+
+                    if (month * 30 % paymentCycle < 30) {
+                        monthlyInflow += accountsReceivable;
+                        accountsReceivable = 0;
+                    }
+                    if (month * 30 % salaryCycle < 30) {
+                        monthlyOutflow += accruedSalary;
+                        accruedSalary = 0;
+                    }
+
+                    monthlyOutflow += monthlyFixedCosts;
+                    monthlyOutflow += activeLoanPayments;
+
+                    cashBalance += monthlyInflow - monthlyOutflow;
+                    periodicInflow += monthlyInflow;
+                    periodicOutflow += monthlyOutflow;
+
+                    if (month % periodMonths === 0) {
+                        const periodLabel = `${period}${month/periodMonths}`;
+                        labels.push(periodLabel);
+                        cumulativeData.push(cashBalance);
+                        periodicInflowData.push(periodicInflow);
+                        periodicOutflowData.push(-periodicOutflow);
+                        
+                        detailedData.push({
+                            label: periodLabel,
+                            opening: openingBalance,
+                            inflow: periodicInflow,
+                            outflow: periodicOutflow,
+                            net: periodicInflow - periodicOutflow,
+                            closing: cashBalance
+                        });
+                        openingBalance = cashBalance;
+                        periodicInflow = 0;
+                        periodicOutflow = 0;
+                    }
+                }
+                return { labels, cumulativeData, periodicInflowData, periodicOutflowData, detailedData, params };
             }
 
             function renderBenchmarkView() {
@@ -571,14 +709,13 @@
                     
                     if (result.candidates && result.candidates.length > 0) {
                         const text = result.candidates[0].content.parts[0].text;
-                        // Basic formatting to make it look like the previous simulation
                         const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<h4 class="font-bold text-lg mt-4">$1</h4>')
                                                 .replace(/\* (.*?):/g, '<li><span class="font-semibold">$1</span>:')
                                                 .replace(/来源：(.*?)\n/g, '<span class="text-slate-500">来源: $1</span></li>')
                                                 .replace(/\n/g, '<br>');
                         resultsContainer.innerHTML = `<div class="p-4 border rounded-lg text-sm">${formattedText}</div>`;
                     } else {
-                        resultsContainer.innerHTML = `<p class="text-center text-red-500">查询失败，请稍后重试。</p>`;
+                        resultsContainer.innerHTML = `<p class="text-center text-red-500">查询失败或无相关数据。</p>`;
                     }
                 } catch (error) {
                     console.error("Benchmark search error:", error);
@@ -587,61 +724,132 @@
             }
             
             function attachExportEventListeners() {
-                document.getElementById('export-quote-btn').addEventListener('click', () => generateExportData('quote'));
-                document.getElementById('export-internal-btn').addEventListener('click', () => generateExportData('internal'));
-                document.getElementById('export-all-btn').addEventListener('click', () => generateExportData('all'));
-                document.getElementById('close-modal-btn').addEventListener('click', () => document.getElementById('export-modal').classList.add('hidden'));
-                document.getElementById('copy-btn').addEventListener('click', copyExportData);
+                document.getElementById('export-quote-btn').addEventListener('click', () => exportToExcel('quote'));
+                document.getElementById('export-internal-btn').addEventListener('click', () => exportToExcel('internal'));
+                document.getElementById('export-all-btn').addEventListener('click', () => exportToExcel('all'));
             }
             
-            function generateExportData(type) {
-                let text = "";
+            function exportToExcel(type) {
+                const wb = XLSX.utils.book_new();
+                const formatDataForSheet = (costs, params, title) => {
+                    const labels = {
+                        tripDistanceOneWay: '运输距离 (km)', tractionHeadCost: '牵引头成本 (元)', trailerCost: '挂车成本 (元)',
+                        depreciationYears: '折旧年限 (年)', depreciationRate: '折旧率 (%)', tripDays: '单次任务天数',
+                        driverDailySalary: '司机日薪 (元)', electricityPrice: '电价 (元/度)', serviceFee: '服务费 (元/度)',
+                        maintenancePerKm: '维保 (元/km)', managementCost3Years: '管理成本 (元/3年)', workDaysPerYear: '年工作天数',
+                        insurancePerYear: '年保险 (元)', payloadTons: '载重 (吨)',
+                        heavyLoadOutbound: '重载去程能耗 (kWh/km)', motherSonReturn: '子母车返程能耗 (kWh/km)'
+                    };
+                    const costLabels = { energy: '能源成本', maintenance: '维修及轮胎', driver: '司机成本', depreciation: '车辆折旧', insurance: '保险费用', management: '管理成本' };
+
+                    const data = [
+                        [title, null, null],
+                        [],
+                        ['成本指标', '金额', '单位'],
+                        ['单车单次任务总成本', costs.total.toFixed(2), '元'],
+                        ['单位吨煤成本', costs.perTon.toFixed(2), '元/吨'],
+                        ['单位吨公里成本', costs.perTonKm.toFixed(2), '元/吨·公里'],
+                        [],
+                        ['成本明细', '金额', '计算公式'],
+                        ...Object.entries(costs).filter(([k]) => !['total', 'perTon', 'perTonKm', 'formulas'].includes(k)).map(([key, value]) => [costLabels[key], value.toFixed(2), costs.formulas[key]]),
+                        [],
+                        ['基于参数', '设定值'],
+                        ...Object.entries(params).map(([key, value]) => [labels[key], key === 'depreciationRate' ? `${value*100}%` : value])
+                    ];
+                    
+                    const ws = XLSX.utils.aoa_to_sheet(data);
+                    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }];
+                    ws['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 50 }];
+                    return ws;
+                };
+
                 if (type === 'quote' || type === 'all') {
-                    text += "--- 客户报价单 ---\n";
-                    text += formatDataForExport(appState.quoteResult, appState.quoteParams);
+                    if (appState.quoteResult && appState.quoteParams) {
+                        const ws = formatDataForSheet(appState.quoteResult, appState.quoteParams, '客户报价单');
+                        XLSX.utils.book_append_sheet(wb, ws, '客户报价单');
+                    }
                 }
+
                 if (type === 'internal' || type === 'all') {
-                    if(type === 'all') text += "\n\n";
-                    text += "--- 内部成本估算 ---\n";
-                    text += formatDataForExport(appState.internalResult, appState.internalParams);
+                    if (appState.internalResult && appState.internalParams) {
+                        const ws = formatDataForSheet(appState.internalResult, appState.internalParams, '内部成本估算');
+                        XLSX.utils.book_append_sheet(wb, ws, '内部成本估算');
+                    }
                 }
-                document.getElementById('export-textarea').value = text;
-                document.getElementById('export-modal').classList.remove('hidden');
+                
+                if (wb.SheetNames.length > 0) {
+                    XLSX.writeFile(wb, '运输成本分析.xlsx');
+                } else {
+                    alert('没有可导出的数据，请先进行计算。');
+                }
             }
 
-            function formatDataForExport(costs, params) {
-                if (!costs || !params) return "数据未计算，请先在“报价与成本”标签页进行操作。\n";
-                let str = `单车单次任务总成本: ${costs.total.toFixed(2)} 元\n`;
-                str += `单位吨煤成本: ${costs.perTon.toFixed(2)} 元/吨\n`;
-                str += `单位吨公里成本: ${costs.perTonKm.toFixed(2)} 元/吨·公里\n\n`;
-                str += "成本明细:\n";
-                Object.entries(costs).filter(([k]) => !['total', 'perTon', 'perTonKm'].includes(k)).forEach(([key, value]) => {
-                    const labels = { energy: '能源成本', maintenance: '维修及轮胎', driver: '司机成本', depreciation: '车辆折旧', insurance: '保险费用', management: '管理成本' };
-                    str += `  - ${labels[key]}: ${value.toFixed(2)} 元\n`;
-                });
-                str += "\n基于参数:\n";
-                for (const [key, value] of Object.entries(params)) {
-                    str += `  - ${key}: ${key === 'depreciationRate' ? value*100+'%' : value}\n`;
+            function exportCashflowToExcel() {
+                if (!appState.cashflowResults) {
+                    alert('请先运行现金流模拟。');
+                    return;
                 }
-                return str;
-            }
-            
-            function copyExportData() {
-                const textarea = document.getElementById('export-textarea');
-                textarea.select();
-                document.execCommand('copy');
-                const copyBtn = document.getElementById('copy-btn');
-                copyBtn.textContent = '已复制!';
-                setTimeout(() => { copyBtn.textContent = '复制到剪贴板'; }, 2000);
+                const { detailedData, params } = appState.cashflowResults;
+                const wb = XLSX.utils.book_new();
+                
+                const paramData = [
+                    ['现金流模拟参数'],
+                    ['参数', '值'],
+                    ['月均运输次数/车', params.tripsPerMonthPerVehicle],
+                    ['客户回款周期 (天)', params.paymentCycle],
+                    ['司机工资支付周期 (天)', params.salaryCycle],
+                    ['模拟月数', params.simulationMonths],
+                    ['图表周期', params.period],
+                    [],
+                    ['投资计划'],
+                    ['批次', '类型', '投资月份', '数量', '单位成本', '自有资金比例', '贷款期限(月)', '月还款额']
+                ];
+                params.investmentBatches.forEach((batch, index) => {
+                    paramData.push([
+                        index + 1,
+                        batch.type === 'truck' ? '车辆' : '充电桩',
+                        batch.month,
+                        batch.units,
+                        batch.unitCost,
+                        `${batch.downPaymentRate * 100}%`,
+                        batch.loanTerm,
+                        batch.monthlyPayment
+                    ]);
+                });
+
+                const ws_params = XLSX.utils.aoa_to_sheet(paramData);
+                ws_params['!cols'] = [{ wch: 20 }, { wch: 15 }];
+                XLSX.utils.book_append_sheet(wb, ws_params, '模拟参数');
+
+                const resultsData = [
+                    ['现金流模拟结果'],
+                    [],
+                    ['周期', '期初现金', '现金流入', '现金流出', '净现金流', '期末现金']
+                ];
+                detailedData.forEach(row => {
+                    resultsData.push([
+                        row.label,
+                        row.opening.toFixed(2),
+                        row.inflow.toFixed(2),
+                        row.outflow.toFixed(2),
+                        row.net.toFixed(2),
+                        row.closing.toFixed(2)
+                    ]);
+                });
+                const ws_results = XLSX.utils.aoa_to_sheet(resultsData);
+                ws_results['!cols'] = Array(6).fill({ wch: 18 });
+                XLSX.utils.book_append_sheet(wb, ws_results, '现金流明细');
+
+                XLSX.writeFile(wb, '现金流模拟分析.xlsx');
             }
 
             function ensureInitialCalculations() {
                 if (!appState.quoteParams) {
-                    appState.quoteParams = DEFAULT_PARAMS.quote.values;
+                    appState.quoteParams = gatherInputs('quote') || DEFAULT_PARAMS.quote.values;
                     appState.quoteResult = calculateCosts(appState.quoteParams, 'standard');
                 }
                 if (!appState.internalParams) {
-                    appState.internalParams = DEFAULT_PARAMS.internal.values;
+                    appState.internalParams = gatherInputs('internal') || DEFAULT_PARAMS.internal.values;
                     appState.internalResult = calculateCosts(appState.internalParams, 'standard');
                 }
             }
