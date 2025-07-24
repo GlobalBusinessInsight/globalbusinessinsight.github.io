@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电动重卡运输报价及成本测算系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Professional Neutrals (Slate) with Blue/Indigo Accents -->
+    <!-- Application Structure Plan: The application is now a multi-tab system: "Quote & Cost", "Profit Analysis", "Cash Flow", and "Benchmarking". This modular design cleanly separates distinct functionalities. Interactive inputs are central to all tabs, allowing for dynamic simulation. This structure transforms the tool from a simple calculator into a comprehensive decision-support dashboard. -->
+    <!-- Visualization & Content Choices: Cost/Quote -> Interactive inputs and a dynamic doughnut chart with datalabels. Profit Analysis -> Sliders for what-if analysis directly manipulating a profit margin gauge. Cash Flow -> Time-series inputs generating a cumulative cash flow line chart. Benchmarking -> An input triggers an API call (simulated) to fetch and display market data in cards. This approach uses the best interactive element for each specific analytical task. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+            color: #1e293b; /* slate-800 */
+        }
+        .main-tab {
+            transition: all 0.2s ease-in-out;
+            border-bottom: 3px solid transparent;
+        }
+        .main-tab.active {
+            border-color: #4f46e5; /* indigo-600 */
+            color: #4f46e5;
+        }
+        .condition-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .condition-btn.active {
+            background-color: #3b82f6; /* blue-600 */
+            color: #ffffff;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+        }
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .input-field label {
+            display: block;
+            font-weight: 500;
+            color: #475569; /* slate-600 */
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+        .input-field input, .input-field select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #cbd5e1; /* slate-300 */
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e2e8f0; /* slate-200 */
+        }
+        .calc-label { font-weight: 500; color: #475569; }
+        .calc-value { font-weight: 600; color: #1e293b; }
+        .calc-formula { font-size: 0.75rem; color: #94a3b8; text-align: right; }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background-color: white; padding: 2rem; border-radius: 0.5rem;
+            width: 90%; max-width: 600px;
+        }
+        .modal-textarea {
+            width: 100%; height: 200px; margin: 1rem 0; padding: 0.5rem;
+            border: 1px solid #d1d5db; border-radius: 0.375rem;
+        }
+        .slider-group label { display: block; margin-bottom: 0.5rem; font-weight: 500;}
+        .slider-group input[type="range"] { width: 100%;}
+        .slider-group .slider-value { font-weight: bold; color: #3b82f6; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">电动重卡运输报价及成本测算系统</h1>
+            <p class="mt-3 max-w-2xl mx-auto text-md text-slate-600">一个集报价、成本、毛利、现金流及行业对标于一体的综合决策支持工具。</p>
+        </header>
+
+        <div class="w-full max-w-7xl mx-auto">
+            <div class="mb-8 border-b border-slate-300">
+                <nav class="flex space-x-8 -mb-px" aria-label="Tabs">
+                    <button data-view="cost-quote" class="main-tab active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">报价与成本</button>
+                    <button data-view="profit" class="main-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">毛利分析</button>
+                    <button data-view="cashflow" class="main-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">现金流模拟</button>
+                    <button data-view="benchmark" class="main-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">行业对标</button>
+                </nav>
+            </div>
+            <div id="content-view"></div>
+        </div>
+    </div>
+    
+    <div id="export-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 class="text-lg font-bold">导出数据</h3>
+            <textarea id="export-textarea" class="modal-textarea"></textarea>
+            <div class="flex justify-end space-x-4">
+                <button id="copy-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">复制到剪贴板</button>
+                <button id="close-modal-btn" class="px-4 py-2 bg-slate-200 rounded-md hover:bg-slate-300">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Chart.register(ChartDataLabels);
+
+            const mainTabs = document.querySelectorAll('.main-tab');
+            const contentView = document.getElementById('content-view');
+            let currentView = 'cost-quote';
+            let appState = {
+                quoteParams: null,
+                internalParams: null,
+                quoteResult: null,
+                internalResult: null
+            };
+            let charts = {};
+
+            const DEFAULT_PARAMS = {
+                quote: {
+                    title: "客户报价单",
+                    values: {
+                        tractionHeadCost: 450000, trailerCost: 80000, depreciationYears: 3, depreciationRate: 0.95,
+                        tripDays: 2, driverDailySalary: 600, insurancePerYear: 25000, workDaysPerYear: 310,
+                        managementCost3Years: 180000, electricityPrice: 0.6, serviceFee: 0.3,
+                        maintenancePerKm: 0.5, payloadTons: 33, tripDistanceOneWay: 480
+                    }
+                },
+                internal: {
+                    title: "内部成本估算",
+                    values: {
+                        tractionHeadCost: 450000, trailerCost: 80000, depreciationYears: 5, depreciationRate: 1.0,
+                        tripDays: 1.5, driverDailySalary: 600, insurancePerYear: 25000, workDaysPerYear: 310,
+                        managementCost3Years: 180000, electricityPrice: 0.45, serviceFee: 0.3,
+                        maintenancePerKm: 0.5, payloadTons: 33, tripDistanceOneWay: 480
+                    }
+                }
+            };
+            
+            const ENERGY_MODELS = {
+                standard: { goHeavy: 2.30, goLight: 1.43, backMotherSon: 1.76 },
+                winter: { goHeavy: 2.88, goLight: 1.79, backMotherSon: 2.20 }
+            };
+
+            function calculateCosts(params, condition) {
+                const energyModel = ENERGY_MODELS[condition];
+                const vehicleCost = params.tractionHeadCost + params.trailerCost;
+                const goEnergy = (params.tripDistanceOneWay * energyModel.goHeavy) + (params.tripDistanceOneWay * energyModel.goLight);
+                const backEnergy = params.tripDistanceOneWay * energyModel.backMotherSon;
+                const totalEnergyKwh = goEnergy + backEnergy;
+                const comprehensiveElectricityPrice = params.electricityPrice + params.serviceFee;
+                const totalEnergyCost = totalEnergyKwh * comprehensiveElectricityPrice;
+                const totalDistance = params.tripDistanceOneWay * 3;
+                const totalMaintenanceCost = totalDistance * params.maintenancePerKm;
+                const totalDriverCost = params.driverDailySalary * params.tripDays * 2;
+                const dailyDepreciation = (params.workDaysPerYear > 0 && params.depreciationYears > 0) ? (vehicleCost * params.depreciationRate / params.depreciationYears) / params.workDaysPerYear : 0;
+                const totalDepreciationCost = dailyDepreciation * params.tripDays * 2;
+                const dailyInsurance = params.insurancePerYear / 365;
+                const totalInsuranceCost = dailyInsurance * params.tripDays * 2;
+                const dailyManagement = (params.workDaysPerYear > 0) ? (params.managementCost3Years / 3) / params.workDaysPerYear : 0;
+                const totalManagementCost = dailyManagement * params.tripDays * 2;
+
+                const costs = {
+                    energy: totalEnergyCost / 2, maintenance: totalMaintenanceCost / 2,
+                    driver: totalDriverCost / 2, depreciation: totalDepreciationCost / 2,
+                    insurance: totalInsuranceCost / 2, management: totalManagementCost / 2,
+                };
+                
+                costs.total = Object.values(costs).reduce((sum, val) => sum + val, 0);
+                costs.perTon = costs.total / (params.payloadTons || 1);
+                costs.perTonKm = costs.perTon / (params.tripDistanceOneWay || 1);
+                return costs;
+            }
+
+            function renderCostQuoteView() {
+                const viewHTML = `
+                    <div class="grid lg:grid-cols-2 gap-8 xl:gap-12">
+                        ${renderSingleCalculator('quote', '客户报价单')}
+                        ${renderSingleCalculator('internal', '内部成本估算')}
+                    </div>
+                    <div class="mt-8 flex justify-end space-x-4">
+                        <button id="export-quote-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">导出报价</button>
+                        <button id="export-internal-btn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">导出成本</button>
+                        <button id="export-all-btn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">全部导出</button>
+                    </div>
+                `;
+                contentView.innerHTML = viewHTML;
+                ['quote', 'internal'].forEach(type => {
+                    updateSingleCalculator(type, 'standard');
+                    attachCalculatorEventListeners(type);
+                });
+                attachExportEventListeners();
+            }
+            
+            function renderSingleCalculator(type, title) {
+                const model = DEFAULT_PARAMS[type];
+                return `
+                    <div id="${type}-calculator" class="card p-6">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">${title}</h2>
+                        <div class="grid xl:grid-cols-2 gap-6">
+                            <div id="${type}-inputs-container">
+                                <h3 class="font-bold text-lg mb-4 border-b pb-2">参数输入</h3>
+                                <div class="input-group">
+                                    ${Object.entries(model.values).map(([id, value]) => renderInputField(type, id, id, value)).join('')}
+                                </div>
+                            </div>
+                            <div id="${type}-outputs-container">
+                                <div class="mb-4">
+                                    <div class="flex rounded-lg shadow-sm w-full max-w-xs">
+                                        <button data-type="${type}" data-condition="standard" class="condition-btn active flex-1 px-4 py-2 text-sm font-medium rounded-l-md">标准</button>
+                                        <button data-type="${type}" data-condition="winter" class="condition-btn flex-1 px-4 py-2 text-sm font-medium rounded-r-md">冬季</button>
+                                    </div>
+                                </div>
+                                <div id="${type}-calculation-results"></div>
+                                <div class="chart-container h-64 mt-4"><canvas id="${type}-chart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderInputField(type, id, label, value) {
+                const labels = {
+                    tripDistanceOneWay: '运输距离 (km)', tractionHeadCost: '牵引头成本 (元)', trailerCost: '挂车成本 (元)',
+                    depreciationYears: '折旧年限 (年)', depreciationRate: '折旧率 (%)', tripDays: '单次任务天数',
+                    driverDailySalary: '司机日薪 (元)', electricityPrice: '电价 (元/度)', serviceFee: '服务费 (元/度)',
+                    maintenancePerKm: '维保 (元/km)', managementCost3Years: '管理成本 (元/3年)', workDaysPerYear: '年工作天数',
+                    insurancePerYear: '年保险 (元)', payloadTons: '载重 (吨)'
+                };
+                const step = (id.includes('Price') || id.includes('Fee') || id.includes('PerKm') || id.includes('Days')) ? 0.01 : 1;
+                const displayValue = id === 'depreciationRate' ? value * 100 : value;
+                return `<div class="input-field"><label for="${type}-${id}">${labels[id]}</label><input type="number" id="${type}-${id}" value="${displayValue}" step="${step}"></div>`;
+            }
+
+            function renderCalculationResults(type, costs) {
+                const container = document.getElementById(`${type}-calculation-results`);
+                const scenarioTitle = document.querySelector(`#${type}-outputs-container .condition-btn.active`).textContent;
+                const resultsHTML = `
+                    <h3 class="font-bold text-lg mb-2">${scenarioTitle} - 成本明细</h3>
+                    <div class="space-y-2 text-sm">
+                        ${Object.keys(costs).filter(k => !['total', 'perTon', 'perTonKm'].includes(k)).map(key => renderCalcRow(key, costs[key])).join('')}
+                    </div>
+                    <div class="mt-4 pt-4 border-t-2 border-slate-200 space-y-2 font-semibold">
+                        ${renderTotalRow('单车单次任务总成本', costs.total, 'text-blue-600 text-xl')}
+                        ${renderTotalRow('单位吨煤成本', costs.perTon)}
+                        ${renderTotalRow('单位吨公里成本', costs.perTonKm)}
+                    </div>`;
+                container.innerHTML = resultsHTML;
+                updateCostChart(type, costs);
+            }
+            
+            function renderCalcRow(label, value) {
+                const labels = { energy: '能源成本', maintenance: '维修及轮胎', driver: '司机成本', depreciation: '车辆折旧', insurance: '保险费用', management: '管理成本' };
+                return `<div class="calc-row"><span class="calc-label">${labels[label]}</span><span class="calc-value">${value.toFixed(2)} 元</span></div>`;
+            }
+
+            function renderTotalRow(label, value, customClass = '') {
+                const unit = label.includes('吨公里') ? '元/吨·公里' : (label.includes('吨') ? '元/吨' : '元');
+                return `<div class="flex justify-between items-center"><span class="text-slate-800">${label}</span><span class="calc-value ${customClass}">${value.toFixed(2)} ${unit}</span></div>`;
+            }
+
+            function updateCostChart(type, costs) {
+                const chartCtx = document.getElementById(`${type}-chart`).getContext('2d');
+                const chartData = {
+                    labels: ['能源', '司机', '折旧', '维修', '管理', '保险'],
+                    datasets: [{
+                        data: [costs.energy, costs.driver, costs.depreciation, costs.maintenance, costs.management, costs.insurance],
+                        backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ec4899', '#64748b'],
+                    }]
+                };
+                if (charts[type]) charts[type].destroy();
+                charts[type] = new Chart(chartCtx, {
+                    type: 'pie',
+                    data: chartData,
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            datalabels: {
+                                formatter: (value, ctx) => {
+                                    let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    if (sum === 0) return '0%';
+                                    let percentage = (value * 100 / sum).toFixed(1) + "%";
+                                    return `${ctx.chart.data.labels[ctx.dataIndex]}\n${percentage}\n${Math.round(value)}元`;
+                                },
+                                color: '#fff',
+                                font: { weight: 'bold', size: 10 }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function gatherInputs(type) {
+                const params = {};
+                const inputs = document.querySelectorAll(`#${type}-inputs-container input`);
+                inputs.forEach(input => {
+                    const id = input.id.split('-')[1];
+                    let value = parseFloat(input.value) || 0;
+                    if (id === 'depreciationRate') value /= 100;
+                    params[id] = value;
+                });
+                return params;
+            }
+
+            function updateSingleCalculator(type, condition) {
+                const params = gatherInputs(type);
+                const costs = calculateCosts(params, condition);
+                appState[`${type}Params`] = params;
+                appState[`${type}Result`] = costs;
+                renderCalculationResults(type, costs);
+            }
+            
+            function attachCalculatorEventListeners(type) {
+                document.querySelectorAll(`#${type}-inputs-container input`).forEach(input => {
+                    input.addEventListener('input', () => {
+                        const activeCondition = document.querySelector(`#${type}-outputs-container .condition-btn.active`).dataset.condition;
+                        updateSingleCalculator(type, activeCondition);
+                    });
+                });
+                document.querySelectorAll(`#${type}-outputs-container .condition-btn`).forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const condition = btn.dataset.condition;
+                        document.querySelectorAll(`#${type}-outputs-container .condition-btn`).forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        updateSingleCalculator(type, condition);
+                    });
+                });
+            }
+            
+            function renderProfitView() {
+                const viewHTML = `
+                    <div class="card p-6 md:p-8">
+                        <div class="grid lg:grid-cols-2 gap-8 xl:gap-12">
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800 mb-4">毛利模拟 (What-If分析)</h2>
+                                <p class="text-slate-600 mb-6">调整下方关键成本驱动因素，实时观察其对标准工况下毛利率的影响。</p>
+                                <div id="profit-sliders" class="space-y-6">
+                                    ${renderSlider('quote_total', '报价总额 (元)', (appState.internalResult?.total || 0), (appState.quoteResult?.total || 0) * 1.5, 10, appState.quoteResult?.total || 0)}
+                                    ${renderSlider('internal_electricityPrice', '内部综合电价', 0.5, 1.5, 0.01, (appState.internalParams?.electricityPrice || 0) + (appState.internalParams?.serviceFee || 0))}
+                                    ${renderSlider('internal_driverDailySalary', '内部司机日薪', 400, 1000, 10, appState.internalParams?.driverDailySalary || 0)}
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg mb-4 text-center">毛利分析结果 (标准工况)</h3>
+                                <div id="profit-results" class="text-center"></div>
+                                <div class="chart-container h-64 mt-4">
+                                    <canvas id="profitChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                contentView.innerHTML = viewHTML;
+                updateProfitAnalysis();
+                attachProfitEventListeners();
+            }
+
+            function renderSlider(id, label, min, max, step, value) {
+                return `
+                    <div class="slider-group">
+                        <label for="${id}-slider">${label}: <span id="${id}-value" class="slider-value">${parseFloat(value).toFixed(2)}</span></label>
+                        <input type="range" id="${id}-slider" min="${min}" max="${max}" step="${step}" value="${value}" class="w-full">
+                    </div>`;
+            }
+
+            function updateProfitAnalysis() {
+                if (!document.getElementById('quote_total-slider')) return;
+                
+                let quoteTotal = parseFloat(document.getElementById('quote_total-slider').value);
+                let newElecPrice = parseFloat(document.getElementById('internal_electricityPrice-slider').value);
+                let newDriverSalary = parseFloat(document.getElementById('internal_driverDailySalary-slider').value);
+
+                document.getElementById('quote_total-value').textContent = quoteTotal.toFixed(0);
+                document.getElementById('internal_electricityPrice-value').textContent = newElecPrice.toFixed(2);
+                document.getElementById('internal_driverDailySalary-value').textContent = newDriverSalary.toFixed(0);
+
+                let simulatedInternalParams = { ...appState.internalParams };
+                simulatedInternalParams.electricityPrice = newElecPrice - simulatedInternalParams.serviceFee;
+                simulatedInternalParams.driverDailySalary = newDriverSalary;
+
+                const internalResult = calculateCosts(simulatedInternalParams, 'standard');
+                const grossProfit = quoteTotal - internalResult.total;
+                const profitMargin = (quoteTotal > 0) ? (grossProfit / quoteTotal) * 100 : 0;
+
+                document.getElementById('profit-results').innerHTML = `
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div><p class="text-sm text-slate-500">报价总额</p><p class="text-2xl font-bold">${quoteTotal.toFixed(0)}</p></div>
+                        <div><p class="text-sm text-slate-500">成本总额</p><p class="text-2xl font-bold">${internalResult.total.toFixed(0)}</p></div>
+                        <div><p class="text-sm text-slate-500">毛利润</p><p class="text-2xl font-bold text-green-600">${grossProfit.toFixed(0)}</p></div>
+                    </div>
+                    <div class="mt-6"><p class="text-lg">毛利率: <span class="text-3xl font-bold text-indigo-600">${profitMargin.toFixed(1)}%</span></p></div>
+                `;
+
+                const profitChartCtx = document.getElementById('profitChart').getContext('2d');
+                const chartData = {
+                    labels: ['内部成本', '毛利润'],
+                    datasets: [{
+                        data: [internalResult.total, grossProfit > 0 ? grossProfit : 0],
+                        backgroundColor: ['#64748b', '#16a34a'],
+                    }]
+                };
+                if (charts.profit) charts.profit.destroy();
+                charts.profit = new Chart(profitChartCtx, { type: 'doughnut', data: chartData, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
+            }
+            
+            function attachProfitEventListeners() {
+                document.querySelectorAll('#profit-sliders input[type="range"]').forEach(slider => {
+                    slider.addEventListener('input', updateProfitAnalysis);
+                });
+            }
+
+            function renderCashflowView() {
+                const viewHTML = `
+                     <div class="card p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">现金流模拟</h2>
+                        <div class="grid lg:grid-cols-2 gap-8 xl:gap-12">
+                            <div>
+                                <h3 class="font-bold text-lg mb-4">模拟参数</h3>
+                                <div class="input-group">
+                                    ${renderInputField('cf', 'initialInvestment', '车队初始投资 (元)', 1060000)}
+                                    ${renderInputField('cf', 'tripsPerMonth', '月均运输次数/车', 10)}
+                                    ${renderInputField('cf', 'fleetSize', '车队规模 (台)', 2)}
+                                    <div class="input-field">
+                                        <label for="cf-paymentCycle">客户付款周期</label>
+                                        <select id="cf-paymentCycle"><option value="30" selected>月结</option><option value="90">季结</option><option value="7">周结</option></select>
+                                    </div>
+                                    <div class="input-field">
+                                        <label for="cf-salaryCycle">司机工资周期</label>
+                                        <select id="cf-salaryCycle"><option value="30" selected>月付</option><option value="7">周付</option></select>
+                                    </div>
+                                    ${renderInputField('cf', 'simulationMonths', '模拟月数', 24)}
+                                </div>
+                                <button id="run-cashflow-sim" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">运行模拟</button>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg mb-4">模拟结果：累计现金流</h3>
+                                <div class="chart-container h-80">
+                                    <canvas id="cashflowChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                contentView.innerHTML = viewHTML;
+                document.getElementById('run-cashflow-sim').addEventListener('click', runCashflowSimulation);
+            }
+            
+            function runCashflowSimulation() {
+                const initialInvestment = parseFloat(document.getElementById('cf-initialInvestment').value);
+                const tripsPerMonth = parseFloat(document.getElementById('cf-tripsPerMonth').value);
+                const fleetSize = parseInt(document.getElementById('cf-fleetSize').value);
+                const paymentCycle = parseInt(document.getElementById('cf-paymentCycle').value);
+                const salaryCycle = parseInt(document.getElementById('cf-salaryCycle').value);
+                const simulationMonths = parseInt(document.getElementById('cf-simulationMonths').value);
+
+                if (!appState.quoteResult || !appState.internalResult) {
+                    alert("请先在“报价与成本”标签页计算成本。");
+                    return;
+                }
+
+                const revenuePerTrip = appState.quoteResult.total;
+                const internalCosts = appState.internalResult;
+                const energyCostPerTrip = internalCosts.energy;
+                const maintCostPerTrip = internalCosts.maintenance;
+                const driverCostPerTrip = internalCosts.driver;
+                const monthlyFixedCostPerVehicle = (internalCosts.depreciation + internalCosts.insurance + internalCosts.management) / (appState.internalParams.tripDays) * 30;
+
+                let cashBalance = -initialInvestment;
+                let accountsReceivable = 0;
+                let accruedSalary = 0;
+                
+                const labels = [];
+                const data = [];
+                data.push(cashBalance);
+                labels.push('初始');
+
+                for (let day = 1; day <= simulationMonths * 30; day++) {
+                    const tripsToday = (tripsPerMonth * fleetSize / 2) / 30;
+                    accountsReceivable += revenuePerTrip * tripsToday;
+                    cashBalance -= (energyCostPerTrip + maintCostPerTrip) * tripsToday;
+                    accruedSalary += driverCostPerTrip * tripsToday;
+                    
+                    if (day % paymentCycle === 0) {
+                        cashBalance += accountsReceivable;
+                        accountsReceivable = 0;
+                    }
+
+                    if (day % salaryCycle === 0) {
+                        cashBalance -= accruedSalary;
+                        accruedSalary = 0;
+                    }
+                    
+                    if (day % 30 === 0) {
+                        cashBalance -= monthlyFixedCostPerVehicle * fleetSize;
+                        labels.push(`第${day/30}月`);
+                        data.push(cashBalance);
+                    }
+                }
+
+                const cashflowChartCtx = document.getElementById('cashflowChart').getContext('2d');
+                if (charts.cashflow) charts.cashflow.destroy();
+                charts.cashflow = new Chart(cashflowChartCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{ label: '累计现金流', data: data, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.1 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            function renderBenchmarkView() {
+                const viewHTML = `
+                    <div class="card p-6 md:p-8">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">行业运价对标</h2>
+                        <p class="text-slate-600 mb-6">输入一个或多个省份（用逗号分隔），查询近期的公路运价作为参考。</p>
+                        <div class="flex space-x-4 mb-6">
+                            <input type="text" id="benchmark-provinces" class="w-full px-4 py-2 border border-slate-300 rounded-md" placeholder="例如: 甘肃, 四川">
+                            <button id="run-benchmark-search" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">查询</button>
+                        </div>
+                        <div id="benchmark-results">
+                            <p class="text-center text-slate-400">请输入省份并点击查询。</p>
+                        </div>
+                    </div>`;
+                contentView.innerHTML = viewHTML;
+                document.getElementById('run-benchmark-search').addEventListener('click', runBenchmarkSearch);
+            }
+
+            async function runBenchmarkSearch() {
+                const provincesInput = document.getElementById('benchmark-provinces').value;
+                const resultsContainer = document.getElementById('benchmark-results');
+                if (!provincesInput.trim()) {
+                    resultsContainer.innerHTML = `<p class="text-center text-red-500">请输入至少一个省份。</p>`; return;
+                }
+                resultsContainer.innerHTML = `<p class="text-center text-slate-500">正在查询，请稍候...</p>`;
+
+                const apiKey = ""; // Gemini API Key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const prompt = `请为以下每个省份提供最近2年的公路货运价格（单位：元/吨·公里），并尽可能注明车辆类型和数据来源（例如：XXX公司招标价，XXX行业协会指导价）。省份：${provincesInput}。如果找不到特定省份的数据，请明确指出。`;
+                
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        // Basic formatting to make it look like the previous simulation
+                        const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<h4 class="font-bold text-lg mt-4">$1</h4>')
+                                                .replace(/\* (.*?):/g, '<li><span class="font-semibold">$1</span>:')
+                                                .replace(/来源：(.*?)\n/g, '<span class="text-slate-500">来源: $1</span></li>')
+                                                .replace(/\n/g, '<br>');
+                        resultsContainer.innerHTML = `<div class="p-4 border rounded-lg text-sm">${formattedText}</div>`;
+                    } else {
+                        resultsContainer.innerHTML = `<p class="text-center text-red-500">查询失败，请稍后重试。</p>`;
+                    }
+                } catch (error) {
+                    console.error("Benchmark search error:", error);
+                    resultsContainer.innerHTML = `<p class="text-center text-red-500">查询时发生网络错误。</p>`;
+                }
+            }
+            
+            function attachExportEventListeners() {
+                document.getElementById('export-quote-btn').addEventListener('click', () => generateExportData('quote'));
+                document.getElementById('export-internal-btn').addEventListener('click', () => generateExportData('internal'));
+                document.getElementById('export-all-btn').addEventListener('click', () => generateExportData('all'));
+                document.getElementById('close-modal-btn').addEventListener('click', () => document.getElementById('export-modal').classList.add('hidden'));
+                document.getElementById('copy-btn').addEventListener('click', copyExportData);
+            }
+            
+            function generateExportData(type) {
+                let text = "";
+                if (type === 'quote' || type === 'all') {
+                    text += "--- 客户报价单 ---\n";
+                    text += formatDataForExport(appState.quoteResult, appState.quoteParams);
+                }
+                if (type === 'internal' || type === 'all') {
+                    if(type === 'all') text += "\n\n";
+                    text += "--- 内部成本估算 ---\n";
+                    text += formatDataForExport(appState.internalResult, appState.internalParams);
+                }
+                document.getElementById('export-textarea').value = text;
+                document.getElementById('export-modal').classList.remove('hidden');
+            }
+
+            function formatDataForExport(costs, params) {
+                if (!costs || !params) return "数据未计算，请先在“报价与成本”标签页进行操作。\n";
+                let str = `单车单次任务总成本: ${costs.total.toFixed(2)} 元\n`;
+                str += `单位吨煤成本: ${costs.perTon.toFixed(2)} 元/吨\n`;
+                str += `单位吨公里成本: ${costs.perTonKm.toFixed(2)} 元/吨·公里\n\n`;
+                str += "成本明细:\n";
+                Object.entries(costs).filter(([k]) => !['total', 'perTon', 'perTonKm'].includes(k)).forEach(([key, value]) => {
+                    const labels = { energy: '能源成本', maintenance: '维修及轮胎', driver: '司机成本', depreciation: '车辆折旧', insurance: '保险费用', management: '管理成本' };
+                    str += `  - ${labels[key]}: ${value.toFixed(2)} 元\n`;
+                });
+                str += "\n基于参数:\n";
+                for (const [key, value] of Object.entries(params)) {
+                    str += `  - ${key}: ${key === 'depreciationRate' ? value*100+'%' : value}\n`;
+                }
+                return str;
+            }
+            
+            function copyExportData() {
+                const textarea = document.getElementById('export-textarea');
+                textarea.select();
+                document.execCommand('copy');
+                const copyBtn = document.getElementById('copy-btn');
+                copyBtn.textContent = '已复制!';
+                setTimeout(() => { copyBtn.textContent = '复制到剪贴板'; }, 2000);
+            }
+
+            function ensureInitialCalculations() {
+                if (!appState.quoteParams) {
+                    appState.quoteParams = DEFAULT_PARAMS.quote.values;
+                    appState.quoteResult = calculateCosts(appState.quoteParams, 'standard');
+                }
+                if (!appState.internalParams) {
+                    appState.internalParams = DEFAULT_PARAMS.internal.values;
+                    appState.internalResult = calculateCosts(appState.internalParams, 'standard');
+                }
+            }
+
+            mainTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    mainTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentView = tab.dataset.view;
+                    ensureInitialCalculations();
+                    switch(currentView) {
+                        case 'cost-quote': renderCostQuoteView(); break;
+                        case 'profit': renderProfitView(); break;
+                        case 'cashflow': renderCashflowView(); break;
+                        case 'benchmark': renderBenchmarkView(); break;
+                    }
+                });
+            });
+
+            // Initial Render
+            renderCostQuoteView();
+        });
+    </script>
+</body>
+</html>
