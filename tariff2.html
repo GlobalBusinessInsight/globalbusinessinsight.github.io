@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度交互式分析：美国贸易协议博弈过程 (含历史数据)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Amber -->
+    <!-- Application Structure Plan: The application is structured as a narrative journey. It begins with an overview of the US's standardized 'Playbook'. The core is an interactive dashboard where users select a country. This action updates three components: 1) A 'Bargaining Table' with a tariff chart and cards detailing pressure points and leverage. 2) A 'Long-Term Context' section with line and bar charts showing a decade of trade balance and FDI data. 3) A 'Sector Breakdown' section with doughnut charts and stacked bar charts. 4) A new 'Future Forecast' section. 5) A final compromise analysis. This structure allows users to connect immediate tactics with long-term economic relationships and specific sector-level interests. -->
+    <!-- Visualization & Content Choices: Report Info: Negotiation tactics, leverage points, historical economic data, and sector-specific details. -> Goal: Compare, Analyze, Contextualize. -> Viz/Presentation Method: Added a new text-based section for the 6-month forecast. Changed the FDI chart to a line chart. Changed the trade breakdown to stacked bar charts. -> Interaction: Clicking a country button now updates all charts and text cards simultaneously, creating a comprehensive narrative from macro trends to bidirectional micro-sector details. -> Justification: The new forecast section completes the analytical narrative, moving from past and present to future outlook. -> Library/Method: Chart.js, Vanilla JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        .historical-chart-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            max-height: 45vh;
+        }
+        .doughnut-chart-container {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            max-height: 35vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-btn {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .nav-btn.active {
+            background-color: #c2410c; /* orange-700 */
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px 0 rgb(0 0 0 / 0.1);
+            border-color: #f97316; /* orange-500 */
+        }
+        .content-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .content-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .flow-arrow {
+            color: #94a3b8; /* slate-400 */
+        }
+        .icon-style {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
+            margin-right: 0.75rem;
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-800 mb-2">深度博弈：美国贸易谈判的战术与权衡</h1>
+            <p class="text-lg text-slate-600 max-w-3xl mx-auto">一份关于美国如何利用关税重塑全球贸易规则，以及各国如何应对的交互式分析。</p>
+        </header>
+
+        <main>
+            <section id="background" class="mb-16">
+                <h2 class="text-3xl font-bold text-center mb-8">关税战的序幕：背景、理念与关键声音</h2>
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <div class="content-card p-6">
+                        <p class="text-slate-600 leading-relaxed">2025年，美国贸易政策经历了一场自“大萧条”以来最剧烈的范式转移。其核心驱动力源于特朗普政府的“美国优先”理念，该理念将巨大的贸易逆差视为国家经济实力和制造业基础被侵蚀的直接证据。政府高层，包括总统本人，反复强调了几个核心观点，为这场关税战奠定了理论基础。</p>
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-6 text-center">
+                        <div class="content-card p-6">
+                            <h3 class="text-xl font-semibold text-orange-700">特朗普总统的核心论述</h3>
+                            <p class="mt-2 text-slate-500">“他们对我们征收多少，我们就对他们征收多少。这才是公平贸易。” 这一声明标志着美国彻底转向以消除贸易逆差为首要目标的交易型贸易政策。</p>
+                        </div>
+                        <div class="content-card p-6">
+                            <h3 class="text-xl font-semibold text-orange-700">商务部长卢特尼克</h3>
+                            <p class="mt-2 text-slate-500">关税是迫使贸易伙伴回到谈判桌、达成“更公平”协议的必要工具，将迫使其他国家为美国农产品和工业品开放市场。</p>
+                        </div>
+                        <div class="content-card p-6">
+                            <h3 class="text-xl font-semibold text-orange-700">财政部长贝森特</h3>
+                            <p class="mt-2 text-slate-500">关税与国家安全和供应链韧性直接相关，是推动制造业回流、实现供应链多元化的关键一步。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="media-viewpoints" class="mb-16">
+                <h2 class="text-3xl font-bold text-center mb-8">美国舆论场的交锋：媒体观点演变</h2>
+                <div class="max-w-4xl mx-auto grid md:grid-cols-3 gap-6">
+                    <div class="content-card p-6">
+                        <h4 class="font-bold text-lg mb-2">早期（2-3月）：震惊与质疑</h4>
+                        <p class="text-slate-600"><strong>《华尔街日报》</strong>社论普遍表达了对自由贸易原则被颠覆的担忧，警告称突如其来的高关税将扰乱全球供应链，并最终由美国消费者和企业买单。</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h4 class="font-bold text-lg mb-2">升级期（4-6月）：阵营分化</h4>
+                        <p class="text-slate-600"><strong>福克斯新闻</strong>等媒体支持政府的强硬立场，认为这是纠正多年不公平贸易行为的必要之举。而<strong>彭博社</strong>则聚焦于关税对金融市场造成的波动和对特定行业（如汽车、科技）的负面冲击。</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h4 class="font-bold text-lg mb-2">谈判期（6月至今）：务实与批评</h4>
+                        <p class="text-slate-600"><strong>《纽约时报》</strong>分析认为，虽然达成了一些协议，但美国付出的代价是与传统盟友的关系紧张，且消费者价格上涨的负面效应已经显现。观点普遍认为，这是一场代价高昂的博弈。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="actions-list" class="mb-16">
+                <h2 class="text-3xl font-bold text-center mb-8">过去半年的实质性壁垒：关税行动清单</h2>
+                <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="content-card p-6">
+                        <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2">🌍</span>普遍性基础关税</h4>
+                        <p class="text-slate-600">自4月5日起，对几乎所有国家的进口商品征收了**10%的“基线”对等关税**，成为所有谈判的起点。</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2">🎯</span>国别惩罚性关税威胁</h4>
+                        <p class="text-slate-600">对中国(最高145%)、越南(46%)、欧盟(25-30%)、巴西(50%)等国威胁征收远高于基线的特定关税。</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2">🏭</span>特定行业关税升级</h4>
+                        <p class="text-slate-600">6月4日，将全球钢铝关税从25%**加倍至50%**。4月3日，对进口汽车及零部件征收**25%关税**。</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2">🛡️</span>非传统贸易壁垒</h4>
+                        <p class="text-slate-600">以打击芬太尼为由对中国商品加征**20%关税**。以遏制非法移民为由对墨、加商品加征**25%关税**。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="domestic-impact" class="mb-16">
+                <h2 class="text-3xl font-bold text-center mb-8">美国国内市场的回响：物价与消费行为</h2>
+                <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="content-card p-6">
+                        <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2">📈</span>物价普遍上涨</h4>
+                        <p class="text-slate-600">系列关税导致消费品价格短期平均上涨约2.0%，每个家庭年化成本增加约$3800。服装(涨36%)、食品(涨3.7%)、汽车(涨10-13%)等领域尤为显著。</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2">🛒</span>消费行为转变</h4>
+                        <p class="text-slate-600">出现明显消费降级，消费者转向更便宜的自有品牌，并削减非必需品开支。市场情绪分化，多数人对物价上涨感到焦虑，削弱了消费信心。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="playbook" class="mb-16">
+                <h2 class="text-3xl font-bold text-center mb-8">美国的战术手册：三步强制性谈判法</h2>
+                <div class="grid md:grid-cols-5 items-center gap-4 text-center max-w-4xl mx-auto">
+                    <div class="content-card p-6">
+                        <h3 class="text-xl font-semibold text-orange-700">第一步</h3>
+                        <p class="mt-2 font-medium">制造危机</p>
+                        <p class="text-sm text-slate-500 mt-2">以国安为由，威胁征收惩罚性关税，创造极限施压环境。</p>
+                    </div>
+                    <div class="flow-arrow text-4xl font-light hidden md:block">→</div>
+                    <div class="content-card p-6">
+                        <h3 class="text-xl font-semibold text-orange-700">第二步</h3>
+                        <p class="mt-2 font-medium">强制谈判</p>
+                        <p class="text-sm text-slate-500 mt-2">设定最后期限，迫使伙伴国为减轻损失而进入谈判。</p>
+                    </div>
+                    <div class="flow-arrow text-4xl font-light hidden md:block">→</div>
+                    <div class="content-card p-6">
+                        <h3 class="text-xl font-semibold text-orange-700">第三步</h3>
+                        <p class="mt-2 font-medium">重新定义“让步”</p>
+                        <p class="text-sm text-slate-500 mt-2">将关税从威胁高点“降至”仍远高于过去的水平，并要求对方付出实质代价。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="dashboard" class="mb-16 bg-slate-100 p-6 md:p-8 rounded-xl">
+                <h2 class="text-3xl font-bold text-center mb-2">交互式博弈分析台</h2>
+                <p class="text-center text-slate-500 mb-8">选择一个国家，深入探索其与美国的谈判过程、核心博弈点及最终的妥协。</p>
+
+                <div class="flex justify-center flex-wrap gap-3 mb-8">
+                    <button class="nav-btn px-6 py-2 bg-white rounded-full shadow-sm font-semibold text-slate-700" data-country="uk">🇬🇧 英国</button>
+                    <button class="nav-btn px-6 py-2 bg-white rounded-full shadow-sm font-semibold text-slate-700" data-country="japan">🇯🇵 日本</button>
+                    <button class="nav-btn px-6 py-2 bg-white rounded-full shadow-sm font-semibold text-slate-700" data-country="indonesia">🇮🇩 印尼</button>
+                    <button class="nav-btn px-6 py-2 bg-white rounded-full shadow-sm font-semibold text-slate-700" data-country="vietnam">�🇳 越南</button>
+                </div>
+
+                <div class="content-card p-4 md:p-6 mb-8">
+                    <h3 id="chart-title" class="text-xl font-bold text-center mb-4"></h3>
+                    <div class="chart-container">
+                        <canvas id="tariffChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="content-card p-6">
+                        <h4 class="font-bold text-lg mb-4 flex items-center">
+                            <span class="icon-style bg-red-100 text-red-700">▼</span>
+                            美方施压点
+                        </h4>
+                        <div id="us-pressure" class="text-slate-600 space-y-2"></div>
+                    </div>
+                    <div class="content-card p-6">
+                        <h4 class="font-bold text-lg mb-4 flex items-center">
+                           <span class="icon-style bg-green-100 text-green-700">▲</span>
+                            伙伴国核心筹码
+                        </h4>
+                        <div id="partner-leverage" class="text-slate-600 space-y-2"></div>
+                    </div>
+                </div>
+                 <div class="mt-8 content-card p-6 md:p-8">
+                    <h3 class="text-2xl font-bold mb-4 flex items-center">
+                        <span class="icon-style bg-blue-100 text-blue-700">⚖️</span>
+                        最终的妥协：<span id="analysis-country-name"></span>
+                    </h3>
+                    <div id="final-deal" class="prose prose-slate max-w-none text-slate-600"></div>
+                </div>
+
+                <div id="historical-context" class="mt-12">
+                    <h2 class="text-3xl font-bold text-center mb-8">长期经济背景：贸易与投资趋势 (2014-2024)</h2>
+                     <div class="grid md:grid-cols-2 gap-8">
+                        <div class="content-card p-6">
+                            <h3 class="text-xl font-bold text-center mb-4">美国贸易差额趋势</h3>
+                            <div class="historical-chart-container">
+                                <canvas id="tradeBalanceChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="content-card p-6">
+                            <h3 class="text-xl font-bold text-center mb-4">双向直接投资(FDI)存量趋势</h3>
+                             <div class="historical-chart-container">
+                                <canvas id="fdiChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sector-breakdown" class="mt-12">
+                    <h2 class="text-3xl font-bold text-center mb-8">关键领域细分 (田字格布局)</h2>
+                    <div class="content-card p-6 mb-8">
+                        <h3 class="text-2xl font-bold text-center mb-6">双向贸易细分 (2014-2024年趋势)</h3>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div class="text-center">
+                                <h4 id="partner-exports-title" class="text-lg font-semibold mb-2"></h4>
+                                <div class="historical-chart-container">
+                                    <canvas id="partnerExportsChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <h4 id="us-exports-title" class="text-lg font-semibold mb-2"></h4>
+                                <div class="historical-chart-container">
+                                    <canvas id="usExportsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="text-2xl font-bold text-center mb-6">双向投资细分 (2024年存量)</h3>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div class="text-center">
+                                <h4 id="us-fdi-breakdown-title" class="text-lg font-semibold mb-2"></h4>
+                                <div class="doughnut-chart-container">
+                                    <canvas id="usFdiBreakdownChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <h4 id="partner-fdi-breakdown-title" class="text-lg font-semibold mb-2"></h4>
+                                <div class="doughnut-chart-container">
+                                    <canvas id="partnerFdiBreakdownChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="future-forecast" class="mb-16">
+                <h2 class="text-3xl font-bold text-center mb-8">未来半年谈判预测</h2>
+                <div class="max-w-4xl mx-auto space-y-8">
+                    <div class="content-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-slate-800">🇪🇺 欧盟</h3>
+                        <ul class="list-disc list-inside space-y-2 text-slate-600">
+                            <li><strong>美方策略：</strong>主攻农业与汽车，以日本15%关税为标杆施压，并试图分化欧盟内部。</li>
+                            <li><strong>欧盟对策：</strong>利用统一市场的力量和千亿级报复清单作为威慑，力求在汽车关税上获得较大免税配额。</li>
+                            <li><strong>结果预测：</strong>极有可能在8月1日最后期限前达成妥协。欧盟在农业上做象征性让步，接受15%-20%的汽车关税并附带较大配额。</li>
+                        </ul>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-slate-800">🇰🇷 韩国</h3>
+                        <ul class="list-disc list-inside space-y-2 text-slate-600">
+                            <li><strong>美方策略：</strong>采用“冷处理”后极限施压的心理战，要求韩国在投资和半导体供应链上做出比日本更大的承诺。</li>
+                            <li><strong>韩国对策：</strong>强调其在全球高科技供应链中的关键价值，并利用地缘政治平衡作为背景筹码。</li>
+                            <li><strong>结果预测：</strong>结果高度依赖韩国的非贸易让步。若能满足美方要求，最终关税可能在16%-18%区间。否则可能面临短暂的惩罚性关税。</li>
+                        </ul>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-slate-800">🇮🇳 印度</h3>
+                        <ul class="list-disc list-inside space-y-2 text-slate-600">
+                            <li><strong>美方策略：</strong>认识到农业问题短期难突破，从“寻求全面协议”转向“维持长期压力”，并利用IPEF作为侧翼。</li>
+                            <li><strong>印度对策：</strong>坚守农业和乳制品的核心利益红线，同时利用其巨大的国内市场和地缘战略价值作为长期筹码。</li>
+                            <li><strong>结果预测：</strong>半年内达成重大协议可能性低。最可能达成范围有限的“迷你协议”，核心问题搁置，双方进入“边谈边斗”的新常态。</li>
+                        </ul>
+                    </div>
+                     <div class="content-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-slate-800">🇨🇳 中国</h3>
+                        <ul class="list-disc list-inside space-y-2 text-slate-600">
+                            <li><strong>美方策略：</strong>“有管理的对抗”。利用重新加征巨额关税的威胁作为核心杠杆，推动在结构性问题（如产业补贴、市场准入）上的谈判，并引入新压力点（如进口伊朗/俄罗斯石油）。</li>
+                            <li><strong>中方对策：</strong>“战术性缓和”。用关键资源（如恢复稀土出口）换取美方在技术限制上的让步，同时坚守产业政策底线，并准备好精准反制措施。</li>
+                            <li><strong>结果预测：</strong>全面协议可能性极低。最可能的结果是延长当前的“休战期”，达成一系列小范围、针对特定领域的协议。关税将作为长期战略工具，而非短期谈判策略。</li>
+                        </ul>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-slate-800">🇧🇷 巴西</h3>
+                        <ul class="list-disc list-inside space-y-2 text-slate-600">
+                            <li><strong>美方策略：</strong>“遏制与管理”。核心目标是限制巴西钢铁和铝的进口浪涌，以保护本国产业。50%的全面关税威胁是迫使巴西谈判的极端手段。</li>
+                            <li><strong>巴西对策：</strong>威胁报复。利用其作为全球大宗商品（粮食、铁矿石）关键供应国的地位，并暗示有其他合作伙伴（如金砖国家），来抵制美方压力。</li>
+                            <li><strong>结果预测：</strong>紧张的现状将持续。50%的全面关税可能不会完全实施，但会作为谈判筹码，最终双方可能就现有的钢铝关税配额进行小幅调整。</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="implications">
+                 <h2 class="text-3xl font-bold text-center mb-8">战略影响与利益相关方建议</h2>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="content-card p-6">
+                        <h3 class="text-xl font-bold mb-4">政府应对</h3>
+                        <p class="text-slate-600">必须从基于规则的谈判立场转向基于实力和杠杆的谈判立场。识别本国面对美国压力时的关键脆弱点和独特的杠杆来源。</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="text-xl font-bold mb-4">企业对策</h3>
+                        <p class="text-slate-600">重新评估供应链的韧性，重点关注政治风险，而不仅仅是经济效率。定价策略必须适应永久性更高且不稳定的关税环境。</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="text-xl font-bold mb-4">体系碎片化</h3>
+                        <p class="text-slate-600">美国的做法挑战了WTO的最惠国待遇原则，将全球体系分割成不同层级的伙伴关系，增加了全球商业的不确定性和成本。</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="text-xl font-bold mb-4">双轨战略</h3>
+                        <p class="text-slate-600">美国正通过“大棒”（双边关税威胁）和“胡萝卜”（印太经济框架IPEF）推行双轨战略，以获取即时利益并构建新的区域经济秩序。</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="text-center mt-16 pt-8 border-t border-slate-200">
+            <p class="text-slate-500">这是一个基于公开报告创建的交互式分析项目，旨在用于信息和教育目的。</p>
+        </footer>
+    </div>
+
+    <script>
+        const tradeData = {
+            uk: {
+                label: '英国',
+                chartTitle: '英国关税变化：在“特殊关系”下的损害控制',
+                tariffs: { pre: 2.5, threatened: 27.5, agreed: 10.0 },
+                usPressure: `<p><strong>利用“脱欧”窗口期：</strong>看准英国脱欧后急于证明自身价值的心理，施加政治压力。</p><p><strong>精准打击核心产业：</strong>威胁对汽车征收27.5%的关税，直击其制造业心脏。</p><p><strong>模糊化与拖延：</strong>在钢铝问题上仅承诺“替代安排”，维持不确定性以换取更多让步。</p>`,
+                partnerLeverage: `<p><strong>安全与情报合作：</strong>利用“五眼联盟”成员身份，将贸易与安全议题绑定，强调其盟友价值。</p><p><strong>关键供应链节点：</strong>凭借在航空航天领域的关键地位（如罗尔斯·罗伊斯），作为美国不可或缺的供应商进行博弈。</p>`,
+                finalDeal: `<p>这是一次典型的<strong>损害控制</strong>。英国以牺牲部分经济利益（接受更高的汽车和基线关税、开放农业市场）为代价，保住了其最具价值的工业筹码（航空航天部件零关税），避免了最坏的经济后果，并巩固了其在美国安全体系中的地位。</p>`,
+                historicalData: {
+                    years: [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024],
+                    tradeBalance: [14.8, 15.5, 5.2, -2.6, -3.9, 5.8, 16.9, 18.2, 22.5, 24.1, 11.9],
+                    usFDI: [588, 572, 590, 650, 754, 801, 850, 930, 980, 1010, 1050],
+                    partnerFDI: [445, 495, 505, 540, 560, 610, 630, 680, 720, 750, 802]
+                },
+                breakdownData: {
+                    partnerExportsToUS: { 
+                        labels: ['机械与运输设备', '化学品(含医药)', '燃料', '其他'], 
+                        data: [[25.1, 26.2, 27.5, 28.1, 28.5, 29.0, 27.5, 28.3, 28.8, 29.0, 29.1], [8.2, 8.5, 8.8, 9.1, 9.5, 9.8, 10.1, 10.5, 10.7, 10.9, 10.8], [5.1, 5.3, 4.9, 6.2, 7.1, 8.0, 7.5, 8.5, 9.8, 9.6, 9.5], [15.3, 15.8, 16.1, 16.5, 17.0, 17.5, 18.0, 18.2, 18.5, 18.6, 18.7]]
+                    },
+                    usExportsToPartner: { 
+                        labels: ['机械与运输设备', '燃料', '化学品', '其他'], 
+                        data: [[18.1, 18.5, 19.0, 19.5, 20.0, 20.5, 19.8, 20.2, 20.5, 20.3, 20.1], [10.2, 11.1, 12.3, 13.1, 13.8, 14.5, 13.9, 14.8, 15.5, 15.4, 15.3], [6.5, 6.8, 7.0, 7.2, 7.5, 7.8, 7.9, 8.1, 8.2, 8.1, 8.0], [30.1, 31.2, 32.0, 33.1, 34.5, 35.8, 36.1, 36.4, 36.8, 36.7, 36.5]]
+                    },
+                    usFDI: { labels: ['金融与保险', '专业与商业服务', '制造业', '其他'], values: [450, 250, 150, 200] },
+                    partnerFDI: { labels: ['制造业(含化工)', '金融与保险', '信息技术', '其他'], values: [300, 280, 122, 100] }
+                }
+            },
+            japan: {
+                label: '日本',
+                chartTitle: '日本关税变化：为拯救经济命脉的“豪赌”',
+                tariffs: { pre: 2.5, threatened: 24.0, agreed: 15.0 },
+                usPressure: `<p><strong>直击经济要害：</strong>威胁对汽车产业征收24%-30%的关税，构成生存威胁。</p><p><strong>利用政治弱点：</strong>利用当时日本政府支持率不高、政治基础薄弱的局面，加大速战速决的压力。</p>`,
+                partnerLeverage: `<p><strong>巨额投资承诺：</strong>拿出令美国无法拒绝的5500亿美元投资承诺，精准对接美国“重振工业”的政治口号。</p><p><strong>开放敏感市场：</strong>在政治敏感的农业领域（大米、牛肉）做出痛苦但必要的让步。</p><p><strong>拥抱数字规则：</strong>主动接受美国主导的高标准数字贸易规则，提供战略价值。</p>`,
+                finalDeal: `<p>这是一次教科书式的<strong>“未来投资+农业市场”换取“当前汽车产业安全”</strong>的交易。日本选择性地牺牲了部分利益，以保护其不可动摇的核心利益。最终15%的关税虽高于过去，但完全可以接受，避免了灭顶之灾。</p>`,
+                historicalData: {
+                    years: [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024],
+                    tradeBalance: [-76.3, -68.9, -69.0, -68.8, -67.6, -66.3, -55.4, -60.2, -73.8, -71.6, -68.5],
+                    usFDI: [105, 115, 112, 120, 125, 130, 135, 140, 142, 145, 150],
+                    partnerFDI: [375, 410, 425, 460, 480, 530, 590, 650, 700, 730, 780]
+                },
+                breakdownData: {
+                    partnerExportsToUS: { 
+                        labels: ['汽车及零部件', '工业机械', '电子产品', '其他'], 
+                        data: [[48, 49, 50, 51, 52, 53, 50, 52, 54, 54, 55], [22, 22, 23, 23, 24, 24, 23, 24, 25, 25, 25], [18, 18, 19, 19, 19, 20, 19, 20, 20, 20, 20], [28, 29, 30, 31, 32, 32, 31, 32, 33, 33, 33]]
+                    },
+                    usExportsToPartner: { 
+                        labels: ['矿物燃料', '机械设备', '医疗设备', '其他'], 
+                        data: [[9, 9.5, 10, 10.5, 11, 11.5, 11, 11.2, 11.5, 11.6, 11.7], [9, 9.2, 9.5, 9.8, 10, 10.2, 10, 10.1, 10.3, 10.4, 10.5], [6, 6.2, 6.4, 6.6, 6.8, 7, 6.9, 7, 7.1, 7.1, 7.2], [40, 41, 42, 43, 44, 45, 44, 45, 45, 45, 45.8]]
+                    },
+                    usFDI: { labels: ['金融与保险', '批发贸易', '制造业(化工)', '其他'], values: [60, 35, 25, 30] },
+                    partnerFDI: { labels: ['制造业(汽车)', '批发贸易', '金融与保险', '其他'], values: [376, 200, 104, 100] }
+                }
+            },
+            indonesia: {
+                label: '印尼',
+                chartTitle: '印尼关税变化：用资源主权换取发展空间',
+                tariffs: { pre: 0.0, threatened: 32.0, agreed: 19.0 },
+                usPressure: `<p><strong>颠覆身份：</strong>通过威胁32%的高额关税，将印尼从普惠制受益国变为惩罚目标，造成巨大心理落差。</p><p><strong>全面市场准入要求：</strong>要求极为苛刻，不仅针对关税，更瞄准了本地成分要求等非关税壁垒。</p>`,
+                partnerLeverage: `<p><strong>关键矿产控制权：</strong>将全球最大的镍储量作为王牌，与美国对绿色能源和供应链安全的战略需求直接挂钩。</p><p><strong>地区领导地位：</strong>利用其作为东盟最大经济体和世界第四人口大国的市场潜力与地区影响力。</p>`,
+                finalDeal: `<p>这是一次经典的<strong>“资源换市场，主权换空间”</strong>的交易。印尼在非关税壁垒上做出史无前例的让步，几乎完全开放市场。作为回报，它不仅将关税降至可控的19%，更重要的是锁定了自己作为美国关键矿产战略伙伴的地位，为长期发展提供了保障。</p>`,
+                 historicalData: {
+                    years: [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024],
+                    tradeBalance: [-13.4, -13.2, -13.1, -13.6, -12.4, -12.9, -15.5, -16.8, -17.0, -17.2, -17.9],
+                    usFDI: [15.2, 16.1, 15.8, 14.9, 14.5, 15.0, 12.1, 12.8, 13.5, 15.9, 16.5],
+                    partnerFDI: [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 0.9, 1.1, 1.2, 1.4, 1.5]
+                },
+                breakdownData: {
+                    partnerExportsToUS: { 
+                        labels: ['服装与纺织品', '橡胶制品', '鞋类', '其他'], 
+                        data: [[7.0, 7.2, 7.5, 7.8, 8.0, 8.2, 8.5, 8.8, 8.9, 9.0, 9.0], [4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.8, 4.9, 5.0, 5.0], [3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5], [5.0, 5.2, 5.4, 5.6, 5.8, 6.0, 6.2, 6.4, 6.5, 6.6, 6.6]]
+                    },
+                    usExportsToPartner: { 
+                        labels: ['大豆', '棉花', '机械设备', '其他'], 
+                        data: [[1.0, 1.1, 1.1, 1.2, 1.2, 1.3, 1.4, 1.4, 1.5, 1.5, 1.5], [0.5, 0.5, 0.6, 0.6, 0.7, 0.7, 0.7, 0.8, 0.8, 0.8, 0.8], [1.0, 1.0, 1.1, 1.1, 1.1, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2], [4.5, 4.7, 4.8, 5.0, 5.1, 5.3, 5.5, 5.6, 5.7, 5.8, 5.8]]
+                    },
+                    usFDI: { labels: ['矿业与能源', '制造业', '金融服务', '其他'], values: [10, 3, 2, 1.5] },
+                    partnerFDI: { labels: ['资源加工', '房地产', '其他'], values: [0.8, 0.4, 0.3] }
+                }
+            },
+            vietnam: {
+                label: '越南',
+                chartTitle: '越南关税变化：在地缘政治夹缝中求生存',
+                tariffs: { pre: 3.0, threatened: 46.0, agreed: 20.0 },
+                usPressure: `<p><strong>“原罪”指控：</strong>将越南定位为中国商品规避关税的“转运中心”，使谈判带上惩罚性质。</p><p><strong>利用贸易依赖：</strong>利用越南经济增长严重依赖对美出口的特点，迫使其在供应链监管上合作。</p>`,
+                partnerLeverage: `<p><strong>展示合作意愿：</strong>主动接受针对转运商品的更高关税，表明愿意帮助美国实现其供应链目标。</p><p><strong>战略位置价值：</strong>巧妙利用其在美国“印太战略”中的重要地位，暗示压力过大可能将其推向中国。</p>`,
+                finalDeal: `<p>这是一次极其务实的妥协。越南通过<strong>承担一部分经济成本和监管责任（同意为美国充当供应链“监管者”）</strong>，在中美之间找到了一个危险但可行的平衡点，避免了可能摧毁其经济的46%关税，维护了国家生存和发展的核心利益。</p>`,
+                historicalData: {
+                    years: [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024],
+                    tradeBalance: [-25.9, -30.9, -32.0, -38.4, -39.5, -55.8, -69.7, -90.1, -116.1, -104.6, -123.5],
+                    usFDI: [2.1, 2.4, 2.6, 2.8, 3.0, 3.3, 3.5, 3.8, 4.1, 4.5, 5.0],
+                    partnerFDI: [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0, 1.2, 1.4, 1.6, 1.9]
+                },
+                breakdownData: {
+                    partnerExportsToUS: { 
+                        labels: ['电子与电气设备', '机械设备', '服装与鞋类', '其他'], 
+                        data: [[15, 18, 22, 28, 32, 38, 40, 41, 42, 42.2, 42.6], [10, 12, 15, 18, 20, 24, 26, 27, 28, 29, 29.2], [10, 11, 12, 13, 14, 14.5, 15, 15.1, 15.2, 15.2, 15.3], [20, 22, 24, 26, 28, 30, 32, 33, 34, 34.2, 34.5]]
+                    },
+                    usExportsToPartner: { 
+                        labels: ['棉花', '大豆', '机械设备', '其他'], 
+                        data: [[1.5, 1.7, 1.8, 2.0, 2.1, 2.2, 2.3, 2.4, 2.4, 2.5, 2.5], [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.7, 1.8, 1.8], [1.0, 1.1, 1.1, 1.2, 1.2, 1.3, 1.4, 1.4, 1.5, 1.5, 1.5], [4.0, 4.2, 4.5, 4.8, 5.0, 5.3, 5.6, 5.8, 6.0, 6.1, 6.2]]
+                    },
+                    usFDI: { labels: ['制造业(电子)', '房地产', '能源', '其他'], values: [2.5, 1.0, 0.8, 0.7] },
+                    partnerFDI: { labels: ['批发零售', '房地产', '科技', '其他'], values: [0.8, 0.5, 0.3, 0.3] }
+                }
+            }
+        };
+
+        let tariffChart, tradeBalanceChart, fdiChart, partnerExportsChart, usExportsChart, usFdiBreakdownChart, partnerFdiBreakdownChart;
+        
+        const navButtons = document.querySelectorAll('.nav-btn');
+        
+        function destroyCharts() {
+            if (tariffChart) tariffChart.destroy();
+            if (tradeBalanceChart) tradeBalanceChart.destroy();
+            if (fdiChart) fdiChart.destroy();
+            if (partnerExportsChart) partnerExportsChart.destroy();
+            if (usExportsChart) usExportsChart.destroy();
+            if (usFdiBreakdownChart) usFdiBreakdownChart.destroy();
+            if (partnerFdiBreakdownChart) partnerFdiBreakdownChart.destroy();
+        }
+        
+        const chartColors = ['#1e3a8a', '#ea580c', '#166534', '#ca8a04', '#4b5563'];
+
+        function createStackedBarChart(ctx, years, labels, data, title) {
+            const datasets = labels.map((label, index) => ({
+                label: label,
+                data: data[index],
+                backgroundColor: chartColors[index % chartColors.length],
+            }));
+
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact' }).format(context.parsed.y * 1e9);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { stacked: true },
+                        y: { 
+                            stacked: true,
+                            title: { display: true, text: '出口额 (十亿美元)' },
+                            ticks: { callback: (value) => `${value}B` }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createDoughnutChart(ctx, labels, data, title) {
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: data,
+                        backgroundColor: chartColors,
+                        borderColor: '#f8fafc',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact' }).format(context.parsed * 1e9);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDashboard(countryKey) {
+            destroyCharts();
+
+            const data = tradeData[countryKey];
+
+            document.getElementById('chart-title').textContent = data.chartTitle;
+            document.getElementById('us-pressure').innerHTML = data.usPressure;
+            document.getElementById('partner-leverage').innerHTML = data.partnerLeverage;
+            document.getElementById('analysis-country-name').textContent = data.label;
+            document.getElementById('final-deal').innerHTML = data.finalDeal;
+            
+            // Tariff Chart
+            const tariffCtx = document.getElementById('tariffChart').getContext('2d');
+            tariffChart = new Chart(tariffCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['危机前关税', '威胁施加的关税', '最终协议关税'],
+                    datasets: [{
+                        label: '关税税率 (%)',
+                        data: [data.tariffs.pre, data.tariffs.threatened, data.tariffs.agreed],
+                        backgroundColor: ['#64748b', '#dc2626', '#f59e0b'],
+                        borderColor: ['#475569', '#b91c1c', '#d97706'],
+                        borderWidth: 1,
+                        borderRadius: 5,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // Trade Balance Chart
+            const tradeBalanceCtx = document.getElementById('tradeBalanceChart').getContext('2d');
+            tradeBalanceChart = new Chart(tradeBalanceCtx, {
+                type: 'line',
+                data: {
+                    labels: data.historicalData.years,
+                    datasets: [{
+                        label: '美国贸易差额 (十亿美元)',
+                        data: data.historicalData.tradeBalance,
+                        borderColor: '#c2410c',
+                        backgroundColor: 'rgba(194, 65, 12, 0.1)',
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        y: { 
+                            title: { display: true, text: '十亿美元' },
+                            ticks: { callback: (value) => `${value}B` }
+                        } 
+                    }
+                }
+            });
+
+            // FDI Chart
+            const fdiCtx = document.getElementById('fdiChart').getContext('2d');
+            fdiChart = new Chart(fdiCtx, {
+                type: 'line',
+                data: {
+                    labels: data.historicalData.years,
+                    datasets: [
+                        {
+                            label: `美国在${data.label}的FDI`,
+                            data: data.historicalData.usFDI,
+                            borderColor: '#166534',
+                            backgroundColor: 'rgba(22, 101, 52, 0.1)',
+                            fill: true,
+                            tension: 0.1
+                        },
+                        {
+                            label: `${data.label}在美国的FDI`,
+                            data: data.historicalData.partnerFDI,
+                            borderColor: '#fbbf24',
+                            backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                            fill: true,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'FDI存量 (十亿美元)' },
+                            ticks: { callback: (value) => `${value}B` }
+                        },
+                        x: {
+                           ticks: {
+                                maxRotation: 0,
+                                minRotation: 0,
+                                callback: function(value, index, values) {
+                                    const year = this.getLabelForValue(value);
+                                    return window.innerWidth < 768 && year % 2 !== 0 ? '' : year;
+                                }
+                           }
+                        }
+                    }
+                }
+            });
+
+            // Breakdown Charts
+            document.getElementById('partner-exports-title').textContent = `${data.label}对美出口趋势`;
+            const partnerExportsCtx = document.getElementById('partnerExportsChart').getContext('2d');
+            partnerExportsChart = createStackedBarChart(partnerExportsCtx, data.historicalData.years, data.breakdownData.partnerExportsToUS.labels, data.breakdownData.partnerExportsToUS.data, '出口额 (十亿美元)');
+
+            document.getElementById('us-exports-title').textContent = `美国对${data.label}出口趋势`;
+            const usExportsCtx = document.getElementById('usExportsChart').getContext('2d');
+            usExportsChart = createStackedBarChart(usExportsCtx, data.historicalData.years, data.breakdownData.usExportsToPartner.labels, data.breakdownData.usExportsToPartner.data, '出口额 (十亿美元)');
+
+            document.getElementById('us-fdi-breakdown-title').textContent = `美国在${data.label}的FDI (2024)`;
+            const usFdiBreakdownCtx = document.getElementById('usFdiBreakdownChart').getContext('2d');
+            usFdiBreakdownChart = createDoughnutChart(usFdiBreakdownCtx, data.breakdownData.usFDI.labels, data.breakdownData.usFDI.values, 'FDI存量 (十亿美元)');
+
+            document.getElementById('partner-fdi-breakdown-title').textContent = `${data.label}在美国的FDI (2024)`;
+            const partnerFdiBreakdownCtx = document.getElementById('partnerFdiBreakdownChart').getContext('2d');
+            partnerFdiBreakdownChart = createDoughnutChart(partnerFdiBreakdownCtx, data.breakdownData.partnerFDI.labels, data.breakdownData.partnerFDI.values, 'FDI存量 (十亿美元)');
+
+
+            navButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.country === countryKey) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                updateDashboard(button.dataset.country);
+            });
+        });
+
+        window.onload = () => {
+            updateDashboard('uk');
+        };
+    </script>
+</body>
+</html>
+�
