@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
      crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,24 +16,13 @@
             font-family: "Inter", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
             overflow: hidden; /* Prevent body scroll */
         }
-        #container {
-            display: flex;
-            height: 100vh;
-        }
         #map_container {
-            flex-grow: 1;
-            height: 100%;
+            height: 100vh;
+            width: 100%;
         }
+        /* Sidebar transition */
         #sidebar {
-            width: 350px;
-            flex-shrink: 0;
-            background-color: #f8fafc;
-            height: 100%;
-            overflow-y: auto;
-            border-left: 1px solid #e2e8f0;
-        }
-        .station-item:hover {
-            background-color: #e0f2fe;
+            transition: transform 0.3s ease-in-out;
         }
         /* Baidu Map InfoWindow custom style */
         .BMap_bubble_title {
@@ -49,18 +38,30 @@
 </head>
 <body class="bg-gray-100">
 
-    <div id="container">
+    <div class="relative h-screen w-full">
         <!-- Sidebar for station list -->
-        <div id="sidebar" class="p-4">
-            <h1 class="text-2xl font-bold text-blue-800 mb-4">绿新能源站点列表</h1>
-            <div id="station_list" class="space-y-2">
-                <!-- Station items will be dynamically inserted here -->
+        <div id="sidebar" class="fixed top-0 left-0 h-full w-80 max-w-[90%] bg-white/90 backdrop-blur-sm z-40 transform -translate-x-full md:translate-x-0 md:w-96 shadow-lg border-r border-gray-200">
+            <div class="p-4 h-full flex flex-col">
+                <h1 class="text-2xl font-bold text-blue-800 mb-4 flex-shrink-0">绿新能源站点列表</h1>
+                <div id="station_list" class="space-y-2 overflow-y-auto flex-grow">
+                    <!-- Station items will be dynamically inserted here -->
+                </div>
             </div>
         </div>
 
-        <!-- Map container -->
-        <div id="map_container"></div>
+        <!-- Main content area with map -->
+        <main id="main-content" class="h-full transition-all duration-300 ease-in-out">
+            <div id="map_container" class="h-full"></div>
+        </main>
+        
+        <!-- Toggle Button -->
+        <button id="toggle-button" class="fixed top-4 left-4 z-50 p-2 bg-white rounded-md shadow-lg text-gray-700 hover:bg-gray-100 focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+            </svg>
+        </button>
     </div>
+
 
     <!-- Baidu Maps API Script with callback - Using stable v2.0 -->
     <script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=0pyGMMHFBJRbZz6DtzsDfkqkz281iv4h&callback=initializeMap"></script>
@@ -151,8 +152,20 @@
                 map.centerAndZoom(centerPoint, 8);
                 map.enableScrollWheelZoom(true);
 
+                // --- Define Custom Icons ---
+                const greenIcon = new BMap.Icon("http://api.map.baidu.com/img/markers.png", new BMap.Size(23, 25), {
+                    offset: new BMap.Size(10, 25),
+                    imageOffset: new BMap.Size(0, 0 - 10 * 25)
+                });
+
+                const yellowIcon = new BMap.Icon("http://api.map.baidu.com/img/markers.png", new BMap.Size(23, 25), {
+                    offset: new BMap.Size(10, 25),
+                    imageOffset: new BMap.Size(0, 0 - 11 * 25)
+                });
+
+
                 const stationListEl = document.getElementById('station_list');
-                const markers = []; // To store marker references
+                const markers = []; 
 
                 // --- Create Markers and List Items ---
                 stations.forEach(station => {
@@ -162,11 +175,11 @@
                     }
 
                     const point = new BMap.Point(station.lng, station.lat);
-                    const marker = new BMap.Marker(point);
+                    const currentIcon = station.status === '已投运' ? greenIcon : yellowIcon;
+                    const marker = new BMap.Marker(point, { icon: currentIcon });
                     map.addOverlay(marker);
                     markers.push({id: station.id, marker: marker, point: point});
 
-                    // Create info window content
                     const content = `
                         <div class="p-2">
                             <p><b>地址:</b> ${station.address}</p>
@@ -180,12 +193,10 @@
                         height: 100
                     });
 
-                    // Add click event to marker
                     marker.addEventListener('click', function () {
                         this.openInfoWindow(infoWindow);
                     });
 
-                    // Create and add list item to sidebar
                     const listItem = document.createElement('div');
                     listItem.className = 'station-item p-3 bg-white rounded-lg shadow-sm cursor-pointer border border-gray-200';
                     listItem.innerHTML = `
@@ -196,9 +207,52 @@
                     listItem.addEventListener('click', function() {
                         map.centerAndZoom(point, 15);
                         marker.openInfoWindow(infoWindow);
+                        // On mobile, close sidebar after clicking an item
+                        if (window.innerWidth < 768) {
+                            sidebar.classList.add('-translate-x-full');
+                        }
                     });
                     stationListEl.appendChild(listItem);
                 });
+
+                // --- Sidebar Toggle Logic ---
+                const sidebar = document.getElementById('sidebar');
+                const toggleButton = document.getElementById('toggle-button');
+                const mainContent = document.getElementById('main-content');
+                
+                toggleButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('-translate-x-full');
+                    // Adjust main content margin on desktop
+                    if (window.innerWidth >= 768) { // md breakpoint
+                        if (sidebar.classList.contains('-translate-x-full')) {
+                            mainContent.style.marginLeft = '0';
+                        } else {
+                            mainContent.style.marginLeft = sidebar.offsetWidth + 'px';
+                        }
+                    }
+                });
+
+                // Adjust layout on initial load and window resize for desktop
+                function adjustLayout() {
+                    if (window.innerWidth >= 768) {
+                        if (sidebar.classList.contains('-translate-x-full')) {
+                           mainContent.style.marginLeft = '0';
+                        } else {
+                           sidebar.classList.remove('-translate-x-full'); // Ensure it's visible
+                           mainContent.style.marginLeft = sidebar.offsetWidth + 'px';
+                        }
+                    } else {
+                        mainContent.style.marginLeft = '0';
+                        sidebar.classList.add('-translate-x-full'); // Hide on mobile by default
+                    }
+                }
+
+                window.addEventListener('resize', adjustLayout);
+                // Initial check
+                adjustLayout();
+
+
             } catch (e) {
                 console.error("An error occurred during map initialization:", e);
                 const mapContainer = document.getElementById('map_container');
