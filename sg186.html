@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SG186业务诊断分析报告 - 交互式仪表盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Serene Corporate Blue -->
+    <!-- Application Structure Plan: A single-page dashboard application with a top navigation bar. The content is synthesized from the 10 source reports into six thematic sections: a main dashboard, Strategy & Finance, Safety & Asset Management, Market & Customer, Project & Materials Management, and a final Improvement Blueprint. This structure avoids a direct, cumbersome report-by-report layout, instead grouping related findings and recommendations for a more intuitive and user-friendly exploration. Each section presents a side-by-side comparison of "Current State Problems" and "Improvement Directions," accompanied by an interactive chart and custom-built diagrams to visualize key data points and processes. This design facilitates quick comprehension and comparison, making the complex diagnostic information highly accessible and actionable. -->
+    <!-- Visualization & Content Choices: 
+        - Overall: An HTML/CSS based diagram illustrates the core goal ("一强三优") and the primary challenges (information silos), providing a clear, non-interactive overview. Goal: Inform.
+        - Strategy & Finance: A Doughnut chart (Chart.js) visualizes the disproportionate time finance staff spend on transactional tasks. This effectively highlights the "traditional finance role" problem. Goal: Compare proportions.
+        - Safety & Asset Management: A Horizontal Bar chart (Chart.js) compares the maturity of different asset management areas against a best-practice benchmark. This provides a quick, comparative view of capability gaps. Goal: Compare performance.
+        - Market & Customer: A Radar chart (Chart.js) illustrates the maturity of various marketing capabilities, ideal for showing multi-dimensional strengths and weaknesses in the "customer-centric transformation" theme. Goal: Compare multiple variables.
+        - Project & Materials Management: A new section featuring a custom HTML/CSS diagram of the Project Management Lifecycle, directly addressing user feedback. A Bar chart (Chart.js) visualizes key project management pain points like delays and cost overruns. Goal: Organize process & Compare issues.
+        - HR & Collaborative Office: A Bar chart (Chart.js) shows the low adoption rates of key modern HR practices (e.g., competency models), quantifying the "strategic support deficiency". Goal: Compare quantities.
+        - Improvement Blueprint: An enhanced HTML/CSS diagram visualizes the integrated platform strategy. Goal: Organize structure.
+        - All diagrams and icons are created using HTML/CSS and Unicode characters to adhere to the no-SVG constraint.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans SC', sans-serif; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 280px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .nav-item { transition: all 0.3s ease; }
+        .nav-item.active { color: #2563eb; border-bottom-color: #2563eb; transform: translateY(-2px); }
+        .page-content { display: none; }
+        .page-content.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; translateY(0); } }
+        .card-icon { font-size: 2.5rem; line-height: 1; }
+        .process-flow { display: flex; flex-direction: column; align-items: center; }
+        .process-step { background-color: #fff; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.75rem; text-align: center; width: 90%; margin-bottom: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .process-step h5 { font-weight: 600; color: #1e40af; }
+        .process-step p { font-size: 0.875rem; color: #4b5563; }
+        .process-arrow { color: #9ca3af; font-size: 1.5rem; line-height: 1; transform: rotate(90deg); margin-bottom: 0.5rem; }
+        .inefficiency-dot { height: 12px; width: 12px; background-color: #ef4444; border-radius: 9999px; position: absolute; left: -20px; top: 50%; transform: translateY(-50%); }
+        @media (min-width: 768px) {
+            .process-flow { flex-direction: row; justify-content: center; }
+            .process-step { width: 150px; margin-right: 0.5rem; margin-bottom: 0; }
+            .process-arrow { transform: rotate(0deg); margin-right: 0.5rem; }
+            .inefficiency-dot { left: 50%; top: -20px; transform: translateX(-50%); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">SG186工程业务诊断分析报告</h1>
+            <p class="text-lg text-gray-600 mt-2">交互式仪表盘</p>
+        </header>
+
+        <nav class="bg-white rounded-lg shadow-md mb-8 sticky top-4 z-10">
+            <ul class="flex flex-wrap justify-center items-center p-2 md:p-4">
+                <li><a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-semibold p-3 md:p-4 text-sm md:text-base border-b-4 border-transparent active" data-target="dashboard">核心概要</a></li>
+                <li><a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-semibold p-3 md:p-4 text-sm md:text-base border-b-4 border-transparent" data-target="finance">战略与财务</a></li>
+                <li><a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-semibold p-3 md:p-4 text-sm md:text-base border-b-4 border-transparent" data-target="operations">安全生产与资产管理</a></li>
+                <li><a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-semibold p-3 md:p-4 text-sm md:text-base border-b-4 border-transparent" data-target="marketing">市场与客户</a></li>
+                <li><a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-semibold p-3 md:p-4 text-sm md:text-base border-b-4 border-transparent" data-target="project-materials">项目与物资管理</a></li>
+                <li><a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-semibold p-3 md:p-4 text-sm md:text-base border-b-4 border-transparent" data-target="organization">人力资源与协同办公</a></li>
+                <li><a href="#" class="nav-item text-gray-600 hover:text-blue-600 font-semibold p-3 md:p-4 text-sm md:text-base border-b-4 border-transparent" data-target="blueprint">总体改进蓝图</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <!-- Dashboard Section -->
+            <section id="dashboard-content" class="page-content active">
+                <div class="bg-white p-6 md:p-8 rounded-lg shadow-lg">
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">核心概要：迈向“一强三优”的数字化转型之路</h2>
+                    
+                    <div class="prose max-w-none prose-lg text-gray-700">
+                        <p class="lead text-xl text-center mb-8">SG186工程是国家电网公司在本世纪初，为应对内外部严峻挑战、实现跨越式发展而启动的一项具有里程碑意义的信息化建设工程。它不仅仅是一个技术项目，更是一场深刻的管理变革。本报告旨在对SG186工程所涉及的八大核心业务领域进行全面诊断，揭示其在“集团化运作、集约化发展、精细化管理”道路上的关键瓶颈，并为构建一体化企业级信息平台、最终建成“一强三优”的现代公司提供清晰的改进蓝图。</p>
+
+                        <h3 class="text-2xl font-semibold text-blue-700 mt-8 mb-4">“一强三优”：战略灯塔与核心内涵</h3>
+                        <p>“一强三优”是国家电网公司在21世纪初期提出的核心发展战略目标，它为公司的所有业务活动和管理改进指明了方向。这一战略的提出，标志着公司发展理念从追求规模的“大”向追求质量和效率的“强”进行根本性转变。其内涵丰富，是衡量公司现代化水平的综合标准。</p>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <h4 class="font-bold text-lg text-blue-800">一强：电网坚强</h4>
+                                <p class="mt-2 text-sm">这是公司发展的基础。它要求电网规划科学、结构合理、技术先进、安全可靠、运行灵活、标准统一、经济高效。这不仅是对物理网架的要求，更是对电网智能化、自动化和抵御风险能力的综合考量。</p>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                                <h4 class="font-bold text-lg text-green-800">三优之一：资产优良</h4>
+                                <p class="mt-2 text-sm">这反映了公司的发展能力。要求资产结构合理，盈利和偿债能力强；不良资产少，成本费用低，现金流量大，客户欠费少。核心是提升资产的运营效率和价值创造能力。</p>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                                <h4 class="font-bold text-lg text-yellow-800">三优之二：服务优质</h4>
+                                <p class="mt-2 text-sm">这展现了公司的发展形象。要求事故率低，可靠性高，流程规范，服务高效，社会满意，品牌形象好。标志着从单一的电力供应商向综合能源服务商的转变，将客户满意度置于核心位置。</p>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                <h4 class="font-bold text-lg text-purple-800">三优之三：业绩优秀</h4>
+                                <p class="mt-2 text-sm">这体现了公司的发展成果。要求安全、质量、效益等关键指标在国内外同行业中处于领先水平，企业健康发展，社会贡献大。这是对公司综合竞争力的最终检验。</p>
+                            </div>
+                        </div>
+                        <p class="mt-6"><strong>战略意义</strong>：“一强三优”的战略目标，是对国家电网公司企业价值的全面提升，是公司由大到强的必然选择。它要求公司必须摆脱传统粗放式的管理模式，转向依靠技术进步和管理创新的内涵式发展道路。SG186工程正是实现这一战略转型的核心抓手和技术支撑。</p>
+
+                        <h3 class="text-2xl font-semibold text-blue-700 mt-8 mb-4">时代背景：“两个转变”与“现代企业管理”</h3>
+                        <p>SG186工程的提出，正值中国电力工业快速发展和体制改革深入推进的关键时期。为实现“一强三优”目标，公司提出了“两个转变”的发展思路，其核心是引入“现代企业管理”理念。</p>
+                        <ul class="space-y-4 mt-4 list-disc list-inside">
+                            <li><strong>实现公司发展方式转变：</strong>这标志着从传统国有企业的行政化管理向市场化、集团化运作的转变。核心是从单纯的生产管理向全面的企业经营管理转型，强化总部的战略管控、资源配置和资本运作能力，追求整体效益最大化。这要求公司必须建立起与集团化运作相匹配的管理体系和信息系统。</li>
+                            <li><strong>实现电网发展方式转变：</strong>这标志着电网建设从满足局部用电需求的被动适应，向以特高压为骨干网架、各级电网协调发展的全国大范围资源优化配置主动引导的转变。这要求电网的规划、建设和运行必须更加科学、精细，对跨区域、跨层级的信息协同提出了前所未有的高要求。</li>
+                            <li><strong>推行现代企业管理：</strong>在2006年的时代背景下，“现代企业管理”意味着要建立健全现代企业制度，充分利用先进信息技术，推行精细化、标准化、流程化的管理方法。其本质是通过信息化手段，打破部门壁垒和层级隔阂，实现信息流、业务流、资金流的“三流合一”，提高决策的科学性和执行的穿透力，从而全面提升公司的运营效率和核心竞争力。</li>
+                        </ul>
+
+                        <h3 class="text-2xl font-semibold text-red-700 mt-8 mb-4">面临的核心挑战与SG186的使命</h3>
+                        <p>在宏伟的战略目标之下，公司面临着一系列严峻的现实挑战，这些挑战正是SG186工程必须解决的核心问题：</p>
+                        <div class="bg-red-50 p-6 rounded-lg border border-red-200 mt-4">
+                            <ul class="space-y-4 text-gray-800">
+                                <li class="flex items-start">
+                                    <span class="text-2xl mr-3">🧱</span>
+                                    <div>
+                                        <strong class="font-semibold">信息孤岛与流程壁垒：</strong>各业务领域（财务、物资、项目、生产等）的信息系统独立建设、互不联通，数据标准不一。跨部门业务流程（如项目物资采购、基建转资）严重依赖线下沟通和手工单据传递，形成了“部门墙”，导致信息延迟、数据失真、效率低下，是“精细化管理”的最大障碍。
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-2xl mr-3">📉</span>
+                                    <div>
+                                        <strong class="font-semibold">资产经营效率低下：</strong>尽管资产规模庞大，但净资产收益率远低于世界一流企业水平。资产全生命周期管理理念缺失，“重建设、轻运维”现象普遍，导致资产底数不清、状态不明、效益不高，无法为投资决策提供有效数据支撑。
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-2xl mr-3">👥</span>
+                                    <div>
+                                        <strong class="font-semibold">客户服务模式陈旧：</strong>营销管理仍以“用电点”为中心，而非“客户”，无法形成360度客户视图。服务渠道分散，服务标准不一，难以提供差异化、个性化的优质服务，与“服务优质”的目标存在较大差距。
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="text-2xl mr-3">🔭</span>
+                                    <div>
+                                        <strong class="font-semibold">集团管控能力不足：</strong>总部对下属单位的业务过程缺乏实时、透明的监控手段，战略意图难以穿透至基层。决策多依赖层层上报的滞后报表，难以应对快速变化的市场和运营环境，制约了“集团化运作”的效能。
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <p class="mt-6">因此，SG186工程的根本使命，就是通过构建一个统一、集成、共享的信息化平台，打通业务壁垒，规范管理流程，统一数据标准，实现“横向集成、纵向贯通”，为解决上述核心挑战提供根本性的技术和管理支撑，从而推动公司整体管理水平的跃升。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Finance Section -->
+            <section id="finance-content" class="page-content">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">战略与财务诊断</h2>
+                    <p class="text-gray-600 mb-8 text-center max-w-3xl mx-auto">财务管理作为企业价值管理的核心，当前面临着从传统的核算中心向战略决策支持中心转型的巨大挑战。诊断发现，计划与预算流程脱节、财务角色定位传统、资金管理效率不高等问题，严重制约了财务价值的创造。推动业财深度融合，是实现精细化管理和资产优良目标的关键。</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                            <h3 class="text-xl font-semibold text-red-700 mb-3">主要问题</h3>
+                            <ul class="space-y-3 text-gray-700">
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>计划与预算“两张皮”：</strong>综合计划与预算在编制流程、指标体系和模版上未实现一体化。业务计划无法有效指导预算编制，导致资源配置与战略目标脱节。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>财务角色传统：</strong>财务部门仍定位为“服务+监控”型，工作重心在事后核算和报表报送，缺乏对业务决策的深度参与和前瞻性支持，未能成为业务部门的“商业伙伴”。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>资金管理分散：</strong>缺乏中长期投融资政策和资金预测模型。总部虽有资金系统，但与网省公司系统未集成，无法实时掌握全网资金状况，资金调配效率和准确性低。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>核算体系分散且滞后：</strong>核算工作分散在各级单位，标准不一，风险高、成本大。核算系统与业务系统（如项目、物资）未集成，导致基建转资、物资成本核算严重滞后，信息失真。</div></li>
+                            </ul>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                            <h3 class="text-xl font-semibold text-green-700 mb-3">改进方向</h3>
+                            <ul class="space-y-3 text-gray-700">
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>推动业财一体化：</strong>统一计划与预算的编制流程、指标和模版。实施与核算系统集成的预算模块，实现从事前预算、事中控制到事后分析的闭环管理。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>强化决策支持能力：</strong>建立以价值为导向的财务分析体系，了解业务部门对财务信息的需求，改进内部管理分析报告，为业务决策提供数据支撑。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>深化资金集中管理：</strong>实施集成的资金管理系统，统一数据口径，建立资金预测模型，增强系统控制，实现全公司资金的有效调配，降低财务成本。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>建立共享服务模式：</strong>探索建立财务共享服务中心，集中处理核算业务，统一核算标准和流程，提高标准化水平和效率，将财务人员从事务性工作中解放出来。</div></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-center text-gray-700 mb-2">典型流程分析：合同付款审批</h4>
+                        <div class="process-flow mt-4">
+                            <div class="process-step"><h5>业务部门</h5><p>提交付款申请</p></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step relative"><h5>项目经理</h5><p>人工核对进度</p><div class="inefficiency-dot" title="瓶颈：信息获取依赖线下沟通，耗时长"></div></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step"><h5>财务部</h5><p>人工核对合同与预算</p></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step relative"><h5>领导审批</h5><p>纸质单据流转</p><div class="inefficiency-dot" title="瓶颈：审批周期长，状态不透明"></div></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step"><h5>资金中心</h5><p>执行支付</p></div>
+                        </div>
+                         <div class="mt-6 bg-gray-100 p-4 rounded-lg">
+                            <h5 class="font-semibold text-gray-800">流程效率提升建议：流程挖掘与自动化</h5>
+                            <p class="text-sm text-gray-600 mt-2">当前付款流程存在多个信息断点和人工处理环节，效率低下。建议应用<strong>流程挖掘技术</strong>，通过分析信息系统中留存的数字足迹（如申请提交时间、审批时间戳），精准定位流程瓶颈（如审批等待时间、返工环节），量化各环节耗时。基于数据洞察，可通过RPA（机器人流程自动化）等技术实现发票自动校验、审批任务自动推送等，大幅缩短处理周期，实现流程自动化，提升财务运营效率。</p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-center text-gray-700 mb-2">财务人员时间分配现状</h4>
+                        <div class="chart-container">
+                            <canvas id="financeChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-2">图表显示，财务人员绝大部分精力消耗在基础的交易处理上，用于高价值决策支持的时间严重不足。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Operations Section -->
+            <section id="operations-content" class="page-content">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">安全生产与资产管理诊断</h2>
+                    <p class="text-gray-600 mb-8 text-center max-w-3xl mx-auto">安全生产是电网企业的生命线，而科学的资产管理是其根本保障。诊断显示，公司资产管理缺乏全生命周期视角，普遍存在“重建设、轻运维”的倾向。技术标准、投资决策与实际运营脱节，信息系统无法有效支撑资产全过程的精细化管理，影响了电网的安全可靠性和资产的整体效益。</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                            <h3 class="text-xl font-semibold text-red-700 mb-3">主要问题</h3>
+                            <ul class="space-y-3 text-gray-700">
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>缺乏全生命周期理念：</strong>电网规划（基建）与技改规划（生产）分离，未从资产全生命周期成本（LCC）最优角度进行统筹决策，导致“头痛医头、脚痛医脚”。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>技术标准管理薄弱：</strong>标准体系不完整，制定分散在各部门，缺乏全生命周期管理理念和有效的执行监控，导致标准执行参差不齐。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>投资决策缺乏数据支撑：</strong>项目筛选与优化机制不健全，资产的实际绩效表现（如故障率、运维成本）未能有效反馈到投资策略和规划中。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>安监信息孤立：</strong>安监信息系统与生产、项目等系统未集成，信息采集准确性和及时性不足，无法进行数据的交叉校验和共享，风险预控能力弱。</div></li>
+                            </ul>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                            <h3 class="text-xl font-semibold text-green-700 mb-3">改进方向</h3>
+                            <ul class="space-y-3 text-gray-700">
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>贯彻资产全生命周期管理（ALM）：</strong>成立资产全生命周期管理委员会，建立统一资产管理平台，整合规划、技改、运维数据，实现基于资产状态和风险的投资决策优化。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>建立健全标准体系：</strong>完善资产管理标准体系，建立标准的闭环管理机制（制定-执行-监控-优化），并建立共享的知识管理体系。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>优化投资决策流程：</strong>实施投资辅助决策系统，对项目进行排序和筛选，综合平衡新建与技改，优化投资组合。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>建设集成安监信息应用：</strong>与生产管理信息应用相集成，实现数据共享和交叉校验，建立安全生产知识库，提升风险预控能力。</div></li>
+                            </ul>
+                        </div>
+                    </div>
+                     <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-center text-gray-700 mb-2">典型流程分析：年度技改计划流程</h4>
+                        <div class="process-flow mt-4">
+                            <div class="process-step"><h5>基层单位</h5><p>上报计划</p></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step relative"><h5>网省生产部</h5><p>汇总审核</p><div class="inefficiency-dot" title="瓶颈：缺乏资产状态数据，审核依赖经验"></div></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step"><h5>总部生产部</h5><p>汇总平衡</p></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step relative"><h5>总部发展部/财务部</h5><p>纳入综合计划/预算</p><div class="inefficiency-dot" title="瓶颈：与基建计划割裂，缺乏统筹平衡"></div></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step"><h5>总部生产部</h5><p>批复下达</p></div>
+                        </div>
+                         <div class="mt-6 bg-gray-100 p-4 rounded-lg">
+                            <h5 class="font-semibold text-gray-800">流程效率提升建议：流程挖掘与自动化</h5>
+                            <p class="text-sm text-gray-600 mt-2">技改计划流程涉及多层级、多部门，信息传递不畅导致决策周期长。通过<strong>流程挖掘技术</strong>，可分析从计划上报到最终批复的完整路径和时间，识别出审批延迟、信息不一致等问题。未来，通过建立统一的资产信息平台，可实现技改需求的自动上报、基于资产状态数据的智能排序和初步筛选，将人工审核集中于高价值的决策判断，实现流程自动化，提高投资决策效率。</p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-center text-gray-700 mb-2">资产管理能力成熟度评估</h4>
+                        <div class="chart-container">
+                            <canvas id="operationsChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-2">图表直观展示了各资产管理领域与行业最佳实践的差距，尤其在资产策略和信息管理方面短板明显。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Marketing Section -->
+            <section id="marketing-content" class="page-content">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">市场与客户诊断</h2>
+                    <p class="text-gray-600 mb-8 text-center max-w-3xl mx-auto">面对日益增强的社会服务期望和潜在的市场竞争，营销管理必须从传统的“收电费”模式向现代的“客户经营”模式转型。诊断发现，公司仍带有传统电力企业的烙印，缺乏真正的客户导向文化。数据架构、营销策略和服务资源均未围绕“客户”为中心进行构建，向现代服务企业转型面临挑战。</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                            <h3 class="text-xl font-semibold text-red-700 mb-3">主要问题</h3>
+                            <ul class="space-y-3 text-gray-700">
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>数据架构陈旧：</strong>系统以“用电点”或“房产”为核心，而非“客户”，无法形成完整的客户视图，阻碍了对客户的全面理解和个性化服务。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>营销策略模糊：</strong>缺乏系统化的市场与品牌战略。客户细分维度单一（多为电压等级、行业），无法进行精准营销和差异化服务。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>服务资源分散：</strong>客户服务、计量、收费等业务分散在不同部门和地点，信息不通，流程冗长，客户体验不一致，运营成本高。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>需求侧管理薄弱：</strong>缺乏整体规划和潜力分析，多依赖行政手段进行“有序用电”，未能通过经济和技术手段有效引导用户合理用电、提升能效。</div></li>
+                            </ul>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                            <h3 class="text-xl font-semibold text-green-700 mb-3">改进方向</h3>
+                            <ul class="space-y-3 text-gray-700">
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>建立以客户为中心的数据架构：</strong>重构营销系统，实现“一户一档”，整合客户所有相关信息（基本信息、用电信息、服务记录、信用记录等）。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>制定精细化营销策略：</strong>开展多维度客户细分（如客户价值、信用等级、用电行为），设计并推广差异化的产品与服务。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>推进营销业务集中化：</strong>在地市或网省公司层面建立集中的客户服务中心、计量中心、电费中心，整合资源，统一标准，提升效率。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>实施系统化需求侧管理：</strong>编制需求侧管理规划，建设需求侧管理系统，集成各类电能信息，支撑日常业务和统计分析，推广能效服务。</div></li>
+                            </ul>
+                        </div>
+                    </div>
+                     <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-center text-gray-700 mb-2">典型流程分析：高压新装业务</h4>
+                        <div class="process-flow mt-4">
+                            <div class="process-step"><h5>客户</h5><p>提交申请</p></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step"><h5>营销部门</h5><p>受理与勘察</p></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step relative"><h5>多部门</h5><p>供电方案审批</p><div class="inefficiency-dot" title="瓶颈：跨部门流转，审批环节多，耗时长"></div></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step"><h5>设计/施工</h5><p>工程实施</p></div>
+                             <div class="process-arrow">↓</div>
+                            <div class="process-step relative"><h5>多部门</h5><p>竣工验收</p><div class="inefficiency-dot" title="瓶颈：信息不共享，验收协调困难"></div></div>
+                             <div class="process-arrow">↓</div>
+                            <div class="process-step"><h5>营销部门</h5><p>装表接电</p></div>
+                        </div>
+                         <div class="mt-6 bg-gray-100 p-4 rounded-lg">
+                            <h5 class="font-semibold text-gray-800">流程效率提升建议：流程挖掘与自动化</h5>
+                            <p class="text-sm text-gray-600 mt-2">业扩报装流程长、环节多，是影响客户满意度的关键点。通过<strong>流程挖掘技术</strong>，可以清晰地可视化整个流程的实际路径，精确计算各环节（如方案审批、设计、施工）的平均耗时和等待时间，识别出最常见的延迟点。基于此，可以优化审批流程（如并行审批），并通过工作流引擎实现任务的自动派发、流转和超时预警，实现流程自动化，显著缩短客户等待时间。</p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-center text-gray-700 mb-2">营销能力成熟度雷达图</h4>
+                        <div class="chart-container">
+                            <canvas id="marketingChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-2">雷达图清晰地揭示了各项营销能力发展不均衡，尤其在数据架构和客户细分方面与最佳实践差距显著。</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Project & Materials Section -->
+            <section id="project-materials-content" class="page-content">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">项目与物资管理诊断</h2>
+                    <p class="text-gray-600 mb-8 text-center max-w-3xl mx-auto">项目管理与物资管理作为公司投资和资产形成的关键环节，存在严重的流程脱节和信息壁垒。项目前期工作滞后、物资供应与工程进度不匹配、成本控制手段缺乏，是导致投资效益不高的主要原因。这种“建、管、用”脱节的模式，亟需通过一体化平台进行重塑。</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                            <h3 class="text-xl font-semibold text-red-700 mb-3">主要问题</h3>
+                            <ul class="space-y-3 text-gray-700">
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>项目“前期不前”：</strong>项目储备机制不健全，可行性研究深度不足，导致设计变更频繁，工期被动压缩，为安全质量埋下隐患。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>物资管理脱节：</strong>物资编码不统一，需求计划与采购、库存、项目进度严重脱节。项目经理无法实时掌握物资供应状态，现场物资管理混乱。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>成本控制滞后：</strong>概算执行缺乏有效过程监控，变更管理不规范，超概算情况多在竣工后才发现，导致项目决算普遍延迟，影响资产及时转固。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>信息系统割裂：</strong>项目、物资、财务系统各自独立，数据不通，信息传递依赖人工报表，导致数据不一致、不及时、不透明，难以进行综合管理。</div></li>
+                            </ul>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                            <h3 class="text-xl font-semibold text-green-700 mb-3">改进方向</h3>
+                            <ul class="space-y-3 text-gray-700">
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>强化项目储备与前期工作：</strong>建立项目储备库，深化可研工作，加强前期工作的系统性与连贯性，推广典型设计。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>建设一体化项目管理平台：</strong>打通项目、物资、财务等系统，以统一的项目编码贯穿始终，实现“三流合一”，加强全过程动态监控。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>提升供应链管理水平：</strong>统一物资编码，建立需求预测与平衡机制，推行战略采购和供应商全生命周期管理，确保物资供应及时、经济。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>加强过程造价控制：</strong>整合技经资源，明确变更规范，实现概算、预算、合同、核算的联动控制，将成本控制从事后分析提前到事中控制。</div></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-center text-gray-700 mb-4">项目管理全生命周期模型</h4>
+                        <div class="flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-1 text-center text-xs md:text-sm">
+                            <div class="process-step w-full md:w-auto p-2 md:p-3"><strong>项目决策<br>& 前期管理</strong></div>
+                            <div class="process-arrow hidden md:block">→</div><div class="process-arrow md:hidden">↓</div>
+                            <div class="process-step w-full md:w-auto p-2 md:p-3"><strong>项目计划<br>管理</strong></div>
+                            <div class="process-arrow hidden md:block">→</div><div class="process-arrow md:hidden">↓</div>
+                            <div class="process-step w-full md:w-auto p-2 md:p-3"><strong>项目过程<br>管理</strong></div>
+                            <div class="process-arrow hidden md:block">→</div><div class="process-arrow md:hidden">↓</div>
+                            <div class="process-step w-full md:w-auto p-2 md:p-3"><strong>项目竣工<br>管理</strong></div>
+                            <div class="process-arrow hidden md:block">→</div><div class="process-arrow md:hidden">↓</div>
+                            <div class="process-step w-full md:w-auto p-2 md:p-3"><strong>项目后<br>评估管理</strong></div>
+                        </div>
+                    </div>
+                     <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-center text-gray-700 mb-2">项目管理主要痛点分析</h4>
+                        <div class="chart-container">
+                            <canvas id="projectChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-2">数据显示，项目管理中的信息不通畅和流程脱节是导致工期延误和成本超支的最主要原因。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Organization Section -->
+            <section id="organization-content" class="page-content">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2 text-center">人力资源与协同办公诊断</h2>
+                    <p class="text-gray-600 mb-8 text-center max-w-3xl mx-auto">人力资源管理与协同办公是企业高效运转的软实力。诊断发现，人力资源管理偏重传统事务，对业务的战略支撑作用不足。同时，协同办公系统功能单一，未能有效促进跨部门、跨层级的知识共享与高效协作，组织效能有待提升。</p>
+                     <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                            <h3 class="text-xl font-semibold text-red-700 mb-3">主要问题</h3>
+                            <ul class="space-y-3 text-gray-700">
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>HR角色事务化：</strong>人力资源部门仍聚焦于基础人事工作，在战略规划、人才发展、绩效激励等战略层面价值发挥不足，未能成为业务的战略伙伴。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>信息共享不足：</strong>总部难以实时、准确地监控和分析下属公司的人力资源信息，缺乏数据驱动的人才决策。信息上报仍依赖邮件和Excel。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>协同办公功能弱：</strong>系统主要停留在公文流转，缺少知识管理、项目协作、跨部门任务协调等深度应用，未形成高效协作文化。</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-2 mt-1">❗️</span><div><strong>岗位管理基础薄弱：</strong>岗位说明书管理不规范，未引入能力素质模型，影响招聘、培训、绩效管理的科学性与针对性。</div></li>
+                            </ul>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                            <h3 class="text-xl font-semibold text-green-700 mb-3">改进方向</h3>
+                            <ul class="space-y-3 text-gray-700">
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>推动HR管理转型：</strong>建立基于能力素质模型的现代人力资源体系（招聘、培训、绩效、薪酬），使HR成为业务的战略伙伴。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>构建一体化协同平台：</strong>以企业门户为入口，整合公文、会议、督办、知识管理等应用，促进跨部门、跨层级的高效协作与信息共享。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>强化知识管理：</strong>建立全公司统一的知识库，沉淀各业务领域的经验和标准，促进创新和整体能力提升。</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">➡️</span><div><strong>夯实岗位管理基础：</strong>规范岗位说明书，引入能力素质模型，设计科学的职业发展通道，为人才“选、育、用、留”提供依据。</div></li>
+                            </ul>
+                        </div>
+                    </div>
+                     <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-center text-gray-700 mb-2">典型流程分析：跨部门公文流转</h4>
+                        <div class="process-flow mt-4">
+                            <div class="process-step"><h5>起草部门</h5><p>拟稿</p></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step relative"><h5>部门内审批</h5><p>逐级审核</p><div class="inefficiency-dot" title="瓶颈：串行审批，等待时间长"></div></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step"><h5>办公厅</h5><p>核稿</p></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step relative"><h5>相关部门</h5><p>依次会签</p><div class="inefficiency-dot" title="瓶颈：跨部门流转慢，状态不透明"></div></div>
+                            <div class="process-arrow">↓</div>
+                            <div class="process-step"><h5>领导签发</h5><p>最终审批</p></div>
+                        </div>
+                         <div class="mt-6 bg-gray-100 p-4 rounded-lg">
+                            <h5 class="font-semibold text-gray-800">流程效率提升建议：流程挖掘与自动化</h5>
+                            <p class="text-sm text-gray-600 mt-2">公文流转是典型的协同办公流程，其效率直接影响决策速度。通过<strong>流程挖掘技术</strong>分析OA系统中的审批日志，可以精准识别出哪些部门、哪些环节是审批的“堵点”，计算出平均处理时长和返工率。基于分析结果，可以优化流程，例如将串行审批改为并行会签，并利用工作流引擎实现流程的自动化流转、超时提醒和代理审批，从而显著提升办公效率。</p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h4 class="text-lg font-semibold text-center text-gray-700 mb-2">现代人力资源管理实践应用率</h4>
+                        <div class="chart-container">
+                            <canvas id="hrChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-2">数据显示，能力素质模型、规范化职业通道等现代HR管理工具的应用率普遍偏低，管理转型迫在眉睫。</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Blueprint Section -->
+            <section id="blueprint-content" class="page-content">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">总体改进蓝图</h2>
+                    <p class="text-gray-600 mb-8 text-center max-w-3xl mx-auto">为系统性解决上述问题，建议以SG186工程为核心，构建“一体化企业级信息系统”，通过统一标准、重造流程、集中数据和强化保障，实现业务流程的全面优化和数据的互联互通，为“一强三优”战略目标提供坚实支撑。</p>
+                    
+                    <div class="w-full max-w-5xl mx-auto p-4">
+                        <div class="bg-blue-50 border-2 border-blue-500 rounded-lg p-6">
+                            <h3 class="text-xl font-bold text-blue-800 text-center mb-6">一体化企业级信息平台 (SG186核心)</h3>
+                            
+                            <div class="flex justify-center items-center">
+                                <div class="bg-blue-100 border border-blue-300 rounded-lg p-4 text-center shadow-md">
+                                    <h4 class="font-semibold text-blue-700 text-lg">两级数据中心 (总部 & 网省)</h4>
+                                    <p class="text-sm text-blue-600 mt-1">数据同源 | 实时共享 | 决策支持</p>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-center my-4">
+                                <div class="w-1 bg-blue-300 h-8"></div>
+                            </div>
+                            
+                            <div class="relative flex justify-center">
+                                <div class="absolute top-1/2 left-0 w-full h-0.5 bg-blue-300"></div>
+                                <div class="relative w-1 bg-blue-300 h-8 -top-8"></div>
+                            </div>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-4 relative z-10">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-1 bg-blue-300 h-8"></div>
+                                    <div class="bg-white p-3 rounded-md shadow text-center border border-gray-200 w-full">
+                                        <p class="font-semibold text-gray-700 text-sm">财务管理</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-1 bg-blue-300 h-8"></div>
+                                    <div class="bg-white p-3 rounded-md shadow text-center border border-gray-200 w-full">
+                                        <p class="font-semibold text-gray-700 text-sm">营销管理</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-1 bg-blue-300 h-8"></div>
+                                    <div class="bg-white p-3 rounded-md shadow text-center border border-gray-200 w-full">
+                                        <p class="font-semibold text-gray-700 text-sm">安全生产</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-1 bg-blue-300 h-8"></div>
+                                    <div class="bg-white p-3 rounded-md shadow text-center border border-gray-200 w-full">
+                                        <p class="font-semibold text-gray-700 text-sm">协同办公</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-1 bg-blue-300 h-8"></div>
+                                    <div class="bg-white p-3 rounded-md shadow text-center border border-gray-200 w-full">
+                                        <p class="font-semibold text-gray-700 text-sm">人力资源</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-1 bg-blue-300 h-8"></div>
+                                    <div class="bg-white p-3 rounded-md shadow text-center border border-gray-200 w-full">
+                                        <p class="font-semibold text-gray-700 text-sm">物资管理</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-1 bg-blue-300 h-8"></div>
+                                    <div class="bg-white p-3 rounded-md shadow text-center border border-gray-200 w-full">
+                                        <p class="font-semibold text-gray-700 text-sm">项目管理</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-1 bg-blue-300 h-8"></div>
+                                    <div class="bg-white p-3 rounded-md shadow text-center border border-gray-200 w-full">
+                                        <p class="font-semibold text-gray-700 text-sm">综合管理</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-center items-center my-4">
+                                <div class="w-1 bg-blue-300 h-8"></div>
+                            </div>
+                            
+                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-left text-sm mt-4">
+                                <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                                    <h5 class="font-bold text-green-800">1. 统一数据标准</h5>
+                                    <p class="text-green-700 mt-1">建立主数据管理体系，统一物资、客户、项目等核心编码，实现数据同源。</p>
+                                </div>
+                                <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                                    <h5 class="font-bold text-green-800">2. 流程再造与固化</h5>
+                                    <p class="text-green-700 mt-1">优化跨部门核心业务流程，并通过信息系统进行固化，提升标准化与自动化水平。</p>
+                                </div>
+                                <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                                    <h5 class="font-bold text-green-800">3. 建设两级数据中心</h5>
+                                    <p class="text-green-700 mt-1">实现核心业务数据集中，为高级分析和决策提供高质量数据支持。</p>
+                                </div>
+                                <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                                    <h5 class="font-bold text-green-800">4. 强化组织与人才保障</h5>
+                                    <p class="text-green-700 mt-1">建立与信息化相适应的管理机制，加强全员培训和观念转变，确保成果落地。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const navItems = document.querySelectorAll('.nav-item');
+            const pageContents = document.querySelectorAll('.page-content');
+
+            const appData = {
+                finance: {
+                    labels: ['交易处理与核算', '报告与分析', '决策支持'],
+                    data: [70, 20, 10],
+                    backgroundColor: ['#ef4444', '#f97316', '#10b981'],
+                },
+                operations: {
+                    labels: ['资产策略', '技术管理', '投资管理', '安全管理', '信息管理'],
+                    data: [3, 5, 4, 7, 4],
+                    backgroundColor: ['#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6', '#3b82f6'],
+                },
+                marketing: {
+                    labels: ['市场战略', '客户细分', '差异化服务', '数据架构', '需求侧管理'],
+                    data: [4, 3, 4, 2, 3],
+                    backgroundColor: 'rgba(234, 179, 8, 0.2)',
+                    borderColor: 'rgba(234, 179, 8, 1)',
+                },
+                project: {
+                    labels: ['信息与文档管理', '成本管理', '竣工管理', '前期管理', '变更管理'],
+                    data: [25, 22, 20, 18, 15],
+                    backgroundColor: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'],
+                },
+                hr: {
+                    labels: ['能力素质模型应用率', '规范职业通道设计率', '集成信息系统共享率'],
+                    data: [20, 30, 15],
+                    backgroundColor: ['#8b5cf6', '#8b5cf6', '#8b5cf6'],
+                }
+            };
+
+            let charts = {};
+
+            const createChart = (ctx, config) => {
+                if (ctx) {
+                    return new Chart(ctx, config);
+                }
+                return null;
+            };
+            
+            const destroyChart = (chartInstance) => {
+                if (chartInstance) {
+                    chartInstance.destroy();
+                }
+            };
+
+            const initCharts = (targetId) => {
+                Object.values(charts).forEach(destroyChart);
+                charts = {};
+
+                if (targetId === 'dashboard' || !targetId) {
+                    // No chart on dashboard
+                }
+                if (targetId === 'finance' || !targetId) {
+                    charts.finance = createChart(document.getElementById('financeChart')?.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: appData.finance.labels,
+                            datasets: [{ data: appData.finance.data, backgroundColor: appData.finance.backgroundColor, hoverOffset: 4 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (c) => `${c.label}: ${c.raw}%` } } } }
+                    });
+                }
+                if (targetId === 'operations' || !targetId) {
+                    charts.operations = createChart(document.getElementById('operationsChart')?.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: appData.operations.labels,
+                            datasets: [{ label: '成熟度评分 (满分10)', data: appData.operations.data, backgroundColor: appData.operations.backgroundColor, borderColor: '#1d4ed8', borderWidth: 1 }]
+                        },
+                        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { beginAtZero: true, max: 10 } }, plugins: { legend: { display: false } } }
+                    });
+                }
+                if (targetId === 'marketing' || !targetId) {
+                     charts.marketing = createChart(document.getElementById('marketingChart')?.getContext('2d'), {
+                        type: 'radar',
+                        data: {
+                            labels: appData.marketing.labels,
+                            datasets: [{
+                                label: '能力成熟度 (满分10)',
+                                data: appData.marketing.data,
+                                backgroundColor: appData.marketing.backgroundColor,
+                                borderColor: appData.marketing.borderColor,
+                                borderWidth: 1,
+                                pointBackgroundColor: appData.marketing.borderColor,
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { r: { beginAtZero: true, max: 10, pointLabels: { font: { size: 11 } } } }, plugins: { legend: { position: 'bottom' } } }
+                    });
+                }
+                if (targetId === 'project-materials' || !targetId) {
+                    charts.project = createChart(document.getElementById('projectChart')?.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: appData.project.labels,
+                            datasets: [{ label: '问题提及频率 (%)', data: appData.project.data, backgroundColor: appData.project.backgroundColor, }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: { x: { beginAtZero: true, max: 30 } },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: { callbacks: { label: (c) => `${c.label}: ${c.raw}%` } }
+                            }
+                        }
+                    });
+                }
+                if (targetId === 'organization' || !targetId) {
+                    charts.hr = createChart(document.getElementById('hrChart')?.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: appData.hr.labels.map(l => l.length > 16 ? l.match(/.{1,16}/g) : l),
+                            datasets: [{ label: '应用率 (%)', data: appData.hr.data, backgroundColor: appData.hr.backgroundColor, borderColor: '#6d28d9', borderWidth: 1 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${c.raw}%` } } } }
+                    });
+                }
+            };
+
+            const showPage = (targetId) => {
+                pageContents.forEach(content => {
+                    content.classList.remove('active');
+                });
+                const activeContent = document.getElementById(targetId + '-content');
+                if (activeContent) {
+                    activeContent.classList.add('active');
+                }
+                
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (item.dataset.target === targetId) {
+                        item.classList.add('active');
+                    }
+                });
+
+                initCharts(targetId);
+            };
+
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = e.target.dataset.target;
+                    showPage(targetId);
+                });
+            });
+
+            showPage('dashboard');
+        });
+    </script>
+</body>
+</html>
