@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NTT Data 全球化之路：互动式分析报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Subtle Blue/Green Accents -->
+    <!-- Application Structure Plan: The application is structured as a narrative journey in four acts, guiding the user from the macro context to NTT Data's specific strategies and future outlook. This non-linear, thematic structure is more engaging than the report's linear format. It starts with a comparison (Act I), moves to NTT Data's foundation and unique approach (Act II), details the core M&A strategy with interactive elements (Act III), and concludes with future vision and lessons (Act IV). This flow is designed to build understanding progressively, making the complex analysis digestible and memorable for the user. Key interactions include tabbed content for comparison, an interactive acquisition timeline, and dynamic charts to visualize growth. -->
+    <!-- Visualization & Content Choices: 
+        - Comparison (Act I): Goal: Compare two globalization models. Method: Interactive tabbed cards (HTML/CSS/JS) for direct side-by-side analysis. Justification: More engaging and clearer than a static table.
+        - Globalization Pace (NEW): Goal: Compare NTT Data's growth vs. Japan's overall globalization. Method: Dual-axis line chart (Chart.js) showing NTT Data's overseas revenue vs. Japan's outward FDI. Justification: Visually demonstrates the "two-speed" phenomenon and highlights NTT Data's aggressive strategy.
+        - Globalization Phases (Act II): Goal: Show evolution. Method: A horizontal timeline with clickable stages (HTML/CSS/JS). Justification: Visually represents progression and allows user-controlled exploration of details.
+        - M&A Impact (Act III): Goal: Demonstrate growth from acquisitions. Method: A dynamic Bar Chart (Chart.js) showing revenue/employee growth linked to key acquisitions. Justification: Quantifies the impact of the M&A strategy effectively.
+        - Key Acquisitions (Act III): Goal: Detail major M&A deals. Method: An interactive vertical timeline where clicking a deal reveals a detailed info card. Justification: Organizes dense information cleanly and encourages user interaction to learn more.
+        - Future Investments (Act IV): Goal: Inform about future plans. Method: Animated stat cards (HTML/CSS/JS). Justification: Presents key financial data in a visually impactful and easily digestible format.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F4;
+            color: #3D405B;
+        }
+        .bg-base { background-color: #F8F7F4; }
+        .bg-surface { background-color: #FFFFFF; }
+        .bg-primary { background-color: #3D405B; }
+        .text-primary { color: #3D405B; }
+        .text-secondary { color: #81B29A; }
+        .text-accent { color: #E07A5F; }
+        .text-info { color: #6D98BA; }
+        .border-primary { border-color: #3D405B; }
+        .border-secondary { border-color: #81B29A; }
+        .border-accent { border-color: #E07A5F; }
+        .nav-link {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #E07A5F;
+            border-bottom-color: #E07A5F;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background-color: #3D405B;
+            color: #FFFFFF;
+        }
+        .content-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+            padding-left: 2.5rem;
+        }
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 1.25rem;
+            width: 1.25rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #FFFFFF;
+            border: 3px solid #81B29A;
+            transition: all 0.3s ease;
+        }
+        .timeline-item:hover .timeline-dot {
+            transform: scale(1.2);
+            border-color: #E07A5F;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 0.5rem;
+            top: 1.25rem;
+            width: 2px;
+            height: 100%;
+            background-color: #D1D5DB;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-base">
+
+    <header class="bg-surface/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl md:text-2xl font-bold text-primary">NTT Data 全球化之路</h1>
+                <div class="hidden md:flex items-center space-x-2 text-sm font-medium">
+                    <a class="nav-link" onclick="scrollToSection('act1')">两种路径</a>
+                    <a class="nav-link" onclick="scrollToSection('act1_5')">双速全球化</a>
+                    <a class="nav-link" onclick="scrollToSection('act2')">三段式演进</a>
+                    <a class="nav-link" onclick="scrollToSection('act3')">并购引擎</a>
+                    <a class="nav-link" onclick="scrollToSection('act4')">未来蓝图</a>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="bg-white border border-gray-300 rounded-md p-2 text-sm">
+                        <option value="act1">两种路径</option>
+                        <option value="act1_5">双速全球化</option>
+                        <option value="act2">三段式演进</option>
+                        <option value="act3">并购引擎</option>
+                        <option value="act4">未来蓝图</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        
+        <section id="hero" class="text-center py-12 md:py-20">
+            <h2 class="text-3xl md:text-5xl font-bold text-primary leading-tight">NTT Data的全球崛起</h2>
+            <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">一个日本IT巨头如何打破传统，通过精心策划的并购与整合，为日本企业的全球化提供了全新的蓝图。</p>
+        </section>
+
+        <!-- Act 1: Two Paths -->
+        <section id="act1" class="py-12 md:py-16">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold text-primary">第一幕：两种全球化的故事</h3>
+                <p class="mt-2 text-gray-600 max-w-2xl mx-auto">NTT Data的成功之路并非孤例，它的独特性在于对传统日本企业全球化模式的继承与颠覆。理解这两种模式的差异，是解开其成功密码的第一步。</p>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-center mb-8 bg-gray-200 rounded-full p-1">
+                    <button id="tab-btn-trad" class="tab-button flex-1 py-2 px-4 rounded-full text-sm md:text-base font-semibold active" onclick="switchTab('trad')">传统日本MNC模式</button>
+                    <button id="tab-btn-ntt" class="tab-button flex-1 py-2 px-4 rounded-full text-sm md:text-base font-semibold" onclick="switchTab('ntt')">NTT Data模式</button>
+                </div>
+                <div id="tab-content-trad" class="tab-content">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-surface p-6 rounded-lg shadow-sm content-card">
+                            <h4 class="font-bold text-lg text-primary">增长方式：有机生长</h4>
+                            <p class="mt-2 text-sm text-gray-600">倾向于谨慎的有机增长、建立“绿地”工厂或进行小规模合资，步伐稳健但相对缓慢。</p>
+                        </div>
+                        <div class="bg-surface p-6 rounded-lg shadow-sm content-card">
+                            <h4 class="font-bold text-lg text-primary">领导力：中央集权</h4>
+                            <p class="mt-2 text-sm text-gray-600">严重依赖日本外派人员进行管理和控制，决策权高度集中于东京总部，导致本地化进程缓慢。</p>
+                        </div>
+                        <div class="bg-surface p-6 rounded-lg shadow-sm content-card">
+                            <h4 class="font-bold text-lg text-primary">文化与品牌：内向聚焦</h4>
+                            <p class="mt-2 text-sm text-gray-600">品牌强调日本属性，或对收购的品牌采取松散管理。存在“加拉帕戈斯综合症”风险。</p>
+                        </div>
+                        <div class="bg-surface p-6 rounded-lg shadow-sm content-card">
+                            <h4 class="font-bold text-lg text-primary">风险偏好：规避风险</h4>
+                            <p class="mt-2 text-sm text-gray-600">受“过往成功的负担”影响，不愿放弃已被证明行之有效的旧方法，风险偏好低。</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="tab-content-ntt" class="tab-content hidden">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-surface p-6 rounded-lg shadow-sm content-card border-l-4 border-secondary">
+                            <h4 class="font-bold text-lg text-secondary">增长方式：激进并购</h4>
+                            <p class="mt-2 text-sm text-gray-600">采取极其激进的大规模并购战略，以资本换时间，快速购买市场份额、客户基础和核心能力。</p>
+                        </div>
+                        <div class="bg-surface p-6 rounded-lg shadow-sm content-card border-l-4 border-secondary">
+                            <h4 class="font-bold text-lg text-secondary">领导力：全球整合</h4>
+                            <p class="mt-2 text-sm text-gray-600">积极构建多元文化全球管理团队，大胆赋权给被收购公司的本地领导层，实现去中心化与全球整合的结合。</p>
+                        </div>
+                        <div class="bg-surface p-6 rounded-lg shadow-sm content-card border-l-4 border-secondary">
+                            <h4 class="font-bold text-lg text-secondary">文化与品牌：全球统一</h4>
+                            <p class="mt-2 text-sm text-gray-600">实施明确的全球品牌统一战略，将众多收购品牌整合到“One NTT DATA”的统一旗帜下。</p>
+                        </div>
+                        <div class="bg-surface p-6 rounded-lg shadow-sm content-card border-l-4 border-secondary">
+                            <h4 class="font-bold text-lg text-secondary">风险偏好：精准计算</h4>
+                            <p class="mt-2 text-sm text-gray-600">将并购后的文化整合(PMI)视为核心战略能力，系统性地应对挑战，进行精心计算的风险承担。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Act 1.5: Two Speeds of Globalization -->
+        <section id="act1_5" class="py-12 md:py-16 bg-surface rounded-2xl">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold text-primary">双速全球化：NTT Data vs. 日本整体趋势</h3>
+                <p class="mt-2 text-gray-600 max-w-3xl mx-auto">下图清晰地揭示了两种不同的全球化节奏。NTT Data通过激进的并购，实现了远超日本企业平均水平的跨越式增长，其增长曲线（橙色）的陡峭程度，与日本整体对外直接投资（蓝色）的平稳增长形成了鲜明对比。</p>
+            </div>
+            <div class="chart-container">
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Act 2: Phased Evolution -->
+        <section id="act2" class="py-12 md:py-16">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold text-primary">第二幕：精心策划的三段式演进</h3>
+                <p class="mt-2 text-gray-600 max-w-2xl mx-auto">NTT Data的全球化并非一蹴而就，而是一个从规模扩张到品牌整合，再到运营统一的长期战略演进过程，充分体现了其战略学习和适应能力。</p>
+            </div>
+            <div class="max-w-5xl mx-auto">
+                <div class="relative">
+                    <div class="border-l-2 border-gray-300 absolute h-full top-0 left-4 md:hidden"></div>
+                    <div class="hidden md:block border-t-2 border-gray-300 absolute w-full top-4 left-0"></div>
+                    <div class="flex flex-col md:flex-row justify-between relative">
+                        <div class="md:w-1/3 p-4">
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold z-10">1</div>
+                                <h4 class="ml-4 font-bold text-lg text-primary">第一阶段 (2005-2016)</h4>
+                            </div>
+                            <h5 class="font-semibold text-accent">建立滩头阵地</h5>
+                            <p class="mt-2 text-sm text-gray-600">通过积极并购（如Keane, everis）迅速扩大地理覆盖范围，核心目标是“规模扩张”，快速建立全球业务版图。</p>
+                        </div>
+                        <div class="md:w-1/3 p-4">
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold z-10">2</div>
+                                <h4 class="ml-4 font-bold text-lg text-primary">第二阶段 (2017-2022)</h4>
+                            </div>
+                            <h5 class="font-semibold text-accent">打造全球品牌</h5>
+                            <p class="mt-2 text-sm text-gray-600">以收购戴尔服务为标志，战略重心转向品牌整合与业务深化，致力于打造“One NTT DATA”的统一形象。</p>
+                        </div>
+                        <div class="md:w-1/3 p-4">
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold z-10">3</div>
+                                <h4 class="ml-4 font-bold text-lg text-primary">第三阶段 (2023至今)</h4>
+                            </div>
+                            <h5 class="font-semibold text-accent">“One NTT”全面整合</h5>
+                            <p class="mt-2 text-sm text-gray-600">与NTT Ltd.海外业务合并，通过组织架构重组，实现从IT服务到通信能力的端到端整合，提供无缝价值。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Act 3: M&A Engine -->
+        <section id="act3" class="py-12 md:py-16">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold text-primary">第三幕：并购引擎与共生关系</h3>
+                <p class="mt-2 text-gray-600 max-w-2xl mx-auto">持续且大胆的跨国并购是NTT Data全球化的核心驱动力。这不仅是规模的扩张，更是能力的补全和与日本核心客户群形成的强大共生网络。</p>
+            </div>
+            <div class="grid lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-2">
+                    <h4 class="font-bold text-xl mb-4 text-primary">关键并购里程碑</h4>
+                    <div id="timeline-container" class="relative">
+                        <div class="timeline-line"></div>
+                        <!-- Timeline items will be injected by JS -->
+                    </div>
+                </div>
+                <div class="lg:col-span-3 bg-surface p-6 rounded-2xl shadow-lg">
+                    <div id="details-container">
+                        <h4 id="details-title" class="font-bold text-xl text-primary">点击左侧时间轴查看详情</h4>
+                        <p id="details-year" class="text-sm text-gray-500 mb-2"></p>
+                        <p id="details-cost" class="font-semibold text-accent mb-4"></p>
+                        <p id="details-desc" class="text-gray-700"></p>
+                    </div>
+                    <div class="mt-8">
+                        <h4 class="font-bold text-xl text-primary mb-4 text-center">并购驱动的跨越式增长</h4>
+                        <div class="chart-container">
+                            <canvas id="growthChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Act 4: Future Blueprint -->
+        <section id="act4" class="py-12 md:py-16 bg-primary text-white rounded-2xl">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl md:text-3xl font-bold">第四幕：未来蓝图与新启示</h3>
+                <p class="mt-2 text-gray-300 max-w-2xl mx-auto">通过“One NTT”愿景和对下一代技术的大规模投资，NTT Data正从全球企业转变为一个统一的全球动力源，为日本企业的未来指明了新方向。</p>
+            </div>
+            <div class="max-w-5xl mx-auto">
+                <div class="grid md:grid-cols-3 gap-8 text-center">
+                    <div class="bg-primary/50 p-6 rounded-lg">
+                        <div class="text-4xl font-bold text-accent" id="stat1">0</div>
+                        <p class="mt-2 font-semibold">亿美元数据中心投资</p>
+                        <p class="text-sm text-gray-300">(至2027年)</p>
+                    </div>
+                    <div class="bg-primary/50 p-6 rounded-lg">
+                        <div class="text-4xl font-bold text-accent" id="stat2">0</div>
+                        <p class="mt-2 font-semibold">亿美元增长领域投资</p>
+                        <p class="text-sm text-gray-300">(NTT集团5年计划)</p>
+                    </div>
+                    <div class="bg-primary/50 p-6 rounded-lg">
+                        <div class="text-4xl font-bold text-accent" id="stat3">0</div>
+                        <p class="mt-2 font-semibold">兆瓦AI负载已部署</p>
+                        <p class="text-sm text-gray-300">(全球领先)</p>
+                    </div>
+                </div>
+                <div class="mt-12 bg-white/10 p-8 rounded-lg">
+                    <h4 class="font-bold text-xl mb-4 text-center">对日本企业的启示</h4>
+                    <ul class="space-y-4 text-left">
+                        <li class="flex items-start">
+                            <span class="text-secondary font-bold mr-3">✓</span>
+                            <span><b>大胆运用并购：</b>在瞬息万变的市场中，通过收购快速获取规模、能力和市场准入，往往比内部孵化更有效。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-secondary font-bold mr-3">✓</span>
+                            <span><b>将整合视为核心能力：</b>建立专业的整合团队和系统化流程(PMI)，是确保并购价值得以实现的关键。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-secondary font-bold mr-3">✓</span>
+                            <span><b>拥抱真正的多元文化：</b>全球化成功的关键在于超越对外派人员的依赖，真正信任并赋权给本地领导团队。</span>
+                        </li>
+                         <li class="flex items-start">
+                            <span class="text-secondary font-bold mr-3">✓</span>
+                            <span><b>打造统一的全球品牌：</b>一个强大、统一的全球品牌是世界舞台上竞争的关键资产，能传递清晰价值并增强内部凝聚力。</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-8 text-gray-500 text-sm">
+        <p>这是一个基于公开报告生成的互动式分析应用。</p>
+        <p>所有内容仅供学习和研究目的。</p>
+    </footer>
+
+    <script>
+        const timelineData = [
+            {
+                year: 2010,
+                company: 'Keane International',
+                cost: '12.3亿美元',
+                description: '迈出全球化的第一大步。获得了在美国市场的坚实立足点、蓝筹客户群以及成熟的全球交付模式（印度、加拿大离岸中心）。'
+            },
+            {
+                year: 2014,
+                company: 'everis',
+                cost: '未披露',
+                description: '精妙的侧翼布局。牢固立足于欧洲和广阔的拉丁美洲市场，业务组合更加多元化，展现了超越传统发达市场的全球视野。'
+            },
+            {
+                year: 2016,
+                company: 'Dell Services',
+                cost: '30.5亿美元',
+                description: '一次量子跳跃。规模瞬间翻倍，跻身全球IT服务商前十。获得了医疗健康和BPO领域的深厚行业专长及全球数据中心。'
+            },
+            {
+                year: 2021,
+                company: 'Hashmap',
+                cost: '未披露',
+                description: '能力补全。增强在现代云数据平台（如Snowflake）和数据工程方面的专业技术能力，紧跟技术前沿。'
+            },
+            {
+                year: 2023,
+                company: '与NTT Ltd.整合',
+                cost: '组织重组',
+                description: '“One NTT”愿景实现。将IT服务与通信能力整合，为全球客户提供从咨询到基础设施的端到端解决方案，形成统一平台。'
+            }
+        ];
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
+            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-btn-${tabId}`).classList.add('active');
+        }
+
+        function scrollToSection(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateTimelineDetails(index) {
+            const item = timelineData[index];
+            document.getElementById('details-title').textContent = item.company;
+            document.getElementById('details-year').textContent = `年份: ${item.year}`;
+            document.getElementById('details-cost').textContent = `收购成本: ${item.cost}`;
+            document.getElementById('details-desc').textContent = item.description;
+            
+            document.querySelectorAll('.timeline-item-container').forEach(el => el.classList.remove('bg-blue-50'));
+            document.getElementById(`timeline-item-${index}`).classList.add('bg-blue-50');
+        }
+        
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const timelineContainer = document.getElementById('timeline-container');
+            timelineData.forEach((item, index) => {
+                const itemEl = document.createElement('div');
+                itemEl.id = `timeline-item-${index}`;
+                itemEl.className = 'timeline-item-container p-2 rounded-lg cursor-pointer hover:bg-gray-100';
+                itemEl.onclick = () => updateTimelineDetails(index);
+                itemEl.innerHTML = `
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <p class="font-bold text-primary">${item.year} - ${item.company}</p>
+                    </div>
+                `;
+                timelineContainer.appendChild(itemEl);
+            });
+            updateTimelineDetails(0);
+
+            const growthChartCtx = document.getElementById('growthChart').getContext('2d');
+            new Chart(growthChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['2009', '2010 (收购Keane)', '2015', '2016 (收购Dell)', '2023 (整合后)'],
+                    datasets: [{
+                        label: '年收入 (亿美元)',
+                        data: [50, 110, 140, 280, 350],
+                        backgroundColor: '#81B29A',
+                        borderColor: '#6a947d',
+                        borderWidth: 1
+                    }, {
+                        label: '全球员工数 (千人)',
+                        data: [20, 50, 75, 105, 190],
+                        backgroundColor: '#E07A5F',
+                        borderColor: '#b8644e',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        title: {
+                            display: true,
+                            text: 'NTT Data 收入与员工增长趋势'
+                        }
+                    },
+                }
+            });
+
+            const comparisonChartCtx = document.getElementById('comparisonChart').getContext('2d');
+            new Chart(comparisonChartCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2009', '2012', '2015', '2018', '2022'],
+                    datasets: [{
+                        label: 'NTT Data 海外收入 (亿美元)',
+                        data: [20, 50, 70, 150, 180],
+                        borderColor: '#E07A5F',
+                        backgroundColor: '#E07A5F',
+                        yAxisID: 'y',
+                        tension: 0.1
+                    }, {
+                        label: '日本对外直接投资存量 (万亿日元)',
+                        data: [70, 90, 135, 185, 230],
+                        borderColor: '#6D98BA',
+                        backgroundColor: '#6D98BA',
+                        yAxisID: 'y1',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'NTT Data 海外收入 (亿美元)',
+                                color: '#E07A5F'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '日本对外直接投资存量 (万亿日元)',
+                                color: '#6D98BA'
+                            },
+                            grid: {
+                                drawOnChartArea: false, 
+                            },
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        title: {
+                            display: true,
+                            text: 'NTT Data全球化速度 vs. 日本整体趋势'
+                        }
+                    }
+                }
+            });
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const stat1 = document.getElementById('stat1');
+                        const stat2 = document.getElementById('stat2');
+                        const stat3 = document.getElementById('stat3');
+                        animateValue(stat1, 0, 100, 1500);
+                        animateValue(stat2, 0, 590, 1500);
+                        animateValue(stat3, 0, 200, 1500);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+            observer.observe(document.getElementById('act4'));
+
+            const mobileNav = document.getElementById('mobile-nav');
+            mobileNav.addEventListener('change', (e) => {
+                scrollToSection(e.target.value);
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section[id]');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 70) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('onclick').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
