@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>变电设备红外热像检测交互式操作手册 (V10)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        :root {
+            --highlight-color: rgba(59, 130, 246, 0.2);
+        }
+        html {
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: 'Noto Sans SC', 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease-in-out;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        .sidebar-link:hover, .sidebar-link.active {
+            background-color: #eef2ff;
+            color: #3730a3;
+        }
+        .sidebar-link svg {
+            margin-right: 0.75rem;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
+            border: 1px solid #e5e7eb;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: box-shadow 0.3s;
+        }
+        .accordion-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            transition: background-color 0.2s;
+        }
+        .accordion-header:hover {
+            background-color: #f3f4f6;
+        }
+        .accordion-content {
+            display: none;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+            background-color: #ffffff;
+        }
+        .filter-btn.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        /* Mobile Sidebar */
+        #sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        /* Search Highlight */
+        @keyframes highlight-animation {
+            from { background-color: var(--highlight-color); }
+            to { background-color: transparent; }
+        }
+        .highlight {
+            animation: highlight-animation 1.5s ease-out;
+        }
+        /* Knowledge Graph Styles */
+        #knowledge-graph-container {
+            width: 100%;
+            height: 70vh; /* Optimized for mobile */
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            background-color: white;
+            position: relative;
+        }
+        .graph-node text {
+            pointer-events: none;
+            font-size: 10px;
+            fill: #333;
+            text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+        }
+        .graph-link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+        }
+        /* Modal Styles */
+        #modal-backdrop {
+            transition: opacity 0.3s ease;
+        }
+        #modal-content {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="bg-white w-64 flex-shrink-0 p-4 border-r border-gray-200 fixed lg:static h-full z-30 -translate-x-full lg:translate-x-0">
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center">
+                    <div class="p-2 bg-indigo-600 rounded-lg">
+                        <i data-lucide="camera" class="text-white"></i>
+                    </div>
+                    <h1 class="text-xl font-bold ml-3">红外检测手册</h1>
+                </div>
+                <button id="close-menu-btn" class="lg:hidden text-gray-500 hover:text-gray-800">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <nav id="sidebar-nav">
+                <!-- Links are populated by JS -->
+            </nav>
+        </aside>
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-white/80 backdrop-blur-sm border-b border-gray-200 w-full z-10">
+                <div class="flex items-center justify-between h-16 px-4">
+                    <button id="open-menu-btn" class="lg:hidden text-gray-600 hover:text-gray-900">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <div class="relative flex-1 max-w-xs ml-4 lg:ml-0">
+                        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="text" id="search-input" placeholder="在手册中搜索..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        <div id="search-results" class="absolute top-full mt-2 w-full bg-white rounded-md shadow-lg max-h-80 overflow-y-auto z-30 hidden"></div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main id="main-content" class="flex-1 p-4 md:p-6 overflow-y-auto">
+                <!-- Content sections are populated by JS -->
+            </main>
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div id="sop-modal" class="fixed inset-0 z-40 flex items-center justify-center p-4 hidden">
+        <div id="modal-backdrop" class="absolute inset-0 bg-black/50"></div>
+        <div id="modal-content" class="relative bg-white rounded-lg shadow-xl w-full max-w-lg h-5/6 sm:h-auto sm:max-h-[90vh] flex flex-col transform scale-95 opacity-0">
+            <div class="flex items-center justify-between p-4 border-b">
+                <h3 id="modal-title" class="text-xl font-semibold"></h3>
+                <button id="modal-close-btn" class="text-gray-400 hover:text-gray-700 p-2 -mr-2">&times;</button>
+            </div>
+            <div id="modal-body" class="p-6 overflow-y-auto">
+                <!-- SOP content will be injected here -->
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- DATA ---
+        const pages = [
+            { id: 'home', title: '首页', icon: 'home' },
+            { id: 'knowledge-graph', title: '知识图谱', icon: 'share-2' },
+            { id: 'conditions', title: '检测条件', icon: 'thermometer-sun' },
+            { id: 'preparation', title: '检测准备', icon: 'clipboard-list' },
+            { id: 'method', title: '检测方法', icon: 'wand-2' },
+            { id: 'analysis', title: '数据分析与处理', icon: 'pie-chart' },
+            { id: 'gallery', title: '典型缺陷图谱', icon: 'gallery-thumbnails' },
+        ];
+
+        const galleryData = [
+            { category: 'transformer', title: '变压器故障', img: 'https://globalbusinessinsight.github.io/picture/Transformer1.png' },
+            { category: 'inductor', title: '开关及连接故障', img: 'https://globalbusinessinsight.github.io/picture/connector.png' },
+            { category: 'inductor', title: '电流互感器故障', img: 'https://globalbusinessinsight.github.io/picture/currenttransformer.png' },
+            { category: 'capacitor', title: '并联电容内部故障发热', img: 'https://globalbusinessinsight.github.io/picture/Capacitor.png' },
+            { category: 'capacitor', title: '电容器熔丝接不良', img: 'https://globalbusinessinsight.github.io/picture/Capacitor.png' },
+            { category: 'arrester', title: '氧化锌避雷器内部受潮', img: 'https://www.researchgate.net/publication/332353386/figure/fig1/AS:746461012340737@1554981792942/The-infrared-images-of-the-arrester-with-internal-moisture-defect-a-visible-light.png' },
+            { category: 'arrester', title: '避雷器均压环连接不良', img: 'https://www.researchgate.net/profile/Yong-Li-139/publication/282361730/figure/fig3/AS:613910543265800@1523379093418/The-infrared-image-of-the-grading-ring.png' },
+            { category: 'cable', title: '电缆类故障', img: 'https://globalbusinessinsight.github.io/picture/cable.png' },
+            { category: 'bushing', title: '套管类故障', img: 'https://globalbusinessinsight.github.io/picture/Tube.png' },
+            { category: 'insulator', title: '绝缘子故障', img: 'https://globalbusinessinsight.github.io/picture/insulator.png' },
+        ];
+        
+        const sopDetails = {
+            '测量接触电阻': {
+                title: 'SOP: 测量接触电阻',
+                content: `
+                    <h4 class="font-bold text-lg mb-2">1. 安全措施及准备工作 (前置步骤)</h4>
+                    <ul class="list-disc list-inside mb-4 space-y-1">
+                        <li>办理工作票，得到许可后方可开始工作。</li>
+                        <li>确保相关设备已停电，并悬挂“禁止合闸，有人工作”等标示牌。</li>
+                        <li>使用验电器确认设备无电压。</li>
+                        <li>准备好经过校准的回路电阻测试仪、连接导线、工具和个人防护用品(PPE)。</li>
+                        <li>清洁被测设备的端子表面，去除油污和氧化层。</li>
+                    </ul>
+                    <h4 class="font-bold text-lg mb-2">2. 操作步骤</h4>
+                    <ul class="list-disc list-inside mb-4 space-y-1">
+                        <li>按照仪器说明书正确连接测试线，电压线应接在电流线内侧。</li>
+                        <li>选择合适的测试电流（通常不小于100A）。</li>
+                        <li>启动仪器进行测量，待读数稳定后记录数值。</li>
+                        <li>对设备的三相分别进行测量，每相至少重复测量三次，取平均值。</li>
+                        <li>记录测量时环境温度。</li>
+                    </ul>
+                    <h4 class="font-bold text-lg mb-2">3. 工作终结 (后续步骤)</h4>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>测量结束后，先关闭仪器电源，再拆除测试线。</li>
+                        <li>将测量结果与历史数据或出厂标准进行比较。</li>
+                        <li>清理工作现场，恢复设备连接。</li>
+                        <li>向工作负责人汇报工作完成情况，办理工作票终结手续。</li>
+                    </ul>`
+            },
+            '伏安特性或局放试验': {
+                title: 'SOP: 伏安特性/局部放电试验',
+                content: `
+                    <h4 class="font-bold text-lg mb-2">1. 安全措施及准备工作 (前置步骤)</h4>
+                    <ul class="list-disc list-inside mb-4 space-y-1">
+                        <li>办理第一种工作票，工作负责人进行安全交底。</li>
+                        <li>设备停电，做好安全隔离措施（如拉开刀闸），验电接地。</li>
+                        <li>准备好试验仪器（如CT分析仪、局放测试仪），高压引线，连接导线和PPE。</li>
+                        <li>断开互感器的二次绕组，并将其余不用绕组可靠短路接地。</li>
+                    </ul>
+                    <h4 class="font-bold text-lg mb-2">2. 操作步骤</h4>
+                    <ul class="list-disc list-inside mb-4 space-y-1">
+                        <li><strong>伏安特性:</strong> 从二次侧施加电压，从0开始缓慢升压，同时记录电压和电流值，直至电流达到额定值或出现拐点。</li>
+                        <li><strong>局部放电:</strong> 连接局放仪，按规定程序进行加压，记录起始放电电压和熄灭电压，以及在特定电压下的放电量。</li>
+                        <li>试验过程中，密切监视仪器读数和被测设备有无异音、异味。</li>
+                    </ul>
+                    <h4 class="font-bold text-lg mb-2">3. 工作终结 (后续步骤)</h4>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>试验结束后，将电压降至零，断开电源。</li>
+                        <li>对设备充分放电后，方可拆除试验接线。</li>
+                        <li>恢复设备二次绕组接线。</li>
+                        <li>整理试验数据，与标准对比分析，得出结论。</li>
+                        <li>清理现场，办理工作票终结手续。</li>
+                    </ul>`
+            }
+        };
+
+        const knowledgeGraphData = {
+            nodes: [
+                // Pre-step (Type 0)
+                { id: '工作许可与安全隔离', type: 0 },
+                // Equipment (Type 1)
+                { id: '隔离开关', type: 1 }, { id: '断路器', type: 1 }, { id: '电流互感器', type: 1 }, { id: '电压互感器', type: 1 }, { id: '氧化锌避雷器', type: 1 },
+                // Defects (Type 2)
+                { id: '接触不良', type: 2 }, { id: '内部连接不良', type: 2 }, { id: '铁心/绕组故障', type: 2 }, { id: '受潮或老化', type: 2 },
+                // Procedures (Type 3)
+                { id: '测量接触电阻', type: 3, details: sopDetails['测量接触电阻'] },
+                { id: '伏安特性或局放试验', type: 3, details: sopDetails['伏安特性或局放试验'] }
+            ],
+            links: [
+                { source: '隔离开关', target: '接触不良' }, { source: '断路器', target: '接触不良' },
+                { source: '接触不良', target: '测量接触电阻' },
+                { source: '测量接触电阻', target: '工作许可与安全隔离' },
+                { source: '电流互感器', target: '内部连接不良' }, { source: '内部连接不良', target: '测量接触电阻' },
+                { source: '电流互感器', target: '铁心/绕组故障' }, { source: '电压互感器', target: '铁心/绕组故障' },
+                { source: '铁心/绕组故障', target: '伏安特性或局放试验' },
+                { source: '伏安特性或局放试验', target: '工作许可与安全隔离' },
+                { source: '氧化锌避雷器', target: '受潮或老化' }, { source: '受潮或老化', target: '伏安特性或局放试验' },
+            ]
+        };
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', function () {
+            const mainContent = document.getElementById('main-content');
+            const sidebarNav = document.getElementById('sidebar-nav');
+            
+            pages.forEach(page => {
+                const link = document.createElement('a');
+                link.href = '#';
+                link.className = 'sidebar-link';
+                link.dataset.target = page.id;
+                link.innerHTML = `<i data-lucide="${page.icon}"></i><span>${page.title}</span>`;
+                sidebarNav.appendChild(link);
+
+                const section = document.createElement('div');
+                section.id = page.id;
+                section.className = 'content-section';
+                section.innerHTML = getPageContent(page.id);
+                mainContent.appendChild(section);
+            });
+
+            sidebarNav.querySelector('.sidebar-link').classList.add('active');
+            mainContent.querySelector('.content-section').classList.add('active');
+            
+            initializeDynamicContent('home');
+            lucide.createIcons();
+            initializeApp();
+        });
+
+        // --- PAGE CONTENT TEMPLATES ---
+        function getPageContent(pageId) {
+             switch (pageId) {
+                case 'home': return `
+                    <h2 class="text-3xl font-bold mb-4">某输配电公司变电设备红外热像检测细则</h2>
+                    <p class="text-gray-600 mb-8">欢迎使用交互式操作手册。本手册依据《某输配电公司变电检测管理规定（试行）第1分册 红外热像检测细则》编制，旨在提供一个友好、易于查阅的在线指南。</p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="card" id="home-card-1"><div class="flex items-center mb-3"><div class="p-2 bg-blue-100 rounded-md"><i data-lucide="thermometer-sun" class="text-blue-600"></i></div><h3 class="text-lg font-semibold ml-3">检测条件</h3></div><p class="text-gray-500 text-sm">了解进行红外检测所需的环境、设备、人员、安全及仪器要求。</p></div>
+                        <div class="card" id="home-card-2"><div class="flex items-center mb-3"><div class="p-2 bg-green-100 rounded-md"><i data-lucide="wand-2" class="text-green-600"></i></div><h3 class="text-lg font-semibold ml-3">检测方法</h3></div><p class="text-gray-500 text-sm">掌握一般检测和精确检测的操作步骤和核心要点。</p></div>
+                        <div class="card" id="home-card-3"><div class="flex items-center mb-3"><div class="p-2 bg-yellow-100 rounded-md"><i data-lucide="pie-chart" class="text-yellow-600"></i></div><h3 class="text-lg font-semibold ml-3">数据分析</h3></div><p class="text-gray-500 text-sm">学习如何判断缺陷类型、定性并采取相应处理措施。</p></div>
+                        <div class="card col-span-full lg:col-span-1" id="home-card-4"><div class="flex items-center mb-3"><div class="p-2 bg-purple-100 rounded-md"><i data-lucide="gallery-thumbnails" class="text-purple-600"></i></div><h3 class="text-lg font-semibold ml-3">典型图谱</h3></div><p class="text-gray-500 text-sm">通过丰富的案例图谱，直观识别各类设备的红外缺陷特征。</p></div>
+                    </div>`;
+                case 'knowledge-graph': return `
+                    <h2 class="text-3xl font-bold mb-2">知识图谱</h2>
+                    <p class="text-gray-600 mb-6">直观展示设备、缺陷与维修程序之间的关系。点击节点可高亮显示其关联项，点击<span class="font-bold text-green-600">绿色节点</span>可查看标准作业流程。</p>
+                    <div id="knowledge-graph-container"></div>
+                    <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                        <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-yellow-400 mr-2"></span>前置步骤</div>
+                        <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>设备</div>
+                        <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-orange-500 mr-2"></span>缺陷</div>
+                        <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>处理建议</div>
+                    </div>`;
+                case 'conditions': return `
+                    <h2 class="text-3xl font-bold mb-6">1. 检测条件</h2>
+                    <div class="space-y-6">
+                        <div class="card" id="cond-env"><h3 class="text-xl font-semibold mb-4 flex items-center"><i data-lucide="cloud-sun" class="mr-3 text-blue-500"></i>环境要求</h3><ul class="list-disc list-inside space-y-2 text-gray-700"><li>环境温度不宜低于5ºC。</li><li>相对湿度不宜大于85%。</li><li>风速一般不大于5m/s。精确检测时，风速一般不大于0.5m/s。</li><li>天气以阴天、多云为宜，夜间图像质量更佳。</li><li>不应在雷、雨、雾、雪等气象条件下进行。</li><li>避免阳光或灯光直接照射或反射进入仪器镜头。</li></ul></div>
+                        <div class="card" id="cond-equip"><h3 class="text-xl font-semibold mb-4 flex items-center"><i data-lucide="server" class="mr-3 text-green-500"></i>待测设备要求</h3><ul class="list-disc list-inside space-y-2 text-gray-700"><li>设备处于运行状态。</li><li>精确测温时，设备需连续通电不小于6h，最好24h以上。</li><li>电流致热型设备最好在高峰负荷下检测，或不低于30%的额定负荷。</li></ul></div>
+                        <div class="card" id="cond-person"><h3 class="text-xl font-semibold mb-4 flex items-center"><i data-lucide="users" class="mr-3 text-yellow-500"></i>人员要求</h3><ul class="list-disc list-inside space-y-2 text-gray-700"><li>熟悉红外诊断技术、热像仪原理和操作。</li><li>了解被测设备结构、原理及故障因素。</li><li>具备现场工作经验，遵守安全规程。</li><li>经过上岗培训并考试合格。</li></ul></div>
+                        <div class="card" id="cond-safety"><h3 class="text-xl font-semibold mb-4 flex items-center"><i data-lucide="shield-alert" class="mr-3 text-red-500"></i>安全要求</h3><ul class="list-disc list-inside space-y-2 text-gray-700"><li>严格执行《电力安全工作规程》。</li><li>与带电部位保持安全距离。</li><li>防止误碰误动设备，注意脚下安全。</li><li>应有专人监护。</li></ul></div>
+                    </div>`;
+                case 'preparation': return `
+                    <h2 class="text-3xl font-bold mb-6">2. 检测准备</h2>
+                    <div class="card" id="prep-steps">
+                        <ol class="list-decimal list-inside space-y-4">
+                            <li class="flex items-start"><span class="font-bold text-indigo-600 mr-3">1.</span><div><h4 class="font-semibold">信息收集</h4><p class="text-gray-600">了解设备数量、型号、厂家、运行情况，制定技术措施。</p></div></li>
+                            <li class="flex items-start"><span class="font-bold text-indigo-600 mr-3">2.</span><div><h4 class="font-semibold">资料准备</h4><p class="text-gray-600">配备相关图纸、上次检测记录、标准化作业工艺卡。</p></div></li>
+                            <li class="flex items-start"><span class="font-bold text-indigo-600 mr-3">3.</span><div><h4 class="font-semibold">条件检查</h4><p class="text-gray-600">检查环境、人员、仪器、设备是否满足检测条件。</p></div></li>
+                            <li class="flex items-start"><span class="font-bold text-indigo-600 mr-3">4.</span><div><h4 class="font-semibold">现场了解</h4><p class="text-gray-600">了解现场设备运行方式，记录待测设备的负荷电流。</p></div></li>
+                            <li class="flex items-start"><span class="font-bold text-indigo-600 mr-3">5.</span><div><h4 class="font-semibold">许可办理</h4><p class="text-gray-600">按相关安全生产管理规定办理工作许可手续。</p></div></li>
+                        </ol>
+                    </div>`;
+                case 'method': return `
+                    <h2 class="text-3xl font-bold mb-6">3. 检测方法</h2>
+                    <div class="card" id="method-steps">
+                        <h3 class="text-xl font-semibold mb-4">3.2 检测步骤</h3>
+                        <div class="mb-4 border-b border-gray-200"><nav class="-mb-px flex space-x-8" aria-label="Tabs"><button class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-indigo-500 text-indigo-600" data-target="general-detection">一般检测</button><button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-target="precise-detection">精确检测</button></nav></div>
+                        <div id="general-detection" class="tab-content active"><ol class="list-decimal list-inside space-y-3 text-gray-700"><li>开机校准，待图像稳定后设置参数。</li><li>根据被测设备材料设置辐射率（一般取0.9左右）。</li><li>设置色标温度量程（一般为环境温度+10K~20K）。</li><li>远距离全面扫描，利用彩色显示和热点跟踪等手段发现异常。</li><li>环境温度变化大时，重新进行内部校准。</li><li>发现异常后，转入精确检测。</li><li>确保测量距离满足安全和仪器有效距离要求。</li></ol></div>
+                        <div id="precise-detection" class="tab-content" style="display:none;"><ol class="list-decimal list-inside space-y-3 text-gray-700"><li>确定最佳检测位置和角度，可做标记供复测用。</li><li>输入大气温度、湿度、距离等补偿参数。</li><li>正确选择被测设备的辐射率（可参考附录G）。</li><li>选择与被测设备类似的物体作为环境温度参照体。</li><li>使用同一仪器相继测量发热点、正常相对应点及环境参照体。</li><li>在安全距离允许下，尽量靠近被测设备，使其充满视场。</li><li>记录设备负荷电流、电压、物体温度及环境参照体温度。</li></ol></div>
+                    </div>`;
+                case 'analysis': return `
+                    <h2 class="text-3xl font-bold mb-6">4. 数据分析与处理</h2>
+                    <div class="space-y-4">
+                        <div class="accordion" id="analysis-methods"><div class="accordion-header"><span class="font-semibold">4.1 判断方法</span><i data-lucide="chevron-down" class="transition-transform"></i></div><div class="accordion-content"><ul class="list-disc list-inside space-y-2"><li><b>表面温度判断法：</b>对照国标温升极限进行判断。</li><li><b>同类比较判断法：</b>比较三相设备、同类设备对应部位的温差。</li><li><b>图像特征判断法：</b>比较正常与异常状态的热像图。</li><li><b>相对温差判断法：</b>适用于小负荷电流致热型设备。</li><li><b>档案分析判断法：</b>分析同一设备不同时期的温度场变化。</li><li><b>实时分析判断法：</b>连续检测，观察温度随负载、时间的变化。</li></ul></div></div>
+                        <div class="accordion" id="analysis-criteria"><div class="accordion-header"><span class="font-semibold">4.2 判断依据</span><i data-lucide="chevron-down" class="transition-transform"></i></div><div class="accordion-content"><p class="mb-4">主要分为电流致热型和电压致热型设备两类，具体判据请参考相关附录表格。</p><div class="overflow-x-auto"><h4 class="font-bold mb-2">电流致热型设备缺陷诊断判据（示例）</h4><table class="min-w-full divide-y divide-gray-200">...</table></div></div></div>
+                        <div class="accordion" id="analysis-defects"><div class="accordion-header"><span class="font-semibold">4.3 缺陷类型的确定及处理方法</span><i data-lucide="chevron-down" class="transition-transform"></i></div><div class="accordion-content"><div class="space-y-4"><div><h4 class="font-bold text-blue-600">一般缺陷</h4><p>设备存在过热，有一定温差，但不会引起事故的缺陷。要求记录在案，注意观察其发展，利用停电机会检修。</p></div><div><h4 class="font-bold text-orange-600">严重缺陷</h4><p>过热程度较重，温差较大的缺陷。应尽快安排处理，必要时降低负荷。</p></div><div><h4 class="font-bold text-red-600">危急缺陷</h4><p>设备最高温度超过允许值的缺陷。应立即降低负荷或退出运行，立即安排消缺。</p></div></div></div></div>
+                    </div>`;
+                case 'gallery': return `
+                    <h2 class="text-3xl font-bold mb-2">附录K. 电气设备红外缺陷典型图谱</h2>
+                    <p class="text-gray-600 mb-6">点击下方按钮筛选不同类型的设备缺陷图谱。</p>
+                    <div id="filter-container" class="flex flex-wrap gap-2 mb-6">
+                        <button class="filter-btn active bg-gray-200 text-gray-800 px-4 py-2 rounded-full text-sm font-medium" data-filter="all">全部</button>
+                        <button class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded-full text-sm font-medium" data-filter="transformer">变压器类</button>
+                        <button class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded-full text-sm font-medium" data-filter="inductor">开关及连接</button>
+                        <button class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded-full text-sm font-medium" data-filter="capacitor">电容器类</button>
+                        <button class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded-full text-sm font-medium" data-filter="arrester">避雷器类</button>
+                        <button class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded-full text-sm font-medium" data-filter="cable">电缆类</button>
+                        <button class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded-full text-sm font-medium" data-filter="bushing">套管类</button>
+                        <button class="filter-btn bg-gray-200 text-gray-800 px-4 py-2 rounded-full text-sm font-medium" data-filter="insulator">绝缘子类</button>
+                    </div>
+                    <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>`;
+                default: return ``;
+            }
+        }
+        
+        // --- SEARCH DATA ---
+        const searchableData = [
+            { id: 'knowledge-graph-container', page: 'knowledge-graph', title: '知识图谱', text: '设备、缺陷与维修程序之间的关系图。设备, 缺陷, 维修, 隔离开关, 断路器, 互感器, 套管, 电容器, 避雷器, 绝缘子, 电缆, 接触不良, 局放, 介质损耗, 缺油, 老化, 污秽, 测量电阻, 试验'},
+            { id: 'cond-env', page: 'conditions', title: '环境要求', text: '环境温度不宜低于5ºC。相对湿度不宜大于85%。风速一般不大于5m/s。天气以阴天、多云为宜。不应在雷、雨、雾、雪等气象条件下进行。'},
+            { id: 'cond-equip', page: 'conditions', title: '待测设备要求', text: '设备处于运行状态。精确测温时，设备需连续通电不小于6h。电流致热型设备最好在高峰负荷下检测。'},
+            { id: 'cond-person', page: 'conditions', title: '人员要求', text: '熟悉红外诊断技术、热像仪原理和操作。了解被测设备结构。具备现场工作经验。经过上岗培训并考试合格。'},
+            { id: 'cond-safety', page: 'conditions', title: '安全要求', text: '严格执行《电力安全工作规程》。与带电部位保持安全距离。防止误碰误动设备。应有专人监护。'},
+            { id: 'prep-steps', page: 'preparation', title: '检测准备', text: '信息收集、资料准备、条件检查、现场了解、许可办理。'},
+            { id: 'method-steps', page: 'method', title: '检测步骤', text: '一般检测：开机校准，设置辐射率，设置色标，远距离扫描。精确检测：确定位置，输入补偿参数，选择辐射率，靠近设备。'},
+            { id: 'analysis-methods', page: 'analysis', title: '判断方法', text: '表面温度判断法、同类比较判断法、图像特征判断法、相对温差判断法、档案分析判断法、实时分析判断法。'},
+            { id: 'analysis-defects', page: 'analysis', title: '缺陷类型的确定及处理方法', text: '一般缺陷：记录在案，计划检修。严重缺陷：尽快处理，降低负荷。危急缺陷：立即处理，退出运行。'},
+        ];
+
+        // --- CORE APP LOGIC ---
+        function initializeApp() {
+            // Mobile Menu
+            const sidebar = document.getElementById('sidebar');
+            const openMenuBtn = document.getElementById('open-menu-btn');
+            const closeMenuBtn = document.getElementById('close-menu-btn');
+            openMenuBtn.addEventListener('click', () => sidebar.classList.remove('-translate-x-full'));
+            closeMenuBtn.addEventListener('click', () => sidebar.classList.add('-translate-x-full'));
+
+            // Sidebar Navigation
+            const sidebarLinks = document.querySelectorAll('.sidebar-link');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navigateTo(link.dataset.target);
+                    if (window.innerWidth < 1024) {
+                        sidebar.classList.add('-translate-x-full');
+                    }
+                });
+            });
+
+            // Search
+            const searchInput = document.getElementById('search-input');
+            const searchResultsContainer = document.getElementById('search-results');
+            let searchTimeout;
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const query = searchInput.value.trim();
+                    if (query.length > 0) {
+                        performSearch(query);
+                    } else {
+                        searchResultsContainer.innerHTML = '';
+                        searchResultsContainer.classList.add('hidden');
+                    }
+                }, 250);
+            });
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !searchResultsContainer.contains(e.target)) {
+                    searchResultsContainer.classList.add('hidden');
+                }
+            });
+            
+            // Modal Logic
+            const modal = document.getElementById('sop-modal');
+            const modalBackdrop = document.getElementById('modal-backdrop');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const closeModal = () => {
+                const modalContent = document.getElementById('modal-content');
+                modalContent.classList.add('scale-95', 'opacity-0');
+                modalBackdrop.classList.add('opacity-0');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            };
+            modalBackdrop.addEventListener('click', closeModal);
+            modalCloseBtn.addEventListener('click', closeModal);
+
+        }
+
+        function navigateTo(pageId, elementId = null) {
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+            const activeLink = document.querySelector(`.sidebar-link[data-target="${pageId}"]`);
+            if (activeLink) activeLink.classList.add('active');
+
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+                if (section.id === pageId) {
+                    section.classList.add('active');
+                    initializeDynamicContent(pageId);
+                }
+            });
+            
+            document.getElementById('main-content').scrollTop = 0;
+
+            if (elementId) {
+                setTimeout(() => {
+                    const targetElement = document.getElementById(elementId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        targetElement.classList.add('highlight');
+                        setTimeout(() => targetElement.classList.remove('highlight'), 1500);
+                    }
+                }, 100);
+            }
+        }
+        
+        // --- SEARCH FUNCTIONS ---
+        function performSearch(query) {
+            const lowerCaseQuery = query.toLowerCase();
+            const results = searchableData.filter(item => 
+                item.title.toLowerCase().includes(lowerCaseQuery) || 
+                item.text.toLowerCase().includes(lowerCaseQuery)
+            );
+            displayResults(results, lowerCaseQuery);
+        }
+
+        function displayResults(results, query) {
+            const container = document.getElementById('search-results');
+            if (results.length === 0) {
+                container.innerHTML = `<div class="p-4 text-sm text-gray-500">未找到结果</div>`;
+            } else {
+                container.innerHTML = results.map(result => {
+                    const titleMatch = result.title.toLowerCase().indexOf(query);
+                    const textMatch = result.text.toLowerCase().indexOf(query);
+                    let snippet = '';
+
+                    if (titleMatch > -1) {
+                        snippet = result.title;
+                    } else if (textMatch > -1) {
+                        const start = Math.max(0, textMatch - 20);
+                        const end = Math.min(result.text.length, textMatch + 50);
+                        snippet = '...' + result.text.substring(start, end) + '...';
+                    }
+                    
+                    const regex = new RegExp(`(${query})`, 'gi');
+                    const highlightedSnippet = snippet.replace(regex, `<span class="font-bold text-indigo-600">$1</span>`);
+
+                    return `
+                        <a href="#" data-page="${result.page}" data-element="${result.id}" class="search-result-item block p-4 hover:bg-gray-100 border-b border-gray-100 last:border-b-0">
+                            <div class="font-semibold text-sm text-gray-800">${result.title}</div>
+                            <div class="text-xs text-gray-500 mt-1">${highlightedSnippet}</div>
+                        </a>`;
+                }).join('');
+            }
+            container.classList.remove('hidden');
+
+            container.querySelectorAll('.search-result-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navigateTo(item.dataset.page, item.dataset.element);
+                    container.classList.add('hidden');
+                    document.getElementById('search-input').value = '';
+                });
+            });
+        }
+        
+        // --- LAZY INITIALIZATION ---
+        function initializeDynamicContent(pageId) {
+            const section = document.getElementById(pageId);
+            if (!section || section.dataset.initialized === 'true') {
+                return;
+            }
+
+            switch(pageId) {
+                case 'knowledge-graph':
+                    initializeKnowledgeGraph(section);
+                    break;
+                case 'gallery':
+                    initializeGallery(section);
+                    break;
+                case 'method':
+                    initializeTabs(section);
+                    break;
+                case 'analysis':
+                    initializeAccordions(section);
+                    break;
+            }
+            section.dataset.initialized = 'true';
+        }
+
+        // --- DYNAMIC CONTENT INITIALIZERS ---
+        function initializeKnowledgeGraph(section) {
+            const container = section.querySelector('#knowledge-graph-container');
+            if (!container || container.querySelector('svg')) return;
+
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const { nodes, links } = knowledgeGraphData;
+            const color = d3.scaleOrdinal(['#fbbf24', '#3b82f6', '#f97316', '#22c55e']);
+
+            const simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d => d.id).distance(120))
+                .force("charge", d3.forceManyBody().strength(-400))
+                .force("center", d3.forceCenter(width / 2, height / 2));
+
+            const svg = d3.select(container).append("svg")
+                .attr("viewBox", [0, 0, width, height])
+                .attr("width", width)
+                .attr("height", height)
+                .call(d3.zoom().on("zoom", (event) => g.attr("transform", event.transform)))
+                .on("click", resetHighlight);
+
+            const g = svg.append("g");
+
+            const link = g.append("g")
+                .attr("class", "links")
+                .selectAll("line")
+                .data(links)
+                .join("line")
+                .attr("class", "graph-link");
+
+            const node = g.append("g")
+                .attr("class", "nodes")
+                .selectAll("g")
+                .data(nodes)
+                .join("g")
+                .attr("class", "graph-node")
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
+
+            node.append("circle")
+                .attr("r", d => d.type === 3 ? 14 : 12)
+                .attr("fill", d => color(d.type))
+                .style("cursor", d => d.type === 3 ? "pointer" : "move")
+                .on("click", handleNodeClick);
+
+            node.append("text")
+                .text(d => d.id)
+                .attr("x", 18)
+                .attr("y", 5);
+
+            simulation.on("tick", () => {
+                link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                node.attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+            
+            let linkedByIndex = {};
+            links.forEach(d => {
+                linkedByIndex[`${d.source.id},${d.target.id}`] = 1;
+            });
+
+            function areNodesConnected(a, b) {
+                return linkedByIndex[`${a.id},${b.id}`] || linkedByIndex[`${b.id},${a.id}`] || a.id === b.id;
+            }
+
+            function handleNodeClick(event, d) {
+                event.stopPropagation();
+                highlightNode(d);
+                if (d.type === 3 && d.details) {
+                    showSopModal(d.details);
+                }
+            }
+
+            function highlightNode(d) {
+                node.style("opacity", n => areNodesConnected(d, n) ? 1 : 0.15);
+                link.style("opacity", l => (l.source.id === d.id || l.target.id === d.id) ? 1 : 0.1);
+            }
+
+            function resetHighlight() {
+                node.style("opacity", 1);
+                link.style("opacity", 0.6);
+            }
+            
+            function showSopModal(details) {
+                document.getElementById('modal-title').textContent = details.title;
+                document.getElementById('modal-body').innerHTML = details.content;
+                const modal = document.getElementById('sop-modal');
+                const modalContent = document.getElementById('modal-content');
+                const modalBackdrop = document.getElementById('modal-backdrop');
+                
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modalBackdrop.classList.remove('opacity-0');
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                }, 10);
+            }
+
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x; d.fy = d.y;
+            }
+            function dragged(event, d) {
+                d.fx = event.x; d.fy = event.y;
+            }
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null; d.fy = null;
+            }
+        }
+
+        function initializeGallery(section) {
+            const filterContainer = section.querySelector('#filter-container');
+            const galleryGrid = section.querySelector('#gallery-grid');
+
+            function renderGallery(filter = 'all') {
+                galleryGrid.innerHTML = '';
+                const filteredData = filter === 'all' ? galleryData : galleryData.filter(item => item.category === filter);
+                
+                filteredData.forEach(item => {
+                    const galleryItem = document.createElement('div');
+                    galleryItem.className = 'gallery-item bg-white rounded-lg shadow-md overflow-hidden';
+                    galleryItem.innerHTML = `<img src="${item.img}" alt="${item.title}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/e0e0e0/757575?text=图片加载失败';"><div class="p-4"><h4 class="font-semibold text-base">${item.title}</h4></div>`;
+                    galleryGrid.appendChild(galleryItem);
+                });
+            }
+
+            filterContainer.addEventListener('click', (e) => {
+                const clicked = e.target.closest('.filter-btn');
+                if (!clicked) return;
+                filterContainer.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                clicked.classList.add('active');
+                renderGallery(clicked.dataset.filter);
+            });
+            renderGallery();
+        }
+
+        function initializeTabs(section) {
+            const tabBtns = section.querySelectorAll('.tab-btn');
+            const tabContents = section.querySelectorAll('.tab-content');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabBtns.forEach(b => b.classList.remove('active', 'border-indigo-500', 'text-indigo-600'));
+                    btn.classList.add('active', 'border-indigo-500', 'text-indigo-600');
+                    tabContents.forEach(c => c.style.display = 'none');
+                    section.querySelector(`#${btn.dataset.target}`).style.display = 'block';
+                });
+            });
+        }
+
+        function initializeAccordions(section) {
+            section.querySelectorAll('.accordion').forEach(accordion => {
+                const header = accordion.querySelector('.accordion-header');
+                const content = accordion.querySelector('.accordion-content');
+                const icon = header.querySelector('svg');
+                header.addEventListener('click', () => {
+                    const isVisible = content.style.display === 'block';
+                    content.style.display = isVisible ? 'none' : 'block';
+                    if (icon) icon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+                });
+            });
+        }
+
+    </script>
+</body>
+</html>
