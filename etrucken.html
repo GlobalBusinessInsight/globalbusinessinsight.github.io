@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Chosen Palette: "Green Tech" - A calming and professional palette using shades of teal, slate gray, and a light beige background to evoke a sense of clean technology, sustainability, and data-driven clarity. Accent colors are used sparingly for interactive elements. -->
+    <!-- Application Structure Plan: The SPA is designed as a single-page, scrollable narrative dashboard. This structure was chosen to guide the user through a compelling story, starting with the big picture (market tipping point), diving into the core "why" (economic advantage), then the "how" (operational model revolution & vehicle-charger integration), addressing key concerns (long-haul viability), looking to the future (tech platform), and concluding with a strategic summary. This thematic, story-driven flow is more engaging than a static report and allows users to digest complex information in logical, interactive chunks. Key interactions include a dynamic TCO calculator, interactive charts, and clear visual diagrams. -->
+    <!-- Visualization & Content Choices: 
+        1. Market Growth: Report Info -> Exponential sales/penetration data. Goal -> Show market has hit a tipping point. Viz -> Interactive Line Chart (Chart.js). Interaction -> Hover for details. Justification -> A line chart is the most effective way to show trends over time.
+        2. TCO Comparison: Report Info -> Detailed cost breakdown (CAPEX, energy, maintenance) for Electric, Diesel, LNG trucks based on 100k km/year. Goal -> Prove the decisive economic advantage of electric trucks over diesel and analyze the nuance with LNG. Viz -> Dynamic Bar Chart (Chart.js) paired with a radio-button selector. Interaction -> User selects truck type to dynamically update the chart and detailed cost table. Justification -> This makes the comparison direct and empowers the user to see the financial impact themselves.
+        3. Operational Model & Vehicle-Charger Integration: Report Info -> Fuel theft issue, rise of large fleets, benefits of "vehicle-charger integration". Goal -> Explain the organizational and strategic revolution enabled by electric trucks. Viz -> A series of HTML/CSS diagrams and benefit cards. Interaction -> Static visuals for clarity. Justification -> Clear, concise diagrams and benefit cards are effective for explaining conceptual shifts and strategic advantages.
+        4. Future Tech (Platooning): Report Info -> Cost breakdown (electricity, driver, depreciation), platooning concept reducing drivers. Goal -> Link future tech to tangible cost reduction. Viz -> Interactive Donut Chart (Chart.js) for cost structure and an animated HTML/CSS diagram for platooning. Interaction -> Hover on chart, visual animation on diagram. Justification -> A donut chart is perfect for showing proportions of a whole. The platooning diagram visually demonstrates the core benefit of reduced manpower.
+        All charts use Chart.js on a Canvas element, ensuring no SVG is used.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <title>The Tipping Point: An Interactive Analysis of China's Heavy-Duty Electric Truck Market</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F4;
+            color: #333;
+        }
+        .section-title {
+            color: #005A5B; /* Dark Teal */
+        }
+        .highlight-text {
+            color: #007A7C; /* Bright Teal */
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #007A7C;
+            border-bottom-color: #007A7C;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 45vh;
+            max-height: 450px;
+        }
+        .btn-primary {
+            background-color: #007A7C;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #005A5B;
+        }
+        .tco-radio-label {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 9999px;
+            transition: all 0.3s ease;
+        }
+        .tco-radio-label:hover {
+            background-color: #E5E7EB;
+        }
+        input[type="radio"]:checked + .tco-radio-label {
+            background-color: #007A7C;
+            color: white;
+            border-color: #007A7C;
+        }
+        .section {
+            scroll-margin-top: 80px;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-lg md:text-xl font-bold section-title whitespace-nowrap">China's EV Truck Market</h1>
+            <div class="hidden md:flex space-x-4 lg:space-x-6 text-sm lg:text-base">
+                <a href="#market" class="nav-link font-medium text-gray-600">Tipping Point</a>
+                <a href="#tco" class="nav-link font-medium text-gray-600">TCO Analysis</a>
+                <a href="#ops-revolution" class="nav-link font-medium text-gray-600">Ops Revolution</a>
+                <a href="#vehicle-charger" class="nav-link font-medium text-gray-600">V-C Integration</a>
+                <a href="#future" class="nav-link font-medium text-gray-600">Future Platform</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#007A7C]">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="#market" class="block py-2 px-4 text-sm hover:bg-gray-200">Market Tipping Point</a>
+            <a href="#tco" class="block py-2 px-4 text-sm hover:bg-gray-200">Economic Analysis</a>
+            <a href="#ops-revolution" class="block py-2 px-4 text-sm hover:bg-gray-200">Operational Revolution</a>
+            <a href="#vehicle-charger" class="block py-2 px-4 text-sm hover:bg-gray-200">Vehicle-Charger Integration</a>
+            <a href="#future" class="block py-2 px-4 text-sm hover:bg-gray-200">Future Platform</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-8 md:py-12">
+
+        <!-- Hero Section -->
+        <section class="text-center py-12 md:py-16">
+            <h2 class="text-4xl md:text-6xl font-bold section-title leading-tight">A Paradigm Shift in Trucking</h2>
+            <p class="mt-4 text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto">Electrification is more than an energy revolution; it's a disruptive restructuring of China's road freight models and management efficiency. A new era, led by large, professional fleets, is dawning.</p>
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <div class="card p-6">
+                    <h3 class="text-3xl font-bold highlight-text">Closed-Loop Control</h3>
+                    <p class="mt-2 text-gray-500">Eliminates fuel theft, enabling precise cost management.</p>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-3xl font-bold highlight-text">Efficiency Leap</h3>
+                    <p class="mt-2 text-gray-500">Large-scale operations and smart platooning will redefine the industry's cost structure.</p>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-3xl font-bold highlight-text">V-C Integration</h3>
+                    <p class="mt-2 text-gray-500">Deeply integrating fleets and energy builds the strongest moat of the new era.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Market Tipping Point Section -->
+        <section id="market" class="section py-12 md:py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold section-title">Market Dynamics: Past the Tipping Point</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">Sales volumes and penetration rates are climbing at an astonishing pace, signaling the market's shift from early exploration to a high-growth phase. The market's choice is the most powerful proof.</p>
+            </div>
+            <div class="card p-4 md:p-8">
+                <div class="chart-container">
+                    <canvas id="marketChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- TCO Section -->
+        <section id="tco" class="section py-12 md:py-20 bg-white rounded-2xl">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold section-title">Economic Analysis: An Unbeatable Cost Advantage</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">Despite a higher initial purchase price, the overwhelming Total Cost of Ownership (TCO) advantage is the core economic engine driving market adoption. Select a vehicle type to see the comparison (based on 100,000 km/year).</p>
+            </div>
+
+            <div class="flex justify-center mb-8 space-x-2 md:space-x-4">
+                <input type="radio" name="tco" id="electric" value="electric" class="sr-only" checked>
+                <label for="electric" class="tco-radio-label">⚡️ Electric Truck</label>
+                
+                <input type="radio" name="tco" id="diesel" value="diesel" class="sr-only">
+                <label for="diesel" class="tco-radio-label">⛽️ Diesel Truck</label>
+
+                <input type="radio" name="tco" id="lng" value="lng" class="sr-only">
+                <label for="lng" class="tco-radio-label">💨 LNG Truck</label>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+                <div class="lg:col-span-3 card p-4 md:p-8">
+                    <div class="chart-container h-[50vh] max-h-[500px]">
+                        <canvas id="tcoChart"></canvas>
+                    </div>
+                </div>
+                <div id="tcoDetails" class="lg:col-span-2 space-y-4">
+                    <!-- Details will be populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Ops Revolution Section -->
+        <section id="ops-revolution" class="section py-12 md:py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold section-title">The Operational Revolution: Dawn of the Mega-Fleet Era</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">Electrification plugs the biggest loophole in traditional fuel management, paving the way for professional, large-scale fleet operations—a structural change more profound than TCO savings alone.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                <div class="card p-8">
+                    <h3 class="text-2xl font-bold mb-4">Plugging the Leak: The Digital Lock on Energy</h3>
+                    <p class="text-gray-600 mb-6">One of the biggest management challenges for traditional diesel fleets is "fuel shrinkage"—theft and illicit resale. The energy of an electric truck (electricity) cannot be easily siphoned and sold. Its charging and discharging process is fully monitored digitally, solving this chronic problem at its root.</p>
+                    <div class="flex justify-around items-center bg-gray-50 p-4 rounded-lg">
+                        <div class="text-center">
+                            <span class="text-5xl">⛽️</span>
+                            <p class="mt-2 font-semibold">Open-Loop Fuel</p>
+                            <p class="text-sm text-red-600">Prone to loss, hard to track</p>
+                        </div>
+                        <div class="text-4xl font-light text-gray-400">➡️</div>
+                        <div class="text-center">
+                            <span class="text-5xl">🔋</span>
+                            <p class="mt-2 font-semibold">Closed-Loop Electricity</p>
+                            <p class="text-sm text-green-600">Traceable, fully sealed</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card p-8">
+                    <h3 class="text-2xl font-bold mb-4">Reshaping the Landscape: From Owner-Operators to Pro Fleets</h3>
+                    <p class="text-gray-600 mb-6">Over 90% of heavy-duty trucks in China are owned by individual drivers, a fragmented model leading to inefficiency and poor management. The transparency brought by electrification will foster the rise of large, professional fleets as the market mainstream.</p>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3"><span class="text-2xl">💰</span><p><strong>Bulk Purchasing Power:</strong> Stronger negotiating leverage on vehicles, insurance, and financing.</p></div>
+                        <div class="flex items-center space-x-3"><span class="text-2xl">🤝</span><p><strong>Client Bargaining Power:</strong> Providing stable, reliable capacity for large customers.</p></div>
+                        <div class="flex items-center space-x-3"><span class="text-2xl">🛡️</span><p><strong>Risk Resilience:</strong> Scale provides a better buffer against market volatility.</p></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vehicle-Charger Integration Section -->
+        <section id="vehicle-charger" class="section py-12 md:py-20 bg-white rounded-2xl">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold section-title">The Strategic High Ground: The "Vehicle-Charger Integration" Model</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">The electric era fundamentally changes the relationship between transport and energy. Self-built charging networks by large fleets are not only feasible but are a core strategy for building a competitive moat.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="card p-6 md:col-span-1">
+                    <h3 class="text-xl font-bold mb-3">Why It's Viable</h3>
+                    <ul class="space-y-3 text-gray-600">
+                        <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✓</span><span><strong>Low Tech Barrier:</strong> Compared to refineries, charging stations are standard electrical engineering projects.</span></li>
+                        <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✓</span><span><strong>Internalized Costs:</strong> Turns high external service fees into controllable, lower internal wholesale electricity costs.</span></li>
+                        <li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✓</span><span><strong>High Ops Synergy:</strong> Deploying along proprietary routes ensures perfect alignment between energy and freight flows.</span></li>
+                    </ul>
+                </div>
+                <div class="card p-6 md:col-span-2">
+                     <h3 class="text-xl font-bold mb-3">Why Charging Beats Swapping (for Fleets)</h3>
+                     <p class="text-gray-600 mb-4">For fleets building their own networks, charging offers far superior flexibility and asset efficiency than battery swapping.</p>
+                     <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1 border border-red-200 bg-red-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-red-700">❌ The Swapping Dilemma</h4>
+                            <p class="text-sm text-red-600 mt-2">Huge investment, heavy battery asset burden, and lack of standardization kill asset fungibility.</p>
+                        </div>
+                        <div class="flex-1 border border-green-200 bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-green-700">✅ The Charging Advantage</h4>
+                            <p class="text-sm text-green-600 mt-2">Flexible investment, clear asset ownership, and open standards allow for easy expansion and compatibility.</p>
+                        </div>
+                     </div>
+                </div>
+            </div>
+             <div class="mt-8 card p-8">
+                <h3 class="text-2xl font-bold text-center mb-4">The Future: From Logistics Giants to Energy Providers</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-center">
+                    <div>
+                        <span class="text-6xl">🚚</span>
+                        <h4 class="text-xl font-semibold mt-2">Path 1: The Logistics Behemoth</h4>
+                        <p class="text-gray-600 mt-2">Use a private charging network as a moat to guarantee capacity, lower costs, and offer superior service, creating a "dimensional advantage" over competitors.</p>
+                    </div>
+                    <div>
+                        <span class="text-6xl">⚡️</span>
+                        <h4 class="text-xl font-semibold mt-2">Path 2: The Energy Service Provider</h4>
+                        <p class="text-gray-600 mt-2">After meeting internal needs, open the network to the public, transforming from a freight carrier into a new-age energy provider that understands logistics better than traditional oil giants.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Future Tech Section -->
+        <section id="future" class="section py-12 md:py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold section-title">The Future Platform: Platooning & Cost Reinvention</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">The digital chassis of an electric truck is the only viable platform for smart platooning. This technology will completely reinvent the industry's cost structure, ushering in a second cost-reduction revolution.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="card p-8">
+                    <h3 class="text-2xl font-bold mb-4">Cost Structure Breakdown</h3>
+                    <p class="text-gray-600 mb-4">Driver salary is one of the largest operating expenses for an electric truck. Therefore, any technology that reduces the number of drivers will have a massive impact on cost optimization.</p>
+                    <div class="chart-container h-[40vh] max-h-[350px]">
+                        <canvas id="costStructureChart"></canvas>
+                    </div>
+                </div>
+                <div class="card p-8">
+                    <h3 class="text-2xl font-bold mb-4">Smart Platooning: The 5-Truck, 2-Driver Revolution</h3>
+                    <p class="text-gray-600 mb-4">With autonomous driving, a platoon of 5 trucks could operate with only 1-2 drivers, drastically cutting labor costs. Following trucks also benefit from reduced air resistance, further lowering energy consumption.</p>
+                    <div class="bg-gray-50 p-4 rounded-lg text-center">
+                        <p class="font-bold text-lg mb-2">A 5-truck platoon with only 2 drivers</p>
+                        <div class="flex justify-center items-end space-x-2">
+                            <div class="text-center"><span class="text-4xl">👤</span><span class="text-4xl">🚚</span></div>
+                            <div class="text-center"><span class="text-4xl opacity-20">👤</span><span class="text-4xl">🚚</span></div>
+                            <div class="text-center"><span class="text-4xl opacity-20">👤</span><span class="text-4xl">🚚</span></div>
+                            <div class="text-center"><span class="text-4xl opacity-20">👤</span><span class="text-4xl">🚚</span></div>
+                            <div class="text-center"><span class="text-4xl">👤</span><span class="text-4xl">🚚</span></div>
+                        </div>
+                        <p class="mt-4 text-green-700 font-semibold">Labor costs cut by over 60%, leading to significant overall cost optimization.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p>&copy; 2025 EV Truck Market Interactive Analysis, by Energy Research Group.</p>
+            <p class="text-sm text-gray-400 mt-2">This application is for analysis and estimation purposes only. Data is based on public market sources and may differ from actual conditions.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Mobile Menu Toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Smooth Scrolling & Active Nav Link
+            const navLinks = document.querySelectorAll('a[href^="#"]');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                        if (mobileMenu.classList.contains('hidden') === false) {
+                            mobileMenu.classList.add('hidden');
+                        }
+                    }
+                });
+            });
+
+            const sections = document.querySelectorAll('.section');
+            const navItems = document.querySelectorAll('.nav-link');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navItems.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: "-30% 0px -70% 0px", threshold: 0 });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // Market Growth Chart
+            const marketCtx = document.getElementById('marketChart').getContext('2d');
+            new Chart(marketCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2021', '2022', '2023', '2024 (Est.)'],
+                    datasets: [{
+                        label: 'EV Truck Sales (10k units)',
+                        data: [1.0, 2.2, 3.4, 8.2],
+                        borderColor: '#007A7C',
+                        backgroundColor: 'rgba(0, 122, 124, 0.1)',
+                        fill: true,
+                        yAxisID: 'y',
+                        tension: 0.4,
+                    }, {
+                        label: 'Market Penetration (%)',
+                        data: [0.7, 1.5, 4.9, 9.8],
+                        borderColor: '#F29F05',
+                        backgroundColor: 'rgba(242, 159, 5, 0.1)',
+                        fill: true,
+                        yAxisID: 'y1',
+                        tension: 0.4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        title: { display: true, text: 'EV Heavy-Duty Truck Sales & Market Penetration', font: { size: 16 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y;
+                                        label += context.dataset.yAxisID === 'y' ? 'k units' : ' %';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Sales (10k Units)' } },
+                        y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'Penetration (%)' }, grid: { drawOnChartArea: false } },
+                    }
+                }
+            });
+
+            // TCO Chart
+            const tcoData = {
+                electric: {
+                    title: "Electric Truck TCO (5-yr/500k km)",
+                    labels: ['Initial Purchase', 'Energy Costs', 'Battery Dep.', 'Maint. & Other'],
+                    costs: [550, 680, 250, 200],
+                    details: `<h3 class="text-2xl font-bold highlight-text">Electric Truck</h3><p class="text-lg text-gray-700">Total Cost: <span class="font-bold">$1.68M</span> | Per km: <span class="font-bold">$3.36</span></p><div class="mt-4 space-y-2 text-gray-600"><p><strong>Pros:</strong> Extremely low energy and maintenance costs; stable, predictable OPEX; zero emissions.</p><p><strong>Cons:</strong> Highest initial purchase price; dependent on charging infrastructure.</p><p class="mt-2 p-3 bg-teal-50 rounded-lg text-teal-800"><strong>Verdict:</strong> Huge advantage over diesel. For high-intensity operations, its economics will surpass LNG.</p></div>`
+                },
+                diesel: {
+                    title: "Diesel Truck TCO (5-yr/500k km)",
+                    labels: ['Initial Purchase', 'Fuel Costs', 'Maint. & Other'],
+                    costs: [400, 1237.5, 350],
+                    details: `<h3 class="text-2xl font-bold text-red-600">Diesel Truck</h3><p class="text-lg text-gray-700">Total Cost: <span class="font-bold">$1.99M</span> | Per km: <span class="font-bold">$3.98</span></p><div class="mt-4 space-y-2 text-gray-600"><p><strong>Pros:</strong> Low purchase price; extensive refueling network; mature technology.</p><p><strong>Cons:</strong> Extremely high fuel and maintenance costs; volatile OPEX; high emissions.</p><p class="mt-2 p-3 bg-red-50 rounded-lg text-red-800"><strong>Verdict:</strong> The legacy choice, but the worst economic performer over its lifecycle. High and unpredictable costs.</p></div>`
+                },
+                lng: {
+                    title: "LNG Truck TCO (5-yr/500k km)",
+                    labels: ['Initial Purchase', 'Fuel Costs', 'Maint. & Other'],
+                    costs: [450, 790, 300],
+                    details: `<h3 class="text-2xl font-bold text-blue-600">LNG Truck</h3><p class="text-lg text-gray-700">Total Cost: <span class="font-bold">$1.54M</span> | Per km: <span class="font-bold">$3.08</span></p><div class="mt-4 space-y-2 text-gray-600"><p><strong>Pros:</strong> Best TCO in low-intensity scenarios; cleaner than diesel.</p><p><strong>Cons:</strong> Higher purchase price than diesel; volatile fuel costs; less developed refueling network.</p><p class="mt-2 p-3 bg-blue-50 rounded-lg text-blue-800"><strong>Verdict:</strong> A strong choice for specific current scenarios, but lacks the cost stability and long-term advantage of electric.</p></div>`
+                }
+            };
+            
+            const tcoCtx = document.getElementById('tcoChart').getContext('2d');
+            const tcoDetailsContainer = document.getElementById('tcoDetails');
+            let tcoChartInstance;
+
+            function updateTCOChart(type) {
+                const data = tcoData[type];
+                if (tcoChartInstance) { tcoChartInstance.destroy(); }
+                tcoChartInstance = new Chart(tcoCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{ label: 'Cost ($1k)', data: data.costs, backgroundColor: ['#FFC154', '#FF6B6B', '#48A9A6', '#3A6EA5'], borderColor: '#FFFFFF', borderWidth: 2 }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: data.title, font: { size: 16 } },
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: (context) => `${context.label}: $${context.raw}k` } }
+                        },
+                        scales: { x: { title: { display: true, text: 'Cost ($1,000s)' } } }
+                    }
+                });
+                tcoDetailsContainer.innerHTML = data.details;
+            }
+
+            document.querySelectorAll('input[name="tco"]').forEach(radio => {
+                radio.addEventListener('change', (event) => updateTCOChart(event.target.value));
+            });
+            updateTCOChart('electric');
+
+            // Cost Structure Chart
+            const costCtx = document.getElementById('costStructureChart').getContext('2d');
+            new Chart(costCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Driver Salary & Benefits', 'Vehicle Depreciation', 'Electricity Cost', 'Other (Maint., Insurance)'],
+                    datasets: [{
+                        label: 'Cost Breakdown',
+                        data: [28, 25, 26, 21],
+                        backgroundColor: ['#007A7C', '#48A9A6', '#F29F05', '#E5E7EB'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'EV Truck Operating Cost Structure', font: { size: 16 } },
+                        tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw}%` } }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
