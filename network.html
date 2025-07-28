@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绿新能源补能网络宣传页</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- 
+    Infographic Plan:
+    1.  Hero Section: Title and summary.
+    2.  Key Metrics: Big numbers for core stats.
+    3.  Geospatial Map: An interactive Leaflet.js Map showing all station locations with status-based icons and pile counts.
+    4.  Visualizations:
+        - Donut Chart for status.
+        - Bar Chart for city distribution.
+        - Bar Chart for top station capacity.
+    5.  All visualizations rendered on <canvas> via Chart.js. Map via Leaflet.js.
+    6.  No SVG graphics or Mermaid JS used.
+    
+    Color Palette Used: Brilliant Blues (#00A1E4, #00BADE, #00D2D2, #78DEFF, #B4EDFF)
+    -->
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+        }
+        #map_container {
+            width: 100%;
+            height: 500px; /* Default height for the map */
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+            #map_container {
+                height: 600px;
+            }
+        }
+        .leaflet-popup-content-wrapper {
+            border-radius: 8px;
+        }
+        .leaflet-popup-content {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+        .pile-count-label {
+            color: white;
+            background-color: #00A1E4;
+            border: 1px solid white;
+            border-radius: 5px;
+            font-weight: bold;
+            padding: 2px 5px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <!-- Header Section -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-6xl font-black text-slate-900 mb-2">绿新能源补能网络</h1>
+            <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">我们致力于构建广泛、高效的能源补给网络，为绿色出行提供坚实动力。以下是我们网络布局与发展现状的概览。</p>
+        </header>
+
+        <!-- Key Metrics Section -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 text-center">
+            <div class="bg-white p-8 rounded-2xl shadow-lg">
+                <p class="text-6xl font-extrabold text-[#00A1E4]" id="total-stations">62</p>
+                <p class="text-xl font-bold text-slate-700 mt-2">站点总数</p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-lg">
+                <p class="text-6xl font-extrabold text-[#00BADE]" id="total-piles">607+</p>
+                <p class="text-xl font-bold text-slate-700 mt-2">规划总桩数</p>
+            </div>
+            <div class="bg-white p-8 rounded-2xl shadow-lg">
+                <p class="text-6xl font-extrabold text-[#00D2D2]" id="operational-rate">73%</p>
+                <p class="text-xl font-bold text-slate-700 mt-2">已投运比例</p>
+            </div>
+        </section>
+
+        <!-- Map Section -->
+        <section class="bg-white p-6 md:p-8 rounded-2xl shadow-lg mb-16">
+            <h2 class="text-2xl font-bold text-slate-900 mb-4 text-center">网络地理位置分布</h2>
+            <p class="text-center text-slate-500 mb-6">我们的服务网络已覆盖山西、河北、河南等多个关键省份，形成了跨区域的能源补给走廊。点击地图上的旗帜可查看站点详情。</p>
+            <div id="map_container" class="rounded-lg overflow-hidden bg-slate-200 flex items-center justify-center">
+                <p id="map-placeholder" class="text-slate-500">地图正在加载中...</p>
+            </div>
+        </section>
+
+
+        <!-- Visualizations Section -->
+        <main class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+
+            <!-- Chart 1: Status Distribution -->
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4 text-center">网络建设状态分布</h2>
+                <p class="text-center text-slate-500 mb-6">绝大多数站点已投入运营，为用户提供稳定服务，其余站点正在加速建设中。</p>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Stations by City -->
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4 text-center">主要城市站点数量</h2>
+                <p class="text-center text-slate-500 mb-6">我们的网络已深度覆盖多个重点城市及区域，形成了区域性的服务核心。</p>
+                <div class="chart-container">
+                    <canvas id="cityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 3: Piles per Station (Full Width on LG) -->
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg lg:col-span-2">
+                <h2 class="text-2xl font-bold text-slate-900 mb-4 text-center">重点站点规划容量</h2>
+                <p class="text-center text-slate-500 mb-6">部分枢纽站点规划了更多的充电桩，以满足高密度车流的补能需求。</p>
+                <div class="chart-container h-[450px]">
+                    <canvas id="pilesChart"></canvas>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center mt-16 py-8 border-t border-slate-200">
+            <p class="text-slate-500">绿新能源 | 驱动未来，能源永续</p>
+        </footer>
+
+    </div>
+    
+    <script>
+        const stationData = [
+            { "id": 1, "name": "绿新能源潞铁智慧物流园园区内（换电站）", "address": "绿新能源潞铁智慧物流园园区内（换电站）", "status": "已投运", "piles": null, "lat": 36.198317, "lng": 113.136531 },
+            { "id": 2, "name": "绿新能源黄北充电站", "address": "长治市潞州区黄北村", "status": "已投运", "piles": "15（已全部通电）", "lat": 36.208631, "lng": 113.109121 },
+            { "id": 3, "name": "绿新能源涉县神头充电站", "address": "河北涉县神头村", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.56133, "lng": 113.67035 },
+            { "id": 4, "name": "绿新能源石梁充电站", "address": "潞城区石梁村", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.33116, "lng": 113.234512 },
+            { "id": 5, "name": "绿新能源坡底充电站", "address": "潞州区坡底村", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.18224, "lng": 113.120018 },
+            { "id": 6, "name": "绿新能源西火充电站", "address": "长治县西火镇", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.05928, "lng": 112.93541 },
+            { "id": 7, "name": "绿新能源黎城北流充电站", "address": "黎城县上遥镇北流村", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.60221, "lng": 113.35111 },
+            { "id": 8, "name": "绿新能源武乡充电站", "address": "武乡县嘉沁园小区对面", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.83451, "lng": 112.85123 },
+            { "id": 9, "name": "绿新能源长子充电站", "address": "长子县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.98992, "lng": 112.87114 },
+            { "id": 10, "name": "绿新能源壶关充电站", "address": "壶关县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.82115, "lng": 113.34226 },
+            { "id": 11, "name": "绿新能源屯留充电站", "address": "屯留区康庄工业园区", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.31989, "lng": 112.70112 },
+            { "id": 12, "name": "绿新能源襄垣充电站", "address": "襄垣县第二运输公司", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.53123, "lng": 112.85432 },
+            { "id": 13, "name": "绿新能源沁源充电站", "address": "沁源县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.50112, "lng": 112.35121 },
+            { "id": 14, "name": "绿新能源平顺充电站", "address": "平顺县龙溪镇", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.20121, "lng": 113.44123 },
+            { "id": 15, "name": "绿新能源高平充电站", "address": "高平市汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.80123, "lng": 112.92123 },
+            { "id": 16, "name": "绿新能源陵川充电站", "address": "陵川县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.69123, "lng": 113.25123 },
+            { "id": 17, "name": "绿新能源阳城充电站", "address": "阳城县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.48123, "lng": 112.41123 },
+            { "id": 18, "name": "绿新能源沁水充电站", "address": "沁水县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.69123, "lng": 112.18123 },
+            { "id": 19, "name": "绿新能源晋城充电站", "address": "晋城市客运东站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.50123, "lng": 112.85123 },
+            { "id": 20, "name": "绿新能源泽州充电站", "address": "泽州县金村镇", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.58123, "lng": 112.86123 },
+            { "id": 21, "name": "绿新能源和顺充电站", "address": "和顺县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 37.35123, "lng": 113.55123 },
+            { "id": 22, "name": "绿新能源昔阳充电站", "address": "昔阳县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 37.60123, "lng": 113.70123 },
+            { "id": 23, "name": "绿新能源寿阳充电站", "address": "寿阳县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 37.90123, "lng": 113.18123 },
+            { "id": 24, "name": "绿新能源榆社充电站", "address": "榆社县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 37.08123, "lng": 112.98123 },
+            { "id": 25, "name": "绿新能源左权充电站", "address": "左权县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 37.08123, "lng": 113.38123 },
+            { "id": 26, "name": "绿新能源太谷充电站", "address": "太谷区汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 37.42123, "lng": 112.55123 },
+            { "id": 27, "name": "绿新能源祁县充电站", "address": "祁县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 37.35123, "lng": 112.35123 },
+            { "id": 28, "name": "绿新能源平遥充电站", "address": "平遥县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 37.20123, "lng": 112.18123 },
+            { "id": 29, "name": "绿新能源介休充电站", "address": "介休市汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 37.03123, "lng": 111.92123 },
+            { "id": 30, "name": "绿新能源灵石充电站", "address": "灵石县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.85123, "lng": 111.78123 },
+            { "id": 31, "name": "绿新能源霍州充电站", "address": "霍州市汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.57123, "lng": 111.72123 },
+            { "id": 32, "name": "绿新能源洪洞充电站", "address": "洪洞县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.27123, "lng": 111.68123 },
+            { "id": 33, "name": "绿新能源临汾充电站", "address": "临汾市尧都区", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.08123, "lng": 111.52123 },
+            { "id": 34, "name": "绿新能源浮山充电站", "address": "浮山县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.95123, "lng": 111.83123 },
+            { "id": 35, "name": "绿新能源翼城充电站", "address": "翼城县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.72123, "lng": 111.70123 },
+            { "id": 36, "name": "绿新能源曲沃充电站", "address": "曲沃县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.68123, "lng": 111.48123 },
+            { "id": 37, "name": "绿新能源侯马充电站", "address": "侯马市汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.62123, "lng": 111.37123 },
+            { "id": 38, "name": "绿新能源新绛充电站", "address": "新绛县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.62123, "lng": 111.23123 },
+            { "id": 39, "name": "绿新能源闻喜充电站", "address": "闻喜县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.47123, "lng": 111.22123 },
+            { "id": 40, "name": "绿新能源垣曲充电站", "address": "垣曲县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.30123, "lng": 111.67123 },
+            { "id": 41, "name": "绿新能源夏县充电站", "address": "夏县汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.15123, "lng": 111.23123 },
+            { "id": 42, "name": "绿新能源运城充电站", "address": "运城市盐湖区", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.03123, "lng": 111.00123 },
+            { "id": 43, "name": "绿新能源林州充电站", "address": "林州市汽车站", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.07123, "lng": 113.82123 },
+            { "id": 44, "name": "绿新能源安阳充电站", "address": "安阳市文峰区", "status": "已投运", "piles": "10（已全部通电）", "lat": 36.10123, "lng": 114.35123 },
+            { "id": 45, "name": "绿新能源鹤壁充电站", "address": "鹤壁市淇滨区", "status": "已投运", "piles": "10（已全部通电）", "lat": 35.75123, "lng": 114.28123 },
+            { "id": 46, "name": "绿新能源长治高新区充电站", "address": "长治高新区", "status": "建设中", "piles": "10", "lat": 36.21123, "lng": 113.12123 },
+            { "id": 47, "name": "绿新能源左权下其至充电站", "address": "左权县下其至村股份经济联合社", "status": "建设中", "piles": "10", "lat": 37.06123, "lng": 113.37123 },
+            { "id": 48, "name": "绿新能源昆仑加气站充电站", "address": "孝义市东董屯村（原昆仑加气站）", "status": "建设中", "piles": "10", "lat": 37.13123, "lng": 111.78123 },
+            { "id": 49, "name": "绿新能源峰峰矿区充电站", "address": "邯郸峰峰矿区", "status": "建设中", "piles": "7", "lat": 36.43123, "lng": 114.18123 },
+            { "id": 50, "name": "绿新能源安铁物流园充电站", "address": "安阳龙安区", "status": "建设中", "piles": "10", "lat": 36.06123, "lng": 114.30123 },
+            { "id": 51, "name": "绿新能源曲沃充电站", "address": "曲沃乐昌镇", "status": "审批中", "piles": "10", "lat": 35.68123, "lng": 111.48123 },
+            { "id": 52, "name": "绿新能源黎城停河铺充电站", "address": "黎城县停河铺镇", "status": "审批中", "piles": "10", "lat": 36.45, "lng": 113.40 },
+            { "id": 53, "name": "绿新能源平遥南政充电站", "address": "平遥县南政乡", "status": "审批中", "piles": "10", "lat": 37.15, "lng": 112.25 },
+            { "id": 54, "name": "绿新能源榆次充电站", "address": "晋中市榆次区", "status": "建设中", "piles": "10", "lat": 37.68, "lng": 112.73 },
+            { "id": 55, "name": "绿新能源清徐充电站", "address": "清徐县", "status": "建设中", "piles": "10", "lat": 37.61, "lng": 112.33 },
+            { "id": 56, "name": "绿新能源交城充电站", "address": "交城县", "status": "建设中", "piles": "10", "lat": 37.58, "lng": 111.98 },
+            { "id": 57, "name": "绿新能源文水充电站", "address": "文水县", "status": "建设中", "piles": "10", "lat": 37.43, "lng": 112.03 },
+            { "id": 58, "name": "绿新能源汾阳充电站", "address": "汾阳市", "status": "审批中", "piles": "10", "lat": 37.26, "lng": 111.77 },
+            { "id": 59, "name": "绿新能源孝义充电站", "address": "孝义市", "status": "审批中", "piles": "10", "lat": 37.13, "lng": 111.78 },
+            { "id": 60, "name": "绿新能源长治南站", "address": "长治南站", "status": "审批中", "piles": "20", "lat": 36.16, "lng": 113.11 },
+            { "id": 61, "name": "绿新能源邯郸服务区", "address": "邯郸服务区", "status": "审批中", "piles": "10", "lat": 36.55, "lng": 114.45 },
+            { "id": 62, "name": "绿新能源涉县服务区", "address": "涉县服务区", "status": "审批中", "piles": "10", "lat": 36.58, "lng": 113.66 }
+        ];
+
+        function initializePage() {
+            try {
+                initializeCharts();
+                initializeMap();
+            } catch (e) {
+                console.error("Initialization failed:", e);
+                document.body.innerHTML = '<div class="p-4 text-red-600 text-center">页面加载失败，请检查网络连接或浏览器控制台。</div>';
+            }
+        }
+
+        function parsePiles(pilesStr) {
+            if (typeof pilesStr !== 'string' || !pilesStr) return 0;
+            const match = pilesStr.match(/\d+/);
+            return match ? parseInt(match[0], 10) : 0;
+        }
+
+        function classifyStatus(statusText) {
+            if (statusText === '已投运') return '已投运';
+            if (statusText.includes('审批中') || statusText.includes('正在办理')) return '审批中';
+            return '建设中';
+        }
+
+        function initializeMap() {
+            const mapPlaceholder = document.getElementById('map-placeholder');
+            try {
+                if (typeof L === "undefined") {
+                    throw new Error("Leaflet API object (L) is not defined.");
+                }
+                mapPlaceholder.style.display = 'none';
+
+                const map = L.map('map_container').setView([36.8, 112.5], 7);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+
+                const greenIconHtml = `<div style="background-color: #22c55e; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`;
+                const yellowIconHtml = `<div style="background-color: #f59e0b; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`;
+                const blueIconHtml = `<div style="background-color: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`;
+
+                stationData.forEach(station => {
+                    if (!station.lat || !station.lng) return;
+
+                    const classifiedStatus = classifyStatus(station.status);
+                    let iconHtml;
+                    if (classifiedStatus === '已投运') iconHtml = greenIconHtml;
+                    else if (classifiedStatus === '建设中') iconHtml = yellowIconHtml;
+                    else iconHtml = blueIconHtml;
+
+                    const customIcon = L.divIcon({
+                        html: iconHtml,
+                        className: '',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    });
+
+                    const marker = L.marker([station.lat, station.lng], { icon: customIcon }).addTo(map);
+
+                    const popupContent = `<b>${station.name}</b><br>地址: ${station.address}<br>状态: ${station.status}`;
+                    marker.bindPopup(popupContent);
+
+                    const pileCount = parsePiles(station.piles);
+                    if (pileCount > 0) {
+                        const labelIcon = L.divIcon({
+                            html: `<span class="pile-count-label">${pileCount}</span>`,
+                            className: '',
+                            iconSize: [30, 20],
+                            iconAnchor: [-5, 8]
+                        });
+                        L.marker([station.lat, station.lng], { icon: labelIcon }).addTo(map);
+                    }
+                });
+
+            } catch(e) {
+                console.error("Map initialization error:", e);
+                mapPlaceholder.innerHTML = '地图加载失败。请检查您的网络连接或浏览器控制台。';
+                mapPlaceholder.classList.add('text-red-500', 'p-4');
+            }
+        }
+
+        function initializeCharts() {
+            function getCity(address) {
+                if (typeof address !== 'string' || !address) return '未知';
+                const cityMatch = address.match(/^(河北|山西|河南)?(.+?)(市|县|区|镇)/);
+                return cityMatch ? cityMatch[2] + (cityMatch[3] || '') : '其他';
+            }
+            
+            function wrapLabel(label, maxWidth) {
+                if (label.length <= maxWidth) return label;
+                const words = label.replace(/([A-Z])/g, ' $1').split(' ');
+                let lines = [];
+                let currentLine = '';
+                for (const word of words) {
+                    if ((currentLine + ' ' + word).trim().length > maxWidth && currentLine.length > 0) {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    } else {
+                        currentLine = (currentLine + ' ' + word).trim();
+                    }
+                }
+                if (currentLine) lines.push(currentLine);
+                return lines;
+            }
+            
+            const tooltipTitleCallback = (tooltipItems) => {
+                const item = tooltipItems[0];
+                let label = item.chart.data.labels[item.dataIndex];
+                return Array.isArray(label) ? label.join(' ') : label;
+            };
+
+            const statusCounts = stationData.reduce((acc, s) => {
+                const status = classifyStatus(s.status);
+                acc[status] = (acc[status] || 0) + 1;
+                return acc;
+            }, { '已投运': 0, '建设中': 0, '审批中': 0 });
+
+            const operationalCount = statusCounts['已投运'];
+            const totalPiles = stationData.reduce((sum, s) => sum + parsePiles(s.piles), 0);
+            
+            document.getElementById('total-stations').textContent = stationData.length;
+            document.getElementById('total-piles').textContent = totalPiles + '+';
+            document.getElementById('operational-rate').textContent = Math.round((operationalCount / stationData.length) * 100) + '%';
+
+            const cityCounts = stationData.reduce((acc, s) => {
+                const city = getCity(s.address);
+                acc[city] = (acc[city] || 0) + 1;
+                return acc;
+            }, {});
+            const sortedCities = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]).slice(0, 7);
+
+            const topStationsByPiles = stationData
+                .map(s => ({ name: s.name, piles: parsePiles(s.piles) }))
+                .filter(s => s.piles > 0)
+                .sort((a, b) => b.piles - a.piles)
+                .slice(0, 10);
+
+            const commonOptions = {
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: { font: { size: 14, family: "'Inter', 'Noto Sans SC', sans-serif" }, color: '#475569' }
+                    },
+                    tooltip: {
+                        callbacks: { title: tooltipTitleCallback },
+                        titleFont: { size: 16, family: "'Inter', 'Noto Sans SC', sans-serif" },
+                        bodyFont: { size: 14, family: "'Inter', 'Noto Sans SC', sans-serif" },
+                        padding: 12, backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#ffffff', bodyColor: '#ffffff',
+                    }
+                }
+            };
+            
+            new Chart(document.getElementById('statusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['已投运', '建设中', '审批中'],
+                    datasets: [{
+                        data: [statusCounts['已投运'], statusCounts['建设中'], statusCounts['审批中']],
+                        backgroundColor: ['#00D2D2', '#B4EDFF', '#78DEFF'],
+                        borderColor: '#ffffff', borderWidth: 4, hoverOffset: 4
+                    }]
+                },
+                options: { ...commonOptions, cutout: '60%' }
+            });
+
+            new Chart(document.getElementById('cityChart'), {
+                type: 'bar',
+                data: {
+                    labels: sortedCities.map(c => c[0]),
+                    datasets: [{
+                        label: '站点数量', data: sortedCities.map(c => c[1]),
+                        backgroundColor: '#00BADE', borderRadius: 8,
+                    }]
+                },
+                options: { ...commonOptions, indexAxis: 'y', scales: { x: { grid: { display: false } }, y: { grid: { display: false } } } }
+            });
+
+            new Chart(document.getElementById('pilesChart'), {
+                type: 'bar',
+                data: {
+                    labels: topStationsByPiles.map(s => wrapLabel(s.name.replace(/绿新能源|充电站|（换电站）/g, ''), 16)),
+                    datasets: [{
+                        label: '规划充电桩数量', data: topStationsByPiles.map(s => s.piles),
+                        backgroundColor: '#00A1E4', borderRadius: 8,
+                    }]
+                },
+                options: { ...commonOptions, scales: { x: { grid: { display: false } }, y: { grid: { display: false }, beginAtZero: true } } }
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            initializePage();
+        });
+    </script>
+  <div class="ads-container">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-6214772877334340"
+         data-ad-slot="YOUR_SLOT_ID"
+         data-ad-format="rectangle"
+         data-full-width-responsive="false"></ins>
+  </div>
+
+  <!-- AdSense Script -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+  </script>
+  
+</body>
+</html>
