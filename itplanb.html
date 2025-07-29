@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>石油公司 2000: IT愿景交互式体验</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Windows 2000 Classic -->
+    <!-- Application Structure Plan: The application is designed as a simulation of the Windows 2000 desktop environment. This "digital archaeology" or "desktop metaphor" approach was chosen to create an immersive and contextually rich experience, directly transporting the user back to the era of the report. Instead of a linear scroll, the user explores content through familiar desktop interactions: clicking icons ('My Computer', 'My Documents', 'Intranet Explorer') which open draggable, resizable "windows". This non-linear, discovery-based flow encourages exploration and makes the dense report content more engaging and digestible. Each icon logically maps to a core theme of the report (e.g., 'My Computer' for Infrastructure, 'SAP Login' for ERP/EAI), providing an intuitive information architecture that leverages the user's existing mental models of a desktop OS. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Strategic Initiatives (Budgets/Timelines). Goal: Compare resource allocation. Viz Method: Horizontal Bar Chart (Chart.js). Interaction: Tooltips on hover provide exact figures. Justification: Bar charts are excellent for comparing discrete categories. Library: Chart.js (Canvas).
+        - Report Info: EAI Architecture (Hub-and-Spoke). Goal: Organize system relationships. Viz Method: HTML/CSS Diagram. Interaction: Hovering over elements reveals descriptive tooltips. Justification: A static, styled HTML diagram is sufficient and avoids complex SVG, clearly illustrating the architectural concept. Library/Method: Tailwind CSS.
+        - Report Info: 2000 vs 2025 Tech Comparison. Goal: Compare across time. Viz Method: Tabulated text in a two-column layout. Interaction: A "Future View" button toggles the visibility of the 2025 column. Justification: Simple, direct comparison is most effective for textual data. Library/Method: Vanilla JS + Tailwind.
+        - Report Info: Core Report Content (Text). Goal: Inform. Viz Method: Formatted text within draggable windows. Interaction: Users can open, close, drag, and resize windows to manage their "workspace". Justification: This mimics the real OS experience and gives users control over information presentation. Library/Method: Vanilla JS + Tailwind.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Tahoma', 'Noto Sans SC', sans-serif;
+            background-color: #008080;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .desktop {
+            width: 100vw;
+            height: 100vh;
+            background: url('https://placehold.co/1920x1080/005353/FFFFFF?text=PetroCorp+2000') center/cover;
+            position: relative;
+        }
+
+        .taskbar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 30px;
+            background-color: #C0C0C0;
+            border-top: 2px solid #FFFFFF;
+            box-shadow: inset 0 1px 0 #808080;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .start-button {
+            background-color: #C0C0C0;
+            border: 2px outset #FFFFFF;
+            box-shadow: inset 1px 1px 0 #FFFFFF, inset -1px -1px 0 #808080;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            height: 24px;
+            margin-left: 2px;
+            cursor: pointer;
+        }
+        .start-button:active {
+            border-style: inset;
+        }
+        .start-button img {
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+        }
+        .start-button span {
+            font-weight: bold;
+        }
+
+        .clock {
+            margin-left: auto;
+            border: 1px inset #808080;
+            padding: 2px 8px;
+            margin-right: 4px;
+            font-size: 12px;
+        }
+
+        .desktop-icon {
+            position: absolute;
+            width: 80px;
+            text-align: center;
+            color: white;
+            padding: 4px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .desktop-icon:hover {
+            background-color: rgba(0, 0, 128, 0.5);
+            border: 1px dotted #FFFFFF;
+        }
+        .desktop-icon img {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto;
+        }
+        .desktop-icon p {
+            font-size: 12px;
+            margin-top: 4px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .window {
+            position: absolute;
+            background-color: #C0C0C0;
+            border: 2px outset #FFFFFF;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            min-width: 320px;
+            min-height: 200px;
+            resize: both;
+            overflow: hidden;
+            display: none; /* Hidden by default */
+        }
+        .window.active {
+            z-index: 500;
+        }
+
+        .title-bar {
+            background: linear-gradient(to right, #000080, #1084d0);
+            color: white;
+            padding: 3px 5px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            height: 24px;
+        }
+
+        .title-bar-buttons {
+            display: flex;
+        }
+        .title-bar-button {
+            width: 16px;
+            height: 14px;
+            background-color: #C0C0C0;
+            border: 1px outset #FFFFFF;
+            margin-left: 2px;
+            font-family: 'Marlett', 'Noto Sans SC', sans-serif;
+            font-size: 10px;
+            text-align: center;
+            line-height: 12px;
+            cursor: pointer;
+        }
+        .title-bar-button:active {
+            border-style: inset;
+        }
+
+        .window-body {
+            padding: 10px;
+            background-color: #FFFFFF;
+            flex-grow: 1;
+            overflow-y: auto;
+            font-size: 14px;
+            color: #000;
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .future-view-button {
+            background: linear-gradient(to right, #4f46e5, #818cf8);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .future-view-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="desktop" class="desktop">
+        <!-- Desktop Icons -->
+        <div id="icon-intranet" class="desktop-icon" style="top: 30px; left: 30px;">
+            <img src="https://placehold.co/48x48/C0C0C0/000000?text=🌐" alt="Intranet Explorer">
+            <p>内网浏览器</p>
+        </div>
+        <div id="icon-sap" class="desktop-icon" style="top: 130px; left: 30px;">
+            <img src="https://placehold.co/48x48/C0C0C0/000000?text=⚙️" alt="SAP Login">
+            <p>SAP 登录</p>
+        </div>
+        <div id="icon-docs" class="desktop-icon" style="top: 230px; left: 30px;">
+            <img src="https://placehold.co/48x48/C0C0C0/000000?text=📄" alt="My Documents">
+            <p>我的文档</p>
+        </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div class="taskbar">
+        <div class="start-button">
+            <img src="https://placehold.co/16x16/000080/FFFFFF?text=P" alt="Start">
+            <span>开始</span>
+        </div>
+        <div class="clock" id="clock"></div>
+    </div>
+
+    <!-- Windows -->
+    <div id="window-intranet" class="window" style="top: 50px; left: 150px; width: 700px; height: 500px;">
+        <div class="title-bar">
+            <span>内网浏览器 - PetroCorp 2000 愿景</span>
+            <div class="title-bar-buttons">
+                <div class="title-bar-button close-button">r</div>
+            </div>
+        </div>
+        <div class="window-body">
+            <h1 class="text-2xl font-bold text-blue-800 mb-4">新千年曙光下的IT世界</h1>
+            <p class="mb-4">欢迎访问PetroCorp公司内网。2000年，对于全球IT界而言，是一个充满矛盾与希望的独特年份。我们刚刚耗费巨资成功规避了“千年虫”危机，旋即又被卷入互联网泡沫的狂热浪潮。这种由恐惧驱动的大规模IT盘点，与非理性繁荣催生的巨额投资相结合，为我们制定IT战略创造了一个前所未有的宏观环境。本门户旨在阐明公司在这一关键时刻的业务驱动力与面临的挑战。</p>
+            
+            <div class="bg-gray-100 p-4 rounded-lg border border-gray-300">
+                <h2 class="text-xl font-bold text-blue-700 mb-2">PetroCorp的战略要务</h2>
+                <p class="mb-2">作为一家全球能源巨头，我们的IT转型不仅是追赶潮流，更是关乎生存和发展的战略要务。我们面临三大核心挑战：</p>
+                <ul class="list-disc list-inside space-y-2">
+                    <li><strong>应对价格波动与全球化运营：</strong> 石油行业天然具有周期性，我们需要利用技术提升效率、降低成本，并实现对全球偏远资产的有效监控。</li>
+                    <li><strong>“大换班”：</strong> 大批经验丰富的工程师即将退休，我们必须通过“知识管理”来捕获和传承他们宝贵的隐性知识，防止核心知识资产流失。</li>
+                    <li><strong>数据指令：</strong> 从海量的地震勘探数据到管道的实时运营数据，我们必须打破“信息孤岛”，有效整合与利用这些数据，以支持更精准的决策。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="window-sap" class="window" style="top: 100px; left: 250px; width: 650px; height: 480px;">
+        <div class="title-bar">
+            <span>企业应用集成 (EAI) 架构</span>
+            <div class="title-bar-buttons">
+                <div class="title-bar-button close-button">r</div>
+            </div>
+        </div>
+        <div class="window-body">
+            <h1 class="text-2xl font-bold text-blue-800 mb-4">集成化企业：用ERP和EAI驯服复杂性</h1>
+            <p class="mb-4">为了打破信息孤岛，我们的核心战略是实施SAP R/3系统，以统一财务、人事、供应链等核心业务。然而，没有任何一个系统能满足所有需求。因此，我们采用“企业应用集成”（EAI）技术，将SAP这个庞然大物与数百个其他关键应用（如地球科学软件、SCADA系统）连接起来。</p>
+            
+            <h2 class="text-lg font-bold mt-6 mb-2 text-center">轮辐式 (Hub-and-Spoke) EAI 架构</h2>
+            <div class="flex justify-center items-center p-4 bg-gray-100 rounded-lg border border-gray-300">
+                 <div class="relative w-full max-w-lg h-64 flex items-center justify-center">
+                    <div class="absolute w-24 h-24 bg-blue-600 text-white rounded-full flex items-center justify-center text-center font-bold shadow-lg" title="中心的集成代理，负责管理所有通信。">EAI<br>集成中心</div>
+                    <div class="absolute top-0 left-1/2 -ml-8 w-16 text-center">
+                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white font-bold shadow-md" title="地球科学软件">勘探</div>
+                    </div>
+                     <div class="absolute bottom-0 left-1/2 -ml-8 w-16 text-center">
+                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white font-bold shadow-md" title="供应链管理系统">SCM</div>
+                    </div>
+                     <div class="absolute left-0 top-1/2 -mt-8 h-16 text-center">
+                        <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center text-white font-bold shadow-md" title="核心ERP系统">SAP R/3</div>
+                    </div>
+                     <div class="absolute right-0 top-1/2 -mt-8 h-16 text-center">
+                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white font-bold shadow-md" title="实时过程监控系统">SCADA</div>
+                    </div>
+                </div>
+            </div>
+             <p class="text-sm text-center mt-2 text-gray-600">一个中心的“集成代理”负责管理所有外围应用（“辐条”）之间的通信，大大简化了集成的复杂性。</p>
+        </div>
+    </div>
+
+    <div id="window-docs" class="window" style="top: 150px; left: 350px; width: 800px; height: 600px;">
+        <div class="title-bar">
+            <span>我的文档 - PetroCorp 战略计划</span>
+            <div class="title-bar-buttons">
+                <div class="title-bar-button close-button">r</div>
+            </div>
+        </div>
+        <div class="window-body">
+            <h1 class="text-2xl font-bold text-blue-800 mb-4">新千年的战略举措</h1>
+            <p class="mb-6">我们将宏观愿景转化为一系列具体的、可执行的战略性IT项目组合。每个项目都有明确的目标、预算和时间表，共同构成了我们迈向未来的数字蓝图。</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h2 class="text-xl font-bold text-blue-700">基石计划</h2>
+                    <p class="text-sm my-2">实施全球统一的SAP R/3系统，实现业务流程标准化。</p>
+                    <p class="font-bold">目标: 降低运营成本, 统一数据。</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h2 class="text-xl font-bold text-green-700">突触计划</h2>
+                    <p class="text-sm my-2">通过知识管理系统，应对“大换班”带来的知识流失风险。</p>
+                    <p class="font-bold">目标: 保留核心知识, 培育分享文化。</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <h2 class="text-xl font-bold text-yellow-700">地平线计划</h2>
+                    <p class="text-sm my-2">利用数字技术打造“数字油田”，提高上游资产产量与安全。</p>
+                    <p class="font-bold">目标: 提高采收率, 降低成本。</p>
+                </div>
+            </div>
+            
+            <h2 class="text-xl font-bold text-blue-800 mt-8 mb-4">战略举措：预算与时间线概览 (2000年)</h2>
+            <div class="chart-container">
+                <canvas id="initiativesChart"></canvas>
+            </div>
+            
+            <div class="mt-8 text-center">
+                 <button id="future-view-btn" class="future-view-button">
+                    🚀 展望未来：与2025年对比
+                </button>
+            </div>
+
+            <div id="future-view-content" class="hidden mt-6 bg-gray-100 p-6 rounded-lg border border-gray-300">
+                <h2 class="text-2xl font-bold text-purple-700 mb-4 text-center">技术格局：25年巨变 (2000 vs 2025)</h2>
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="p-2 border">技术领域</th>
+                            <th class="p-2 border">2000年状况</th>
+                            <th class="p-2 border font-bold text-purple-700">2025年状况</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="p-2 border font-bold">计算</td><td class="p-2 border">本地服务器, Sun E10000</td><td class="p-2 border">混合云, 边缘计算</td></tr>
+                        <tr><td class="p-2 border font-bold">软件</td><td class="p-2 border">单体式ERP, EAI</td><td class="p-2 border">SaaS, 微服务</td></tr>
+                        <tr><td class="p-2 border font-bold">人工智能</td><td class="p-2 border">专家系统, 规则引擎</td><td class="p-2 border">生成式AI, 大规模机器学习</td></tr>
+                        <tr><td class="p-2 border font-bold">用户界面</td><td class="p-2 border">桌面为中心 (800x600)</td><td class="p-2 border">移动优先, AR/VR</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const desktop = document.getElementById('desktop');
+            const windows = document.querySelectorAll('.window');
+            let activeWindow = null;
+            let highestZIndex = 500;
+
+            function updateClock() {
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                document.getElementById('clock').textContent = `${hours}:${minutes}`;
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            function bringToFront(win) {
+                if (activeWindow) {
+                    activeWindow.classList.remove('active');
+                    activeWindow.style.zIndex = parseInt(activeWindow.style.zIndex) - 100;
+                }
+                highestZIndex++;
+                win.style.zIndex = highestZIndex;
+                win.classList.add('active');
+                activeWindow = win;
+            }
+            
+            windows.forEach(win => {
+                const titleBar = win.querySelector('.title-bar');
+                const closeButton = win.querySelector('.close-button');
+                let isDragging = false;
+                let offsetX, offsetY;
+
+                win.addEventListener('mousedown', () => bringToFront(win));
+
+                titleBar.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    offsetX = e.clientX - win.offsetLeft;
+                    offsetY = e.clientY - win.offsetTop;
+                    titleBar.style.cursor = 'grabbing';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (isDragging) {
+                        let newX = e.clientX - offsetX;
+                        let newY = e.clientY - offsetY;
+                        
+                        const desktopRect = desktop.getBoundingClientRect();
+                        newX = Math.max(0, Math.min(newX, desktopRect.width - win.offsetWidth));
+                        newY = Math.max(0, Math.min(newY, desktopRect.height - win.offsetHeight - 30));
+
+                        win.style.left = `${newX}px`;
+                        win.style.top = `${newY}px`;
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    isDragging = false;
+                    titleBar.style.cursor = 'move';
+                });
+
+                closeButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    win.style.display = 'none';
+                });
+            });
+
+            function openWindow(windowId) {
+                const win = document.getElementById(windowId);
+                if (win) {
+                    win.style.display = 'flex';
+                    bringToFront(win);
+                }
+            }
+            
+            document.getElementById('icon-intranet').addEventListener('dblclick', () => openWindow('window-intranet'));
+            document.getElementById('icon-sap').addEventListener('dblclick', () => openWindow('window-sap'));
+            document.getElementById('icon-docs').addEventListener('dblclick', () => openWindow('window-docs'));
+            
+            document.getElementById('icon-intranet').addEventListener('click', () => openWindow('window-intranet'));
+            document.getElementById('icon-sap').addEventListener('click', () => openWindow('window-sap'));
+            document.getElementById('icon-docs').addEventListener('click', () => openWindow('window-docs'));
+
+
+            const ctx = document.getElementById('initiativesChart').getContext('2d');
+            const initiativesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['基石计划 (ERP)', '地平线计划 (数字油田)', '突触计划 (知识管理)'],
+                    datasets: [{
+                        label: '预计预算 (百万美元)',
+                        data: [200, 62.5, 15],
+                        backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'],
+                        borderColor: ['#1d4ed8', '#b45309', '#047857'],
+                        borderWidth: 1
+                    },
+                    {
+                        label: '预计时间线 (年)',
+                        data: [4, 2.5, 2],
+                         backgroundColor: ['#93c5fd', '#fcd34d', '#6ee7b7'],
+                        borderColor: ['#3b82f6', '#f59e0b', '#10b981'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '项目投资与周期 (平均估算)',
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        if(context.datasetIndex === 0) {
+                                           label += new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'USD' }).format(context.parsed.x * 1000000);
+                                        } else {
+                                           label += context.parsed.x + ' 年';
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '预算 (百万美元) / 时间 (年)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('future-view-btn').addEventListener('click', function() {
+                const content = document.getElementById('future-view-content');
+                content.classList.toggle('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
