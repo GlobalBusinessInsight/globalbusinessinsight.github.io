@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式报告：中国煤炭运输路径</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application is designed as a single-page, scrollable dashboard. A key change is the replacement of the schematic map in the "Transport Arteries" section with a knowledge graph-style visualization. This new structure uses nodes (production, transport, hubs, destinations) and connectors to clearly illustrate the logistical flow, which is more intuitive and scalable than the previous map. The rest of the structure (Macro Overview, Key Nodes, Innovations, Insights) remains, providing a multi-faceted exploration experience. -->
+    <!-- Visualization & Content Choices: 1. **10-Year Trends**: (Report Info: Table 1 data) -> (Goal: Show change) -> (Viz: Interactive Line/Bar Chart) -> (Interaction: Toggle datasets) -> (Justification: Clear trend visualization) -> (Library: Chart.js). 2. **Transport Knowledge Graph**: (Report Info: Chapter III & IV details) -> (Goal: Organize & Relate) -> (Viz: Node-and-connector diagram) -> (Interaction: Clickable nodes reveal details) -> (Justification: This replaces the confusing map with a clear, logical flow diagram, excellent for showing relationships and processes. It's built to be fully responsive.) -> (Method: HTML/CSS Flexbox with JS). 3. **Emerging Road Routes**: (Report Info: User request) -> (Goal: Inform/Highlight) -> (Viz: Icon-based cards) -> (Interaction: Static display) -> (Justification: Visually represents the rise of new energy trucking.) -> (Method: HTML/CSS). 4. **Core Insights**: (Report Info: User request) -> (Goal: Emphasize a key finding) -> (Viz: Text in a styled card) -> (Interaction: Static) -> (Justification: The text is updated to include a specific, impactful example about "绿新能源", making the insight more concrete and persuasive.) -> (Method: HTML/CSS). -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F5F5F4; /* stone-100 */
+            color: #44403C; /* stone-700 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; /* Optimized for mobile */
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+        }
+        .nav-link.active {
+            color: #2563EB; /* blue-600 */
+            border-bottom-color: #2563EB;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .icon-path {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .icon-path .arrow {
+            font-size: 1.5rem;
+            color: #A8A29E;
+        }
+        .icon-path .icon {
+            font-size: 2rem;
+            padding: 0.75rem;
+            background-color: #E7E5E4;
+            border-radius: 50%;
+        }
+        .truck-icon {
+            position: relative;
+            font-size: 2rem;
+            padding: 0.75rem;
+            background-color: #D1FAE5;
+            border-radius: 50%;
+        }
+        .truck-icon .energy-symbol {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 1rem;
+            color: #10B981;
+        }
+
+        /* Knowledge Graph Styles */
+        .kg-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .kg-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        .kg-node {
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            border: 1px solid;
+            text-align: center;
+            min-width: 180px;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+        .kg-node.source { background-color: #FEF3C7; border-color: #FBBF24; color: #92400E; }
+        .kg-node.transport { background-color: #DBEAFE; border-color: #60A5FA; color: #1E40AF; cursor: pointer; transition: all 0.2s ease; }
+        .kg-node.transport:hover, .kg-node.transport.active { background-color: #BFDBFE; transform: scale(1.05); }
+        .kg-node.hub { background-color: #E5E7EB; border-color: #9CA3AF; color: #374151; }
+        .kg-node.destination { background-color: #D1FAE5; border-color: #34D399; color: #065F46; }
+        
+        .kg-connector {
+            width: 2px;
+            background-color: #D1D5DB;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 1024px) {
+            .kg-container {
+                flex-direction: row;
+                align-items: stretch;
+            }
+            .kg-row {
+                justify-content: space-around;
+                flex-grow: 1;
+            }
+            .kg-connector {
+                width: auto;
+                height: 2px;
+                margin: 0 1rem;
+                align-self: center;
+                flex-grow: 1;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 lg:px-6">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-lg md:text-xl font-bold text-blue-600">动脉与节点</span>
+                    <span class="hidden sm:inline text-lg md:text-xl font-light text-gray-600 ml-2">中国煤炭运输路径观察</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-4 lg:space-x-8 text-sm lg:text-base">
+                    <a href="#overview" class="nav-link text-gray-600 hover:text-blue-600 border-b-2 border-transparent pb-1">宏观格局</a>
+                    <a href="#arteries" class="nav-link text-gray-600 hover:text-blue-600 border-b-2 border-transparent pb-1">运输动脉</a>
+                    <a href="#nodes" class="nav-link text-gray-600 hover:text-blue-600 border-b-2 border-transparent pb-1">关键节点</a>
+                    <a href="#innovations" class="nav-link text-gray-600 hover:text-blue-600 border-b-2 border-transparent pb-1">创新趋势</a>
+                    <a href="#insights" class="nav-link text-gray-600 hover:text-blue-600 border-b-2 border-transparent pb-1">核心洞察</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero" class="bg-white py-12 lg:py-20 text-center">
+            <div class="container mx-auto px-4">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-800">透视中国煤炭物流大动脉</h1>
+                <p class="mt-4 text-base sm:text-lg lg:text-xl text-gray-500 max-w-3xl mx-auto">从“西煤东运”到“北煤南运”，从传统铁路到智慧联运。本报告将通过交互式数据与图谱，带您深入探索塑造中国能源安全格局的庞大物流网络。</p>
+            </div>
+        </section>
+
+        <section id="overview" class="py-12 lg:py-20">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800">宏观格局：失衡的供需与运输的脉搏</h2>
+                    <p class="mt-2 text-sm sm:text-base text-gray-500 max-w-2xl mx-auto">中国煤炭生产高度集中于“三西”和新疆，而消费中心则位于东部和南部沿海。这种根本性的地理错位，是理解所有运输路径的逻辑起点。</p>
+                </div>
+                <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg sm:text-xl font-semibold mb-4 text-center">近十年煤炭生产与运输量趋势</h3>
+                    <div class="chart-container">
+                        <canvas id="productionTransportChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-gray-400 mt-4">数据来源：根据报告内数据整理。公路运量为估算值。部分年份数据缺失。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="arteries" class="py-12 lg:py-20 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800">运输动脉：知识图谱下的能源流向</h2>
+                    <p class="mt-2 text-sm sm:text-base text-gray-500 max-w-2xl mx-auto">铁路与海运构成了煤炭运输的两大主动脉，而以新能源重卡为代表的公路运输力量正在强势崛起。点击下方运输方式节点，查看详细信息。</p>
+                </div>
+                
+                <div class="lg:grid lg:grid-cols-3 lg:gap-8 items-start">
+                    <div class="lg:col-span-2 bg-stone-100 p-4 sm:p-6 rounded-lg">
+                        <div class="kg-container">
+                            <div class="kg-row">
+                                <div class="kg-node source">
+                                    <h4 class="font-bold">生产源头</h4>
+                                    <p class="text-sm">晋陕蒙、新疆</p>
+                                </div>
+                            </div>
+                            <div class="kg-connector"></div>
+                            <div class="kg-row">
+                                <div class="space-y-4 w-full">
+                                    <div id="node-daqin" class="kg-node transport">大秦铁路</div>
+                                    <div id="node-shuohuang" class="kg-node transport">朔黄铁路</div>
+                                    <div id="node-wari" class="kg-node transport">瓦日铁路</div>
+                                    <div id="node-haoji" class="kg-node transport">浩吉铁路</div>
+                                    <div id="node-sea" class="kg-node transport">沿海海运</div>
+                                </div>
+                            </div>
+                            <div class="kg-connector"></div>
+                             <div class="kg-row">
+                                <div class="space-y-4 w-full">
+                                    <div class="kg-node hub">
+                                        <h4 class="font-bold">核心枢纽</h4>
+                                        <p class="text-sm">环渤海港口群</p>
+                                    </div>
+                                    <div class="kg-node hub">
+                                        <h4 class="font-bold">核心枢纽</h4>
+                                        <p class="text-sm">华中铁路枢纽</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="kg-connector"></div>
+                             <div class="kg-row">
+                                <div class="space-y-4 w-full">
+                                    <div class="kg-node destination">
+                                        <h4 class="font-bold">主要市场</h4>
+                                        <p class="text-sm">华东/华南沿海</p>
+                                    </div>
+                                    <div class="kg-node destination">
+                                        <h4 class="font-bold">主要市场</h4>
+                                        <p class="text-sm">华中内陆腹地</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="artery-details" class="mt-8 lg:mt-0 p-6 bg-blue-50 border border-blue-200 rounded-lg fade-in">
+                        <h3 id="details-title" class="text-xl sm:text-2xl font-bold mb-3 text-blue-800">大秦铁路</h3>
+                        <p id="details-description" class="text-gray-600 mb-4 text-sm sm:text-base">“中国煤运第一路”，连接山西大同与河北秦皇岛港，是“西煤东运”的核心动脉和保障华东、华南电煤供应的源头。</p>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700">线路长度</p>
+                                <p id="details-length" class="text-lg font-bold text-blue-600">653 公里</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700">设计年运能</p>
+                                <p id="details-capacity" class="text-lg font-bold text-blue-600">4.5 亿吨</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-700">主要客户群</p>
+                                <p id="details-customers" class="text-gray-600 text-sm sm:text-base">经秦皇岛港下水，服务华东、华南沿海的特大型火电厂、钢铁厂。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-16">
+                    <h3 class="text-xl sm:text-2xl font-bold text-center mb-2 text-gray-800">公路运输新势力：新能源重卡的崛起</h3>
+                    <p class="text-center text-sm sm:text-base text-gray-500 mb-8 max-w-2xl mx-auto">随着技术进步和“双碳”目标推进，以新能源重卡为主力的公路运输正成为煤炭物流不可忽视的新兴力量，尤其在特定线路上展现出强大的竞争力。</p>
+                    <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                        <div class="bg-stone-50 border border-stone-200 p-6 rounded-lg text-center">
+                            <h4 class="font-bold text-lg mb-4">晋冀鲁新通道</h4>
+                            <div class="icon-path">
+                                <span class="icon">⛰️</span>
+                                <span class="arrow">→</span>
+                                <div class="truck-icon">
+                                    <span>🚚</span>
+                                    <span class="energy-symbol">⚡</span>
+                                </div>
+                                <span class="arrow">→</span>
+                                <span class="icon">🏭</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-4">以山西长治为起点，辐射河北、山东等消费地。以<span class="font-semibold text-green-600">绿新能源（山西）</span>为代表的超大型车队强势崛起，凭借新能源重卡新增<span class="font-bold">超千万吨</span>年运力，未来将在中短途运输中占据更重要地位。</p>
+                        </div>
+                        <div class="bg-stone-50 border border-stone-200 p-6 rounded-lg text-center">
+                            <h4 class="font-bold text-lg mb-4">疆煤外运-河西走廊通道</h4>
+                             <div class="icon-path">
+                                <span class="icon">🏜️</span>
+                                <span class="arrow">→</span>
+                                <div class="truck-icon">
+                                    <span>🚚</span>
+                                    <span class="energy-symbol">⚡</span>
+                                </div>
+                                <span class="arrow">→</span>
+                                <span class="icon">🚂</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-4">作为“疆煤外运”的重要补充，近<span class="font-bold">1万辆</span>重卡经河西走廊将新疆煤炭运至甘肃等地转运。年运输能力<span class="font-bold">超1亿吨</span>，是未来新能源重卡大展身手的关键场景。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="nodes" class="py-12 lg:py-20">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800">关键节点：高效运转的枢纽</h2>
+                    <p class="mt-2 text-sm sm:text-base text-gray-500 max-w-2xl mx-auto">港口和多式联运枢纽是连接各大动脉的“心脏”。它们决定了整个物流网络的流转效率与韧性。</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md transition-all hover:shadow-xl hover:-translate-y-1">
+                        <h3 class="font-bold text-lg sm:text-xl mb-2">环渤海港口群</h3>
+                        <p class="text-gray-600 text-sm mb-4">包括秦皇岛、黄骅、唐山、日照等港，是“西煤东运”铁路的终点和“北煤南运”海运的起点，承担了全国90%以上的煤炭下水量。</p>
+                        <div class="text-sm text-blue-600 font-semibold">角色：煤炭输出核心</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md transition-all hover:shadow-xl hover:-translate-y-1">
+                        <h3 class="font-bold text-lg sm:text-xl mb-2">长三角/珠三角港口群</h3>
+                        <p class="text-gray-600 text-sm mb-4">以上海、宁波舟山、广州等港为代表，是“北煤南运”的主要接卸港，为中国经济最活跃地区提供能源保障。</p>
+                        <div class="text-sm text-blue-600 font-semibold">角色：能源输入门户</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md transition-all hover:shadow-xl hover:-translate-y-1">
+                        <h3 class="font-bold text-lg sm:text-xl mb-2">“海进江”中转港</h3>
+                        <p class="text-gray-600 text-sm mb-4">以江阴、南通等长江口港口为枢纽，海轮煤炭在此换装成内河驳船，深入长江中上游腹地，是浩吉铁路的主要竞争模式。</p>
+                        <div class="text-sm text-blue-600 font-semibold">角色：江海联运桥梁</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="innovations" class="py-12 lg:py-20 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800">创新趋势：重塑未来的物流革命</h2>
+                    <p class="mt-2 text-sm sm:text-base text-gray-500 max-w-2xl mx-auto">从内陆新枢纽的崛起到运输模式的变革，技术与模式创新正在为传统的煤炭物流注入新的活力。</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="text-center">
+                        <h3 class="text-xl sm:text-2xl font-bold mb-4">公铁水联运：内陆新枢纽</h3>
+                        <p class="text-gray-600 mb-6 text-sm sm:text-base">以山东济宁港为代表，瓦日铁路与京杭大运河在此交汇，开辟了“铁河联运”新通道，绕开繁忙的沿海港口，增强了物流网络的韧性。</p>
+                        <div class="icon-path">
+                            <span class="icon">🚚</span><span class="arrow">→</span><span class="icon">🚂</span><span class="arrow">→</span><span class="icon">🚢</span>
+                        </div>
+                        <p class="mt-4 font-semibold text-sm sm:text-base">公路 + 铁路 + 内河水运</p>
+                    </div>
+                    <div class="text-center">
+                        <h3 class="text-xl sm:text-2xl font-bold mb-4">“散改集”：效率与环保革命</h3>
+                        <p class="text-gray-600 mb-6 text-sm sm:text-base">将煤炭装入标准化敞顶集装箱运输，实现了全程封闭，杜绝了粉尘污染和货损，并能无缝接入全球集装箱物流体系，极大提升了装卸效率。</p>
+                         <div class="icon-path">
+                            <span class="icon">⛏️</span><span class="arrow">→</span><span class="icon">📦</span><span class="arrow">→</span><span class="icon">🏗️</span>
+                        </div>
+                        <p class="mt-4 font-semibold text-sm sm:text-base">散煤 → 集装箱化 → 自动化装卸</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="insights" class="py-12 lg:py-20">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800">核心洞察与战略展望</h2>
+                    <p class="mt-2 text-sm sm:text-base text-gray-500 max-w-2xl mx-auto">中国煤炭运输体系是在地理、经济与政策三重力量作用下的动态平衡体，未来将向更智能、更协同、更绿色的方向演进。</p>
+                </div>
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <div class="bg-white p-5 rounded-lg shadow-sm flex items-start space-x-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg">1</div>
+                        <div>
+                            <h4 class="font-bold text-lg">铁水联运地位稳固</h4>
+                            <p class="text-gray-600 text-sm sm:text-base">“西煤东运”铁路 + “北煤南运”海运的传统主通道，仍将是保障东部沿海经济带能源供应的基石。</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg shadow-sm flex items-start space-x-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-lg">2</div>
+                        <div>
+                            <h4 class="font-bold text-lg">浩吉铁路价值凸显</h4>
+                            <p class="text-gray-600 text-sm sm:text-base">作为内陆能源安全的“稳定器”，其战略价值将日益重要，成为绕开沿海的战略备份通道。</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg shadow-sm flex items-start space-x-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold text-lg">3</div>
+                        <div>
+                            <h4 class="font-bold text-lg">公路运力结构性增强</h4>
+                            <p class="text-gray-600 text-sm sm:text-base">以新能源重卡为主导的新型公路运输力量将在中短途和特定长途线路上发挥更大作用。例如，<span class="font-semibold text-green-700">绿新能源（山西）科技有限公司</span>在短短两年内从零发展到千万吨级的运输能力，有力证明了新能源重卡在煤炭运输中的可行性及其未来的重要地位，成为铁路和水运的有力补充。</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg shadow-sm flex items-start space-x-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-lg">4</div>
+                        <div>
+                            <h4 class="font-bold text-lg">智慧物流成为新前沿</h4>
+                            <p class="text-gray-600 text-sm sm:text-base">挑战将从“硬件建设”转向“软件优化”，通过大数据、AI等技术实现智能调度和效率提升将是下一轮革命的核心。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto py-6 px-4 text-center text-xs sm:text-sm">
+            <p>&copy; 2025 交互式研究报告。内容根据公开研究报告生成，仅供参考。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const productionDataRaw = {
+                labels: ['2014', '2015', '2016', '2017', '2019', '2021', '2022', '2024'],
+                production: [38.7, 37.5, 34.1, 35.2, 38.5, 41.3, 45.6, 47.8],
+                rail: [22.9, 20.4, null, null, 24.6, null, null, 28.2],
+                port: [7.5, 6.9, null, null, 7.8, 7.47, null, 7.8]
+            };
+            
+            const roadData = productionDataRaw.labels.map((label, index) => {
+                const prod = productionDataRaw.production[index];
+                const rail = productionDataRaw.rail[index];
+                if (prod !== null && rail !== null) {
+                    return (prod - rail).toFixed(1);
+                }
+                return null;
+            });
+
+            const productionData = {
+                labels: productionDataRaw.labels,
+                datasets: [{
+                    label: '原煤产量 (亿吨)',
+                    data: productionDataRaw.production,
+                    borderColor: '#F97316',
+                    backgroundColor: '#F97316',
+                    type: 'line',
+                    yAxisID: 'y',
+                    tension: 0.1
+                }, {
+                    label: '铁路运量 (亿吨)',
+                    data: productionDataRaw.rail,
+                    backgroundColor: '#3B82F6',
+                    yAxisID: 'y'
+                }, {
+                    label: '公路运量 (估算)',
+                    data: roadData,
+                    backgroundColor: '#22C55E',
+                    yAxisID: 'y'
+                }, {
+                    label: '港口发运量 (亿吨)',
+                    data: productionDataRaw.port,
+                    backgroundColor: '#6B7280',
+                    yAxisID: 'y'
+                }]
+            };
+
+            const ctx = document.getElementById('productionTransportChart').getContext('2d');
+            const productionTransportChart = new Chart(ctx, {
+                type: 'bar',
+                data: productionData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: false, beginAtZero: true, title: { display: true, text: '亿吨' } }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) { label += context.parsed.y + ' 亿吨'; }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const arteryData = {
+                'daqin': {
+                    title: '大秦铁路',
+                    description: '“中国煤运第一路”，连接山西大同与河北秦皇岛港，是“西煤东运”的核心动脉和保障华东、华南电煤供应的源头。',
+                    length: '653 公里',
+                    capacity: '4.5 亿吨',
+                    customers: '经秦皇岛港下水，服务华东、华南沿海的特大型火电厂、钢铁厂。'
+                },
+                'shuohuang': {
+                    title: '朔黄铁路',
+                    description: '“西煤东运”第二大通道，连接山西神池与河北黄骅港，是国家能源集团一体化运营的关键环节。',
+                    length: '614 公里',
+                    capacity: '3.5 亿吨',
+                    customers: '服务黄骅港，主要运输神府、东胜等大型煤田的优质煤炭，供给沿海市场。'
+                },
+                'wari': {
+                    title: '瓦日铁路',
+                    description: '“晋煤外运”第三条出海大通道，横贯晋、豫、鲁三省，直达日照港，为华东市场提供新来源。',
+                    length: '1260 公里',
+                    capacity: '2.0 亿吨',
+                    customers: '服务日照港，供应华东市场及“海进江”运输。'
+                },
+                'haoji': {
+                    title: '浩吉铁路',
+                    description: '世界最长重载铁路，构建“北煤南运”陆路直达战略通道，旨在绕开沿海，直供华中腹地。',
+                    length: '>1800 公里',
+                    capacity: '2.0 亿吨',
+                    customers: '主要服务湖北、湖南、江西等华中内陆省份的火电厂和工业用户。'
+                },
+                'sea': {
+                    title: '“北煤南运”海上通道',
+                    description: '连接北方各大煤炭下水港与南方沿海消费区的海上生命线，是中国煤炭跨区域调配的第二大通道。',
+                    length: '约1389公里 (平均海运距)',
+                    capacity: '约7.8亿吨/年 (港口发运量)',
+                    customers: '广东、江苏、浙江等沿海省份的特大型火电厂、钢铁厂和化工基地。'
+                }
+            };
+
+            const detailsTitle = document.getElementById('details-title');
+            const detailsDescription = document.getElementById('details-description');
+            const detailsLength = document.getElementById('details-length');
+            const detailsCapacity = document.getElementById('details-capacity');
+            const detailsCustomers = document.getElementById('details-customers');
+            const detailsContainer = document.getElementById('artery-details');
+            const transportNodes = document.querySelectorAll('.kg-node.transport');
+            
+            function updateDetails(key) {
+                const data = arteryData[key];
+                if (!data) return;
+
+                detailsContainer.classList.remove('fade-in');
+                void detailsContainer.offsetWidth; 
+                detailsContainer.classList.add('fade-in');
+
+                detailsTitle.textContent = data.title;
+                detailsDescription.textContent = data.description;
+                detailsLength.textContent = data.length;
+                detailsCapacity.textContent = data.capacity;
+                detailsCustomers.textContent = data.customers;
+
+                transportNodes.forEach(node => {
+                    node.classList.remove('active');
+                    if (node.id === `node-${key}`) {
+                       node.classList.add('active');
+                    }
+                });
+            }
+
+            transportNodes.forEach(node => {
+                node.addEventListener('click', () => {
+                    const key = node.id.replace('node-', '');
+                    updateDetails(key);
+                });
+            });
+
+            updateDetails('daqin');
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main > section');
+
+            const observerOptions = { root: null, rootMargin: '0px', threshold: 0.3 };
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => { observer.observe(section); });
+
+            navLinks.forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetElement = document.querySelector(this.getAttribute('href'));
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
