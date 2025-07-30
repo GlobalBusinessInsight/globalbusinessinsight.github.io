@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>石油公司IT规划2000</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Windows 2000 Classic -->
+    <!-- Application Structure Plan: The application reverts to the Windows 2000 desktop metaphor for its strong contextual relevance. To address mobile usability, a responsive design is implemented. On large screens (lg+), it's a full interactive desktop with draggable windows. On smaller screens, it collapses into a mobile-friendly, single-column layout where desktop icons act as accordion headers to reveal content sections. This hybrid approach preserves the immersive desktop experience for those who can view it, while ensuring full accessibility and readability on mobile devices, thus solving the core usability challenge. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Strategic Initiatives Budget. Goal: Compare resource allocation. Viz Method: Horizontal Bar Chart (Chart.js). Interaction: Tooltips on hover. Justification: Bar charts are excellent for comparing discrete categories. It is responsive and works on all screen sizes. Library: Chart.js (Canvas).
+        - Report Info: International Benchmarking. Goal: Compare National Oil Corp's strategy against competitors. Viz Method: Tabbed content layout within a window/modal. Interaction: User clicks tabs for each competitor (Exxon, BP, Shell). Justification: Tabs are a space-efficient way to organize and compare parallel sets of information. Library/Method: Vanilla JS + Tailwind.
+        - Report Info: EAI Architecture. Goal: Organize system relationships. Viz Method: HTML/CSS Diagram. Interaction: Static diagram with clear labels. Justification: A clear, static diagram is sufficient to explain the hub-and-spoke concept without the overhead of complex interactive elements. Library/Method: Tailwind CSS.
+        - Report Info: Detailed Report Content. Goal: Inform in-depth. Viz Method: Scrollable text content within windows (desktop) or expandable sections (mobile). Interaction: Scrolling. Justification: Standard scrolling is the most intuitive way to consume long-form text. Library/Method: Native browser scroll.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Tahoma', 'Noto Sans SC', sans-serif;
+            background-color: #008080;
+            user-select: none;
+        }
+
+        .desktop-bg {
+            background: url('https://placehold.co/1920x1080/004040/004040') center/cover;
+        }
+
+        .taskbar {
+            background-color: #C0C0C0;
+            border-top: 2px solid #FFFFFF;
+            box-shadow: inset 0 1px 0 #808080;
+        }
+
+        .start-button, .taskbar-app, .dialog-button {
+            background-color: #C0C0C0;
+            border: 2px outset #FFFFFF;
+            box-shadow: inset 1px 1px 0 #FFFFFF, inset -1px -1px 0 #808080;
+        }
+        .start-button:active, .taskbar-app.active, .dialog-button:active { 
+            border-style: inset;
+            background-color: #e0e0e0;
+        }
+        
+        .taskbar-app {
+            flex-shrink: 1;
+            min-width: 0;
+        }
+        .taskbar-app span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .desktop-icon {
+            border: 1px solid transparent;
+        }
+        .desktop-icon:hover {
+            background-color: rgba(0, 0, 128, 0.5);
+            border: 1px dotted #FFFFFF;
+        }
+
+        .window {
+            background-color: #C0C0C0;
+            border: 2px outset #FFFFFF;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .title-bar {
+            background: linear-gradient(to right, #000080, #1084d0);
+        }
+
+        .title-bar-button {
+            width: 16px;
+            height: 14px;
+            background-color: #C0C0C0;
+            border: 1px outset #FFFFFF;
+            font-family: 'Marlett', 'Noto Sans SC', sans-serif;
+            font-size: 10px;
+        }
+        .title-bar-button:active { border-style: inset; }
+
+        .window-body {
+            background-color: #FFFFFF;
+            color: #000;
+            font-size: 14px;
+        }
+        
+        .mobile-icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .mobile-window {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            background: #C0C0C0;
+        }
+        .mobile-window.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .tab-button {
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-button.active {
+            border-bottom-color: #000080;
+            font-weight: bold;
+        }
+        
+        .slogan {
+            position: absolute;
+            color: white;
+            opacity: 0.7;
+            font-size: 1.75rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.9);
+            pointer-events: none;
+            animation: drift 60s ease-in-out infinite alternate;
+        }
+        
+        @keyframes drift {
+            from { transform: translate(0, 0) rotate(0deg); }
+            to { transform: translate(30px, -15px) rotate(0.5deg); }
+        }
+
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.1);
+            z-index: 999;
+        }
+
+        .dialog-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            background-color: #C0C0C0;
+            border: 2px outset #FFFFFF;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .dialog-title {
+            background: linear-gradient(to right, #000080, #1084d0);
+            color: white;
+            padding: 3px 5px;
+            font-weight: bold;
+        }
+        .dialog-content {
+            padding: 20px;
+            text-align: center;
+        }
+        .dialog-buttons {
+            padding: 10px;
+            text-align: center;
+        }
+
+        /* Responsive font sizes */
+        .window-body h1 { font-size: 1.25rem; }
+        .window-body h2 { font-size: 1.1rem; }
+        .window-body h3 { font-size: 1rem; }
+        .window-body p, .window-body li { font-size: 0.9rem; }
+
+        @media (min-width: 1024px) {
+            .window-body { font-size: 16px; }
+            .window-body h1 { font-size: 1.5rem; }
+            .window-body h2 { font-size: 1.25rem; }
+            .window-body h3 { font-size: 1.125rem; }
+            .window-body p, .window-body li { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body class="w-screen h-screen overflow-hidden">
+
+    <!-- Desktop View (hidden on small screens) -->
+    <div id="desktop-view" class="hidden lg:block w-full h-full desktop-bg relative">
+        <!-- Slogans -->
+        <div class="slogan" style="top: 10%; left: 5%; animation-duration: 70s;">中国石油: 奉献能源，创造和谐</div>
+        <div class="slogan" style="top: 20%; right: 5%; animation-duration: 80s;">BP: Beyond Petroleum</div>
+        <div class="slogan" style="top: 30%; left: 8%; animation-duration: 65s;">中国石化: 为美好生活加油</div>
+        <div class="slogan" style="top: 40%; right: 10%; animation-duration: 75s;">Shell: You can be sure of Shell.</div>
+        <div class="slogan" style="top: 50%; left: 5%; animation-duration: 85s;">Saudi Aramco: Where energy is opportunity</div>
+        <div class="slogan" style="top: 60%; right: 8%; animation-duration: 60s;">Chevron: The Power of Human Energy</div>
+        <div class="slogan" style="bottom: 30%; left: 10%; animation-duration: 90s;">Petrobras: O desafio é a nossa energia</div>
+        <div class="slogan" style="bottom: 20%; right: 5%; animation-duration: 72s;">ADNOC: Energy for Life</div>
+        <div class="slogan" style="bottom: 10%; left: 15%; animation-duration: 82s;">Petronas: Reimagining Energy</div>
+
+        <!-- Desktop Icons -->
+        <div id="icon-intranet" class="desktop-icon absolute top-8 left-8 w-24 text-center text-white p-2 cursor-pointer">
+            <img src="https://placehold.co/48x48/C0C0C0/000000?text=🌐" alt="内网浏览器" class="mx-auto">
+            <p class="mt-1 text-sm">内网浏览器</p>
+        </div>
+        <div id="icon-sap" class="desktop-icon absolute top-32 left-8 w-24 text-center text-white p-2 cursor-pointer">
+            <img src="https://placehold.co/48x48/C0C0C0/000000?text=⚙️" alt="ERP 核心" class="mx-auto">
+            <p class="mt-1 text-sm">ERP 核心</p>
+        </div>
+        <div id="icon-docs" class="desktop-icon absolute top-56 left-8 w-24 text-center text-white p-2 cursor-pointer">
+            <img src="https://placehold.co/48x48/C0C0C0/000000?text=📄" alt="战略文档" class="mx-auto">
+            <p class="mt-1 text-sm">战略文档</p>
+        </div>
+        <div id="icon-benchmark" class="desktop-icon absolute top-80 left-8 w-24 text-center text-white p-2 cursor-pointer">
+            <img src="https://placehold.co/48x48/C0C0C0/000000?text=📊" alt="竞争情报" class="mx-auto">
+            <p class="mt-1 text-sm">竞争情报</p>
+        </div>
+        <div id="icon-architecture" class="desktop-icon absolute top-[27rem] left-8 w-24 text-center text-white p-2 cursor-pointer">
+            <img src="https://placehold.co/48x48/C0C0C0/000000?text=🏛️" alt="架构思想" class="mx-auto">
+            <p class="mt-1 text-sm">架构思想</p>
+        </div>
+
+        <!-- Windows (templates to be cloned) -->
+        <div id="window-template" class="window absolute top-1/4 left-1/4 w-1/2 h-1/2 min-w-[400px] min-h-[300px] flex-col hidden" style="resize: both; overflow: auto;">
+            <div class="title-bar text-white p-1 font-bold flex justify-between items-center cursor-move">
+                <span class="title-text">窗口标题</span>
+                <div class="title-bar-buttons">
+                    <button class="close-button title-bar-button">r</button>
+                </div>
+            </div>
+            <div class="window-body p-4 overflow-y-auto flex-grow">
+                <!-- Content goes here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile View (visible by default, hidden on large screens) -->
+    <div id="mobile-view" class="lg:hidden w-full h-full flex flex-col bg-[#008080]">
+        <div class="flex-grow overflow-y-auto p-4">
+            <div class="mobile-icon-grid">
+                 <!-- Mobile Icons act as accordions -->
+                <div class="mobile-icon text-center text-white" data-target="window-intranet-content">
+                    <img src="https://placehold.co/64x64/C0C0C0/000000?text=🌐" alt="内网浏览器" class="mx-auto bg-gray-300 p-2 rounded-lg">
+                    <p class="mt-2 text-xs">内网门户</p>
+                </div>
+                <div class="mobile-icon text-center text-white" data-target="window-sap-content">
+                    <img src="https://placehold.co/64x64/C0C0C0/000000?text=⚙️" alt="ERP 核心" class="mx-auto bg-gray-300 p-2 rounded-lg">
+                    <p class="mt-2 text-xs">ERP 核心</p>
+                </div>
+                <div class="mobile-icon text-center text-white" data-target="window-docs-content">
+                    <img src="https://placehold.co/64x64/C0C0C0/000000?text=📄" alt="战略文档" class="mx-auto bg-gray-300 p-2 rounded-lg">
+                    <p class="mt-2 text-xs">战略文档</p>
+                </div>
+                <div class="mobile-icon text-center text-white" data-target="window-benchmark-content">
+                    <img src="https://placehold.co/64x64/C0C0C0/000000?text=📊" alt="竞争情报" class="mx-auto bg-gray-300 p-2 rounded-lg">
+                    <p class="mt-2 text-xs">竞争情报</p>
+                </div>
+                <div class="mobile-icon text-center text-white" data-target="window-architecture-content">
+                    <img src="https://placehold.co/64x64/C0C0C0/000000?text=🏛️" alt="架构思想" class="mx-auto bg-gray-300 p-2 rounded-lg">
+                    <p class="mt-2 text-xs">架构思想</p>
+                </div>
+            </div>
+        </div>
+         <!-- Mobile Windows (Full-screen modals) -->
+        <div id="mobile-window-container"></div>
+    </div>
+    
+    <!-- Taskbar (common to both views, but positioned differently) -->
+    <div class="taskbar absolute bottom-0 w-full h-8 flex items-center px-2 z-50">
+        <div class="start-button flex items-center h-6 px-2 cursor-pointer">
+            <img src="https://placehold.co/16x16/000080/FFFFFF?text=N" alt="Start" class="mr-1">
+            <span class="font-bold text-sm">开始</span>
+        </div>
+        <div class="taskbar-app active flex items-center h-6 px-2 ml-2 max-w-xs">
+            <img src="https://placehold.co/16x16/005353/FFFFFF?text=P" alt="Icon" class="mr-1 h-4 w-4">
+            <span class="font-bold text-sm">石油公司IT规划2000</span>
+        </div>
+        <div class="clock ml-auto border-t-2 border-l-2 border-gray-500 px-2 text-sm">
+            <span id="time-display"></span>
+        </div>
+    </div>
+
+    <!-- Welcome Dialog -->
+    <div id="welcome-dialog" class="dialog-overlay hidden">
+        <div class="dialog-box">
+            <div class="dialog-title">提示</div>
+            <div class="dialog-content">
+                <p>欢迎回到2000年</p>
+            </div>
+            <div class="dialog-buttons">
+                <button id="dialog-ok-button" class="dialog-button px-6 py-1">确定</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Window Content (hidden templates) -->
+    <div id="window-content-templates" class="hidden">
+        <div id="window-intranet-content">
+            <h1 class="font-bold text-blue-800 mb-4 border-b-2 pb-2">时代背景：千年之交的机遇与挑战</h1>
+            <p class="mb-4">2000年，IT界正处在一个独特的十字路口。一方面，全球企业刚从“千年虫”危机的恐慌中走出，这次危机倒逼企业完成了史上第一次全面的IT资产盘点，为数字化转型奠定了基础。另一方面，互联网泡沫达到顶峰，非理性的繁荣为推动昂贵的IT项目提供了空前的资本支持。National Oil Corp的IT愿景，正是在这个机遇与挑战并存的时代背景下应运而生。</p>
+            <h2 class="font-bold text-blue-700 mt-6 mb-2">石油行业的战略要务</h2>
+            <p class="mb-2">作为资本和技术密集型行业，我们的IT战略必须紧密围绕核心业务挑战：</p>
+            <ul class="list-disc list-inside space-y-2">
+                <li><strong>驾驭周期，降本增效：</strong> 国际油价剧烈波动，地缘政治复杂。我们必须利用信息技术，优化从勘探开发（上游）到炼化销售（下游）的全产业链，以应对成本压力，尤其是在深海、极地等高成本采油区。</li>
+                <li><strong>知识传承，应对“大换班”：</strong> 大批经验丰富的工程师和地质学家即将退休，其脑海中宝贵的“隐性知识”面临流失风险。建立知识管理体系，是保障公司核心竞争力的关键。</li>
+                <li><strong>数据指令，驯服海量信息：</strong> 从TB级的地震勘探数据，到SCADA系统产生的实时生产数据，再到ERP中的经营数据，我们必须打破信息孤岛，将数据转化为驱动决策的战略资产。</li>
+            </ul>
+        </div>
+        <div id="window-sap-content">
+            <h1 class="font-bold text-blue-800 mb-4 border-b-2 pb-2">ERP核心：集成化的企业神经中枢</h1>
+            <p class="mb-4">为打破信息孤岛，我们的核心战略是实施SAP R/3系统，以统一财务、人事、供应链等核心业务。这不仅是技术升级，更是对全球业务流程的一次痛苦但必要的标准化重塑。然而，ERP无法解决所有问题，尤其是上游高度专业化的技术软件。</p>
+            <h2 class="font-bold text-blue-700 mt-6 mb-2">EAI集成架构：连接孤岛的桥梁</h2>
+            <p class="mb-4">我们采用“轮辐式”（Hub-and-Spoke）EAI架构，将SAP这个庞然大物与数百个其他关键应用连接起来。一个中心的“集成代理”负责管理所有应用间的通信，避免了点对点集成的“意大利面条式”混乱。</p>
+            <div class="text-center bg-gray-100 p-4 rounded-lg border my-4">
+                <p class="font-bold">中心 (Hub): EAI 集成代理</p>
+                <div class="grid grid-cols-2 gap-4 mt-2">
+                    <div><p class="font-bold">辐条 (Spokes):</p></div>
+                    <div></div>
+                    <div class="text-left"><p>➡️ SAP R/3 (ERP)</p></div>
+                    <div class="text-left"><p>➡️ Landmark (地球科学)</p></div>
+                    <div class="text-left"><p>➡️ i2 (供应链管理)</p></div>
+                    <div class="text-left"><p>➡️ Honeywell (SCADA)</p></div>
+                </div>
+            </div>
+            <p class="text-sm text-gray-600">这个架构的挑战在于维护成本高昂，且中心代理可能成为性能瓶颈，但这是2000年驯服企业复杂性的最佳实践。</p>
+        </div>
+        <div id="window-docs-content">
+            <h1 class="font-bold text-blue-800 mb-4 border-b-2 pb-2">三大战略举措：构筑数字未来</h1>
+            <p class="mb-6">我们将宏观愿景转化为一系列具体的、可执行的战略性IT项目组合，每个项目都直指行业痛点，共同构成了我们迈向未来的数字蓝图。</p>
+            <div class="space-y-4">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h2 class="font-bold text-blue-700">基石计划 (Project Bedrock)</h2>
+                    <p class="my-2">实施全球统一的SAP R/3系统，实现财务、人力、采购等核心流程标准化。这是管理全球化运营、控制成本的基础。</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h2 class="font-bold text-green-700">突触计划 (Project Synapse)</h2>
+                    <p class="my-2">构建知识管理系统，通过建立专家黄页和实践社区，应对“大换班”带来的核心技能流失风险，传承隐性知识。</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <h2 class="font-bold text-yellow-700">地平线计划 (Project Horizon)</h2>
+                    <p class="my-2">打造“数字油田”，集成地质、钻井和生产数据，实现对油藏的实时监控和协同决策，目标是提高采收率和作业安全性。</p>
+                </div>
+            </div>
+            <h2 class="font-bold text-blue-800 mt-8 mb-4">战略投资概览 (2000年估算)</h2>
+            <div class="w-full h-64 md:h-80"><canvas id="initiativesChart"></canvas></div>
+        </div>
+        <div id="window-benchmark-content">
+            <h1 class="font-bold text-blue-800 mb-4 border-b-2 pb-2">国际对标：巨头们的数字化赛跑</h1>
+            <p class="mb-4">2000年前后，全球主要石油公司（IOCs）都在积极探索信息化道路，尽管路径各异，但核心目标一致：降本增效、管理风险、提升储量。我们的战略是在充分借鉴业界最佳实践的基础上，走出一条符合自身特点的道路。</p>
+            <div id="tabs-container">
+                <div class="border-b border-gray-300">
+                    <nav class="flex space-x-4" aria-label="Tabs">
+                        <button class="tab-button active" data-target="tab-exxon">埃克森美孚</button>
+                        <button class="tab-button" data-target="tab-bp">BP</button>
+                        <button class="tab-button" data-target="tab-shell">壳牌</button>
+                    </nav>
+                </div>
+                <div class="mt-4 space-y-4">
+                    <div id="tab-exxon" class="tab-content">
+                        <h3 class="font-bold">埃克森美孚：卓越运营与标准化</h3>
+                        <p>以强大的工程文化和对标准化的极致追求著称。其IT战略核心是支持“卓越运营”。在ERP实施上极为审慎，倾向于自主开发或深度定制，以确保系统能100%匹配其严格的全球业务流程（EMCAP）。在上游，他们大力投资专有的地球物理处理软件和油藏模拟技术，以保持技术领先。</p>
+                    </div>
+                    <div id="tab-bp" class="tab-content hidden">
+                        <h3 class="font-bold">BP：数字油田与知识管理的先行者</h3>
+                        <p>在CEO约翰·布朗的推动下，BP是“超越石油”和数字化转型的积极倡导者。他们率先在Valhall等油田实践“数字油田”概念，通过光纤将海上平台与陆上协同中心连接，实现对油田的实时监控和远程协作。在知识管理方面，BP的实践社区（CoPs）和内部知识共享网络是全行业的标杆。</p>
+                    </div>
+                    <div id="tab-shell" class="tab-content hidden">
+                        <h3 class="font-bold">壳牌：情景规划与全球协同</h3>
+                        <p>壳牌以其强大的“情景规划”能力闻名，其IT系统必须支持这种复杂的战略决策过程。他们同样是SAP的早期大规模采用者，旨在整合其庞大而分散的全球业务。壳牌尤其注重利用IT技术支持其全球勘探团队的协同工作，大力投资建设“虚拟现实中心”，让不同地区的地质学家能共同分析三维地震数据。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="window-architecture-content">
+            <h1 class="font-bold text-blue-800 mb-4 border-b-2 pb-2">架构思想：驯服复杂性的蓝图</h1>
+            <p class="mb-4">2000年前后，随着企业IT系统日益庞大和复杂，一种新的学科——企业架构（Enterprise Architecture, EA）——开始兴起。其核心目标是提供一套系统性的方法和框架，来理解、规划、设计和管理复杂的企业级IT系统，确保技术投资与业务战略保持一致。</p>
+            <h2 class="font-bold text-blue-700 mt-6 mb-2">核心框架与理念</h2>
+            <ul class="list-disc list-inside space-y-3">
+                <li>
+                    <h3 class="font-bold inline">扎克曼框架 (Zachman Framework):</h3>
+                    <p>作为EA的鼻祖，扎克曼框架（1987年提出）提供了一个分类法或“本体论”，用于组织和描述企业的信息系统。它本质上是一个6x6的矩阵，通过“六个基本问题”（何事、如何、何地、何人、何时、为何）和“六个不同视角”（规划者、所有者、设计者、建造者、分包商、用户）的交叉，为描绘企业全貌提供了一个结构化的蓝图。</p>
+                </li>
+                <li>
+                    <h3 class="font-bold inline">TOGAF (The Open Group Architecture Framework):</h3>
+                    <p>如果说扎克曼框架回答了“描述什么”，那么TOGAF（1995年首发）则侧重于回答“如何去做”。其核心是架构开发方法（Architecture Development Method, ADM），这是一个迭代的、循环的过程，指导架构师如何一步步地开发和治理企业架构。在2000年，TOGAF正逐渐成为业界事实上的标准流程。</p>
+                </li>
+                <li>
+                    <h3 class="font-bold inline">DoDAF (及其前身 C4ISR AF):</h3>
+                    <p>源自美国国防部，其核心思想是通过一套标准化的“视图”（Views）来描述架构，如作战视图（OV）、系统视图（SV）和技术视图（TV）。这种方法对于需要确保高度互操作性的大型复杂系统（如军事指挥系统或大型石油公司的上下游一体化系统）尤为有效，它强制所有参与方使用共同的语言和模型来沟通。</p>
+                </li>
+            </ul>
+            <h2 class="font-bold text-blue-700 mt-6 mb-2">最佳实践案例：联邦快递 (FedEx)</h2>
+            <p>联邦快递是早期成功应用企业架构理念的典范。为了支撑其“准时送达”的全球业务承诺，他们需要一个高度可靠、可扩展且能实时追踪包裹的IT系统。通过采用类似DoDAF的视图方法，他们清晰地定义了业务流程、应用系统和底层技术之间的关系，确保了其庞大的IT基础设施能够像精密机械一样协同工作，这为其他面临类似全球化和复杂性挑战的行业（如石油行业）提供了宝贵的借鉴。</p>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const desktopView = document.getElementById('desktop-view');
+        const mobileView = document.getElementById('mobile-view');
+        const timeDisplay = document.getElementById('time-display');
+        const windowTemplate = document.getElementById('window-template');
+        const mobileWindowContainer = document.getElementById('mobile-window-container');
+        const windowContentTemplates = document.getElementById('window-content-templates');
+        const startButton = document.querySelector('.start-button');
+        const welcomeDialog = document.getElementById('welcome-dialog');
+        const dialogOkButton = document.getElementById('dialog-ok-button');
+
+        let highestZIndex = 10;
+        let openWindows = {};
+
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            timeDisplay.textContent = `${hours}:${minutes}`;
+        }
+        updateClock();
+        setInterval(updateClock, 30000);
+
+        // Start button dialog
+        startButton.addEventListener('click', () => {
+            welcomeDialog.classList.remove('hidden');
+        });
+        dialogOkButton.addEventListener('click', () => {
+            welcomeDialog.classList.add('hidden');
+        });
+
+
+        function createWindow(id, title, content) {
+            if (openWindows[id]) {
+                bringToFront(openWindows[id]);
+                return;
+            }
+
+            const newWindow = windowTemplate.cloneNode(true);
+            newWindow.id = `window-${id}`;
+            newWindow.style.display = 'flex';
+            newWindow.querySelector('.title-text').textContent = title;
+            const body = newWindow.querySelector('.window-body');
+            body.innerHTML = content;
+            
+            desktopView.appendChild(newWindow);
+            openWindows[id] = newWindow;
+            
+            makeDraggable(newWindow);
+            bringToFront(newWindow);
+            
+            newWindow.querySelector('.close-button').addEventListener('click', () => {
+                newWindow.remove();
+                delete openWindows[id];
+            });
+
+            if (id === 'docs') initializeChart(body);
+            if (id === 'benchmark') initializeTabs(body);
+        }
+
+        function createMobileWindow(id, title, content) {
+            const mobileWindow = document.createElement('div');
+            mobileWindow.id = `mobile-window-${id}`;
+            mobileWindow.className = 'mobile-window active';
+            mobileWindow.innerHTML = `
+                <div class="title-bar text-white p-2 font-bold flex justify-between items-center">
+                    <span class="text-sm">${title}</span>
+                    <button class="mobile-close-button title-bar-button">r</button>
+                </div>
+                <div class="window-body p-4 overflow-y-auto flex-grow">
+                    ${content}
+                </div>
+            `;
+            mobileWindowContainer.appendChild(mobileWindow);
+            
+            mobileWindow.querySelector('.mobile-close-button').addEventListener('click', () => {
+                mobileWindow.remove();
+            });
+
+            if (id === 'docs') initializeChart(mobileWindow);
+            if (id === 'benchmark') initializeTabs(mobileWindow);
+        }
+        
+        function makeDraggable(element) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            const header = element.querySelector('.title-bar');
+
+            header.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+                bringToFront(element);
+            }
+
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        function bringToFront(win) {
+            highestZIndex++;
+            win.style.zIndex = highestZIndex;
+        }
+
+        function initializeChart(container) {
+            const canvas = container.querySelector('#initiativesChart');
+            if (!canvas) return;
+            new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['基石计划 (ERP)', '地平线计划 (数字油田)', '突触计划 (知识管理)'],
+                    datasets: [{
+                        label: '预计预算 (百万美元)',
+                        data: [200, 62.5, 15],
+                        backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'],
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, title: { display: true, text: '项目投资规模' } }
+                }
+            });
+        }
+
+        function initializeTabs(container) {
+            const tabButtons = container.querySelectorAll('.tab-button');
+            const tabContents = container.querySelectorAll('.tab-content');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const targetId = button.getAttribute('data-target');
+                    tabContents.forEach(content => {
+                        content.style.display = content.id === targetId ? 'block' : 'none';
+                    });
+                });
+            });
+        }
+
+        // Desktop icon listeners
+        document.getElementById('icon-intranet').addEventListener('dblclick', () => createWindow('intranet', '内网浏览器', windowContentTemplates.querySelector('#window-intranet-content').innerHTML));
+        document.getElementById('icon-sap').addEventListener('dblclick', () => createWindow('sap', 'ERP 核心', windowContentTemplates.querySelector('#window-sap-content').innerHTML));
+        document.getElementById('icon-docs').addEventListener('dblclick', () => createWindow('docs', '战略文档', windowContentTemplates.querySelector('#window-docs-content').innerHTML));
+        document.getElementById('icon-benchmark').addEventListener('dblclick', () => createWindow('benchmark', '竞争情报', windowContentTemplates.querySelector('#window-benchmark-content').innerHTML));
+        document.getElementById('icon-architecture').addEventListener('dblclick', () => createWindow('architecture', '架构思想', windowContentTemplates.querySelector('#window-architecture-content').innerHTML));
+
+        // Mobile icon listeners
+        mobileView.querySelectorAll('.mobile-icon').forEach(icon => {
+            icon.addEventListener('click', () => {
+                const targetId = icon.getAttribute('data-target');
+                const content = windowContentTemplates.querySelector(`#${targetId}`).innerHTML;
+                const title = icon.querySelector('p').textContent;
+                const id = targetId.replace('-content', '');
+                createMobileWindow(id, title, content);
+            });
+        });
+    });
+    </script>
+</body>
+</html>
