@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式分析：中美关税谈判</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: The application is designed as a single-page, multi-section dashboard to provide a holistic yet digestible view of the U.S.-China tariff negotiations. The structure prioritizes user-driven exploration over a linear narrative. It starts with a high-level overview (the "Stalemate") and a visual of the stakes (tariff chart). It then allows users to dive into a direct side-by-side comparison of U.S. and Chinese positions, which is more effective for understanding the conflict's core than separate descriptions. The interactive "Key Issues" section with tabs and a "Stalemate Meter" breaks down complex topics into manageable, comparable pieces. The "Scenario Analysis" section transforms a static data table into an engaging, interactive tool where users can see the potential impact of different outcomes. Finally, actionable "Strategic Recommendations" are clearly segmented for different audiences. This thematic, non-linear structure, supported by a sticky navigation, empowers users to explore the information based on their interests, making the complex topic more accessible and understandable. -->
+    <!-- Visualization & Content Choices: 
+        1. Tariff Levels (Report Info) -> Goal: Inform on stakes -> Viz: Bar Chart (Chart.js) -> Interaction: Static, for immediate clarity -> Justification: A bar chart is the clearest way to show the dramatic difference between current and potential tariffs.
+        2. U.S./China Positions (Report Info) -> Goal: Compare stances -> Viz: Side-by-side text cards (HTML/Tailwind) -> Interaction: None, focus on readability -> Justification: Direct comparison of text is most effective for nuanced strategic positions.
+        3. Key Issues (Report Info) -> Goal: Organize & Compare -> Viz: Tabbed content with a "Stalemate Meter" (HTML/CSS bar) -> Interaction: Clickable tabs to switch topics -> Justification: Tabs organize complex issues neatly. The visual meter gives a quick, intuitive assessment of compromise difficulty for each point.
+        4. Economic Scenarios (Report Info) -> Goal: Show potential impact -> Viz: Interactive cards + Donut Chart (Chart.js) -> Interaction: Clicking a scenario card updates the chart and details -> Justification: This links cause (scenario) and effect (market impact) interactively, making the data more engaging and memorable than a static table.
+        5. Recommendations (Report Info) -> Goal: Inform specific audiences -> Viz: Three-column layout with icons (HTML/Tailwind) -> Interaction: None, focus on clarity -> Justification: Clear segmentation makes it easy for users to find advice relevant to them.
+        Library/Method: Chart.js for all charts (Canvas-based). HTML/Tailwind/JS for all other interactive elements and layouts. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F5F5F4; /* stone-100 */
+            color: #374151; /* gray-700 */
+        }
+        .nav-active {
+            color: #A855F7; /* purple-500 */
+            font-weight: 500;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .tab-active {
+            background-color: #A855F7;
+            color: white;
+        }
+        .stalemate-meter {
+            height: 8px;
+            border-radius: 4px;
+            background-image: linear-gradient(to right, #4ade80, #facc15, #f87171);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl md:text-2xl font-bold text-purple-600">斯德哥尔摩僵局</h1>
+                <nav class="hidden md:flex items-center space-x-6 text-gray-600">
+                    <a href="#overview" class="hover:text-purple-500 transition-colors">概览</a>
+                    <a href="#positions" class="hover:text-purple-500 transition-colors">立场对比</a>
+                    <a href="#issues" class="hover:text-purple-500 transition-colors">关键症结</a>
+                    <a href="#scenarios" class="hover:text-purple-500 transition-colors">情景分析</a>
+                    <a href="#recommendations" class="hover:text-purple-500 transition-colors">战略建议</a>
+                </nav>
+                <button id="mobile-menu-button" class="md:hidden text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white/90 backdrop-blur-sm">
+            <a href="#overview" class="block py-2 px-4 text-sm text-gray-600 hover:bg-purple-50">概览</a>
+            <a href="#positions" class="block py-2 px-4 text-sm text-gray-600 hover:bg-purple-50">立场对比</a>
+            <a href="#issues" class="block py-2 px-4 text-sm text-gray-600 hover:bg-purple-50">关键症结</a>
+            <a href="#scenarios" class="block py-2 px-4 text-sm text-gray-600 hover:bg-purple-50">情景分析</a>
+            <a href="#recommendations" class="block py-2 px-4 text-sm text-gray-600 hover:bg-purple-50">战略建议</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <!-- Section 1: Overview -->
+        <section id="overview" class="scroll-mt-16 text-center mb-24">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">脆弱的休战</h2>
+            <p class="max-w-3xl mx-auto text-gray-600 mb-12">
+                斯德哥尔摩谈判的核心成果是一项脆弱的休战共识，暂时避免了贸易战的灾难性升级，但未能解决任何根本性矛盾。本应用将带您深入解析双方的立场、关键症结、潜在的经济影响以及未来的战略走向。
+            </p>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">关税休战倒计时</h3>
+                    <div id="countdown-timer" class="text-4xl font-bold text-purple-600">--天 --:--:--</div>
+                    <p class="text-sm text-gray-500 mt-2">基于90天休战延期共识（自2025年8月12日起）</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">关税风险：现状 vs. 破裂</h3>
+                     <div class="chart-container">
+                        <canvas id="tariffChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Positions -->
+        <section id="positions" class="scroll-mt-16 mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">立场对比：一场战略博弈</h2>
+                <p class="max-w-3xl mx-auto text-gray-600">
+                    谈判暴露出中美之间深刻的战略分歧。美国采取双轨策略，既有交易性诉求，也有变革性要求；而中国则展现出更为自信和原则性的立场，坚决捍卫其经济主权和发展模式。
+                </p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- US Position -->
+                <div class="bg-white p-8 rounded-xl shadow-lg border-2 border-blue-200">
+                    <div class="flex items-center mb-6">
+                        <span class="text-4xl mr-4">🇺🇸</span>
+                        <h3 class="text-2xl font-bold text-blue-600">美国立场：双轨施压</h3>
+                    </div>
+                    <div class="space-y-4 text-gray-700">
+                        <div>
+                            <h4 class="font-semibold text-lg">交易性诉求 (第一轨道)</h4>
+                            <p class="text-sm">核心目标是解决眼前的经济失衡，要求中国做出大规模采购承诺（农产品、能源等），以削减近3000亿美元的贸易逆差。</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-lg">变革性诉求 (第二轨道)</h4>
+                            <p class="text-sm">要求中国进行根本性的经济模式转型，从国家主导转向国内消费驱动，并解决工业产能过剩问题。</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-lg">核心矛盾</h4>
+                            <p class="text-sm">要求中国利用国家干预来购买美国商品，同时又要求中国放弃这种国家主导的经济模式，逻辑上相互抵触。</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- China Position -->
+                <div class="bg-white p-8 rounded-xl shadow-lg border-2 border-red-200">
+                     <div class="flex items-center mb-6">
+                        <span class="text-4xl mr-4">🇨🇳</span>
+                        <h3 class="text-2xl font-bold text-red-600">中国立场：红线清晰</h3>
+                    </div>
+                    <div class="space-y-4 text-gray-700">
+                        <div>
+                            <h4 class="font-semibold text-lg">核心原则：稳定与主权</h4>
+                            <p class="text-sm">强调维持稳定、可预测的经贸关系，同时坚决抵制任何改变其经济模式的外部干涉，视其为国家主权。</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-lg">首要诉求：放宽技术管制</h4>
+                            <p class="text-sm">明确将美国放宽对半导体、AI芯片等高科技产品的出口管制作为达成任何协议的“最低条件”。</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-lg">战略杠杆：对等待遇</h4>
+                            <p class="text-sm">利用美国与欧盟达成的15%关税协议作为参照，要求同等待遇，将关税从30%下调，使美方立场显得更具惩罚性。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Key Issues -->
+        <section id="issues" class="scroll-mt-16 mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">关键症结：环环相扣的僵局</h2>
+                <p class="max-w-3xl mx-auto text-gray-600">
+                    任何一项议题的让步都与其他议题的进展紧密相连，形成了一个复杂的博弈格局。点击下方标签，探索各项核心议题的分歧所在和潜在的妥协空间。
+                </p>
+            </div>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
+                <button class="issue-tab tab-active px-4 py-2 text-sm font-medium rounded-full transition" data-issue="tariffs">总体关税</button>
+                <button class="issue-tab px-4 py-2 text-sm font-medium rounded-full transition bg-white hover:bg-gray-100" data-issue="tech">技术管制</button>
+                <button class="issue-tab px-4 py-2 text-sm font-medium rounded-full transition bg-white hover:bg-gray-100" data-issue="rare-earth">稀土矿产</button>
+                <button class="issue-tab px-4 py-2 text-sm font-medium rounded-full transition bg-white hover:bg-gray-100" data-issue="fentanyl">芬太尼</button>
+                <button class="issue-tab px-4 py-2 text-sm font-medium rounded-full transition bg-white hover:bg-gray-100" data-issue="overcapacity">工业产能</button>
+            </div>
+            <div id="issue-content" class="bg-white p-8 rounded-xl shadow-lg max-w-4xl mx-auto border border-gray-200">
+                <!-- Content will be injected by JS -->
+            </div>
+        </section>
+        
+        <!-- Section 4: Scenarios -->
+        <section id="scenarios" class="scroll-mt-16 mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">情景分析：未来的三种可能</h2>
+                <p class="max-w-3xl mx-auto text-gray-600">
+                    谈判结果充满不确定性，不同的走向将对全球经济和市场产生截然不同的影响。点击下方卡片，查看不同情景下的具体分析和潜在的市场冲击。
+                </p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="lg:col-span-1">
+                     <div class="space-y-4">
+                        <div class="scenario-card p-4 bg-white rounded-lg shadow-md cursor-pointer border-2 border-purple-400" data-scenario="truce">
+                            <h4 class="font-bold text-purple-700">情景一：休战延长 (可能性最高)</h4>
+                            <p class="text-sm text-gray-600">双方同意再延长90天休战期，为后续谈判争取时间。</p>
+                        </div>
+                        <div class="scenario-card p-4 bg-white rounded-lg shadow-md cursor-pointer border-2 border-transparent hover:border-purple-400" data-scenario="deal">
+                            <h4 class="font-bold text-purple-700">情景二：有限协议</h4>
+                            <p class="text-sm text-gray-600">达成“芬太尼换关税”等小范围交易性协议。</p>
+                        </div>
+                        <div class="scenario-card p-4 bg-white rounded-lg shadow-md cursor-pointer border-2 border-transparent hover:border-purple-400" data-scenario="breakdown">
+                            <h4 class="font-bold text-purple-700">情景三：谈判破裂 (破坏性最大)</h4>
+                            <p class="text-sm text-gray-600">关税恢复至145%和125%的惩罚性水平。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col md:flex-row items-center gap-6">
+                    <div class="w-full md:w-1/2">
+                        <h3 id="scenario-title" class="text-xl font-bold mb-2 text-gray-800"></h3>
+                        <p id="scenario-description" class="text-sm text-gray-600 mb-4"></p>
+                        <div id="scenario-impacts" class="text-sm space-y-2"></div>
+                    </div>
+                    <div class="w-full md:w-1/2 chart-container h-64 md:h-auto">
+                        <canvas id="scenarioChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Recommendations -->
+        <section id="recommendations" class="scroll-mt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-gray-800">战略建议</h2>
+                 <p class="max-w-3xl mx-auto text-gray-600">
+                    在这一充满不确定性的环境中，不同领域的决策者应如何应对？报告为政策制定者、企业战略家和投资者提供了具体的战略建议。
+                </p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border border-gray-200">
+                    <div class="text-purple-500 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9V3m0 18a9 9 0 009-9m-9 9a9 9 0 00-9-9" /></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">致政策制定者</h3>
+                    <p class="text-sm text-gray-600">正视战略矛盾，按优先级排序目标。加强与盟友的多边协调，形成统一战线，而非过度依赖单边行动。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border border-gray-200">
+                    <div class="text-purple-500 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">致企业战略家</h3>
+                    <p class="text-sm text-gray-600">警惕“稳定”假象，加速供应链多元化（如“中国+1”战略）。对最坏情况进行压力测试并制定应急预案。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg text-center border border-gray-200">
+                    <div class="text-purple-500 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">致投资者</h3>
+                    <p class="text-sm text-gray-600">保持谨慎，为市场波动做好准备。投资组合应倾向于供应链弹性好、对中美贸易风险敞口较小的公司。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-8 mt-12 border-t border-gray-200">
+        <p class="text-sm text-gray-500">数据与分析基于“斯德哥尔摩僵局：解析2025年中美关税谈判及其全球影响”报告。</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Countdown Timer
+            const countdownTimer = document.getElementById('countdown-timer');
+            const truceEndDate = new Date('2025-11-10T00:00:00'); // 8月12日 + 90天
+
+            function updateCountdown() {
+                const now = new Date();
+                const diff = truceEndDate - now;
+
+                if (diff <= 0) {
+                    countdownTimer.innerHTML = "休战期已结束";
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                countdownTimer.innerHTML = `${days}天 ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+            setInterval(updateCountdown, 1000);
+            updateCountdown();
+
+            // Tariff Chart
+            const tariffCtx = document.getElementById('tariffChart').getContext('2d');
+            new Chart(tariffCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['美国对华关税', '中国对美关税'],
+                    datasets: [{
+                        label: '当前休战水平',
+                        data: [30, 10],
+                        backgroundColor: '#A855F7', // purple-500
+                        borderColor: '#9333EA', // purple-600
+                        borderWidth: 1
+                    }, {
+                        label: '谈判破裂后水平',
+                        data: [145, 125],
+                        backgroundColor: '#F87171', // red-400
+                        borderColor: '#EF4444', // red-500
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: '关税税率 (%)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Key Issues Section
+            const issueTabs = document.querySelectorAll('.issue-tab');
+            const issueContent = document.getElementById('issue-content');
+            const issuesData = {
+                tariffs: {
+                    title: '总体关税水平',
+                    us: '将30%关税作为核心杠杆，暗示中国是应受惩罚的例外。',
+                    cn: '要求将关税降至与欧盟同等的15-20%水平，主张平等待遇。',
+                    analysis: '分歧巨大。美国视关税为杠杆；中国视之为惩罚。可能的妥协是美国分阶段降税，以换取中国在其他议题上的具体行动。',
+                    stalemate: 90 
+                },
+                tech: {
+                    title: '技术出口管制',
+                    us: '维持对半导体、AI芯片的严格管制，以遏制中国技术崛起。',
+                    cn: '要求放宽管制，并视其为任何协议的“最低要求”。',
+                    analysis: '根本性僵局。这是两国核心利益的直接碰撞，达成“大交易”可能性极低。',
+                    stalemate: 95
+                },
+                'rare-earth': {
+                    title: '稀土矿产',
+                    us: '寻求供应链“去风险”，并建立全球出口管制新体系。',
+                    cn: '利用其全球主导地位作为关键谈判筹码。',
+                    analysis: '存在交易性协议的可能。中国需要市场，美国需要资源，可能以可预测的供应换取美方在其他领域的让步。',
+                    stalemate: 40
+                },
+                fentanyl: {
+                    title: '芬太尼前体',
+                    us: '维持与芬太尼相关的20%惩罚性关税，直到中国采取果断行动。',
+                    cn: '要求移除此项关税，认为其不公平且政治化。',
+                    analysis: '妥协可能性高。这可能是达成“早期收获”协议的突破口，以中国可核查的打击行动换取美国取消特定关税。',
+                    stalemate: 25
+                },
+                overcapacity: {
+                    title: '工业产能过剩',
+                    us: '要求中国遏制国家补贴，停止向全球倾销低成本商品。',
+                    cn: '捍卫其产业政策，视其为发展关键和国家主权。',
+                    analysis: '近期取得进展的可能性低。该问题触及中国经济模式的核心，北京极不可能做出重大让步。',
+                    stalemate: 85
+                }
+            };
+
+            function updateIssueContent(issueKey) {
+                const data = issuesData[issueKey];
+                issueContent.innerHTML = `
+                    <h4 class="text-xl font-bold mb-4 text-gray-800">${data.title}</h4>
+                    <div class="grid md:grid-cols-2 gap-6 mb-4">
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <p class="font-semibold text-blue-600">🇺🇸 美方立场</p>
+                            <p class="text-sm text-gray-600">${data.us}</p>
+                        </div>
+                        <div class="border-l-4 border-red-500 pl-4">
+                            <p class="font-semibold text-red-600">🇨🇳 中方立场</p>
+                            <p class="text-sm text-gray-600">${data.cn}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-purple-600">僵局分析</p>
+                        <p class="text-sm text-gray-600 mb-2">${data.analysis}</p>
+                        <div class="flex items-center gap-2">
+                           <span class="text-xs font-medium">易</span>
+                           <div class="w-full bg-gray-200 rounded-full h-2.5">
+                             <div class="bg-gradient-to-r from-green-400 via-yellow-400 to-red-500 h-2.5 rounded-full" style="width: ${data.stalemate}%"></div>
+                           </div>
+                           <span class="text-xs font-medium">难</span>
+                        </div>
+                         <p class="text-xs text-gray-500 text-center mt-1">妥协难度</p>
+                    </div>
+                `;
+            }
+
+            issueTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    issueTabs.forEach(t => t.classList.remove('tab-active', 'bg-white', 'hover:bg-gray-100'));
+                    issueTabs.forEach(t => {
+                        if (t !== tab) {
+                            t.classList.add('bg-white', 'hover:bg-gray-100');
+                            t.classList.remove('tab-active');
+                        }
+                    });
+                    tab.classList.add('tab-active');
+                    tab.classList.remove('bg-white', 'hover:bg-gray-100');
+                    updateIssueContent(tab.dataset.issue);
+                });
+            });
+
+            updateIssueContent('tariffs');
+
+            // Scenarios Section
+            const scenarioCards = document.querySelectorAll('.scenario-card');
+            const scenarioTitle = document.getElementById('scenario-title');
+            const scenarioDescription = document.getElementById('scenario-description');
+            const scenarioImpacts = document.getElementById('scenario-impacts');
+            const scenarioCtx = document.getElementById('scenarioChart').getContext('2d');
+            let scenarioChart;
+
+            const scenariosData = {
+                truce: {
+                    title: '情景一：休战延长',
+                    description: '双方同意将休战期再延长90天，为后续谈判争取时间。结构性问题仍悬而未决。这是目前可能性最高的情景。',
+                    impacts: [
+                        '<strong>股票市场:</strong> 温和上涨 (+2-3%)',
+                        '<strong>大宗商品:</strong> 适度上涨 (工业金属 +5-8%)',
+                        '<strong>全球供应链:</strong> 获得暂时稳定'
+                    ],
+                    chartData: { labels: ['股票', '商品', '供应链稳定'], data: [3, 6, 8] }
+                },
+                deal: {
+                    title: '情景二：有限的“芬太尼换关税”协议',
+                    description: '中国同意对芬太尼前体进行可核查的打击，换取美国取消特定的20%芬太尼相关关税。这表明交易性协议是可能的。',
+                    impacts: [
+                        '<strong>股票市场:</strong> 特定板块上涨，整体温和',
+                        '<strong>大宗商品:</strong> 影响有限',
+                        '<strong>全球供应链:</strong> 微弱积极信号'
+                    ],
+                    chartData: { labels: ['特定股票', '商品', '供应链信号'], data: [5, 1, 3] }
+                },
+                breakdown: {
+                    title: '情景三：谈判破裂与关税恢复',
+                    description: '未能达成延期。8月12日后，美国对华关税恢复至145%，中国对美关税恢复至125%，构成“事实上的贸易禁运”。',
+                    impacts: [
+                        '<strong>股票市场:</strong> 大幅回调 (-5-10%)',
+                        '<strong>大宗商品:</strong> 显著下跌 (-10-15%)',
+                        '<strong>全球供应链:</strong> 严重中断'
+                    ],
+                    chartData: { labels: ['股票', '商品', '供应链中断'], data: [-8, -12, -10] }
+                }
+            };
+
+            function updateScenario(scenarioKey) {
+                const data = scenariosData[scenarioKey];
+                scenarioTitle.textContent = data.title;
+                scenarioDescription.textContent = data.description;
+                scenarioImpacts.innerHTML = data.impacts.map(item => `<p>${item}</p>`).join('');
+
+                if (scenarioChart) {
+                    scenarioChart.destroy();
+                }
+                scenarioChart = new Chart(scenarioCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.chartData.labels,
+                        datasets: [{
+                            label: '市场影响评估',
+                            data: data.chartData.data,
+                            backgroundColor: ['#A855F7', '#FACC15', '#F87171'],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    boxWidth: 12
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += `${context.parsed > 0 ? '+' : ''}${context.parsed}% 影响`;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                scenarioCards.forEach(card => {
+                    card.classList.remove('border-purple-400');
+                    card.classList.add('border-transparent');
+                });
+                document.querySelector(`.scenario-card[data-scenario="${scenarioKey}"]`).classList.add('border-purple-400');
+                document.querySelector(`.scenario-card[data-scenario="${scenarioKey}"]`).classList.remove('border-transparent');
+
+            }
+
+            scenarioCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    updateScenario(card.dataset.scenario);
+                });
+            });
+
+            updateScenario('truce');
+
+            // Nav highlighting on scroll
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('header nav a');
+            const mobileNavLinks = document.querySelectorAll('#mobile-menu a');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.toggle('nav-active', link.getAttribute('href') === `#${id}`);
+                        });
+                        mobileNavLinks.forEach(link => {
+                            link.classList.toggle('nav-active', link.getAttribute('href') === `#${id}`);
+                        });
+                    }
+                });
+            }, { rootMargin: '-30% 0px -70% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
