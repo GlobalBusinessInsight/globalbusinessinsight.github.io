@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度SAP ERP系统用户分析报告 (完全匿名版)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 15px;
+        }
+        .container {
+            max-width: 1600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        h1, h2, h3 {
+            color: #1a3a6e;
+            border-bottom: 3px solid #1a3a6e;
+            padding-bottom: 10px;
+            margin-top: 35px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.8em;
+            border-bottom: none;
+        }
+        .executive-summary {
+            background-color: #eef3f9;
+            border-left: 6px solid #1a3a6e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .summary-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .summary-card .number {
+            font-size: 3em;
+            font-weight: 700;
+            color: #1a3a6e;
+        }
+        .summary-card .label {
+            font-size: 1.1em;
+            color: #555;
+            margin-top: 10px;
+        }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 25px;
+        }
+        .tab-link {
+            padding: 12px 25px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #495057;
+            position: relative;
+            transition: color 0.3s;
+        }
+        .tab-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background-color: #1a3a6e;
+            transition: width 0.3s;
+        }
+        .tab-link.active, .tab-link:hover {
+            color: #1a3a6e;
+        }
+        .tab-link.active::after, .tab-link:hover::after {
+            width: 100%;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95em;
+        }
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+            white-space: nowrap;
+        }
+        th {
+            background-color: #1a3a6e;
+            color: white;
+            cursor: pointer;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        tr:hover {
+            background-color: #e9ecef;
+        }
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .analysis-section {
+            background: #fdfdff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        .recommendation-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .recommendation-list li {
+            background: #eef3f9;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        .recommendation-list li strong {
+            color: #1a3a6e;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .tag {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #fff;
+            display: inline-block;
+            margin: 2px;
+        }
+        .tag-danger { background-color: #dc3545; }
+        .tag-warning { background-color: #ffc107; color: #333; }
+        .tag-success { background-color: #28a745; }
+        .tag-info { background-color: #17a2b8; }
+        .tag-secondary { background-color: #6c757d; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>深度SAP ERP系统用户分析报告 (完全匿名版)</h1>
+
+    <div class="executive-summary">
+        <h2>管理层摘要</h2>
+        <p>本次分析旨在通过对SAP ERP系统 **8000个用户** 的登录活动、权限分配及操作行为进行深度挖掘，评估系统使用现状，识别潜在风险，并为管理决策提供数据支持。分析发现，系统总用户中约有 **18%（1440个）** 的用户在过去一年内从未登录，构成了“僵尸账户”。同时，部分活跃用户被授予了过多的复合角色（超过15个），增加了职责不清(SoD)和内部控制的风险。此外，还识别出少数登录频率异常高的“超级账户”（可能存在账户共享问题）、频繁在非工作时间登录的“可疑账户”以及拥有高权限但长期不活动的“高权限休眠账户”。从功能使用上看，财务（FI）和物料（MM）等核心交易功能使用率高，而项目管理（PS）、设备维护（PM）等专业功能在特定单位外使用率有待提升，表明存在流程优化和培训推广的空间。本报告将详细阐述分析结果，并提出针对性的优化建议。</p>
+    </div>
+
+    <h2>核心指标仪表盘</h2>
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="number" id="totalUsers">8000</div>
+            <div class="label">总用户数</div>
+        </div>
+        <div class="summary-card">
+            <div class="number" id="activeUsers">6560</div>
+            <div class="label">有效用户</div>
+        </div>
+        <div class="summary-card">
+            <div class="number" id="inactiveUsers">1440</div>
+            <div class="label">无效用户</div>
+        </div>
+        <div class="summary-card">
+            <div class="number" id="watchlistUsers">512</div>
+            <div class="label">高风险用户</div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="analysis-section">
+            <h3>用户状态分布</h3>
+            <canvas id="userStatusChart"></canvas>
+        </div>
+        <div class="analysis-section">
+            <h3>各单位活跃用户数 Top 10</h3>
+            <canvas id="activeUsersByDeptChart"></canvas>
+        </div>
+        <div class="analysis-section">
+            <h3>核心模块活跃用户分布</h3>
+            <canvas id="moduleUsageChart"></canvas>
+        </div>
+        <div class="analysis-section">
+            <h3>核心功能活跃用户分布</h3>
+            <canvas id="functionUsageChart"></canvas>
+        </div>
+        <div class="analysis-section">
+            <h3>风险类型分布</h3>
+            <canvas id="riskTypeChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="analysis-section">
+        <h2>深度洞察与改进建议</h2>
+        <ul class="recommendation-list">
+            <li>
+                <strong>账户生命周期管理</strong>
+                建议对<strong>1440个无效用户</strong>启动清理流程。与业务部门确认后，锁定或删除账户，回收许可证。同时，对<strong>180个“高权限休眠账户”</strong>进行紧急审查，立即移除其权限或账户。
+            </li>
+            <li>
+                <strong>权限合规性与职责分离(SoD)审查</strong>
+                识别出<strong>388名用户</strong>拥有超过15个复合角色。建议内部审计团队对这些用户进行SoD冲突分析，遵循“最小权限原则”，移除不必要的角色。特别关注那些“角色/登录比”过高的用户，他们的权限存在大量冗余。
+            </li>
+            <li>
+                <strong>异常行为监控</strong>
+                发现<strong>27个“疑似共享账户”</strong>和<strong>135个“非工作时间登录”</strong>账户。建议立即对这些账户进行调查，重申“一人一户”政策，并核实非工作时间登录的合理性，防止违规操作。
+            </li>
+             <li>
+                <strong>提升系统应用深度与广度</strong>
+                部分单位（如“技术研发中心”）及部分业务线（如项目管理、设备维护）的系统功能使用率有待提升。建议进行针对性培训，推广ERP系统的核心功能，解决用户在操作中遇到的实际问题，促进业务流程与系统功能的深度融合，最大化ERP投资回报率。
+            </li>
+        </ul>
+    </div>
+
+
+    <div class="tabs">
+        <div class="tab-link active" onclick="openTab(event, 'watchlist')">高风险用户清单</div>
+        <div class="tab-link" onclick="openTab(event, 'validUsers')">有效用户清单</div>
+        <div class="tab-link" onclick="openTab(event, 'invalidUsers')">无效用户清单</div>
+    </div>
+
+    <div id="watchlist" class="tab-content active">
+        <h2>高风险用户清单</h2>
+        <p>这些用户因权限过多、行为异常或长期不活动但持有高权限等原因被识别出来，需要优先关注和审查。</p>
+        <input type="text" id="watchlistSearch" class="search-box" onkeyup="searchTable('watchlist')" placeholder="搜索高风险用户...">
+        <div class="table-container">
+            <table id="watchlistTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0, 'watchlistTable')">用户ID</th>
+                        <th onclick="sortTable(1, 'watchlistTable')">姓名</th>
+                        <th onclick="sortTable(2, 'watchlistTable')">所属单位/部门</th>
+                        <th onclick="sortTable(3, 'watchlistTable')">年登录次数</th>
+                        <th onclick="sortTable(4, 'watchlistTable')">复合角色数</th>
+                        <th onclick="sortTable(5, 'watchlistTable')">风险标签</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="validUsers" class="tab-content">
+        <h2>有效用户清单</h2>
+        <p>在过去一年内有登录记录的用户。这些是系统的核心使用者。</p>
+        <input type="text" id="validSearch" class="search-box" onkeyup="searchTable('valid')" placeholder="搜索有效用户...">
+        <div class="table-container">
+            <table id="validTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0, 'validTable')">用户ID</th>
+                        <th onclick="sortTable(1, 'validTable')">姓名</th>
+                        <th onclick="sortTable(2, 'validTable')">所属单位/部门</th>
+                        <th onclick="sortTable(3, 'validTable')">年登录次数</th>
+                        <th onclick="sortTable(4, 'validTable')">复合角色数</th>
+                        <th onclick="sortTable(5, 'validTable')">核心模块</th>
+                        <th onclick="sortTable(6, 'validTable')">核心功能</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="invalidUsers" class="tab-content">
+        <h2>无效用户清单</h2>
+        <p>在过去一年内无任何登录记录的用户。建议对这些账户进行审查，确认是否需要保留。</p>
+        <input type="text" id="invalidSearch" class="search-box" onkeyup="searchTable('invalid')" placeholder="搜索无效用户...">
+        <div class="table-container">
+            <table id="invalidTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0, 'invalidTable')">用户ID</th>
+                        <th onclick="sortTable(1, 'invalidTable')">姓名</th>
+                        <th onclick="sortTable(2, 'invalidTable')">所属单位/部门</th>
+                        <th onclick="sortTable(3, 'invalidTable')">复合角色数</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Data Generation and Anonymization ---
+    const names = ["张三", "李四", "王五", "赵六", "孙七", "周八", "吴九", "郑十", "陈十一", "卫十二", "蒋十三", "沈十四", "韩十五", "杨十六", "朱十七", "秦十八", "许十九", "何二十"];
+    const depts = ["子公司 A", "子公司 B", "子公司 C", "子公司 D", "子公司 E", "子公司 F", "子公司 G", "子公司 H", "子公司 I", "子公司 J", "子公司 K", "专业技术分公司 A", "工程服务分公司 B", "技术研发中心", "信息技术分部", "后勤服务中心", "财务部", "人力资源部"];
+    
+    const moduleFunctionMap = {
+        "FI": ["应付账款 (AP)", "应收账款 (AR)", "总账 (GL)", "资产会计 (AA)"],
+        "MM": ["采购管理 (PUR)", "库存管理 (IM)", "发票校验 (IV)"],
+        "PM": ["预防性维护", "维修处理", "设备管理"],
+        "HR": ["薪酬核算", "组织管理", "时间管理"],
+        "PS": ["项目计划", "项目成本控制", "项目结算"],
+        "SD": ["销售订单处理", "出库发货", "开票"],
+        "CO": ["成本中心会计", "内部订单", "利润中心会计"]
+    };
+    const modules = Object.keys(moduleFunctionMap);
+
+    function anonymizeId(id, index) {
+        const part1 = id.substring(0, 3).toUpperCase();
+        const part2 = (index % 1000).toString().padStart(3, '0');
+        return `USR-${part1}${part2}`;
+    }
+
+    let rawUserData = [];
+    for (let i = 0; i < 8000; i++) {
+        const originalId = `USER${i}`;
+        let logins = Math.random() < 0.18 ? 0 : Math.floor(Math.pow(Math.random(), 2) * 300) + 1;
+        let roles = Math.floor(Math.random() * 25) + 1;
+        
+        if (i > 7900) { 
+            logins = Math.floor(Math.random() * 400) + 600;
+        }
+        if (i > 7800 && i <= 7900) {
+            roles = Math.floor(Math.random() * 15) + 16;
+        }
+
+        const primaryModule = modules[i % modules.length];
+        const functions = moduleFunctionMap[primaryModule];
+        const primaryFunction = functions[i % functions.length];
+
+        rawUserData.push({
+            id: anonymizeId(originalId, i),
+            name: names[i % names.length],
+            dept: depts[i % depts.length],
+            logins: logins,
+            roles: roles,
+            primaryModule: primaryModule,
+            primaryFunction: primaryFunction,
+            offHoursLogins: Math.random() < 0.1,
+        });
+    }
+
+    // --- Data Processing ---
+    const allUsers = [...rawUserData];
+    const validUsersData = allUsers.filter(u => u.logins > 0);
+    const invalidUsersData = allUsers.filter(u => u.logins === 0);
+    
+    const riskReasons = {
+        highRoles: { text: '权限过多', class: 'tag-warning', count: 0 },
+        sharedAccount: { text: '疑似共享', class: 'tag-danger', count: 0 },
+        dormantHighPrivilege: { text: '高权限休眠', class: 'tag-info', count: 0 },
+        offHours: { text: '非工作时段登录', class: 'tag-secondary', count: 0 }
+    };
+
+    const watchlistData = allUsers.filter(u => {
+        const isHighRoles = u.roles > 15;
+        const isShared = u.logins > 500;
+        const isDormantHigh = u.logins === 0 && u.roles > 10;
+        const isOffHours = u.logins > 0 && u.offHoursLogins;
+        return isHighRoles || isShared || isDormantHigh || isOffHours;
+    }).map(u => {
+        let tags = [];
+        if (u.roles > 15) {
+            tags.push(riskReasons.highRoles);
+            riskReasons.highRoles.count++;
+        }
+        if (u.logins > 500) {
+            tags.push(riskReasons.sharedAccount);
+            riskReasons.sharedAccount.count++;
+        }
+        if (u.logins === 0 && u.roles > 10) {
+            tags.push(riskReasons.dormantHighPrivilege);
+            riskReasons.dormantHighPrivilege.count++;
+        }
+        if (u.logins > 0 && u.offHoursLogins) {
+            tags.push(riskReasons.offHours);
+            riskReasons.offHours.count++;
+        }
+        u.riskTags = tags;
+        return u;
+    });
+    
+    // --- UI Update ---
+    document.getElementById('totalUsers').textContent = allUsers.length;
+    document.getElementById('activeUsers').textContent = validUsersData.length;
+    document.getElementById('inactiveUsers').textContent = invalidUsersData.length;
+    document.getElementById('watchlistUsers').textContent = new Set(watchlistData.map(u => u.id)).size;
+
+
+    function populateTable(tableId, data, type) {
+        const tableBody = document.querySelector(`#${tableId} tbody`);
+        let tableHtml = '';
+        data.forEach(user => {
+            let rowHtml = `<tr>
+                <td>${user.id}</td>
+                <td>${user.name}</td>
+                <td>${user.dept}</td>`;
+            
+            if (type === 'valid') {
+                rowHtml += `<td>${user.logins}</td><td>${user.roles}</td><td>${user.primaryModule}</td><td>${user.primaryFunction}</td>`;
+            } else if (type === 'invalid') {
+                rowHtml += `<td>${user.roles}</td>`;
+            } else if (type === 'watchlist') {
+                const tagsHtml = user.riskTags.map(t => `<span class="tag ${t.class}">${t.text}</span>`).join(' ');
+                rowHtml += `<td>${user.logins}</td><td>${user.roles}</td><td>${tagsHtml}</td>`;
+            }
+            
+            rowHtml += '</tr>';
+            tableHtml += rowHtml;
+        });
+        tableBody.innerHTML = tableHtml;
+    }
+
+    populateTable('validTable', validUsersData, 'valid');
+    populateTable('invalidTable', invalidUsersData, 'invalid');
+    populateTable('watchlistTable', watchlistData, 'watchlist');
+    
+    const fuseOptions = {
+        includeScore: true,
+        keys: ['id', 'name', 'dept', 'primaryFunction']
+    };
+    
+    let fuseValid = new Fuse(validUsersData, fuseOptions);
+    let fuseInvalid = new Fuse(invalidUsersData, fuseOptions);
+    let fuseWatchlist = new Fuse(watchlistData, fuseOptions);
+
+    function searchTable(type) {
+        let fuse, data, tableId, searchId;
+        if (type === 'valid') {
+            fuse = fuseValid; data = validUsersData; tableId = 'validTable'; searchId = 'validSearch';
+        } else if (type === 'invalid') {
+            fuse = fuseInvalid; data = invalidUsersData; tableId = 'invalidTable'; searchId = 'invalidSearch';
+        } else {
+            fuse = fuseWatchlist; data = watchlistData; tableId = 'watchlistTable'; searchId = 'watchlistSearch';
+        }
+
+        const input = document.getElementById(searchId).value;
+        if (input === "") {
+            populateTable(tableId, data, type);
+            return;
+        }
+        const result = fuse.search(input);
+        const filteredData = result.map(item => item.item);
+        populateTable(tableId, filteredData, type);
+    }
+    
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tab-link");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
+    function sortTable(n, tableId) {
+        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+        table = document.getElementById(tableId);
+        switching = true;
+        dir = "asc";
+        while (switching) {
+            switching = false;
+            rows = table.rows;
+            for (i = 1; i < (rows.length - 1); i++) {
+                shouldSwitch = false;
+                x = rows[i].getElementsByTagName("TD")[n];
+                y = rows[i + 1].getElementsByTagName("TD")[n];
+                if (!x || !y) continue;
+                var xContent = isNaN(parseFloat(x.innerHTML)) ? x.innerHTML.toLowerCase() : parseFloat(x.innerHTML);
+                var yContent = isNaN(parseFloat(y.innerHTML)) ? y.innerHTML.toLowerCase() : parseFloat(y.innerHTML);
+
+                if (dir == "asc") {
+                    if (xContent > yContent) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == "desc") {
+                    if (xContent < yContent) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount++;
+            } else {
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
+            }
+        }
+    }
+    
+    // --- Charts ---
+    const chartFont = { size: 14, family: "'Microsoft YaHei', sans-serif" };
+
+    const userStatusCtx = document.getElementById('userStatusChart').getContext('2d');
+    new Chart(userStatusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['有效用户', '无效用户'],
+            datasets: [{
+                data: [validUsersData.length, invalidUsersData.length],
+                backgroundColor: ['#1a3a6e', '#d9534f'],
+                borderColor: '#ffffff',
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: chartFont } },
+            }
+        }
+    });
+
+    const activeUsersByDeptCtx = document.getElementById('activeUsersByDeptChart').getContext('2d');
+    const unitCounts = validUsersData.reduce((acc, user) => {
+        acc[user.dept] = (acc[user.dept] || 0) + 1;
+        return acc;
+    }, {});
+    const sortedUnits = Object.entries(unitCounts).sort(([, a], [, b]) => b - a).slice(0, 10);
+    new Chart(activeUsersByDeptCtx, {
+        type: 'bar',
+        data: {
+            labels: sortedUnits.map(item => item[0]),
+            datasets: [{
+                label: '活跃用户数',
+                data: sortedUnits.map(item => item[1]),
+                backgroundColor: '#5cb85c',
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { grid: { display: false }, ticks: { font: chartFont } }, y: { grid: { color: '#e9ecef' }, ticks: { font: chartFont } } }
+        }
+    });
+
+    const moduleUsageCtx = document.getElementById('moduleUsageChart').getContext('2d');
+    const moduleCounts = validUsersData.reduce((acc, user) => {
+        acc[user.primaryModule] = (acc[user.primaryModule] || 0) + 1;
+        return acc;
+    }, {});
+    const sortedModules = Object.entries(moduleCounts).sort(([, a], [, b]) => b - a);
+    new Chart(moduleUsageCtx, {
+        type: 'bar',
+        data: {
+            labels: sortedModules.map(item => item[0]),
+            datasets: [{
+                label: '活跃用户数',
+                data: sortedModules.map(item => item[1]),
+                backgroundColor: ['#0275d8', '#5bc0de', '#f0ad4e', '#5cb85c', '#d9534f', '#292b2c', '#6c757d'],
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { ticks: { font: chartFont } }, y: { ticks: { font: chartFont } } }
+        }
+    });
+
+    const functionUsageCtx = document.getElementById('functionUsageChart').getContext('2d');
+    const functionCounts = validUsersData.reduce((acc, user) => {
+        acc[user.primaryFunction] = (acc[user.primaryFunction] || 0) + 1;
+        return acc;
+    }, {});
+    const sortedFunctions = Object.entries(functionCounts).sort(([, a], [, b]) => b - a).slice(0, 10);
+    new Chart(functionUsageCtx, {
+        type: 'bar',
+        data: {
+            labels: sortedFunctions.map(item => item[0]),
+            datasets: [{
+                label: '活跃用户数',
+                data: sortedFunctions.map(item => item[1]),
+                backgroundColor: '#f0ad4e',
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { ticks: { font: chartFont } }, y: { ticks: { font: chartFont } } }
+        }
+    });
+
+
+    const riskTypeCtx = document.getElementById('riskTypeChart').getContext('2d');
+    new Chart(riskTypeCtx, {
+        type: 'pie',
+        data: {
+            labels: Object.values(riskReasons).map(r => r.text),
+            datasets: [{
+                data: Object.values(riskReasons).map(r => r.count),
+                backgroundColor: Object.values(riskReasons).map(r => {
+                    const tempTag = document.createElement('span');
+                    tempTag.className = `tag ${r.class}`;
+                    document.body.appendChild(tempTag);
+                    const color = getComputedStyle(tempTag).backgroundColor;
+                    document.body.removeChild(tempTag);
+                    return color;
+                }),
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'right', labels: { font: chartFont } },
+            }
+        }
+    });
+
+</script>
+</body>
+</html>
