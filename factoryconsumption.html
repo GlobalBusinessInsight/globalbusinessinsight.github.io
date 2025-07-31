@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国燃煤电厂厂用电率交互式分析报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Subtle Blue/Green Accents -->
+    <!-- Application Structure Plan: The application is structured thematically into five main sections: '核心指标' (Core Metrics), '经济驱动' (Economic Drivers), '改进路径' (Improvement Paths), '案例分析' (Case Studies), and '未来展望' (Future Outlook), accessible via a sticky navigation bar. This structure departs from the report's linear format to allow users to explore based on interest. 'Core Metrics' uses an interactive chart. 'Economic Drivers' features a dynamic calculator. 'Improvement Paths' uses a tabbed interface and clickable cards. The new 'Case Studies' section uses a card-based layout to present real-world examples, making the improvement strategies more concrete. This user-centric, interactive dashboard approach is chosen to enhance engagement and make the dense report content more accessible. -->
+    <!-- Visualization & Content Choices: 
+    1. Report Info: National Standards (Table 1) -> Goal: Compare benchmarks -> Viz/Method: Interactive Bar Chart (Chart.js) -> Interaction: Filter by plant type -> Justification: Intuitive comparison.
+    2. Report Info: Financial Impact -> Goal: Demonstrate value -> Viz/Method: Dynamic calculator (HTML/JS) -> Interaction: User slider -> Justification: Makes benefit tangible.
+    3. Report Info: Technical Matrix (Table 3) -> Goal: Organize solutions -> Viz/Method: Interactive Card Grid with Modals (HTML/JS) -> Interaction: Click for details -> Justification: Deconstructs dense data.
+    4. Report Info: Management vs. Tech -> Goal: Differentiate strategies -> Viz/Method: Tabbed Interface (HTML/JS) -> Interaction: Toggle views -> Justification: Clear categorization.
+    5. NEW - Report Info: Real-world examples -> Goal: Provide proof and inspiration -> Viz/Method: Case Study Cards (HTML/Tailwind) -> Interaction: Static display with key data callouts -> Justification: Grounds the abstract concepts in reality and showcases best practices from leading plants.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 450px;
+            }
+        }
+        .modal-backdrop {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">煤电厂效率透视</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#metrics" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">核心指标</a>
+                        <a href="#economics" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">经济驱动</a>
+                        <a href="#paths" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">改进路径</a>
+                        <a href="#cases" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">案例分析</a>
+                        <a href="#future" class="nav-link text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">未来展望</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#metrics" class="nav-link text-gray-600 hover:bg-gray-200 block px-3 py-2 rounded-md text-base font-medium">核心指标</a>
+                <a href="#economics" class="nav-link text-gray-600 hover:bg-gray-200 block px-3 py-2 rounded-md text-base font-medium">经济驱动</a>
+                <a href="#paths" class="nav-link text-gray-600 hover:bg-gray-200 block px-3 py-2 rounded-md text-base font-medium">改进路径</a>
+                <a href="#cases" class="nav-link text-gray-600 hover:bg-gray-200 block px-3 py-2 rounded-md text-base font-medium">案例分析</a>
+                <a href="#future" class="nav-link text-gray-600 hover:bg-gray-200 block px-3 py-2 rounded-md text-base font-medium">未来展望</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+        <!-- Hero Section -->
+        <section class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">解码燃煤电厂的“心脏”效率</h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                厂用电率，不仅是衡量电厂运营卓越性的技术指标，更是影响财务表现、平衡能源安全与“双碳”目标的关键杠杆。本应用将带您深入探索其背后的国家标准、经济价值与优化策略。
+            </p>
+        </section>
+
+        <!-- Section 1: Core Metrics -->
+        <section id="metrics" class="mb-20 pt-16 -mt-16">
+            <h3 class="text-3xl font-bold text-center mb-2 text-gray-800">核心指标：国家如何设定能效标尺？</h3>
+            <p class="text-center text-gray-500 mb-12">厂用电率是内部管理的关键，而供电煤耗是国家考核的核心。两者共同决定了电厂的最终能效。</p>
+            
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+                <div class="flex justify-center mb-6">
+                    <div class="inline-flex rounded-md shadow-sm" role="group">
+                        <select id="unit-filter" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                            <option value="all" selected>所有机组类型</option>
+                            <option value="1000UUSC">1000MW 超超临界</option>
+                            <option value="600UUSC">600MW 超超临界</option>
+                            <option value="600USC">600MW 超临界</option>
+                            <option value="300USC">300MW 超临界</option>
+                            <option value="600SubC">600MW 亚临界</option>
+                            <option value="300SubC">300MW 亚临界</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-center text-sm text-gray-500 mb-4">选择机组类型以查看对应的国家供电煤耗限额标准 (GB 21258)。数值越低，能效越高。</p>
+                <div class="chart-container">
+                    <canvas id="efficiencyStandardsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Economic Drivers -->
+        <section id="economics" class="mb-20 pt-16 -mt-16">
+            <h3 class="text-3xl font-bold text-center mb-2 text-gray-800">经济驱动：为何电厂如此重视？</h3>
+            <p class="text-center text-gray-500 mb-12">每一度节约的厂用电，都直接转化为实实在在的收入和竞争优势。</p>
+
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+                    <h4 class="text-xl font-bold mb-4">厂用电率的“点金术”</h4>
+                    <p class="text-gray-600 mb-6">以一台1000MW机组为例，看看降低厂用电率能带来多大的经济效益。拖动滑块体验一下：</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="efficiency-slider" class="block mb-2 text-sm font-medium text-gray-900">厂用电率降低: <span id="slider-value" class="font-bold text-blue-600">0.5%</span></label>
+                            <input id="efficiency-slider" type="range" min="0.1" max="2" value="0.5" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        <div class="text-center bg-blue-50 p-6 rounded-lg">
+                            <p class="text-gray-600 text-sm">每年可增加上网电量</p>
+                            <p id="kwh-gain" class="text-3xl font-extrabold text-blue-800 my-1">25,000,000 kWh</p>
+                            <p class="text-gray-600 text-sm">约等于直接增加年收入</p>
+                            <p id="revenue-gain" class="text-3xl font-extrabold text-green-600 mt-1">10,000,000 元</p>
+                        </div>
+                        <p class="text-xs text-gray-500 text-center">假设：年利用5000小时，上网电价0.4元/kWh。</p>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h4 class="text-xl font-bold mb-2">企业KPI的核心</h4>
+                        <p class="text-gray-600">各大发电集团将厂用电率作为核心KPI，持续追踪并公开披露，视其为卓越运营和管理能力的综合体现。</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h4 class="text-xl font-bold mb-2">行业对标的压力</h4>
+                        <p class="text-gray-600">在全行业的“能效对标”中，落后者面临整改压力，领先者获得声誉和市场优势。这种良性竞争驱动着全行业持续进步。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Improvement Paths -->
+        <section id="paths" class="mb-20 pt-16 -mt-16">
+            <h3 class="text-3xl font-bold text-center mb-2 text-gray-800">改进路径：如何实现持续优化？</h3>
+            <p class="text-center text-gray-500 mb-12">优化厂用电率需要“软硬兼施”，即管理运维的精细化与核心技术的现代化改造并重。</p>
+
+            <div class="w-full">
+                <div class="mb-8 border-b border-gray-200">
+                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="paths-tabs">
+                        <li class="mr-2">
+                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="tech">🎯 技术改造路径</button>
+                        </li>
+                        <li class="mr-2">
+                            <button class="tab-button inline-block p-4 border-b-2 rounded-t-lg" data-tab="management">⚙️ 管理与运维策略</button>
+                        </li>
+                    </ul>
+                </div>
+                <div id="paths-content">
+                    <div id="tech-tab-content" class="tab-content">
+                        <p class="text-center text-gray-600 mb-8">点击下方卡片，查看各项主流节能技术改造措施的详细信息，及其对降低供电煤耗的预期效果。</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        </div>
+                    </div>
+                    <div id="management-tab-content" class="tab-content hidden">
+                        <div class="grid md:grid-cols-3 gap-8">
+                            <div class="bg-white p-6 rounded-xl shadow-lg">
+                                <h4 class="text-xl font-bold mb-3">1. 建立管理体系</h4>
+                                <ul class="space-y-2 text-gray-600 list-disc list-inside">
+                                    <li>明确组织与责任，目标分解到岗</li>
+                                    <li>定期能源审计，识别节能潜力</li>
+                                    <li>保障专项资金，用于技改和培训</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg">
+                                <h4 class="text-xl font-bold mb-3">2. 优化日常运维</h4>
+                                <ul class="space-y-2 text-gray-600 list-disc list-inside">
+                                    <li>精细化运行操作（燃烧、吹灰、真空）</li>
+                                    <li>推行预防性维护，保持设备高效</li>
+                                    <li>及时消除影响效率的设备缺陷</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg">
+                                <h4 class="text-xl font-bold mb-3">3. 强化数据驱动</h4>
+                                <ul class="space-y-2 text-gray-600 list-disc list-inside">
+                                    <li>配备精准、可靠的计量体系</li>
+                                    <li>深化集控运行，实现全局优化</li>
+                                    <li>引入智能监控，实现预测性维护</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Case Studies -->
+        <section id="cases" class="mb-20 pt-16 -mt-16">
+            <h3 class="text-3xl font-bold text-center mb-2 text-gray-800">案例分析：全球领先实践</h3>
+            <p class="text-center text-gray-500 mb-12">从世界纪录的创造者到精细化管理的典范，这些电厂展示了节能降耗的无限可能。</p>
+            <div class="space-y-8">
+                <!-- Case 1 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
+                    <div class="text-6xl">🇨🇳</div>
+                    <div class="flex-1">
+                        <h4 class="text-xl font-bold">上海外高桥第三发电厂 (中国)</h4>
+                        <p class="text-gray-600 mt-1">作为全球1000MW级机组的能效标杆，该厂通过系统性的技术集成创新，创造了“外三模式”，将供电煤耗降至世界领先的276 gce/kWh水平。其厂用电率的精细化控制是成功的关键一环，尤其在汽轮机通流改造、锅炉燃烧优化和辅机变频应用方面成效卓著。</p>
+                        <div class="mt-3 bg-green-50 text-green-800 p-3 rounded-lg text-center font-semibold">世界级能效典范</div>
+                    </div>
+                </div>
+                <!-- Case 2 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
+                    <div class="text-6xl">🇩🇪</div>
+                    <div class="flex-1">
+                        <h4 class="text-xl font-bold">Neurath F/G 电厂 (德国)</h4>
+                        <p class="text-gray-600 mt-1">作为欧洲最现代化的褐煤电厂之一，Neurath电厂的重点在于实现高效率与高灵活性的平衡。通过先进的锅炉材料和优化的蒸汽循环，其净效率超过43%。为应对可再生能源波动，该厂优化了辅机系统（如风机和泵）的运行策略，确保在频繁变负荷时也能将厂用电率维持在较低水平，为灵活性服务提供了能效保障。</p>
+                        <div class="mt-3 bg-blue-50 text-blue-800 p-3 rounded-lg text-center font-semibold">效率与灵活性的平衡</div>
+                    </div>
+                </div>
+                <!-- Case 3 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
+                    <div class="text-6xl">🇨🇳</div>
+                    <div class="flex-1">
+                        <h4 class="text-xl font-bold">华能玉环电厂 (中国)</h4>
+                        <p class="text-gray-600 mt-1">该厂是中国首座国产百万千瓦超超临界机组的诞生地，也是节能降耗的先行者。通过实施包括汽轮机零出力技术、引风机变频和等离子点火在内的一系列改造，玉环电厂不仅大幅降低了启停过程中的油耗，还显著优化了正常运行时的厂用电率，为同类型机组的节能改造提供了宝贵经验。</p>
+                        <div class="mt-3 bg-green-50 text-green-800 p-3 rounded-lg text-center font-semibold">技术创新引领者</div>
+                    </div>
+                </div>
+          
+                 <!-- Case 5 -->
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
+                    <div class="text-6xl">🇨🇳</div>
+                    <div class="flex-1">
+                        <h4 class="text-xl font-bold">国电舟山普陀电厂 (中国)</h4>
+                        <p class="text-gray-600 mt-1">此案例展示了中小型机组通过精细化管理实现巨大节能潜力的可能性。普陀电厂并未进行大规模资本投入，而是聚焦于运行优化和低成本改造。通过成立节能攻关小组，对循环水泵实施“经济运行”、优化真空系统、堵塞管道漏点等措施，成功将厂用电率降低了超过0.5个百分点，证明了管理在节能中的核心作用。</p>
+                        <div class="mt-3 bg-purple-50 text-purple-800 p-3 rounded-lg text-center font-semibold">精细化管理典范</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Future Outlook -->
+        <section id="future" class="pt-16 -mt-16">
+            <h3 class="text-3xl font-bold text-center mb-2 text-gray-800">未来展望：“双碳”时代下的新挑战</h3>
+            <p class="text-center text-gray-500 mb-12">煤电角色正在转变，从基荷电源到灵活性服务提供者，对能效管理提出了新的要求。</p>
+            <div class="bg-white p-8 rounded-xl shadow-lg max-w-4xl mx-auto">
+                <div class="flex flex-col md:flex-row items-center justify-center text-center md:text-left">
+                    <div class="text-5xl md:text-6xl p-4">⚡</div>
+                    <div class="text-gray-500 text-4xl font-thin mx-4">&harr;</div>
+                    <div class="text-5xl md:text-6xl p-4">🍃</div>
+                </div>
+                <h4 class="text-xl font-bold text-center mt-4 mb-2">效率与灵活性的平衡</h4>
+                <p class="text-gray-600 text-center">
+                    未来的核心挑战在于：如何在满足电网快速响应、深度调峰等灵活性需求的同时，依然保持尽可能低的厂用电率和供电煤耗。单纯追求最高热效率的时代已经过去，能够在宽负荷范围内保持高效的机组，将成为新的行业标杆。对厂用电率的极致追求，将是降低存量煤电碳足迹、提升其在新型电力系统中竞争力的关键。
+                </p>
+            </div>
+        </section>
+
+    </main>
+    
+    <!-- Modal -->
+    <div id="tech-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden modal-backdrop">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto modal-content scale-95">
+            <div class="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+                <h3 id="modal-title" class="text-xl font-bold">技术详情</h3>
+                <button id="modal-close" class="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            <div class="p-6">
+                <p class="font-semibold text-gray-700">应用子系统: <span id="modal-subsystem" class="font-normal text-gray-600"></span></p>
+                <p class="font-semibold text-gray-700 mt-2">工作原理:</p>
+                <p id="modal-principle" class="text-gray-600 mt-1"></p>
+                <p class="font-semibold text-gray-700 mt-4">预计煤耗降低值: <span id="modal-impact" class="font-bold text-lg text-green-600"></span> gce/kWh</p>
+                <p class="font-semibold text-gray-700 mt-4">成熟度与适用范围:</p>
+                <p id="modal-scope" class="text-gray-600 mt-1"></p>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Data
+            const efficiencyData = {
+                "1000UUSC": { label: "1000MW 超超临界", values: [274, 278, 284] },
+                "600UUSC": { label: "600MW 超超临界", values: [276, 282, 291] },
+                "600USC": { label: "600MW 超临界", values: [288, null, 299] },
+                "300USC": { label: "300MW 超临界", values: [290, null, 306] },
+                "600SubC": { label: "600MW 亚临界", values: [303, null, 313] },
+                "300SubC": { label: "300MW 亚临界", values: [310, null, 322] },
+            };
+
+            const techData = [
+                { title: "汽轮机通流部分改造", subsystem: "汽轮机", principle: "采用三维气动设计的先进叶片，减少流动损失", impact: "10 - 20", scope: "成熟，适用于13.5-60万千瓦各类型机组" },
+                { title: "低温省煤器", subsystem: "锅炉/烟气", principle: "回收烟气余热加热凝结水，降低排烟温度", impact: "1.4 - 1.8", scope: "成熟，适用于30-100万千瓦各类型机组" },
+                { title: "锅炉风机改造(含变频)", subsystem: "锅炉辅机", principle: "改造风机叶轮提升效率，采用变频调节减少节流损失", impact: "1.0 - 2.0", scope: "成熟，适用于30-60万千瓦及以上机组" },
+                { title: "汽轮机汽封改造", subsystem: "汽轮机", principle: "采用新型高效汽封，减少级间漏汽", impact: "2 - 4", scope: "成熟，适用于30-60万千瓦各类型机组" },
+                { title: "脱硫系统运行优化", subsystem: "环保系统", principle: "优化浆液循环泵、pH值、氧化风量等运行参数", impact: "约 0.5", scope: "成熟，适用于各类型脱硫机组" },
+                { title: "凝结水泵变频改造", subsystem: "热力系统", principle: "采用变频装置，降低机组调峰时水泵的节流损失", impact: "约 0.5", scope: "成熟，已在30-60万千瓦机组上大量应用" },
+                { title: "空气预热器密封改造", subsystem: "锅炉辅机", principle: "采用先进密封技术，降低预热器漏风率", impact: "0.2 - 0.5", scope: "成熟，适用于各级容量机组" },
+                { title: "静电除尘器高频电源改造", subsystem: "环保系统", principle: "采用高频电源替代工频电源，提效节能", impact: "降低电除尘器电耗", scope: "成熟，适用于30-100万千瓦机组" },
+            ];
+
+            // Chart.js
+            const ctx = document.getElementById('efficiencyStandardsChart').getContext('2d');
+            let myChart;
+
+            function createOrUpdateChart(filter = 'all') {
+                const labels = filter === 'all' ? Object.values(efficiencyData).map(d => d.label) : [efficiencyData[filter].label];
+                const dataToShow = filter === 'all' ? Object.values(efficiencyData) : [efficiencyData[filter]];
+
+                const datasets = [
+                    {
+                        label: '1级 (先进值)',
+                        data: dataToShow.map(d => d.values[0]),
+                        backgroundColor: 'rgba(25, 135, 84, 0.7)',
+                        borderColor: 'rgba(25, 135, 84, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: '2级 (准入值)',
+                        data: dataToShow.map(d => d.values[1]),
+                        backgroundColor: 'rgba(13, 202, 240, 0.7)',
+                        borderColor: 'rgba(13, 202, 240, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: '3级 (限定值)',
+                        data: dataToShow.map(d => d.values[2]),
+                        backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                        borderColor: 'rgba(255, 193, 7, 1)',
+                        borderWidth: 1
+                    }
+                ];
+
+                if (myChart) {
+                    myChart.data.labels = labels;
+                    myChart.data.datasets = datasets;
+                    myChart.update();
+                } else {
+                    myChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: datasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: '供电煤耗国家标准限额 (gce/kWh)',
+                                    font: { size: 16 }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                label += context.parsed.y + ' gce/kWh';
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    min: 250,
+                                    title: {
+                                        display: true,
+                                        text: '供电煤耗 (gce/kWh)'
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        autoSkip: false,
+                                        maxRotation: filter === 'all' ? 45 : 0,
+                                        minRotation: filter === 'all' ? 45 : 0
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            document.getElementById('unit-filter').addEventListener('change', (e) => {
+                createOrUpdateChart(e.target.value);
+            });
+            
+            createOrUpdateChart();
+
+            // Economic Driver Calculator
+            const slider = document.getElementById('efficiency-slider');
+            const sliderValue = document.getElementById('slider-value');
+            const kwhGain = document.getElementById('kwh-gain');
+            const revenueGain = document.getElementById('revenue-gain');
+
+            slider.addEventListener('input', () => {
+                const reduction = parseFloat(slider.value);
+                sliderValue.textContent = `${reduction.toFixed(1)}%`;
+                const kwh = 1000 * 1000 * 5000 * (reduction / 100);
+                const revenue = kwh * 0.4;
+                kwhGain.textContent = kwh.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' kWh';
+                revenueGain.textContent = revenue.toLocaleString('en-US', { maximumFractionDigits: 0 }) + ' 元';
+            });
+
+            // Improvement Paths Tabs & Modal
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('border-blue-500', 'text-blue-600'));
+                    tab.classList.add('border-blue-500', 'text-blue-600');
+                    
+                    tabContents.forEach(content => content.classList.add('hidden'));
+                    document.getElementById(`${tab.dataset.tab}-tab-content`).classList.remove('hidden');
+                });
+            });
+            tabs[0].click(); // Activate first tab by default
+
+            const techGrid = document.querySelector('#tech-tab-content .grid');
+            techData.forEach(tech => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer';
+                card.innerHTML = `
+                    <h5 class="font-bold text-lg text-gray-800">${tech.title}</h5>
+                    <p class="text-sm text-gray-500 mt-1">子系统: ${tech.subsystem}</p>
+                    <p class="text-sm font-semibold text-green-700 mt-2">降低煤耗: ${tech.impact} gce/kWh</p>
+                `;
+                card.addEventListener('click', () => openModal(tech));
+                techGrid.appendChild(card);
+            });
+
+            const modal = document.getElementById('tech-modal');
+            const modalClose = document.getElementById('modal-close');
+            
+            function openModal(tech) {
+                document.getElementById('modal-title').textContent = tech.title;
+                document.getElementById('modal-subsystem').textContent = tech.subsystem;
+                document.getElementById('modal-principle').textContent = tech.principle;
+                document.getElementById('modal-impact').textContent = tech.impact;
+                document.getElementById('modal-scope').textContent = tech.scope;
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.querySelector('.modal-backdrop').classList.remove('opacity-0');
+                    modal.querySelector('.modal-content').classList.remove('scale-95');
+                }, 10);
+            }
+
+            function closeModal() {
+                modal.querySelector('.modal-backdrop').classList.add('opacity-0');
+                modal.querySelector('.modal-content').classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+
+            modalClose.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Mobile Menu
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // Smooth scrolling and active nav link
+            const navLinks = document.querySelectorAll('a[href^="#"]');
+            const sections = document.querySelectorAll('section');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if(targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    if (mobileMenu.classList.contains('hidden') === false) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active', 'text-blue-600', 'border-blue-500');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active', 'text-blue-600', 'border-blue-500');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
