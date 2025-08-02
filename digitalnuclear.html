@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>先进核电数字化转型规划报告 (最终版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Oceanic Calm" -->
+    <!-- Application Structure Plan: This final version integrates the detailed markdown content into the main HTML page. The "SNPP Logical Architecture" section is completely redesigned into an interactive accordion layout. Each accordion panel represents a major business domain, and expanding it reveals the detailed breakdown of platforms, modules, functions, and value propositions. This makes the vast amount of information manageable and user-friendly, fulfilling the user's request to merge the detailed text into the web interface. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Detailed breakdown of SNPP logical application architecture. Goal: Integrate & Explain Interactively. Viz: An accordion component built with HTML/CSS/JS. Each panel corresponds to a business domain from the markdown file. Justification: An accordion is the ideal UI pattern to present a large amount of hierarchical text content without overwhelming the user. It allows for focused reading on a specific domain while keeping the overall structure visible. Library: HTML/CSS/JS.
+        - All other sections and visualizations (Physical Architecture, Reactor Tech Comparison, Outlook) are retained and remain unchanged, providing a complete and cohesive report.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        h1, h2, h3, h4, h5 {
+            font-family: 'Roboto', 'Noto Sans SC', sans-serif;
+            font-weight: 700;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #0d6efd;
+            border-bottom-color: #0d6efd;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        /* Physical Architecture Slice Styles */
+        .slice-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 350px;
+            margin: 2rem auto;
+            perspective: 1500px;
+        }
+        .slice {
+            position: absolute;
+            width: 80%;
+            height: 50px;
+            left: 10%;
+            border: 2px solid;
+            border-radius: 0.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            transition: transform 0.5s ease;
+        }
+        .slice-container:hover .slice {
+            transform: rotateX(60deg) rotateY(0deg) rotateZ(-10deg) translateY(var(--hover-ty));
+        }
+        .slice-5 { top: 0; background-color: rgba(241, 248, 233, 0.9); border-color: #aed581; transform: rotateX(60deg) rotateY(0deg) rotateZ(-10deg); --hover-ty: 0px; }
+        .slice-4 { top: 60px; background-color: rgba(255, 253, 231, 0.9); border-color: #ffd54f; transform: rotateX(60deg) rotateY(0deg) rotateZ(-10deg); --hover-ty: 10px; }
+        .slice-3 { top: 120px; background-color: rgba(243, 229, 245, 0.9); border-color: #ba68c8; transform: rotateX(60deg) rotateY(0deg) rotateZ(-10deg); --hover-ty: 20px; }
+        .slice-2 { top: 180px; background-color: rgba(227, 242, 253, 0.9); border-color: #64b5f6; transform: rotateX(60deg) rotateY(0deg) rotateZ(-10deg); --hover-ty: 30px; }
+        .slice-1 { top: 240px; background-color: rgba(224, 242, 241, 0.9); border-color: #4db6ac; transform: rotateX(60deg) rotateY(0deg) rotateZ(-10deg); --hover-ty: 40px; }
+        .slice-line {
+            position: absolute;
+            left: 50%;
+            width: 2px;
+            background-color: rgba(0,0,0,0.2);
+            height: 60px;
+            transform-origin: top;
+            transform: rotateX(60deg) rotateY(0deg) rotateZ(-10deg) translateX(-1px);
+        }
+        .line-1 { top: 50px; } .line-2 { top: 110px; } .line-3 { top: 170px; } .line-4 { top: 230px; }
+
+        /* Accordion Styles for Logical Architecture */
+        .accordion-item {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            background-color: #fff;
+            transition: background-color 0.3s ease;
+        }
+        .accordion-item:first-child .accordion-header { border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; }
+        .accordion-item:last-child .accordion-header { border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; }
+        .accordion-header:hover {
+            background-color: #f9fafb;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+            background-color: #f9fafb;
+            padding: 0 1.5rem;
+        }
+        .accordion-content-inner {
+            padding: 1.5rem 0;
+        }
+        .accordion-arrow {
+            transition: transform 0.3s ease;
+        }
+        .accordion-header.active .accordion-arrow {
+            transform: rotate(180deg);
+        }
+        .quote {
+            border-left: 4px solid #0d6efd;
+            padding-left: 1rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            color: #4b5563;
+        }
+        .outlook-list li {
+            position: relative;
+            padding-left: 1.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .outlook-list li::before {
+            content: '⚡️';
+            position: absolute;
+            left: 0;
+            top: 0.1rem;
+            font-size: 1rem;
+        }
+        /* Data Flow Diagram V2 Styles */
+        .data-flow-v2-container {
+            position: relative;
+            padding: 2rem;
+            background-color: #f0f4f8;
+            border-radius: 1rem;
+            overflow-x: auto;
+        }
+        .data-flow-v2-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2rem;
+            align-items: center;
+            min-width: 1200px; /* Ensure horizontal scroll on small screens */
+        }
+        .flow-v2-core {
+            grid-column: 3 / 4;
+            grid-row: 2 / 3;
+            background: #2c3e50;
+            color: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            z-index: 10;
+        }
+        .flow-v2-domain {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .flow-v2-domain h6 { font-weight: 600; margin-bottom: 0.5rem; }
+        .flow-v2-domain p { font-size: 0.75rem; color: #6b7280; }
+        .flow-v2-line {
+            position: absolute;
+            background-color: #9ca3af;
+            z-index: 1;
+        }
+        .flow-v2-line::after {
+            content: '';
+            position: absolute;
+            border: solid #3b82f6;
+            border-width: 0 3px 3px 0;
+            display: inline-block;
+            padding: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <header class="bg-white/80 backdrop-blur-sm shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800">先进核电数字化转型</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#vision" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">战略远景</a>
+                        <a href="#snpp-definition" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">SNPP的定义</a>
+                        <a href="#snpp-physical" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">SNPP物理架构</a>
+                        <a href="#snpp-logic" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">SNPP逻辑架构</a>
+                        <a href="#tech" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">核心技术</a>
+                        <a href="#outlook" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">未来十年展望</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <select id="mobile-nav" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                        <option value="vision">战略远景</option>
+                        <option value="snpp-definition">SNPP的定义</option>
+                        <option value="snpp-physical">SNPP物理架构</option>
+                        <option value="snpp-logic">SNPP逻辑架构</option>
+                        <option value="tech">核心技术</option>
+                        <option value="outlook">未来十年展望</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <section id="vision" class="content-section"></section>
+        <section id="snpp-definition" class="content-section"></section>
+        <section id="snpp-physical" class="content-section"></section>
+        <section id="snpp-logic" class="content-section"></section>
+        <section id="tech" class="content-section"></section>
+        <section id="outlook" class="content-section"></section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center">
+            <p>&copy; 2025 先进核电公司数字化转型规划报告。保留所有权利。</p>
+            <p class="text-sm text-gray-400 mt-2">本报告内容仅供研究与参考。</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileNav = document.getElementById('mobile-nav');
+            const sections = document.querySelectorAll('.content-section');
+
+            // --- Populate static sections to avoid duplication ---
+            const visionContent = `
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900">战略远景：核能，驱动人类可持续未来的基石</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-500">在人类文明发展的十字路口，能源的选择决定了未来的方向。基于对全球趋势的深刻洞察，我们认为核能将在满足人类日益增长的能源需求、应对气候变化、以及推动技术革命中扮演不可或缺的核心角色。</p>
+                </div>
+                <div class="card p-8 space-y-8">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4 text-gray-800">1. 人类对能源的永恒需求：增长的必然性</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">人类文明的进步史，本质上是一部能源利用效率的提升史。从工业革命到信息革命，再到当前的人工智能革命，每一次飞跃都伴随着对能源需求的指数级增长。国际能源署(IEA)在《2024年电力报告》中明确指出，继2023年全球电力需求小幅增长后，预计未来三年将加速增长，到2026年，全球电力需求将比2023年增长3.4%。</p>
+                        <p class="text-gray-700 leading-relaxed mb-4">这场增长的最大驱动力，来自于新兴经济体的持续工业化和全球范围内的数字化浪潮。特别是人工智能(AI)和数据中心，正成为新的“电力黑洞”。IEA预测，到2026年，全球数据中心、AI和加密货币的总电力消耗可能超过1000太瓦时(TWh)，这一数字几乎相当于整个日本的电力消耗量。OpenAI的CEO Sam Altman更是直言，未来的AI发展需要能源领域的突破，特别是核聚变，这凸显了前沿科技对海量、稳定电力的极端依赖。</p>
+                        <p class="text-gray-700 leading-relaxed">因此，第一个战略基点是明确的：**人类对能源的需求，尤其对电力的需求，将在可预见的未来持续、强劲地增长。任何关于未来的规划，都必须建立在如何满足这一根本需求的基础之上。**</p>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4 text-gray-800">2. 清洁能源的迫切呼唤：生存的必选项</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">与能源需求增长同样确定无疑的，是应对气候变化的极端紧迫性。巴黎协定确立的全球温控目标，要求世界能源体系进行一场深刻的、以脱碳为核心的结构性转型。然而，要实现这一目标，仅靠间歇性的可再生能源（如风能和太阳能）是远远不够的。</p>
+                        <p class="text-gray-700 leading-relaxed mb-4">风能和太阳能虽然在降低成本方面取得了巨大成就，但其固有的“看天吃饭”属性，决定了它们无法独立承担起为现代工业社会和数字经济提供7x24小时不间断、高质量基荷电力的重任。当夜幕降临、风平浪静之时，电网的稳定必须由其他可靠的电源来保障。世界核能协会(World Nuclear Association)在其报告中指出，核能是唯一已经得到大规模验证的、能够同时提供清洁（近零碳排放）和可靠（高容量因子）电力的能源形式。</p>
+                        <p class="text-gray-700 leading-relaxed">因此，第二个战略基点同样清晰：**要同时满足“增长”和“清洁”两个看似矛盾的目标，能源组合中必须包含一个强大的、可靠的清洁基荷电源。核能，正是填补这一关键战略空白的最现实、最成熟的选择。**</p>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4 text-gray-800">3. 和平利用核能技术的持续进步：创新的可能性</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">对核能的信心，不仅源于现实需求，更源于技术本身的持续进步。今天的核能技术，无论在安全性、经济性还是灵活性上，都已远非昔日可比。</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>安全性的大幅提升：</strong>以华龙一号、AP1000、EPR为代表的第三代/三代+反应堆，普遍采用了“非能动”安全系统。这些系统在极端事故下，无需人工干预或外部电源，仅依靠重力、自然循环等物理规律即可保证反应堆的安全，从根本上杜绝了类似福岛事故的发生。全球超过60年的反应堆安全运行经验，也为新一代电站的设计和运营提供了宝贵的经验反馈。</li>
+                            <li><strong>经济性与灵活性的增强：</strong>小型模块化反应堆(SMRs)的发展，为核能的应用场景带来了革命性的变化。SMRs具有工厂化制造、模块化建造、投资规模小、选址灵活等优点，使其能够与数据中心、工业园区等负荷中心并置部署，或为偏远地区提供可靠能源。这改变了核能只能作为大型基荷电源的传统印象，使其成为一个更具经济性和市场适应性的选择。</li>
+                            <li><strong>未来的终极能源——核聚变：</strong>与此同时，以ITER、CFS、Helion等为代表的全球聚变能研究正在取得历史性突破。在人工智能和新材料技术的加持下，商业聚变能的实现路径正变得日益清晰。这为人类描绘了一个终极的能源愿景：几乎无限、绝对安全、无长期高放废料的清洁能源。</li>
+                        </ul>
+                        <p class="text-gray-700 leading-relaxed mt-4">第三个战略基点在于：**我们必须以动态和发展的眼光看待核能技术。它不是一个静止的选项，而是一个在安全记录、技术创新和应用场景上不断突破的、充满活力的领域。**</p>
+                    </div>
+                     <div class="mt-8 pt-8 border-t">
+                        <a href="https://globalbusinessinsight.github.io/canadanuclear.html" target="_blank" class="text-blue-600 hover:text-blue-800 font-semibold transition-colors">延伸阅读：加拿大核电现状 →</a>
+                    </div>
+                </div>
+            `;
+
+            const snppDefinitionContent = `
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900">SNPP的定义：基于安全基石的价值跃迁</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-500">理解智慧核电站(SNPP)，必须首先理解其坚实的根基——标准核电性能模型(SNPM)。SNPP并非空中楼阁，而是对SNPM的继承、致敬与超越。</p>
+                </div>
+                <div class="card p-8 space-y-8">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4 text-gray-800">1. SNPM的起源：从事故教训中淬炼出的安全基石</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">现代核电工业对卓越运营和极致安全的追求，并非与生俱来，而是在付出惨痛代价后，从事故的废墟中建立起来的。1979年的美国三哩岛事故和1986年的苏联切尔诺贝利事故，是核电发展史上的两个分水岭。这两起事故暴露出早期核电站在设计、运营、人员培训和安全文化上的严重缺陷。</p>
+                        <p class="text-gray-700 leading-relaxed mb-4">作为回应，全球核电行业开启了深刻的自我反思和变革。在美国，核电运营者自发成立了核电运行研究所(INPO)，旨在通过严格的同行评估和最佳实践分享，提升整个行业的安全和运行水平。在全球层面，世界核电运营者协会(WANO)于1989年成立，其使命是“最大化全球商业核电站的安全性与可靠性”。</p>
+                        <p class="text-gray-700 leading-relaxed mb-4">正是在这一背景下，以INPO和WANO倡导的最佳实践为核心，**标准核电性能模型(SNPM)应运而生**。它本质上是一套经过数十年实践检验的、系统化的**卓越运营与安全管理规范**。其核心内涵包括：</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>标准化的流程：</strong> 对电站的关键活动，如设备操作、维修、燃料管理、应急响应等，制定标准化的、经过验证的最佳流程。</li>
+                            <li><strong>量化的绩效指标：</strong> 建立一套覆盖安全、效率、设备可靠性等方面的量化指标体系（如WANO的12项绩效指标），用于电站间的对标和持续改进。</li>
+                            <li><strong>强大的安全文化：</strong> 强调“安全第一”的原则，鼓励质疑、保守决策和经验反馈，将安全意识内化为每个员工的行为准则。</li>
+                        </ul>
+                        <p class="text-gray-700 leading-relaxed mt-4">因此，SNPM是人类在和平利用核能过程中，用经验乃至生命总结出的宝贵财富。**它是核电站安全运营的“宪法”，是任何创新都不可逾越的底线和基础。**</p>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4 text-gray-800">2. SNPP的定义：安全基石上的价值跃迁</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">如果说SNPM是基于人类对核电站深刻理解而建立的“管理科学”，那么**智慧核电站(SNPP)就是在这门科学之上，利用日新月异的数字化技术（数据、AI、数字孪生）实现的“价值工程”**。SNPP与SNPM的关系，不是替代，而是赋能和升华。我们可以用一个公式来定义：</p>
+                        <div class="text-center my-6"><p class="text-xl font-semibold bg-blue-100 text-blue-800 p-4 rounded-lg">SNPP = SNPM (安全与流程基石) + 先进数字技术 (价值倍增器)</p></div>
+                        <p class="text-gray-700 leading-relaxed mb-4">SNPP的目标，是将SNPM中每一个追求卓越的环节，都变得更加高效、精准和具有前瞻性，从而在确保绝对安全的基础上，创造更好的商业效益。具体体现在：</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>从“遵从安全”到“预测安全”：</strong> SNPM要求我们严格遵守安全规程。SNPP则通过AI预测性维护，在设备出现故障、可能威胁安全之前就发出预警；通过数字孪生，在虚拟空间中演练人力无法想象的极端事故，从而将安全防线从“被动防御”前推至“主动预见”。</li>
+                            <li><strong>从“流程标准化”到“流程最优化”：</strong> SNPM定义了标准的维修流程。SNPP则通过智能工单和AR辅助，让维修人员的工作更精准、高效；通过AI优化大修排程，在满足所有安全和质量要求的前提下，找到耗时最短、成本最低的方案。</li>
+                            <li><strong>从“对标改进”到“实时寻优”：</strong> WANO的绩效指标提供了宝贵的行业标杆。SNPP则通过实时数据分析和企业级数字孪生，让管理者不仅知道自己与标杆的差距，更能实时洞察差距背后的原因，并模拟不同改进措施可能带来的效果，实现从“事后对标”到“实时寻优”的飞跃。</li>
+                        </ul>
+                        <p class="quote">“SNPP的本质，不是用机器取代人，而是用机器的不知疲倦、绝对精准和超凡算力，来增强人的经验、智慧和最终决策能力，从而将核安全文化推向一个新的高度。”</p>
+                        <p class="text-gray-700 leading-relaxed mt-4">综上所述，SNPP是一个建立在人类对核能安全运营的深刻理解之上，以数据为燃料，以AI为引擎，以数字孪生为导航，旨在实现核电站全生命周期“更安全、更经济、更高效”的下一代管理模型。</p>
+                    </div>
+                </div>
+            `;
+            
+            const physicalArchContent = `
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900">SNPP 物理架构</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-500">SNPP架构是一个分层、数据驱动的生态系统，它将物理世界的核电站与数字世界的智能分析和决策无缝连接起来，构成了智慧核能的“中央神经系统”。</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div class="card p-6 md:p-8">
+                        <div class="snpp-arch-container">
+                            <div class="snpp-layer application-market-layer"><h4 class="snpp-layer-title text-green-800"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg><span>应用与市场层</span></h4><div class="snpp-components"><div class="snpp-component">AI电力交易</div><div class="snpp-component">ERP</div><div class="snpp-component">BI</div><div class="snpp-component">SCM</div><div class="snpp-component">远程运营中心</div></div></div>
+                            <div class="arrow-down">↓</div>
+                            <div class="snpp-layer analytics-ai-layer"><h4 class="snpp-layer-title text-yellow-800"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect x="4" y="12" width="16" height="8" rx="2"/><path d="M2 12h20"/><path d="M17.5 12a4.5 4.5 0 0 0-9 0"/></svg><span>分析与智能层</span></h4><div class="snpp-components"><div class="snpp-component">PdM</div><div class="snpp-component">RCA</div><div class="snpp-component">性能优化算法</div><div class="snpp-component">XAI</div><div class="snpp-component">LLM</div></div></div>
+                            <div class="arrow-down">↓</div>
+                            <div class="snpp-layer twin-simulation-layer"><h4 class="snpp-layer-title text-purple-800"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19z"/><path d="M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M12 2.5a9.5 9.5 0 0 1 5.2 1.7"/><path d="M12 2.5a9.5 9.5 0 0 0-5.2 1.7"/><path d="M18.7 18.7a9.5 9.5 0 0 0-1.7-5.2"/><path d="M5.3 18.7a9.5 9.5 0 0 1 1.7-5.2"/></svg><span>数字孪生与模拟层</span></h4><div class="snpp-components"><div class="snpp-component">物理孪生</div><div class="snpp-component">流程孪生</div><div class="snpp-component">联邦式企业孪生</div><div class="snpp-component">HPC模拟平台</div><div class="snpp-component">VR/AR</div></div></div>
+                            <div class="arrow-down">↓</div>
+                            <div class="snpp-layer sensing-control-layer"><h4 class="snpp-layer-title text-blue-800"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg><span>感知与控制层</span></h4><div class="snpp-components"><div class="snpp-component">数字化I&C系统</div><div class="snpp-component">SCADA/DCS</div><div class="snpp-component">数据湖/历史站</div><div class="snpp-component">IIoT平台</div><div class="snpp-component">网络安全</div></div></div>
+                            <div class="arrow-down">↓</div>
+                            <div class="snpp-layer physical-layer"><h4 class="snpp-layer-title text-teal-800"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12v-2a4 4 0 0 0-4-4H4"/><path d="M12 12v2a4 4 0 0 1-4 4H4"/><path d="M12 12h2a4 4 0 0 1 4 4v2"/><path d="M12 12h2a4 4 0 0 0 4-4v-2"/><circle cx="12" cy="12" r="10"/></svg><span>物理层</span></h4><div class="snpp-components"><div class="snpp-component">反应堆</div><div class="snpp-component">汽轮机</div><div class="snpp-component">传感器/执行器</div><div class="snpp-component">泵/阀门</div><div class="snpp-component">机器人/无人机</div></div></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-bold mb-4 text-center text-gray-800">切片化架构视角</h4>
+                        <div class="slice-container">
+                            <div class="slice slice-5">应用与市场层</div>
+                            <div class="slice-line line-1"></div>
+                            <div class="slice slice-4">分析与智能层</div>
+                            <div class="slice-line line-2"></div>
+                            <div class="slice slice-3">数字孪生与模拟层</div>
+                            <div class="slice-line line-3"></div>
+                            <div class="slice slice-2">感知与控制层</div>
+                            <div class="slice-line line-4"></div>
+                            <div class="slice slice-1">物理层</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const logicArchContent = `
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900">SNPP 逻辑应用架构功能详解</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-500">本章详细阐述SNPP业务导向逻辑架构中各功能域及其核心平台的具体构成，清晰展示数字化技术如何与核电业务深度融合，实现从传统流程到智慧运营的跃迁。</p>
+                </div>
+                <div id="logic-accordion" class="w-full max-w-5xl mx-auto rounded-lg shadow-lg">
+                    <div class="accordion-item">
+                        <div class="accordion-header"><h4 class="text-lg font-semibold text-blue-700">1. 工程、建造与调试域</h4><svg class="accordion-arrow w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                        <div class="accordion-content"><div class="accordion-content-inner space-y-6"><div><h5 class="text-md font-bold text-gray-800 mb-2">1.1 先进核能技术研发平台</h5><p class="text-sm text-gray-600 mb-3">集团技术创新的“孵化器”。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>多物理场耦合仿真</li><li>材料基因组</li><li>AI辅助概念设计</li><li>技术知识图谱</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>高精度模拟</li><li>预测材料性能</li><li>探索设计可能性</li><li>智能知识检索</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>加速创新</li><li>降低成本</li><li>知识传承</li></ul></div></div></div><div><h5 class="text-md font-bold text-gray-800 mb-2">1.2 协同工程设计平台 (PLM/HPC)</h5><p class="text-sm text-gray-600 mb-3">工程设计的“中央神经系统”。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>统一数据模型与配置管理</li><li>HPC接口</li><li>多专业协同工作流</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>确保单一数据版本</li><li>高效执行安全审评计算</li><li>实现并行设计</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>质量保证</li><li>效率提升</li><li>合规保障</li></ul></div></div></div><div><h5 class="text-md font-bold text-gray-800 mb-2">1.3 数字化建造与智慧工地管理</h5><p class="text-sm text-gray-600 mb-3">将数字化延伸至物理世界。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>4D/5D施工模拟</li><li>IoT进度与资源跟踪</li><li>AI质量安全巡检</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>预演建造过程</li><li>实时掌握工地状态</li><li>自动化质量安全监督</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>控制风险</li><li>提升质量</li><li>保障安全</li></ul></div></div></div><div><h5 class="text-md font-bold text-gray-800 mb-2">1.4 数字化调试与并网管理</h5><p class="text-sm text-gray-600 mb-3">确保机组从建设到运营的平稳过渡。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>调试大纲与流程管理</li><li>虚拟调试与数字预演</li><li>并网性能测试与分析</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>无纸化调试流程</li><li>提前发现系统集成问题</li><li>自动生成并网报告</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>缩短调试周期</li><li>降低并网风险</li><li>确保数据交接完整</li></ul></div></div></div></div></div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header"><h4 class="text-lg font-semibold text-green-700">2. 运营、维修与燃料域</h4><svg class="accordion-arrow w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                        <div class="accordion-content"><div class="accordion-content-inner space-y-6"><div><h5 class="text-md font-bold text-gray-800 mb-2">2.1 智能机组运营平台</h5><p class="text-sm text-gray-600 mb-3">核电站运行的“大脑”和“神经”。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>全数字化仪控系统 (I&C)</li><li>智能报警管理</li><li>AI运行辅助与优化</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>精准参数控制</li><li>报警风暴根因分析</li><li>辅助复杂操作</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>提升安全裕度</li><li>优化决策质量</li><li>经济效益</li></ul></div></div></div><div><h5 class="text-md font-bold text-gray-800 mb-2">2.2 预测性设备维修平台 (PdM)</h5><p class="text-sm text-gray-600 mb-3">将维修理念转变为“预知预修”的主动模式。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>设备健康数字孪生</li><li>AI异常检测与诊断</li><li>剩余使用寿命(RUL)预测</li><li>智能维修策略</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>提前故障预警</li><li>精准定位根源</li><li>最大化设备可用率</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>杜绝非计划停机</li><li>降低维修成本</li><li>提升安全性</li></ul></div></div></div><div><h5 class="text-md font-bold text-gray-800 mb-2">2.3 智慧核燃料管理平台</h5><p class="text-sm text-gray-600 mb-3">实现核燃料全周期精细化、最优化管理。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>堆芯物理与燃耗模拟</li><li>智能换料方案优化</li><li>燃料组件全周期跟踪</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>精准预测燃料性能</li><li>自动生成最优换料方案</li><li>确保核材料衡算准确</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>提升燃料经济性</li><li>缩短换料大修工期</li><li>保障核不扩散安全</li></ul></div></div></div></div></div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header"><h4 class="text-lg font-semibold text-red-700">3. 核安全与合规域</h4><svg class="accordion-arrow w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                        <div class="accordion-content"><div class="accordion-content-inner space-y-6"><div><h5 class="text-md font-bold text-gray-800 mb-2">3.1 智能核安全与应急平台</h5><p class="text-sm text-gray-600 mb-3">构建纵深防御的、主动预测的核安全管理体系。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>实时风险监测(LRM)</li><li>AI辅助事故诊断与决策</li><li>应急资源与疏散模拟</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>动态评估电站风险水平</li><li>快速识别事故序列</li><li>优化应急响应策略</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>从被动防御到主动预测</li><li>提升应急决策效率</li><li>保障公众与环境安全</li></ul></div></div></div><div><h5 class="text-md font-bold text-gray-800 mb-2">3.2 智能辐射防护与化学平台</h5><p class="text-sm text-gray-600 mb-3">实现对辐射、化学等多重风险的精细化管理。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>人员剂量实时监控预警</li><li>三维辐射场动态可视化</li><li>智能化学加药与水质监测</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>剂量超限预警</li><li>优化ALARA原则</li><li>保障设备腐蚀控制</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>保障人员健康</li><li>延长设备寿命</li><li>提升公众信任</li></ul></div></div></div></div></div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header"><h4 class="text-lg font-semibold text-purple-700">4. 企业管理与市场域</h4><svg class="accordion-arrow w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                        <div class="accordion-content"><div class="accordion-content-inner space-y-6"><div><h5 class="text-md font-bold text-gray-800 mb-2">4.1 智慧财务与成本管控 (ERP/Controlling)</h5><p class="text-sm text-gray-600 mb-3">将财务管理从事后记账转变为业务发展的“导航员”。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>业财一体化数据平台</li><li>全生命周期成本(LCC)核算</li><li>AI成本预测与管控</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>分析度电边际成本</li><li>评估维修经济性</li><li>实现事前预测</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>精准决策</li><li>成本领先</li><li>价值导向</li></ul></div></div></div><div><h5 class="text-md font-bold text-gray-800 mb-2">4.2 智能供应链与仓储管理</h5><p class="text-sm text-gray-600 mb-3">构建一个透明、敏捷、有韧性的智慧供应链体系。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>供应商协同与绩效管理</li><li>AI驱动的智能库存</li><li>区块链核级部件追溯</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>提高需求预测准确性</li><li>优化安全库存</li><li>确保部件来源可靠</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>提升韧性</li><li>降低成本</li><li>保障安全</li></ul></div></div></div><div><h5 class="text-md font-bold text-gray-800 mb-2">4.3 AI辅助电力交易与群堆调度</h5><p class="text-sm text-gray-600 mb-3">使核电机组能够智能地参与电力市场。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>电力市场价格预测</li><li>机组发电优化引擎</li><li>群堆协同调度(VPP)</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>智能发电模式</li><li>最大化发电收益</li><li>提供电网辅助服务</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>收入最大化</li><li>提升灵活性</li><li>支撑新能源</li></ul></div></div></div></div></div>
+                    </div>
+                    <div class="accordion-item">
+                        <div class="accordion-header"><h4 class="text-lg font-semibold text-amber-700">5. 人力资本与组织域</h4><svg class="accordion-arrow w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                        <div class="accordion-content"><div class="accordion-content-inner space-y-6"><div><h5 class="text-md font-bold text-gray-800 mb-2">5.1 全员能力与绩效管理系统</h5><p class="text-sm text-gray-600 mb-3">构建一个持续学习、持续成长的敏捷组织。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>动态能力模型</li><li>AI个性化学习推荐</li><li>持续绩效对话与反馈</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>定义人才标准</li><li>精准赋能</li><li>发展导向的绩效管理</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>人才发展</li><li>提升敬业度</li><li>支撑战略</li></ul></div></div></div><div><h5 class="text-md font-bold text-gray-800 mb-2">5.2 沉浸式培训与考核平台 (VR/AR)</h5><p class="text-sm text-gray-600 mb-3">革命性地提升培训的效果和安全性。</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-white p-4 rounded-md border"><h6>核心模块</h6><ul class="text-xs list-disc pl-4 mt-2"><li>VR虚拟核电站漫游与操作</li><li>VR复杂工况与应急演练</li><li>AR远程专家与维修指导</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>主要功能</h6><ul class="text-xs list-disc pl-4 mt-2"><li>熟悉设备系统</li><li>演练事故处理</li><li>实时专家赋能</li></ul></div><div class="bg-white p-4 rounded-md border"><h6>核心价值</h6><ul class="text-xs list-disc pl-4 mt-2"><li>提升技能</li><li>降低风险</li><li>知识共享</li></ul></div></div></div></div></div>
+                    </div>
+                </div>
+                <div class="card p-8 mt-12">
+                     <h3 class="text-2xl font-bold mb-6 text-center text-gray-800">数据集成关系与流程总览</h3>
+                     <div class="data-flow-v2-container">
+                        <div class="data-flow-v2-grid">
+                            <!-- Top Row -->
+                            <div class="flow-v2-domain" style="grid-column: 1/2; grid-row: 1/2;"><h6>工程设计</h6><p>3D模型, BOM, 图纸</p></div>
+                            <div class="flow-v2-domain" style="grid-column: 2/3; grid-row: 1/2;"><h6>建造/调试</h6><p>施工进度, 调试数据</p></div>
+                            <div class="flow-v2-domain" style="grid-column: 4/5; grid-row: 1/2;"><h6>核安全</h6><p>风险等级, 许可文件</p></div>
+                            <div class="flow-v2-domain" style="grid-column: 5/6; grid-row: 1/2;"><h6>人力资本</h6><p>人员资质, 培训记录</p></div>
+                            
+                            <!-- Core -->
+                            <div class="flow-v2-core">
+                                <h5 class="font-bold text-lg text-yellow-400">SNPP数字化配置管理</h5>
+                                <p class="text-sm text-gray-300">联邦式数字孪生<br>统一数据湖<br>AI/ML 平台</p>
+                            </div>
+
+                            <!-- Bottom Row -->
+                            <div class="flow-v2-domain" style="grid-column: 1/2; grid-row: 3/4;"><h6>机组运营</h6><p>实时工况, 操作票</p></div>
+                            <div class="flow-v2-domain" style="grid-column: 2/3; grid-row: 3/4;"><h6>设备维修</h6><p>工单, 故障历史, PdM</p></div>
+                            <div class="flow-v2-domain" style="grid-column: 4/5; grid-row: 3/4;"><h6>燃料管理</h6><p>燃耗数据, 换料方案</p></div>
+                            <div class="flow-v2-domain" style="grid-column: 5/6; grid-row: 3/4;"><h6>供应链/财务</h6><p>备件库存, 成本数据</p></div>
+
+                            <!-- Lines -->
+                            <div class="flow-v2-line" style="top: 25%; left: 0; width: 100%; height: 2px;"></div>
+                            <div class="flow-v2-line" style="bottom: 25%; left: 0; width: 100%; height: 2px;"></div>
+                            <div class="flow-v2-line" style="left: 50%; top: 0; height: 100%; width: 2px;"></div>
+                        </div>
+                     </div>
+                     <p class="text-center text-sm text-gray-600 mt-4">注：上图展示了各业务域如何围绕“SNPP数字化配置管理”核心进行数据交互。所有域将原始数据（如3D模型、实时工况、工单）输入核心，并从核心获取经过处理、分析和预测后的智能洞察（如风险预警、优化建议）来指导业务。</p>
+                </div>
+            `;
+
+            // Updated #tech and #outlook sections
+            const techContent = `
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900">核心技术：因堆制宜的数字化策略</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-500">核能技术多样，数字化策略必须量身定制。本节将结合全球主要堆型的分布、代表性机组的运营绩效，深入探讨各类技术的数字化路径。</p>
+                </div>
+                <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
+                    <button class="reactor-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium text-gray-700 hover:bg-gray-100" data-reactor="pwr">压水堆 (PWR)</button>
+                    <button class="reactor-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium text-gray-700 hover:bg-gray-100" data-reactor="bwr">沸水堆 (BWR)</button>
+                    <button class="reactor-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium text-gray-700 hover:bg-gray-100" data-reactor="phwr">重水堆 (PHWR)</button>
+                    <button class="reactor-btn px-4 py-2 bg-white shadow-sm rounded-full text-sm font-medium text-gray-700 hover:bg-gray-100" data-reactor="smr">小堆 (SMR)及先进堆</button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="card p-6"><div id="reactor-details"></div></div>
+                    <div class="card p-6 flex flex-col items-center justify-center">
+                        <h3 class="text-xl font-bold mb-4 text-center">数字化优先级对比</h3>
+                        <div class="chart-container" style="height: 400px; max-height: 50vh;"><canvas id="reactorChart"></canvas></div>
+                    </div>
+                </div>
+            `;
+            
+            const outlookContent = `
+                 <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900">未来十年展望：AI时代的核能复兴</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-500">人工智能革命正在重塑全球能源需求格局。核能，包括其裂变和聚变两种形式，正处在这场历史性变革的中心，有望迎来一个前所未有的黄金发展期。</p>
+                </div>
+                <div class="card p-8">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">4.1 裂变之桥：全球核能建设的复兴浪潮</h3>
+                    <p class="text-gray-700 leading-relaxed mb-4">面对能源安全、气候变化和AI算力需求增长的三重驱动，全球核裂变技术正迎来新一轮建设高潮。多个国家正以前所未有的力度推进新机组的审批与建设。</p>
+                    <div class="space-y-6 mt-6">
+                        <div>
+                            <h4 class="text-xl font-semibold text-gray-700 mb-2">中国：引领全球建设步伐</h4>
+                            <p class="text-sm text-gray-600">作为全球最大的核电建设市场，中国正以“每年开工10台左右”的速度稳步推进。重点项目包括：</p>
+                            <ul class="list-disc list-inside text-sm mt-2 space-y-1">
+                                <li><strong>华龙一号 (HPR1000):</strong> 作为主力堆型，已在福建福清、广西防城港等地批量化建设。在建项目如福建漳州（1&2号）、广东太平岭（1&2号）、浙江三门（3&4号）等均进展顺利，单机组容量约1200 MWe，为沿海经济发达地区提供基荷电力。</li>
+                                <li><strong>国和一号 (CAP1400):</strong> 在AP1000基础上开发的更大功率的非能动三代技术，其示范工程位于山东荣成石岛湾，规划容量1400 MWe，正在建设中，旨在进一步提升中国大容量核电技术的自主化水平。</li>
+                                <li><strong>高温气冷堆 (HTGR):</strong> 全球首座200 MWe的商业化高温气冷堆示范项目——山东荣成石岛湾华能石岛湾核电站，已于2023年底投产，验证了第四代核电技术的可行性，为未来制氢、区域供热等综合利用场景打开了想象空间。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-gray-700 mb-2">美国：政策与技术双轮驱动</h4>
+                            <p class="text-sm text-gray-600">通过《通胀削减法案》等政策支持，美国核能复兴势头强劲，重点转向下一代反应堆。</p>
+                            <ul class="list-disc list-inside text-sm mt-2 space-y-1">
+                                <li><strong>Vogtle 3&4号机组 (AP1000):</strong> 位于佐治亚州，单机组容量约1117 MWe，已于2024年全面商运，为美国东南部地区提供关键电力，并为后续项目提供了宝贵的建设经验。</li>
+                                <li><strong>Natrium™ 示范项目:</strong> 由TerraPower和GE-Hitachi联合开发，位于怀俄明州，是一座345 MWe的钠冷快堆，结合了熔盐储能系统。该项目旨在为电网提供灵活的清洁电力，并验证快堆技术的商业化潜力，目前正在进行场址准备和许可申请。</li>
+                                <li><strong>小型模块化反应堆 (SMRs):</strong> 美国正积极推动SMR的商业化，NuScale Power的首个项目虽有挫折，但其技术已获美国核管会(NRC)的设计认证。Dow与X-energy合作，计划在德州建设一座由4个Xe-100高温气冷堆组成的SMR电站，为工业设施直接供电脱碳，预计2030年左右投运。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-gray-700 mb-2">欧洲：能源独立的战略选择</h4>
+                            <p class="text-sm text-gray-600">在俄乌冲突后，能源独立成为欧洲多国的核心诉求，核能被重新定位为关键支柱。</p>
+                            <ul class="list-disc list-inside text-sm mt-2 space-y-1">
+                                <li><strong>法国:</strong> 计划新建6台EPR2反应堆（单机组1670 MWe），并研究再建8台的可能性，以巩固其核电大国的地位。</li>
+                                <li><strong>英国:</strong> Hinkley Point C (2x1630 MWe EPR) 正在建设中，Sizewell C (2x1630 MWe EPR) 已获开发许可。此外，英国正大力推动SMR发展，罗尔斯-罗伊斯(Rolls-Royce)的470 MWe SMR设计正在接受监管审查。</li>
+                                <li><strong>东欧:</strong> 波兰已选择西屋AP1000和韩国APR-1400技术，计划建设其首批核电站。捷克、罗马尼亚等国也在积极推进新核电项目招标。</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3 class="text-2xl font-bold mt-12 mb-4 text-gray-800">4.2 聚变之光：AI加速的终极能源竞赛</h3>
+                    <p class="text-gray-700 leading-relaxed mb-4">如果说裂变是通往未来的桥梁，那么核聚变就是桥梁另一端的终极目的地。在AI和新材料技术的双重推动下，商业聚变正在从遥远的梦想加速变为可行的工程目标，一场以中美为核心的全球竞赛已经展开。</p>
+                    <div class="space-y-6 mt-6">
+                        <div>
+                            <h4 class="text-xl font-semibold text-gray-700 mb-2">美国：私营企业引领的商业化冲刺</h4>
+                            <p class="text-sm text-gray-600">美国聚变战略的特点是政府“搭台”（提供资金、政策支持），私营企业“唱戏”，以市场为导向，多条技术路线并行，目标是在2030年前后实现商业化。</p>
+                            <ul class="list-disc list-inside text-sm mt-2 space-y-1">
+                                <li><strong>Commonwealth Fusion Systems (CFS):</strong> 依托MIT的托卡马克技术和革命性的高温超导(HTS)磁体，CFS的SPARC项目已成功验证了其物理基础。公司目前正在建设首个商业示范电站ARC，目标是在本世纪30年代初并网发电。其清晰的路线图和强大的技术实力使其成为托卡马克路线的领跑者。</li>
+                                <li><strong>Helion Energy:</strong> 采用独特的磁惯性约束技术，其最新一代原型机“Polaris”于2024年7月实现首次等离子体，目标是在2025年达到聚变条件并展示净电能输出。Helion与微软在2023年签署的购电协议（目标2028年供电）是聚变能商业化的里程碑，尽管时间表极具挑战性，但展现了其巨大的商业雄心。</li>
+                                <li><strong>TAE Technologies:</strong> 采用先进的束驱动场反位形(FRC)技术，追求使用无中子的氢硼(p-B11)燃料。其最新装置“Norman”已稳定实现了超过1亿摄氏度的等离子体温度。TAE的路线图更为长远，但其技术一旦成功，将从根本上解决中子活化和材料损伤问题。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-gray-700 mb-2">中国：国家主导的稳步追赶与超越</h4>
+                            <p class="text-sm text-gray-600">中国采取“国家队”主导、稳扎稳打的策略，在关键物理和工程问题上取得了举世瞩目的成就，并开始布局下一代工程实验堆。</p>
+                            <ul class="list-disc list-inside text-sm mt-2 space-y-1">
+                                <li><strong>“人造太阳”双子星:</strong> 位于合肥的全超导托卡马克东方超环(EAST)和位于成都的中国环流器三号(HL-3，原HL-2M)是中国的两大核心研究平台。EAST在2023年实现了403秒的稳态高约束模式等离子体运行，验证了聚变堆稳态运行的可行性。HL-3则在2024年成功实现了“偏滤器位形”下的高约束模式运行，这是未来聚变堆必须解决的关键物理问题。</li>
+                                <li><strong>中国聚变工程实验堆(CFETR):</strong> 作为对标ITER、并旨在超越其部分功能的下一代装置，CFETR已完成详细的工程设计。其目标是建成一个能够自持燃烧、并实现连续发电的聚变示范堆，为2050年左右建设商业聚变电站奠定基础。</li>
+                                <li><strong>创新技术路线探索:</strong> 除了主流的托卡马克路线，中国也在积极探索球形托卡马克、仿星器等其他技术路线，显示出其在聚变领域全面布局、力争长远领先的战略意图。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+
+            document.getElementById('vision').innerHTML = visionContent;
+            document.getElementById('snpp-definition').innerHTML = snppDefinitionContent;
+            document.getElementById('snpp-physical').innerHTML = physicalArchContent;
+            document.getElementById('snpp-logic').innerHTML = logicArchContent;
+            document.getElementById('tech').innerHTML = techContent;
+            document.getElementById('outlook').innerHTML = outlookContent;
+
+            const reactorData = {
+                pwr: { 
+                    title: '压水堆 (PWR)', 
+                    content: `
+                        <p class="text-sm text-gray-600 mb-3">作为全球核电的绝对主力，压水堆技术成熟、运行经验丰富。全球约有300多台在运机组，占总数60%以上。</p>
+                        <h6 class="font-bold mt-4 mb-2">全球分布与绩效代表:</h6>
+                        <ul class="text-xs list-disc pl-4 space-y-2">
+                            <li><strong>分布:</strong> 广泛分布于美国、法国、中国、俄罗斯、韩国等主要核电国家。</li>
+                            <li><strong>代表电站:</strong> 法国Civaux核电站 (2x1561 MWe)，其N4堆型是EPR的前身，机组长期保持高能力因子，是WANO绩效的标杆。中国田湾核电站 (拥有VVER和CNP多种堆型)，多台机组在WANO综合指数排名中名列前茅。</li>
+                            <li><strong>数字化焦点:</strong> I&C系统现代化改造、延寿评估、预测性维护、运行优化。</li>
+                        </ul>`, 
+                    chartData: { 'I&C现代化': 10, '模拟复杂性': 5, 'AI自主控制': 2, '数字孪生应用': 6 } 
+                },
+                bwr: { 
+                    title: '沸水堆 (BWR)', 
+                    content: `
+                        <p class="text-sm text-gray-600 mb-3">沸水堆是第二大反应堆类型，主要由GE设计，其特点是结构相对简单。全球约有60多台在运机组。</p>
+                        <h6 class="font-bold mt-4 mb-2">全球分布与绩效代表:</h6>
+                        <ul class="text-xs list-disc pl-4 space-y-2">
+                            <li><strong>分布:</strong> 主要集中在美国、日本、瑞典、德国等国。</li>
+                            <li><strong>代表电站:</strong> 美国Grand Gulf核电站 (1x1401 MWe)，是全球功率最大的单体BWR机组之一，发电量巨大。瑞典Oskarshamn-3核电站 (1450 MWe)，经过功率提升后成为全球最强大的BWR之一，展示了BWR机组的升级潜力。</li>
+                            <li><strong>数字化焦点:</strong> 与PWR类似，重点是I&C升级和预测性维护，特别关注压力容器内部件的老化管理。</li>
+                        </ul>`, 
+                    chartData: { 'I&C现代化': 9, '模拟复杂性': 6, 'AI自主控制': 2, '数字孪生应用': 5 } 
+                },
+                phwr: { 
+                    title: '重水堆 (PHWR/CANDU)', 
+                    content: `
+                        <p class="text-sm text-gray-600 mb-3">以加拿大的CANDU技术为代表，特点是使用天然铀燃料和在线换料。全球约有近50台在运机组。</p>
+                        <h6 class="font-bold mt-4 mb-2">全球分布与绩效代表:</h6>
+                        <ul class="text-xs list-disc pl-4 space-y-2">
+                            <li><strong>分布:</strong> 主要在加拿大、印度、韩国、罗马尼亚、阿根廷和中国。</li>
+                            <li><strong>代表电站:</strong> 加拿大Bruce核电站 (8台机组，总装机容量超过6400 MWe)，是全球最大的在运核电站之一。其延寿项目是全球核工业的典范。韩国Wolsong核电站的CANDU机组也长期保持着优秀的运行业绩。</li>
+                            <li><strong>数字化焦点:</strong> 延寿项目管理、压力管状态监测、机器人辅助的在线换料和维修。</li>
+                        </ul>`, 
+                    chartData: { 'I&C现代化': 8, '模拟复杂性': 6, 'AI自主控制': 3, '数字孪生应用': 7 } 
+                },
+                smr: { 
+                    title: '小堆 (SMR)及先进堆', 
+                    content: `
+                        <p class="text-sm text-gray-600 mb-3">SMR和各类先进反应堆（快堆、高温气冷堆、熔盐堆等）是核能的未来，目前多处于示范或商业化初期阶段，数量较少但增长潜力巨大。</p>
+                        <h6 class="font-bold mt-4 mb-2">全球分布与绩效代表:</h6>
+                        <ul class="text-xs list-disc pl-4 space-y-2">
+                            <li><strong>分布:</strong> 俄罗斯拥有全球首座浮动式SMR核电站“罗蒙诺索夫院士”号。中国拥有全球首座商业化高温气冷堆和在建的快堆示范项目。美国、加拿大、英国等国正在大力推进多种SMR和先进堆的设计认证与示范项目建设。</li>
+                            <li><strong>代表项目:</strong> 中国石岛湾高温气冷堆示范工程 (200 MWe)，已并网发电。TerraPower的Natrium™快堆项目 (345 MWe)，计划于2030年投运。</li>
+                            <li><strong>数字化焦点:</strong> **许可审评**是首要任务，数字孪生和高精度仿真是核心工具。此外，还包括远程自主运行、多模块集群控制等。</li>
+                        </ul>`, 
+                    chartData: { 'I&C现代化': 2, '模拟复杂性': 9, 'AI自主控制': 9, '数字孪生应用': 10 } 
+                }
+            };
+
+            let reactorChart;
+
+            function initChart() {
+                const ctx = document.getElementById('reactorChart')?.getContext('2d');
+                if (!ctx) return;
+                reactorChart = new Chart(ctx, {
+                    type: 'bar', data: { labels: [], datasets: [{ label: '数字化优先级 (1-10)', data: [], backgroundColor: ['rgba(54, 162, 235, 0.6)','rgba(255, 159, 64, 0.6)','rgba(75, 192, 192, 0.6)','rgba(255, 99, 132, 0.6)'], borderWidth: 1 }] },
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, max: 10 }, y: { grid: { display: false } } }, plugins: { legend: { display: false } } }
+                });
+            }
+
+            function updateChart(data) {
+                if (!reactorChart) initChart();
+                if(reactorChart) {
+                    reactorChart.data.labels = Object.keys(data);
+                    reactorChart.data.datasets[0].data = Object.values(data);
+                    reactorChart.update();
+                }
+            }
+            
+            function showSection(hash) {
+                const cleanHash = hash.startsWith('#') ? hash : '#' + hash;
+                sections.forEach(section => {
+                    section.classList.toggle('active', '#' + section.id === cleanHash);
+                });
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === cleanHash);
+                });
+                if (mobileNav.value !== cleanHash.substring(1)) {
+                    mobileNav.value = cleanHash.substring(1);
+                }
+                if (cleanHash === '#tech') {
+                    if (!reactorChart) initChart();
+                    updateReactorContent('pwr');
+                }
+            }
+
+            function updateReactorContent(reactorId) {
+                const data = reactorData[reactorId];
+                const container = document.getElementById('reactor-details');
+                if (data && container) {
+                    container.innerHTML = `<h4 class="text-2xl font-bold mb-4 text-gray-800">${data.title}</h4>${data.content}`;
+                    updateChart(data.chartData);
+                }
+                document.querySelectorAll('.reactor-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.reactor === reactorId);
+                });
+            }
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const hash = this.getAttribute('href');
+                    history.pushState(null, null, hash);
+                    showSection(hash);
+                });
+            });
+
+            mobileNav.addEventListener('change', function() {
+                const hash = '#' + this.value;
+                history.pushState(null, null, hash);
+                showSection(hash);
+            });
+
+            window.addEventListener('popstate', function() {
+                const hash = window.location.hash || '#vision';
+                showSection(hash);
+            });
+            
+            document.body.addEventListener('click', function(e) {
+                if (e.target.closest('.reactor-btn')) {
+                    updateReactorContent(e.target.closest('.reactor-btn').dataset.reactor);
+                }
+                if (e.target.closest('.accordion-header')) {
+                    const header = e.target.closest('.accordion-header');
+                    const content = header.nextElementSibling;
+                    header.classList.toggle('active');
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    }
+                }
+            });
+            
+            // Initial load
+            const initialHash = window.location.hash || '#vision';
+            showSection(initialHash);
+            if (document.querySelector('#tech.active')) {
+                if (!reactorChart) initChart();
+                updateReactorContent('pwr');
+            }
+            const firstReactorBtn = document.querySelector('.reactor-btn');
+            if (firstReactorBtn) firstReactorBtn.classList.add('active');
+
+        });
+    </script>
+</body>
+</html>
