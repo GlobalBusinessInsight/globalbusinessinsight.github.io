@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度解析：美联储为何“按兵不动”</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (#F8F7F2, #3D405B, #81B29A, #E07A5F, #F2CC8F) -->
+    <!-- Application Structure Plan: A narrative dashboard structure that guides the user through the complex decision-making process. It starts with the 'Core Dilemma', then moves to an interactive 'Data Dashboard' to weigh conflicting evidence (Hawkish vs. Dovish). It provides 'Historical Lessons' via an interactive timeline, dives into 'The Powell Factor' to understand the man behind the policy, and concludes with the 'Path Forward' triggers. This non-linear, exploratory structure is chosen over a simple linear report to empower users to synthesize the information themselves and understand the nuances of the Fed's position. -->
+    <!-- Visualization & Content Choices: Inflation (Goal: Show stubbornness) -> Line Chart (Chart.js) -> Hover for details. Justification: Clearly shows the gap to the 2% target. Labor Market (Goal: Reveal hidden weakness) -> Bar/Line Combo (Chart.js) -> Interactive button to show data revisions. Justification: This key interaction transforms a static data point from the report into a powerful visual discovery for the user. Rate History (Goal: Compare past decisions) -> Interactive Line Chart (Chart.js) with dynamic markers -> Buttons highlight hike/cut periods with tooltips explaining the rationale. Justification: Turns a dense table into an engaging, explorable historical tool. Powell's Philosophy (Goal: Explain the man) -> Structured multi-column text layout with blockquotes (HTML/Tailwind). Justification: More readable and impactful than a long paragraph for presenting core ideas. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F2;
+            color: #3D405B;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #E07A5F;
+            border-bottom-color: #E07A5F;
+        }
+        .stat-card {
+            background-color: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+        }
+        .stat-card-title {
+            font-size: 1rem;
+            color: #6B7280;
+            margin-bottom: 0.5rem;
+        }
+        .stat-card-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #3D405B;
+        }
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        .btn-primary {
+            background-color: #81B29A;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #6a947e;
+            box-shadow: 0 0 15px rgba(129, 178, 154, 0.5);
+        }
+        .btn-secondary {
+            background-color: #F2CC8F;
+            color: #3D405B;
+        }
+        .btn-secondary:hover {
+            background-color: #dcb77f;
+            box-shadow: 0 0 15px rgba(242, 204, 143, 0.5);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-[#3D405B]">美联储观察</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#dilemma" class="nav-link px-3 py-2 text-sm font-medium">核心困境</a>
+                        <a href="#dashboard" class="nav-link px-3 py-2 text-sm font-medium">数据仪表盘</a>
+                        <a href="#history" class="nav-link px-3 py-2 text-sm font-medium">历史之鉴</a>
+                        <a href="#powell" class="nav-link px-3 py-2 text-sm font-medium">掌舵者鲍威尔</a>
+                        <a href="#path" class="nav-link px-3 py-2 text-sm font-medium">未来之路</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="dilemma" class="text-center mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4 text-[#3D405B]">在通胀与衰退间走钢丝</h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600 mb-8">
+                美联储正面临一场严峻的考验：一边是尚未被完全驯服的通胀猛兽，另一边是经济可能陷入不必要衰退的漩涡。其当前的“按兵不动”并非犹豫，而是一种深思熟虑的战略性耐心，根植于复杂的经济数据、深刻的历史教训和对机构信誉的捍卫。
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <div class="stat-card">
+                    <h3 class="stat-card-title">联邦基金利率</h3>
+                    <p class="stat-card-value">5.25-5.50%</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="stat-card-title">核心PCE通胀年率</h3>
+                    <p class="stat-card-value text-[#E07A5F]">2.8%</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="stat-card-title">失业率</h3>
+                    <p class="stat-card-value text-[#81B29A]">4.2%</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboard" class="mb-16 md:mb-24 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">数据仪表盘：权衡矛盾的信号</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    美联储的谨慎源于经济数据传递出的矛盾信号。一些指标显示经济强韧，而另一些则预示着寒意。本仪表盘旨在呈现这种复杂性，让您像决策者一样权衡证据，理解为何“等待与观察”成为当前最优策略。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-center text-[#E07A5F]">维持高利率的理由 (鹰派视角)</h3>
+                    <div class="mb-6">
+                        <h4 class="text-xl font-semibold mb-2">通胀粘性：最后一英里最艰难</h4>
+                        <p class="text-gray-600 mb-4">核心个人消费支出(PCE)价格指数——美联储最青睐的通胀指标——顽固地停留在2.8%，远高于2%的目标。这种“粘性”表明潜在的价格压力依然广泛存在，过早降息可能导致通胀卷土重来。</p>
+                        <div class="chart-container">
+                            <canvas id="inflationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-center text-[#81B29A]">降息的理由 (鸽派视角)</h3>
+                    <div class="mb-6">
+                        <h4 class="text-xl font-semibold mb-2">劳动力市场：强劲与裂痕并存</h4>
+                        <p class="text-gray-600 mb-4">尽管失业率处于历史低位，但新增就业已显著放缓。更令人警惕的是，先前月份的数据被大幅下修，这表明经济的潜在动能可能正在快速消退。点击下方按钮查看数据修正带来的影响。</p>
+                        <div class="chart-container">
+                            <canvas id="jobsChart"></canvas>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button id="toggleRevisionsBtn" class="btn btn-secondary">揭示数据修正</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="history" class="mb-16 md:mb-24 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">历史之鉴：避免重蹈覆辙</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    当前的谨慎态度深深植根于对历史的反思。决策者们既要避免1970年代因过早放松而导致“大通胀”的错误，也面临着与1994年成功“软着陆”时截然不同的初始条件。通过下方的交互式图表，回顾近期的加息与降息周期，可以更好地理解当前决策的背景。
+                </p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h3 class="text-2xl font-bold mb-4 text-center">联邦基金利率历史走势 (2007-2025)</h3>
+                <div class="chart-container" style="height: 450px;">
+                    <canvas id="ratesHistoryChart"></canvas>
+                </div>
+                <div class="flex justify-center items-center flex-wrap gap-4 mt-6">
+                    <button id="showHikesBtn" class="btn btn-primary">高亮最近10次加息</button>
+                    <button id="showCutsBtn" class="btn btn-secondary">高亮最近10次降息</button>
+                    <button id="resetChartBtn" class="btn bg-gray-300 text-gray-700 hover:bg-gray-400">重置图表</button>
+                </div>
+            </div>
+        </section>
+        
+        <section id="powell" class="mb-16 md:mb-24 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">掌舵者鲍威尔：一位非典型的实用主义者</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    要理解美联储的航向，必须理解其船长。杰罗姆·鲍威尔并非传统央行行长，其独特的背景塑造了一种以风险管理为核心的决策哲学，深刻影响着他对利率的看法。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-3 text-center">非典型背景</h3>
+                    <p class="text-gray-600">与拥有经济学博士学位的前任们不同，鲍威尔是法学博士，拥有丰富的华尔街投资银行经验。这使他更像一个市场参与者而非理论家，更关注现实世界的数据和金融信号，而非固守特定经济模型。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-3 text-center">共识建立者</h3>
+                    <p class="text-gray-600">凭借在财政部和私营部门的经历，鲍威尔擅长在充满分歧的FOMC内部建立共识。他的角色更像一位引导集体决策的CEO，而非独裁者，这意味着政策转向通常是渐进且经过充分辩论的。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-bold mb-3 text-center">风险管理者</h3>
+                    <p class="text-gray-600">他的核心哲学是风险管理。他认为“过早放松政策导致通胀复燃”的风险，远大于“过晚降息导致温和衰退”的风险。因此，在数据模糊时，维持现状是风险最小的选择。</p>
+                </div>
+            </div>
+             <blockquote class="mt-8 max-w-2xl mx-auto text-center text-xl italic text-gray-700 border-l-4 border-[#F2CC8F] pl-4">
+                “历史告诫我们不要过早地放松政策。我们将坚持到底，直到任务完成。”
+            </blockquote>
+        </section>
+
+        <section id="path" class="scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">未来之路：降息的可能触发器</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    降息并非时间问题，而是数据问题。美联储的行动将取决于以下两种关键情景之一的出现。这揭示了市场预测与美联储基于已实现数据的决策逻辑之间的核心矛盾。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white p-8 rounded-lg shadow-lg border-l-4 border-[#81B29A]">
+                    <h3 class="text-2xl font-bold mb-3">情景一：“完美反通胀” (主动降息)</h3>
+                    <p class="text-gray-600">这是美联储最希望看到的路径。它需要：</p>
+                    <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
+                        <li>连续数月核心PCE通胀月度环比稳定在0.2%或以下。</li>
+                        <li>有足够“信心”相信通胀正可持续地回归2%的目标。</li>
+                        <li>在这种情况下，降息将是主动、有序的，旨在调整政策立场。</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg border-l-4 border-[#E07A5F]">
+                    <h3 class="text-2xl font-bold mb-3">情景二：“劳动力市场破裂” (被动降息)</h3>
+                    <p class="text-gray-600">这是被动的、反应性的路径。它将被劳动力市场的急剧恶化所触发，例如：</p>
+                     <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
+                        <li>失业率果断、持续地上升（如突破4.5%）。</li>
+                        <li>连续数月出现非常疲软甚至负增长的非农就业数据。</li>
+                        <li>在这种情景下，“最大化就业”的使命将优先于抗击通胀。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white mt-16 border-t">
+        <div class="container mx-auto px-8 py-6 text-center text-gray-500">
+            <p>&copy; 2025 美联储观察。此应用基于公开报告进行数据可视化分析，不构成任何投资建议。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inflationData = {
+                labels: ['2024-01', '2024-03', '2024-05', '2024-07', '2024-09', '2024-11', '2025-01', '2025-03', '2025-05', '2025-07'],
+                datasets: [{
+                    label: '核心PCE通胀年率 (%)',
+                    data: [2.9, 2.8, 2.7, 2.7, 2.8, 2.7, 2.8, 2.8, 2.8, 2.8],
+                    borderColor: '#E07A5F',
+                    backgroundColor: 'rgba(224, 122, 95, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                }, {
+                    label: '美联储2%目标',
+                    data: Array(10).fill(2),
+                    borderColor: '#81B29A',
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false,
+                }]
+            };
+
+            new Chart(document.getElementById('inflationChart'), {
+                type: 'line',
+                data: inflationData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: false, suggestedMin: 1.5, suggestedMax: 3.5, title: { display: true, text: '年化百分比 (%)' } } },
+                    plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } }
+                }
+            });
+
+            const initialJobsData = [315, 175, 200, 220, 73];
+            const revisedJobsData = [315, 175, 152, 165, 73];
+            let showingRevisions = false;
+
+            const jobsChartData = {
+                labels: ['2025-03', '2025-04', '2025-05', '2025-06', '2025-07'],
+                datasets: [{
+                    type: 'bar',
+                    label: '非农新增就业 (千人)',
+                    data: initialJobsData,
+                    backgroundColor: '#81B29A',
+                    yAxisID: 'y'
+                }, {
+                    type: 'line',
+                    label: '失业率 (%)',
+                    data: [4.1, 4.0, 4.1, 4.2, 4.2],
+                    borderColor: '#F2CC8F',
+                    tension: 0.1,
+                    yAxisID: 'y1'
+                }]
+            };
+
+            const jobsChart = new Chart(document.getElementById('jobsChart'), {
+                data: jobsChartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', title: { display: true, text: '新增就业 (千人)' } },
+                        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: '失业率 (%)' }, suggestedMin: 3.5, suggestedMax: 4.5 }
+                    },
+                    plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } }
+                }
+            });
+            
+            document.getElementById('toggleRevisionsBtn').addEventListener('click', (e) => {
+                showingRevisions = !showingRevisions;
+                const button = e.target;
+                if (showingRevisions) {
+                    jobsChart.data.datasets[0].data = revisedJobsData;
+                    jobsChart.data.datasets[0].backgroundColor = '#E07A5F';
+                    jobsChart.data.datasets[0].label = '修正后非农新增就业 (千人)';
+                    button.textContent = '查看原始数据';
+                    button.classList.remove('btn-secondary');
+                    button.classList.add('btn-primary');
+                } else {
+                    jobsChart.data.datasets[0].data = initialJobsData;
+                    jobsChart.data.datasets[0].backgroundColor = '#81B29A';
+                    jobsChart.data.datasets[0].label = '非农新增就业 (千人)';
+                    button.textContent = '揭示数据修正';
+                    button.classList.remove('btn-primary');
+                    button.classList.add('btn-secondary');
+                }
+                jobsChart.update();
+            });
+
+            const rateHistoryLabels = ['2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'];
+            const rateHistoryData = [5.25, 2.00, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.50, 0.75, 1.50, 2.50, 1.75, 0.25, 0.25, 4.50, 5.50, 5.50, 5.50];
+            
+            const hikes = [{ date: '2018-09-26', rate: 2.25, reason: '经济强劲，失业率低' },{ date: '2018-12-19', rate: 2.50, reason: '劳动力市场持续走强' },{ date: '2022-03-16', rate: 0.50, reason: '政策启动，通胀远超2%' },{ date: '2022-05-04', rate: 1.00, reason: '自2000年来首次加息50基点' },{ date: '2022-06-15', rate: 1.75, reason: '紧急加速至75基点以显决心' },{ date: '2022-07-27', rate: 2.50, reason: '通胀数据意外火爆' },{ date: '2022-09-21', rate: 3.25, reason: '价格压力普遍，需维持限制性利率' },{ date: '2022-11-02', rate: 4.00, reason: '坚定致力于将通胀拉回2%' },{ date: '2022-12-14', rate: 4.50, reason: '放缓加息步伐，但重申通胀仍高' },{ date: '2023-02-01', rate: 4.75, reason: '通胀虽缓解但仍处高位' }];
+            const cuts = [{ date: '2008-03-18', rate: 2.25, reason: '贝尔斯登倒闭后，金融市场紧张' },{ date: '2008-04-30', rate: 2.00, reason: '信贷紧缩，房地产市场收缩' },{ date: '2008-10-08', rate: 1.50, reason: '全球央行协调行动应对金融危机' },{ date: '2008-10-29', rate: 1.00, reason: '经济活动在金融危机中显著放缓' },{ date: '2008-12-16', rate: 0.25, reason: '开启零利率政策(ZIRP)时代' },{ date: '2019-07-31', rate: 2.25, reason: '首次保险性降息，应对贸易不确定性' },{ date: '2019-09-18', rate: 2.00, reason: '第二次保险性降息' },{ date: '2019-10-30', rate: 1.75, reason: '第三次保险性降息' },{ date: '2020-03-03', rate: 1.25, reason: '紧急降息应对新冠演变中的风险' },{ date: '2020-03-15', rate: 0.25, reason: '疫情大流行，紧急降息至零并重启QE' }];
+
+            const findClosestDateIndex = (targetDateStr) => {
+                const targetYear = new Date(targetDateStr).getFullYear();
+                return rateHistoryLabels.indexOf(targetYear.toString());
+            };
+
+            const ratesHistoryChart = new Chart(document.getElementById('ratesHistoryChart'), {
+                type: 'line',
+                data: {
+                    labels: rateHistoryLabels,
+                    datasets: [{
+                        label: '联邦基金利率目标上限 (%)',
+                        data: rateHistoryData,
+                        borderColor: '#3D405B',
+                        backgroundColor: 'rgba(61, 64, 91, 0.1)',
+                        fill: 'start',
+                        tension: 0.1,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#3D405B'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, title: { display: true, text: '利率 (%)' } } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) { label += context.parsed.y.toFixed(2) + '%'; }
+                                    return label;
+                                },
+                                afterBody: function(context) {
+                                  const dataset = context[0].dataset;
+                                  if(dataset.pointReasons && dataset.pointReasons[context[0].dataIndex]) {
+                                    return dataset.pointReasons[context[0].dataIndex].split('\n');
+                                  }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const resetChart = () => {
+                while(ratesHistoryChart.data.datasets.length > 1) {
+                    ratesHistoryChart.data.datasets.pop();
+                }
+                ratesHistoryChart.update();
+            };
+
+            document.getElementById('resetChartBtn').addEventListener('click', resetChart);
+
+            const addPointsToChart = (points, color, style, rotation) => {
+                const pointData = Array(rateHistoryLabels.length).fill(null);
+                const pointReasons = Array(rateHistoryLabels.length).fill(null);
+                points.forEach(point => {
+                    const index = findClosestDateIndex(point.date);
+                    if(index !== -1) {
+                        pointData[index] = point.rate;
+                        if (!pointReasons[index]) pointReasons[index] = '';
+                        pointReasons[index] += `${point.date}: ${point.reason}\n`;
+                    }
+                });
+                ratesHistoryChart.data.datasets.push({
+                    data: pointData,
+                    pointStyle: style,
+                    pointRadius: 8,
+                    pointHoverRadius: 10,
+                    pointBackgroundColor: color,
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointRotation: rotation,
+                    showLine: false,
+                    pointReasons: pointReasons
+                });
+                ratesHistoryChart.update();
+            };
+
+            document.getElementById('showHikesBtn').addEventListener('click', () => {
+                resetChart();
+                addPointsToChart(hikes, '#E07A5F', 'triangle', 0);
+            });
+
+            document.getElementById('showCutsBtn').addEventListener('click', () => {
+                resetChart();
+                addPointsToChart(cuts, '#81B29A', 'triangle', 180);
+            });
+        });
+    </script>
+</body>
+</html>
