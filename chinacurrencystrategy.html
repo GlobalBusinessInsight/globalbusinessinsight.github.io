@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>货币之墙：中国流动性困境的交互式分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Analyst Neutral -->
+    <!-- Application Structure Plan: The SPA uses a narrative-driven dashboard structure. It starts with the core paradox (M1/M2 gap) to hook the user. The central interactive element is the 'Three Dams' diagram, allowing exploration of where money is trapped. A new 'Policy Echo Chamber' section is added to present official statements and expert views, providing crucial context. This is followed by the 'Diagnosis', 'Impacts', and 'Solution'. This structure transforms the dense report into a guided discovery journey, prioritizing user understanding over a literal chapter-by-chapter representation. -->
+    <!-- Visualization & Content Choices: 
+        1. M1/M2 Gap -> Goal: Show the core problem -> Viz: Dual-axis line chart (Chart.js) -> Interaction: Hover tooltips -> Justification: The most critical visual, immediately establishes the report's thesis.
+        2. Credit Flow -> Goal: Explain where money is going -> Viz: Interactive diagram (HTML/CSS/JS) -> Interaction: Click to reveal details on the three 'dams' -> Justification: Simplifies a complex flow into a memorable, explorable infographic.
+        3. Policy & Expert Voices -> Goal: Provide context and diverse viewpoints -> Viz: Quote cards and timeline-like layout (HTML/CSS) -> Interaction: Static -> Justification: Organizes official statements and expert commentary into a scannable, digestible format.
+        4. Social Financing -> Goal: Show state dominance in credit -> Viz: Donut chart (Chart.js) -> Interaction: Hover tooltips -> Justification: Clearly illustrates the disproportionate allocation of credit within the 'State Siphon' section.
+        5. Diagnosis & Impacts -> Goal: Explain theory and consequences -> Viz: Styled text blocks with icons (HTML/CSS) -> Interaction: Static -> Justification: Organizes complex theoretical points into clear, scannable sections.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+                max-height: 500px;
+            }
+        }
+        .kpi-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: 1px solid #e2e8f0; /* slate-200 */
+        }
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .nav-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .nav-button.active {
+            background-color: #334155; /* slate-700 */
+            color: white;
+        }
+        .dam-item {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-width: 2px;
+            border-color: transparent;
+        }
+        .dam-item.active {
+            background-color: #e2e8f0; /* slate-200 */
+            border-color: #3b82f6; /* blue-500 */
+            transform: scale(1.05);
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .quote-card {
+            background-color: white;
+            border-left: 4px solid #4f46e5; /* indigo-600 */
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl md:text-2xl font-bold text-slate-800">货币之墙</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#section-paradox" class="nav-button text-slate-600 hover:bg-slate-200 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">核心悖论</a>
+                        <a href="#section-dams" class="nav-button text-slate-600 hover:bg-slate-200 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">资本三峡</a>
+                        <a href="#section-voices" class="nav-button text-slate-600 hover:bg-slate-200 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">政策回音壁</a>
+                        <a href="#section-diagnosis" class="nav-button text-slate-600 hover:bg-slate-200 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">病理诊断</a>
+                        <a href="#section-impact" class="nav-button text-slate-600 hover:bg-slate-200 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">涟漪效应</a>
+                        <a href="#section-solution" class="nav-button text-slate-600 hover:bg-slate-200 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium">出路何在</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <!-- Section 1: The Paradox -->
+        <section id="section-paradox" class="text-center mb-16 md:mb-24">
+            <h2 class="text-3xl md:text-5xl font-bold text-slate-900 mb-4">两种货币的故事</h2>
+            <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-600 mb-8">
+                中国经济正面临一个深刻的悖论：一方面央行向市场注入了巨量的货币（M2），另一方面，真正用于交易和投资的货币（M1）却增长乏力。这个日益扩大的“剪刀差”，是理解当前经济困境的核心钥匙。
+            </p>
+            <div class="chart-container">
+                <canvas id="m1m2Chart"></canvas>
+            </div>
+            <p class="mt-4 text-sm text-slate-500">数据来源：中国人民银行。图表展示了M1与M2同比增长率的走势。</p>
+        </section>
+
+        <!-- Section 2: The Three Dams -->
+        <section id="section-dams" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-5xl font-bold text-slate-900 mb-4">资本的三峡</h2>
+                <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-600">
+                    天量货币并未消失，而是被三座巨大的“堤坝”所拦截，困于低效的循环之中。本节通过一个互动图表，直观地揭示了资金的淤积之处。点击下方每个“水库”，探索资金被困的具体原因和证据。
+                </p>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <div class="bg-blue-500 text-white font-bold py-4 px-8 rounded-lg shadow-lg mb-8 text-xl">
+                    <span class="mr-2">🌊</span> 货币供应 (M2)
+                </div>
+                <div class="w-full max-w-4xl flex justify-around items-start mb-8">
+                     <div class="w-0.5 h-12 bg-slate-300"></div>
+                     <div class="w-0.5 h-12 bg-slate-300"></div>
+                     <div class="w-0.5 h-12 bg-slate-300"></div>
+                </div>
+
+                <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto mb-8">
+                    <div id="dam1" class="dam-item bg-white p-6 rounded-lg shadow-md text-center border-2 border-transparent">
+                        <div class="text-5xl mb-4">🏛️</div>
+                        <h3 class="text-xl font-bold mb-2">国家的虹吸管</h3>
+                        <p class="text-slate-600">国企 & 地方政府融资平台</p>
+                    </div>
+                    <div id="dam2" class="dam-item bg-white p-6 rounded-lg shadow-md text-center border-2 border-transparent">
+                        <div class="text-5xl mb-4">🏗️</div>
+                        <h3 class="text-xl font-bold mb-2">房地产的泥潭</h3>
+                        <p class="text-slate-600">保交楼 & 僵尸项目</p>
+                    </div>
+                    <div id="dam3" class="dam-item bg-white p-6 rounded-lg shadow-md text-center border-2 border-transparent">
+                        <div class="text-5xl mb-4">🛡️</div>
+                        <h3 class="text-xl font-bold mb-2">私营部门大撤退</h3>
+                        <p class="text-slate-600">企业 & 家庭预防性储蓄</p>
+                    </div>
+                </div>
+
+                <div class="w-full max-w-4xl">
+                    <div id="content-dam1" class="content-section bg-white p-6 md:p-8 rounded-lg shadow-inner border">
+                        <h4 class="text-2xl font-bold mb-4">国家的虹吸管：低效的资本循环</h4>
+                        <p class="text-slate-700 mb-6">新增信贷的绝大部分被导向与国家相关的实体，主要用于回报率递减的基建项目和偿还旧债。这形成了一个巨大的资本内部循环，挤压了私营部门的融资空间。</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="kpi-card !shadow-none border-slate-200">
+                                <h5 class="font-bold text-lg text-slate-800">政府债券净融资</h5>
+                                <p class="text-3xl font-bold text-blue-600">7.66万亿</p>
+                                <p class="text-sm text-slate-500">2025上半年，同比多增4.32万亿</p>
+                            </div>
+                            <div class="chart-container !h-64 !max-w-sm">
+                                <canvas id="socialFinancingChart"></canvas>
+                                <p class="text-center text-xs text-slate-500 mt-2">2025上半年社融增量构成</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="content-dam2" class="content-section bg-white p-6 md:p-8 rounded-lg shadow-inner border">
+                        <h4 class="text-2xl font-bold mb-4">房地产的泥潭：吞噬资本的黑洞</h4>
+                        <p class="text-slate-700 mb-6">曾经的增长引擎如今蜕变为一个资本黑洞。大量资金被用于“保交楼”和救助陷入困境的开发商，而非启动有市场前景的新项目。这是一种防御性的资本填充，无法创造新价值。</p>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div class="kpi-card !shadow-none border-slate-200">
+                                <h5 class="font-bold text-lg text-slate-800">个人住房贷款</h5>
+                                <p class="text-3xl font-bold text-red-600">余额下降</p>
+                                <p class="text-sm text-slate-500">市场需求疲软，居民去杠杆</p>
+                            </div>
+                             <div class="kpi-card !shadow-none border-slate-200">
+                                <h5 class="font-bold text-lg text-slate-800">开发商贷款</h5>
+                                <p class="text-3xl font-bold text-amber-600">微弱增长</p>
+                                <p class="text-sm text-slate-500">主要流向“白名单”内的救助项目</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="content-dam3" class="content-section bg-white p-6 md:p-8 rounded-lg shadow-inner border">
+                        <h4 class="text-2xl font-bold mb-4">私营部门大撤退：一场信心危机</h4>
+                        <p class="text-slate-700 mb-6">面对政策不确定性、通缩压力和暗淡的未来预期，企业和家庭正以前所未有的规模“大撤退”。他们拒绝借贷、投资和消费，转而选择偿还债务和囤积现金。</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="kpi-card !p-4 !shadow-none border-slate-200"><h5 class="font-semibold text-slate-800">私人投资</h5><p class="text-2xl font-bold text-red-600">-0.4%</p><p class="text-xs text-slate-500">2023年增速</p></div>
+                            <div class="kpi-card !p-4 !shadow-none border-slate-200"><h5 class="font-semibold text-slate-800">消费者信心</h5><p class="text-2xl font-bold text-red-600">88.0</p><p class="text-xs text-slate-500">远低于100荣枯线</p></div>
+                            <div class="kpi-card !p-4 !shadow-none border-slate-200"><h5 class="font-semibold text-slate-800">青年失业率</h5><p class="text-2xl font-bold text-red-600">~17%</p><p class="text-xs text-slate-500">持续高位</p></div>
+                            <div class="kpi-card !p-4 !shadow-none border-slate-200"><h5 class="font-semibold text-slate-800">PPI增速</h5><p class="text-2xl font-bold text-red-600">-3.6%</p><p class="text-xs text-slate-500">持续通缩</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Voices -->
+        <section id="section-voices" class="mb-16 md:mb-24 bg-slate-100 py-12 rounded-lg">
+            <div class="text-center mb-12 px-4">
+                <h2 class="text-3xl md:text-5xl font-bold text-slate-900 mb-4">政策回音壁</h2>
+                <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-600">
+                    面对复杂的经济局面，来自决策层、央行和学界的声音构成了理解当前政策思路和未来走向的关键。本节汇集了近两年的权威表态与核心观点。
+                </p>
+            </div>
+            <div class="max-w-5xl mx-auto space-y-8 px-4">
+                <div class="quote-card">
+                    <p class="text-lg text-slate-800 mb-2">“要...防范化解金融风险，特别是防止发生系统性金融风险...稳中求进、以进促稳、先立后破。”</p>
+                    <footer class="text-slate-500">— 中共中央政治局会议及最高领导人讲话精神 (2023-2025)</footer>
+                    <p class="mt-3 text-sm text-slate-600"><strong>解读：</strong> “稳定”是压倒一切的政策底线。这意味着任何改革都将是渐进的，避免“休克疗法”。“发展新质生产力”的提出，强化了信贷向国家战略方向倾斜的指令性色彩。</p>
+                </div>
+                <div class="quote-card border-l-blue-500">
+                    <p class="text-lg text-slate-800 mb-2">“货币信贷总量...对实体经济支持有力...要盘活被低效占用的金融资源，提高资金使用效率...我国货币政策工具箱依然丰富。”</p>
+                    <footer class="text-slate-500">— 中国人民银行行长潘功胜及官方新闻稿 (2024-2025)</footer>
+                    <p class="mt-3 text-sm text-slate-600"><strong>解读：</strong> 央行一方面强调政策的有效性和工具的充足性以稳定预期，另一方面，“盘活存量”、“提升效率”等提法也间接承认了资金沉淀和空转问题的存在，并试图将叙事从“总量增长”转向“结构优化”。</p>
+                </div>
+                <div class="quote-card border-l-green-500">
+                    <p class="text-lg text-slate-800 mb-2">“当前中国经济面临的主要危险是通货紧缩...应实施更具扩张性的财政货币政策，特别是中央财政应发行更多国债，以替代地方政府的债务，并直接为提振消费提供资金。”</p>
+                    <footer class="text-slate-500">— 经济学家余永定等 (2023-2025)</footer>
+                    <p class="mt-3 text-sm text-slate-600"><strong>解读：</strong> 代表了学界对通缩风险的深切忧虑，并主张采取更果断、更直接作用于需求侧的财政扩张政策，以打破当前的困局。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Diagnosis -->
+        <section id="section-diagnosis" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-5xl font-bold text-slate-900 mb-4">病理诊断：一种混合型危机</h2>
+                <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-600">
+                    中国的困境并非单一因素造成，而是两种严重病症的叠加：需求侧的“资产负债表衰退”与供给侧的“指令性经济硬化症”共同作用的结果。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white p-8 rounded-lg shadow-lg border">
+                    <h3 class="text-2xl font-bold mb-4 text-slate-800">资产负债表衰退 (需求侧)</h3>
+                    <p class="text-slate-600 mb-4">在房地产泡沫破裂后，私营部门（家庭和企业）的目标从“利润最大化”转为“负债最小化”。即使利率再低，他们也不愿借钱投资或消费，导致货币政策失效。</p>
+                    <ul class="space-y-2 text-slate-700">
+                        <li class="flex items-start"><span class="text-blue-500 mr-2 mt-1">▶</span> <strong>触发点:</strong> 资产价格（房产）暴跌。</li>
+                        <li class="flex items-start"><span class="text-blue-500 mr-2 mt-1">▶</span> <strong>行为:</strong> 优先还债，而非借贷。</li>
+                        <li class="flex items-start"><span class="text-blue-500 mr-2 mt-1">▶</span> <strong>后果:</strong> 私人信贷需求崩溃，陷入“流动性陷阱”。</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg border">
+                    <h3 class="text-2xl font-bold mb-4 text-slate-800">指令性经济硬化症 (供给侧)</h3>
+                    <p class="text-slate-600 mb-4">国家主导的银行体系，依据政策指令而非市场原则分配信贷，将资金优先输送给低效的国企和地方政府平台。这扼杀了效率，扭曲了资源配置。</p>
+                     <ul class="space-y-2 text-slate-700">
+                        <li class="flex items-start"><span class="text-amber-500 mr-2 mt-1">▶</span> <strong>机制:</strong> 政策驱动的信贷分配。</li>
+                        <li class="flex items-start"><span class="text-amber-500 mr-2 mt-1">▶</span> <strong>行为:</strong> 资金流向国企，挤出民企。</li>
+                        <li class="flex items-start"><span class="text-amber-500 mr-2 mt-1">▶</span> <strong>后果:</strong> 滋生“僵尸企业”，财政刺激效果大打折扣。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Impact -->
+        <section id="section-impact" class="mb-16 md:mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-5xl font-bold text-slate-900 mb-4">涟漪效应</h2>
+                <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-600">
+                    这场经济困境不仅在中国国内造成痛苦，其影响也正通过贸易和资本流动，向全球扩散。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                <div class="bg-white p-8 rounded-lg shadow-lg border">
+                    <h3 class="text-2xl font-bold mb-6 text-center text-slate-800">国内影响：停滞的代价</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start"><div class="flex-shrink-0 h-10 w-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl font-bold">📉</div><div class="ml-4"><h4 class="text-lg font-semibold">持续的通货紧缩</h4><p class="text-slate-600">物价下跌加重债务负担，抑制消费和投资。</p></div></div>
+                        <div class="flex items-start"><div class="flex-shrink-0 h-10 w-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl font-bold">🎓</div><div class="ml-4"><h4 class="text-lg font-semibold">青年失业困扰</h4><p class="text-slate-600">人力资本浪费，催生社会不满情绪。</p></div></div>
+                        <div class="flex items-start"><div class="flex-shrink-0 h-10 w-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xl font-bold">🏦</div><div class="ml-4"><h4 class="text-lg font-semibold">银行体系承压</h4><p class="text-slate-600">坏账攀升，盈利受损，金融风险积聚。</p></div></div>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg border">
+                    <h3 class="text-2xl font-bold mb-6 text-center text-slate-800">全球溢出效应</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start"><div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold">🌍</div><div class="ml-4"><h4 class="text-lg font-semibold">输出通缩</h4><p class="text-slate-600">过剩产能以廉价商品形式涌入全球，引发贸易摩擦。</p></div></div>
+                        <div class="flex items-start"><div class="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xl font-bold">📦</div><div class="ml-4"><h4 class="text-lg font-semibold">削弱全球需求</h4><p class="text-slate-600">大宗商品进口减少，冲击资源出口国经济。</p></div></div>
+                        <div class="flex items-start"><div class="flex-shrink-0 h-10 w-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-xl font-bold">💸</div><div class="ml-4"><h4 class="text-lg font-semibold">资本外流压力</h4><p class="text-slate-600">国内信心危机加剧资本外逃，对人民币汇率构成压力。</p></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: Solution -->
+        <section id="section-solution" class="bg-slate-800 text-white py-16 md:py-20 rounded-lg">
+            <div class="text-center mb-12 px-4">
+                <h2 class="text-3xl md:text-5xl font-bold mb-4">走出迷宫的路线图</h2>
+                <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-300">
+                    面对这种混合型危机，修修补补已无济于事。中国需要一场根本性的战略转向，通过一套大胆的组合拳，同时疏通需求侧和供给侧的结构性堵塞。
+                </p>
+            </div>
+            <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
+                <div class="bg-slate-700 p-6 rounded-lg"><h3 class="text-xl font-bold mb-3 text-cyan-300">1. 治愈私营部门</h3><p class="text-slate-300">建立真正稳固的社会安全网（养老、医疗、失业保障），从根本上降低家庭的预防性储蓄，重燃企业家的“动物精神”。</p></div>
+                <div class="bg-slate-700 p-6 rounded-lg"><h3 class="text-xl font-bold mb-3 text-cyan-300">2. 重组国有部门</h3><p class="text-slate-300">对地方政府和房企债务进行果断的中央主导重组，设立“坏账银行”剥离有毒资产，净化金融体系，阻止信贷流入“僵尸”实体。</p></div>
+                <div class="bg-slate-700 p-6 rounded-lg"><h3 class="text-xl font-bold mb-3 text-cyan-300">3. 重塑总需求</h3><p class="text-slate-300">将财政重心从低效的基建投资转向直接补贴家庭，通过消费券、减税甚至直接发现金，将购买力直接交到消费者手中。</p></div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 mt-16">
+        <div class="container mx-auto py-4 px-4 sm:px-6 lg:px-8 text-center text-sm">
+            <p>本页面内容基于公开报告进行分析和可视化呈现，仅供研究和学习使用。</p>
+            <p>&copy; 2025 交互式经济分析</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const m1m2Data = {
+                labels: ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06'],
+                m2: [7.0, 7.0, 7.0, 8.0, 7.9, 8.3],
+                m1: [0.4, 0.1, 1.6, 1.5, 2.3, 4.6]
+            };
+
+            const socialFinancingData = {
+                labels: ['政府债券', '企事业贷款', '企业债券', '住户贷款', '其他'],
+                data: [7.66, 11.57, 1.17, 1.17, 1.26] 
+            };
+            
+            Chart.defaults.font.family = "'Noto Sans SC', sans-serif";
+            Chart.defaults.color = '#334155'; // slate-700
+
+            const m1m2Ctx = document.getElementById('m1m2Chart').getContext('2d');
+            new Chart(m1m2Ctx, {
+                type: 'line',
+                data: {
+                    labels: m1m2Data.labels,
+                    datasets: [
+                        {
+                            label: 'M2 同比增长 (%)',
+                            data: m1m2Data.m2,
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            fill: true,
+                        },
+                        {
+                            label: 'M1 同比增长 (%)',
+                            data: m1m2Data.m1,
+                            borderColor: 'rgb(239, 68, 68)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            fill: true,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        title: { display: true, text: 'M1与M2增长“剪刀差”', font: { size: 16 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label || ''}: ${context.parsed.y !== null ? context.parsed.y + '%' : 'N/A'}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: { y: { title: { display: true, text: '同比增长率 (%)' } } }
+                }
+            });
+
+            const socialFinancingCtx = document.getElementById('socialFinancingChart').getContext('2d');
+            new Chart(socialFinancingCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: socialFinancingData.labels,
+                    datasets: [{
+                        label: '金额 (万亿元)',
+                        data: socialFinancingData.data,
+                        backgroundColor: ['#3b82f6', '#22c55e', '#f97316', '#ef4444', '#a855f7'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 10, font: { size: 10 } } },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    return `${context.label || ''}: ${context.parsed !== null ? context.parsed + ' 万亿元' : 'N/A'}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const damItems = document.querySelectorAll('.dam-item');
+            const contentSections = document.querySelectorAll('.content-section');
+            damItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const targetId = 'content-' + item.id;
+                    const targetContent = document.getElementById(targetId);
+                    if (item.classList.contains('active')) {
+                        item.classList.remove('active');
+                        targetContent.style.display = 'none';
+                        targetContent.classList.remove('active');
+                        return;
+                    }
+                    damItems.forEach(i => i.classList.remove('active'));
+                    contentSections.forEach(s => { s.style.display = 'none'; s.classList.remove('active'); });
+                    item.classList.add('active');
+                    targetContent.style.display = 'block';
+                    targetContent.classList.add('active');
+                });
+            });
+
+            const navLinks = document.querySelectorAll('.nav-button');
+            const sections = document.querySelectorAll('main > section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').split('#')[1] === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: '-20% 0px -80% 0px' });
+            sections.forEach(section => observer.observe(section));
+        });
+    </script>
+</body>
+</html>
