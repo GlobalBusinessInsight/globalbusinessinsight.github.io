@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>“奥德修斯计划”交互式解读</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: 本应用采用单页滚动式布局，通过顶部导航实现平滑跳转。信息架构被重新设计为一条引导用户探索的路径：1. **项目概览**：开篇点明核心挑战与价值主张。2. **问题剖析**：通过交互式图表量化NPT（非生产时间）的巨大成本，使用户直观感受问题的严重性。3. **解决方案架构**：将报告中复杂的五层架构转化为一个可交互的、分层展开的视觉流程图。4. **核心能力展示**：以卡片形式清晰展示四大核心应用模块。5. **技术组件**: 一个专门的深度解析区域，包含CSS绘制的架构图和详细的功能分解表格。6. **用户界面**: 包含仪表盘、需求规划和采购工作流等多个高保真界面原型。7. **动态情景模拟**：应用的核心亮点，用户可以通过选择不同的风险场景，亲身体验AI如何进行预测、分析并提出应对策略。8. **实施蓝图**：分阶段详细阐述部署计划。这个结构旨在将用户从“是什么”引导到“为什么”，再到“怎么做”，并通过“看界面”和“体验模拟”来感知其价值，最后为专业人士提供“如何实现”的深度信息。 -->
+    <!-- Visualization & Content Choices: 1. **NPT成本分析**: Chart.js水平条形图。2. **五层架构**: HTML/CSS视觉流程图。3. **核心能力**: 可点击展开的卡片。4. **技术组件**: HTML/CSS架构图和功能分解表。5. **用户界面**: 使用纯HTML/Tailwind CSS构建多个高保真、静态的UI原型。6. **情景模拟**: JS动态更新HTML。7. **实施蓝图**: 采用结构化的文本和列表。所有图表和视觉元素均通过Canvas或纯HTML/CSS实现。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F5F2;
+            color: #4A4A4A;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) { .chart-container { height: 500px; } }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #5D8B9E;
+            border-bottom-color: #5D8B9E;
+        }
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .layer-box, .capability-card {
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+        }
+        .layer-box:hover, .capability-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .details-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .details-content.open { max-height: 1000px; }
+        .arch-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+        }
+        .arch-flow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .flow-line {
+            width: 4px;
+            background-color: #cbd5e1;
+            position: relative;
+        }
+        .flow-arrow-up::after {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 16px solid #6BAA9F;
+        }
+        .flow-arrow-down::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 16px solid #5D8B9E;
+        }
+        .arch-layer {
+            border-width: 2px;
+            border-style: solid;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            background-color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            width: 100%;
+            max-width: 28rem;
+            z-index: 10;
+        }
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+        .tech-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .ui-mockup {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            background-color: #f7fafc;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="sticky top-0 z-50 w-full glassmorphism">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="text-xl font-bold text-[#5D8B9E]">“奥德修斯计划”</div>
+            <div class="hidden md:flex space-x-6 lg:space-x-8 text-sm lg:text-base">
+                <a href="#problem" class="nav-link">挑战</a>
+                <a href="#solution" class="nav-link">解决方案</a>
+                <a href="#capabilities" class="nav-link">核心能力</a>
+                <a href="#tech-components" class="nav-link">技术组件</a>
+                <a href="#ui-mockups" class="nav-link">用户界面</a>
+                <a href="#simulation" class="nav-link">AI模拟</a>
+                <a href="#roadmap" class="nav-link">实施蓝图</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pt-2 pb-4">
+            <a href="#problem" class="block py-2 nav-link">挑战</a>
+            <a href="#solution" class="block py-2 nav-link">解决方案</a>
+            <a href="#capabilities" class="block py-2 nav-link">核心能力</a>
+            <a href="#tech-components" class="block py-2 nav-link">技术组件</a>
+            <a href="#ui-mockups" class="block py-2 nav-link">用户界面</a>
+            <a href="#simulation" class="block py-2 nav-link">AI模拟</a>
+            <a href="#roadmap" class="block py-2 nav-link">实施蓝图</a>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero" class="relative py-40 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1579656357499-411a762e3f7a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');">
+            <div class="absolute inset-0 bg-black/50"></div>
+            <div class="container mx-auto px-6 text-center relative z-10">
+                <h1 class="text-4xl md:text-6xl font-bold text-white leading-tight mb-4">“奥德修斯计划”</h1>
+                <p class="text-xl md:text-2xl text-gray-200">将深水钻井供应链从被动响应，转变为主动预测的智能生态系统。</p>
+            </div>
+        </section>
+
+        <section id="problem" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">挑战：深水后勤的“财务深渊”</h2>
+                    <p class="text-lg max-w-3xl mx-auto">深水钻井作业中，任何由后勤失误导致的停工，即“非生产时间”（NPT），都意味着巨大的财务损失。问题的根源并非物理故障，而是信息延迟和数据孤岛。</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+                    <h3 class="text-2xl font-semibold text-center mb-6">NPT主要原因及预估成本</h3>
+                    <div class="chart-container">
+                        <canvas id="nptChart"></canvas>
+                    </div>
+                    <p class="text-center text-sm text-gray-500 mt-4">将鼠标悬停在图表条目上以查看平均停工时间。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="solution" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">解决方案：五层智能架构</h2>
+                    <p class="text-lg max-w-3xl mx-auto">“奥德修斯计划”构建了一个多层次的智能系统，以LLM为核心编排器，将数据转化为可执行的智能决策。点击下方各层级，可展开简要说明。</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="layer-box bg-white rounded-lg shadow-md p-6 border-l-4 border-[#5D8B9E]"><h3 class="text-2xl font-bold">第五层：用户交互与决策支持 (驾驶舱)</h3><div class="details-content mt-4 text-gray-600"><p>为管理者提供直观的仪表盘、对话式AI界面和强大的情景模拟工具，将复杂的系统能力转化为无缝的用户体验，实现人机高效协同。</p></div></div>
+                    <div class="flex justify-center"><div class="h-8 w-px bg-gray-300"></div></div>
+                    <div class="layer-box bg-white rounded-lg shadow-md p-6 border-l-4 border-[#6BAA9F]"><h3 class="text-2xl font-bold">第四层：LLM编排与应用层 (指挥官)</h3><div class="details-content mt-4 text-gray-600"><p>系统的中央智能。大型语言模型（LLM）作为推理引擎，通过“函数调用”功能，理解人类意图，并协调、指挥所有底层AI模型和企业系统执行复杂任务。</p></div></div>
+                    <div class="flex justify-center"><div class="h-8 w-px bg-gray-300"></div></div>
+                    <div class="layer-box bg-white rounded-lg shadow-md p-6 border-l-4 border-[#E57A44]"><h3 class="text-2xl font-bold">第三层：AI/ML核心 (大脑)</h3><div class="details-content mt-4 text-gray-600"><p>容纳一套专业的预测与优化模型，包括：预测性维护（PdM）模型、需求预测模型，以及用于后勤网络优化的图神经网络（GNN），为系统提供核心分析洞察力。</p></div></div>
+                    <div class="flex justify-center"><div class="h-8 w-px bg-gray-300"></div></div>
+                    <div class="layer-box bg-white rounded-lg shadow-md p-6 border-l-4 border-[#F2C14E]"><h3 class="text-2xl font-bold">第二层：统一数据与集成平台 (数据湖仓)</h3><div class="details-content mt-4 text-gray-600"><p>在云端（如Microsoft Azure）构建现代数据湖仓，打破数据孤岛，创建一个统一、可靠的“事实之源”。核心是“数字孪生”，将物理资产与多源数据关联，为上层AI提供上下文。</p></div></div>
+                    <div class="flex justify-center"><div class="h-8 w-px bg-gray-300"></div></div>
+                    <div class="layer-box bg-white rounded-lg shadow-md p-6 border-l-4 border-[#A37A74]"><h3 class="text-2xl font-bold">第一层：数据采集织物 (神经系统)</h3><div class="details-content mt-4 text-gray-600"><p>通过标准连接器，从工业物联网（IIoT）传感器、企业ERP/CMMS系统，以及天气、航运等外部API实时采集所有相关数据，构成系统的感知基础。</p></div></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="capabilities" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4">核心能力：四大智能模块</h2>
+                    <p class="text-lg max-w-3xl mx-auto">平台通过四个紧密协作的智能模块，实现从预测到执行的闭环管理。点击下方卡片，可展开简要流程。</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="capability-card bg-white rounded-xl shadow-lg p-8 text-center"><div class="text-4xl mb-4 text-[#5D8B9E]">🔮</div><h3 class="text-xl font-bold mb-2">预测性需求规划</h3><p class="text-gray-600">超越传统库存管理，动态预测未来30-90天的物料需求，大幅减少缺货风险与库存积压。</p><div class="details-content mt-4 text-left text-sm"><ol class="list-decimal list-inside space-y-2"><li>数据自动汇集</li><li>分层预测执行</li><li>需求整合与发布</li></ol></div></div>
+                    <div class="capability-card bg-white rounded-xl shadow-lg p-8 text-center"><div class="text-4xl mb-4 text-[#6BAA9F]">⚙️</div><h3 class="text-xl font-bold mb-2">自动化采购执行</h3><p class="text-gray-600">将需求计划自动转化为ERP系统中的采购或调拨订单，将数周的工作压缩至几分钟。</p><div class="details-content mt-4 text-left text-sm"><ol class="list-decimal list-inside space-y-2"><li>LLM工作流启动</li><li>智能寻源</li><li>生成订单</li><li>审批与执行</li><li>闭环监控</li></ol></div></div>
+                    <div class="capability-card bg-white rounded-xl shadow-lg p-8 text-center"><div class="text-4xl mb-4 text-[#E57A44]">🗺️</div><h3 class="text-xl font-bold mb-2">动态后勤优化</h3><p class="text-gray-600">利用GNN模型持续优化运输路线与装载率，实时应对天气变化等外部干扰，降本增效。</p><div class="details-content mt-4 text-left text-sm"><ol class="list-decimal list-inside space-y-2"><li>接收运输需求</li><li>GNN模型分析</li><li>决策与执行</li><li>在途重新规划</li></ol></div></div>
+                    <div class="capability-card bg-white rounded-xl shadow-lg p-8 text-center"><div class="text-4xl mb-4 text-[#F2C14E]">🔬</div><h3 class="text-xl font-bold mb-2">“假设”情景模拟</h3><p class="text-gray-600">强大的战略风险管理工具，允许管理者在危机发生前进行压力测试，主动识别并弥补供应链的脆弱环节。</p><div class="details-content mt-4 text-left text-sm"><ol class="list-decimal list-inside space-y-2"><li>用户输入场景</li><li>数字孪生沙盒创建</li><li>参数修改与模拟</li><li>生成报告与策略</li></ol></div></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tech-components" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16"><h2 class="text-3xl md:text-4xl font-bold mb-4">技术组件深度解析</h2><p class="text-lg max-w-3xl mx-auto">本区域为专业人士提供方案的详细技术剖析，包括可视化架构图和各智能模块的功能、算法与数据结构分解。</p></div>
+                <div class="mb-20"><h3 class="text-2xl font-bold text-center mb-2">五层智能架构可视化</h3><p class="text-md text-gray-600 text-center max-w-3xl mx-auto mb-12">数据流（绿色）自下而上汇集，控制流（蓝色）自上而下传递，形成闭环。</p><div class="arch-container"><div class="arch-flow"><div class="flow-line mx-4 flow-arrow-up" style="background-color: #6BAA9F;"><span class="absolute top-1/2 -left-24 transform -translate-y-1/2 text-[#6BAA9F] font-bold hidden md:block">数据流</span></div><div class="flow-line mx-4 flow-arrow-down" style="background-color: #5D8B9E;"><span class="absolute top-1/2 -right-24 transform -translate-y-1/2 text-[#5D8B9E] font-bold hidden md:block">控制流</span></div></div><div class="flex flex-col items-center w-full"><div class="arch-layer border-[#5D8B9E]"><h4 class="text-xl font-bold text-center mb-4">第五层: 交互与决策</h4><div class="tech-grid"><div class="tech-item"><span>📊</span><span class="font-semibold mt-1">Power BI / React</span><span>仪表盘</span></div><div class="tech-item"><span>💬</span><span class="font-semibold mt-1">WebSocket</span><span>对话式AI</span></div><div class="tech-item"><span>🔬</span><span class="font-semibold mt-1">Sandboxing</span><span>情景模拟</span></div></div></div><div class="arch-layer border-[#6BAA9F]"><h4 class="text-xl font-bold text-center mb-4">第四层: LLM编排与应用</h4><div class="tech-grid"><div class="tech-item"><span>🤖</span><span class="font-semibold mt-1">GPT-4o / Gemini</span><span>核心LLM</span></div><div class="tech-item"><span>🧩</span><span class="font-semibold mt-1">LangChain</span><span>代理框架</span></div><div class="tech-item"><span>🔌</span><span class="font-semibold mt-1">OpenAPI 3.0</span><span>函数调用</span></div></div></div><div class="arch-layer border-[#E57A44]"><h4 class="text-xl font-bold text-center mb-4">第三层: AI/ML核心</h4><div class="tech-grid"><div class="tech-item"><span>🧠</span><span class="font-semibold mt-1">PyTorch / TF</span><span>深度学习</span></div><div class="tech-item"><span>📈</span><span class="font-semibold mt-1">Azure ML</span><span>MLOps平台</span></div><div class="tech-item"><span>🕸️</span><span class="font-semibold mt-1">DGL / PyG</span><span>图神经网络</span></div></div></div><div class="arch-layer border-[#F2C14E]"><h4 class="text-xl font-bold text-center mb-4">第二层: 统一数据平台</h4><div class="tech-grid"><div class="tech-item"><span>💧</span><span class="font-semibold mt-1">Azure Data Lake</span><span>数据湖</span></div><div class="tech-item"><span>🏭</span><span class="font-semibold mt-1">Databricks</span><span>ETL/ELT</span></div><div class="tech-item"><span>🧬</span><span class="font-semibold mt-1">Azure Digital Twins</span><span>数字孪生</span></div></div></div><div class="arch-layer border-[#A37A74]"><h4 class="text-xl font-bold text-center mb-4">第一层: 数据采集织物</h4><div class="tech-grid"><div class="tech-item"><span>📡</span><span class="font-semibold mt-1">MQTT / OPC-UA</span><span>IIoT协议</span></div><div class="tech-item"><span>☁️</span><span class="font-semibold mt-1">Azure IoT Edge</span><span>边缘计算</span></div><div class="tech-item"><span>🔄</span><span class="font-semibold mt-1">REST / API</span><span>系统连接器</span></div></div></div></div></div></div>
+                <div class="space-y-12"><h3 class="text-2xl font-bold text-center mb-2">四大智能模块功能分解</h3><div class="bg-white rounded-xl shadow-lg p-6 md:p-8"><h4 class="text-xl font-bold mb-6 border-b-2 border-[#5D8B9E] pb-2">🔮 模块一：预测性需求规划</h4><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead><tr class="bg-gray-50"><th class="p-3 font-semibold">细分功能</th><th class="p-3 font-semibold">核心算法需求</th><th class="p-3 font-semibold">关键数据结构</th></tr></thead><tbody class="divide-y"><tr><td class="p-3">历史消耗数据清洗</td><td class="p-3">异常值检测 (IQR), 时间序列插值</td><td class="p-3"><code>DataFrame: {ts, part_id, qty}</code></td></tr><tr><td class="p-3">需求模式分类</td><td class="p-3">K-Means聚类, ADI/CV² 分类</td><td class="p-3"><code>Object: {part_id: "intermittent"}</code></td></tr><tr><td class="p-3">分层需求预测</td><td class="p-3">Croston, Prophet, TFT/N-BEATS</td><td class="p-3"><code>JSON: {part_id, forecast: [...]}</code></td></tr><tr><td class="p-3">RUL驱动的需求生成</td><td class="p-3">Weibull分布拟合, 蒙特卡洛模拟</td><td class="p-3"><code>Object: {asset_id, fail_prob: [...]}</code></td></tr></tbody></table></div></div><div class="bg-white rounded-xl shadow-lg p-6 md:p-8"><h4 class="text-xl font-bold mb-6 border-b-2 border-[#6BAA9F] pb-2">⚙️ 模块二：自动化采购与后勤执行</h4><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead><tr class="bg-gray-50"><th class="p-3 font-semibold">细分功能</th><th class="p-3 font-semibold">核心算法需求</th><th class="p-3 font-semibold">关键数据结构</th></tr></thead><tbody class="divide-y"><tr><td class="p-3">意图解析与参数提取</td><td class="p-3">LLM NLU, 命名实体识别 (NER)</td><td class="p-3"><code>JSON (Intent): {action, entities}</code></td></tr><tr><td class="p-3">智能寻源决策</td><td class="p-3">决策树, 规则引擎</td><td class="p-3"><code>Array<Object>: [{source, cost, eta}]</code></td></tr><tr><td class="p-3">API调用序列生成</td><td class="p-3">LLM思维链 (CoT), ReAct框架</td><td class="p-3"><code>Array<String>: ["check_inventory", ...]</code></td></tr><tr><td class="p-3">订单状态跟踪</td><td class="p-3">状态机, 时间差异分析</td><td class="p-3"><code>Object: {order_id, status, eta}</code></td></tr></tbody></table></div></div><div class="bg-white rounded-xl shadow-lg p-6 md:p-8"><h4 class="text-xl font-bold mb-6 border-b-2 border-[#E57A44] pb-2">🗺️ 模块三：动态后勤优化</h4><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead><tr class="bg-gray-50"><th class="p-3 font-semibold">细分功能</th><th class="p-3 font-semibold">核心算法需求</th><th class="p-3 font-semibold">关键数据结构</th></tr></thead><tbody class="divide-y"><tr><td class="p-3">供应链网络图构建</td><td class="p-3">图数据建模, 实体关系提取</td><td class="p-3"><code>Graph: {nodes, edges}</code></td></tr><tr><td class="p-3">运输路线风险评估</td><td class="p-3">GNN (GraphSAGE/GAT) 链接预测</td><td class="p-3"><code>Edge: {risk_score, delay_hours}</code></td></tr><tr><td class="p-3">多目标路径寻优</td><td class="p-3">Dijkstra变体, A*搜索</td><td class="p-3"><code>Array<Object>: [{path, cost, eta, risk}]</code></td></tr><tr><td class="p-3">在途重路由触发器</td><td class="p-3">事件流处理, 阈值比较</td><td class="p-3"><code>Event: {type, location, severity}</code></td></tr></tbody></table></div></div><div class="bg-white rounded-xl shadow-lg p-6 md:p-8"><h4 class="text-xl font-bold mb-6 border-b-2 border-[#F2C14E] pb-2">🔬 模块四：“假设”情景模拟</h4><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead><tr class="bg-gray-50"><th class="p-3 font-semibold">细分功能</th><th class="p-3 font-semibold">核心算法需求</th><th class="p-3 font-semibold">关键数据结构</th></tr></thead><tbody class="divide-y"><tr><td class="p-3">自然语言场景解析</td><td class="p-3">LLM NLU, 语义解析</td><td class="p-3"><code>JSON (Scenario): {event, target}</code></td></tr><tr><td class="p-3">数字孪生沙盒化</td><td class="p-3">图数据库快照/克隆</td><td class="p-3"><code>Graph Snapshot</code></td></tr><tr><td class="p-3">影响传播分析</td><td class="p-3">图遍历 (BFS, DFS), 级联失效模型</td><td class="p-3"><code>Array<Object>: [{asset, impact_type}]</code></td></tr><tr><td class="p-3">缓解策略生成</td><td class="p-3">LLM规划, 约束优化</td><td class="p-3"><code>Array<Object>: [{action, details}]</code></td></tr></tbody></table></div></div></div>
+            </div>
+        </section>
+
+        <section id="ui-mockups" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16"><h2 class="text-3xl md:text-4xl font-bold mb-4">用户界面原型</h2><p class="text-lg max-w-3xl mx-auto">本区域展示了平台核心功能的用户界面原型，旨在将抽象的功能和数据流转化为具体、可感知的用户体验。</p></div>
+                <div class="space-y-16">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-6 text-center">界面一：综合运营仪表盘 (驾驶舱)</h3>
+                        <div class="ui-mockup max-w-5xl mx-auto">
+                            <div class="bg-gray-800 p-2 flex items-center"><div class="flex space-x-1.5"><div class="w-3 h-3 rounded-full bg-red-500"></div><div class="w-3 h-3 rounded-full bg-yellow-500"></div><div class="w-3 h-3 rounded-full bg-green-500"></div></div><div class="text-gray-400 text-sm mx-auto">奥德修斯平台 - 综合运营仪表盘</div></div>
+                            <div class="p-4 md:p-6 bg-white">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                    <div class="bg-blue-100 p-4 rounded-lg text-center"><div class="text-3xl font-bold text-blue-800">98.2%</div><div class="text-blue-700">设备健康指数</div></div>
+                                    <div class="bg-green-100 p-4 rounded-lg text-center"><div class="text-3xl font-bold text-green-800">92.5%</div><div class="text-green-700">库存满足率</div></div>
+                                    <div class="bg-red-100 p-4 rounded-lg text-center"><div class="text-3xl font-bold text-red-800">3</div><div class="text-red-700">高风险NPT警报</div></div>
+                                </div>
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div class="border p-4 rounded-lg"><h4 class="font-bold mb-2">高优先级警报</h4><ul class="space-y-2 text-sm">
+                                        <li class="flex items-start"><span class="text-red-500 mr-2">🔴</span><div><strong>设备预警:</strong> 平台“德尔塔”P-101泵RUL < 7天。 <span class="text-blue-600 cursor-pointer">查看详情</span></div></li>
+                                        <li class="flex items-start"><span class="text-yellow-500 mr-2">🟡</span><div><strong>后勤延误:</strong> V-123补给船预计延误12小时。 <span class="text-blue-600 cursor-pointer">重新规划</span></div></li>
+                                        <li class="flex items-start"><span class="text-yellow-500 mr-2">🟡</span><div><strong>库存短缺:</strong> 备件#XYZ全球库存低于安全阈值。 <span class="text-blue-600 cursor-pointer">创建采购</span></div></li>
+                                    </ul></div>
+                                    <div class="border p-4 rounded-lg"><h4 class="font-bold mb-2">对话式AI助手</h4><div class="bg-gray-100 p-3 rounded-lg h-32 overflow-y-auto text-sm"><p><strong>AI:</strong> 欢迎回来，李经理。P-101泵的维修工单已自动生成并分配。您还有什么需要帮助的吗？</p></div><input type="text" placeholder="在此输入您的问题或指令..." class="w-full mt-2 p-2 border rounded text-sm"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold mb-6 text-center">界面二：预测性需求规划</h3>
+                        <div class="ui-mockup max-w-5xl mx-auto">
+                           <div class="bg-gray-800 p-2 flex items-center"><div class="flex space-x-1.5"><div class="w-3 h-3 rounded-full bg-red-500"></div><div class="w-3 h-3 rounded-full bg-yellow-500"></div><div class="w-3 h-3 rounded-full bg-green-500"></div></div><div class="text-gray-400 text-sm mx-auto">奥德修斯平台 - 需求规划模块</div></div>
+                           <div class="p-4 md:p-6 bg-white"><h4 class="font-bold mb-4">平台“德尔塔” - 未来60天高风险备件需求</h4><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead><tr class="bg-gray-50"><th class="p-3">备件ID</th><th class="p-3">描述</th><th class="p-3">预测需求</th><th class="p-3">当前库存</th><th class="p-3">缺口</th><th class="p-3">需求驱动因素</th><th class="p-3">操作</th></tr></thead><tbody class="divide-y"><tr class="bg-red-50"><td>BOP-Seal-Ring</td><td>防喷器密封环</td><td class="p-3">2</td><td class="p-3">1</td><td class="p-3 text-red-600 font-bold">1</td><td class="p-3">RUL预测</td><td class="p-3"><button class="bg-blue-500 text-white px-2 py-1 rounded text-xs">自动采购</button></td></tr><tr><td>MP-Bearing-789</td><td>泥浆泵轴承</td><td class="p-3">1</td><td class="p-3">1</td><td class="p-3">0</td><td class="p-3">RUL预测</td><td class="p-3"><button class="bg-gray-400 text-white px-2 py-1 rounded text-xs" disabled>无需操作</button></td></tr><tr><td>TD-Motor-XYZ</td><td>顶部驱动电机</td><td class="p-3">1</td><td class="p-3">2</td><td class="p-3">0</td><td class="p-3">作业计划</td><td class="p-3"><button class="bg-gray-400 text-white px-2 py-1 rounded text-xs" disabled>无需操作</button></td></tr></tbody></table></div></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold mb-6 text-center">界面三：自动化采购工作流</h3>
+                        <div class="ui-mockup max-w-5xl mx-auto">
+                            <div class="bg-gray-800 p-2 flex items-center"><div class="flex space-x-1.5"><div class="w-3 h-3 rounded-full bg-red-500"></div><div class="w-3 h-3 rounded-full bg-yellow-500"></div><div class="w-3 h-3 rounded-full bg-green-500"></div></div><div class="text-gray-400 text-sm mx-auto">奥德修斯平台 - 采购执行模块</div></div>
+                            <div class="p-4 md:p-6 bg-white"><h4 class="font-bold mb-4">采购订单 #PO-2025-789 (BOP-Seal-Ring) - 等待批准</h4><div class="flex flex-col md:flex-row gap-6"><div class="w-full md:w-1/3"><h5 class="font-semibold mb-2">AI寻源建议</h5><div class="border p-3 rounded-lg bg-green-50"><p class="font-bold">最优供应商: Global Parts Inc.</p><p class="text-sm">成本: $15,000</p><p class="text-sm">预计交期: 12天</p><p class="text-sm">可靠性评级: 98%</p></div><div class="border p-3 rounded-lg mt-2"><p class="font-bold">备选: RigSupply Co.</p><p class="text-sm">成本: $14,500</p><p class="text-sm">预计交期: 20天</p><p class="text-sm">可靠性评级: 92%</p></div></div><div class="w-full md:w-2/3"><h5 class="font-semibold mb-2">工作流状态</h5><ul class="space-y-3 text-sm">
+                                <li class="flex items-center"><span class="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center mr-3">✓</span><div><strong>需求已确认:</strong> 预测模块请求1件。</div></li>
+                                <li class="flex items-center"><span class="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center mr-3">✓</span><div><strong>内部库存已查询:</strong> 全球库存不足。</div></li>
+                                <li class="flex items-center"><span class="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center mr-3">✓</span><div><strong>外部供应商已寻源:</strong> 已对比3家供应商。</div></li>
+                                <li class="flex items-center"><span class="w-6 h-6 rounded-full bg-yellow-400 text-white flex items-center justify-center mr-3 animate-pulse">!</span><div><strong>等待人工批准:</strong> 订单草案已生成。</div></li>
+                                <li class="flex items-center"><span class="w-6 h-6 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center mr-3">?</span><div>订单已发送至ERP</div></li>
+                            </ul><div class="mt-4 flex space-x-4"><button class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">批准订单</button><button class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">拒绝</button></div></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="simulation" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12"><h2 class="text-3xl md:text-4xl font-bold mb-4">AI决策模拟器</h2><p class="text-lg max-w-3xl mx-auto">体验AI如何应对供应链中断。请选择一个模拟场景，观察系统的实时分析与应对策略。</p></div>
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8"><div class="grid lg:grid-cols-3 gap-8"><div class="lg:col-span-1"><label for="scenario-select" class="block text-lg font-semibold mb-2">选择模拟场景:</label><select id="scenario-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5D8B9E] focus:border-[#5D8B9E]"><option value="none">-- 请选择 --</option><option value="hurricane">场景一：飓风中断主要航道</option><option value="strike">场景二：主要供应港口罢工</option><option value="failure">场景三：关键设备预测到早期故障</option></select><div id="simulation-map" class="mt-6 p-4 border rounded-lg h-64 relative overflow-hidden bg-blue-50"><div id="node-platform" class="absolute top-1/4 left-3/4 transform -translate-x-1/2 -translate-y-1/2 text-center"><div class="text-4xl">🗼</div><p class="text-xs font-bold">钻井平台</p></div><div id="node-port" class="absolute bottom-1/4 left-1/4 transform -translate-x-1/2 -translate-y-1/2 text-center"><div class="text-4xl">⚓</div><p class="text-xs font-bold">供应港口</p></div><div id="node-warehouse" class="absolute top-1/2 left-1/4 transform -translate-x-1/2 -translate-y-1/2 text-center"><div class="text-4xl">📦</div><p class="text-xs font-bold">备用仓库</p></div><svg id="route-normal" class="absolute inset-0 w-full h-full" style="display: block;"><path d="M 70 180 Q 200 100 230 70" stroke="#6BAA9F" stroke-width="4" fill="none" stroke-dasharray="8 8"/></svg><svg id="route-alert" class="absolute inset-0 w-full h-full" style="display: none;"><path d="M 70 180 Q 200 100 230 70" stroke="#E57A44" stroke-width="4" fill="none" stroke-dasharray="8 8"/></svg><svg id="route-reroute" class="absolute inset-0 w-full h-full" style="display: none;"><path d="M 70 130 C 150 130, 150 70, 230 70" stroke="#5D8B9E" stroke-width="4" fill="none" stroke-dasharray="8 8"/></svg><div id="icon-hurricane" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl" style="display: none;">🌪️</div></div></div><div class="lg:col-span-2 space-y-6"><div><h3 class="text-xl font-semibold mb-2 border-b-2 border-[#E57A44] pb-1">🤖 AI系统分析与警报</h3><div id="simulation-alert" class="p-4 bg-red-50 text-red-800 rounded-lg min-h-[100px]"><p>请选择一个场景以启动分析...</p></div></div><div><h3 class="text-xl font-semibold mb-2 border-b-2 border-[#6BAA9F] pb-1">💡 AI建议的应对策略</h3><div id="simulation-action" class="p-4 bg-green-50 text-green-800 rounded-lg min-h-[100px]"><p>等待系统分析结果...</p></div></div></div></div></div>
+            </div>
+        </section>
+
+        <section id="roadmap" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12"><h2 class="text-3xl md:text-4xl font-bold mb-4">实施蓝图：分阶段部署</h2><p class="text-lg max-w-3xl mx-auto">项目将通过三个逻辑阶段从试点验证走向全球推广，每个阶段都聚焦于特定的业务范围和价值交付。</p></div>
+                <div class="space-y-12">
+                    <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 border-t-4 border-[#5D8B9E]">
+                        <h3 class="text-2xl font-bold mb-4">第一阶段：试点验证 (单个钻井平台)</h3>
+                        <div class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                            <div><h4 class="font-bold">业务需求:</h4><p>在一个高价值平台验证核心技术的可行性，证明AI预测的准确性，并建立初始的业务价值案例。</p></div>
+                            <div><h4 class="font-bold">流程清单:</h4><ul class="list-disc list-inside"><li>集成平台SCADA、ERP、CMMS系统</li><li>部署50个关键备件的数字孪生</li><li>上线PdM和需求预测模型 (建议模式)</li><li>部署管理者仪表盘</li></ul></div>
+                            <div><h4 class="font-bold">关键指标 (KPI):</h4><p>预测准确率 > 85%；关键备件缺货事件减少20%。</p></div>
+                            <div><h4 class="font-bold">改进点:</h4><p>从被动响应故障转变为基于数据的主动预警；建立单一事实来源，打破数据孤岛。</p></div>
+                            <div class="md:col-span-2"><h4 class="font-bold">业务价值:</h4><p>通过避免1-2次关键设备停机，证明项目的初始ROI。为后续推广建立技术和组织信誉。</p></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 border-t-4 border-[#6BAA9F]">
+                        <h3 class="text-2xl font-bold mb-4">第二阶段：区域扩展 (区域船队)</h3>
+                        <div class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                            <div><h4 class="font-bold">业务需求:</h4><p>将成功经验推广至整个区域船队，实现网络级别的后勤优化，并开始引入自动化流程。</p></div>
+                            <div><h4 class="font-bold">流程清单:</h4><ul class="list-disc list-inside"><li>将数字孪生模型扩展至所有主要设备</li><li>集成GNN后勤优化模型</li><li>启用半自动化的采购执行模块</li><li>全面推出情景模拟功能</li></ul></div>
+                            <div><h4 class="font-bold">关键指标 (KPI):</h4><p>区域NPT降低5%；加急货运成本降低15%；库存周转率提升10%。</p></div>
+                            <div><h4 class="font-bold">改进点:</h4><p>从单点优化到网络优化；将规划人员从手动执行中解放出来，转向决策监督。</p></div>
+                            <div class="md:col-span-2"><h4 class="font-bold">业务价值:</h4><p>实现显著的、可测量的区域性成本节约和效率提升。通过情景模拟增强区域供应链的韧性。</p></div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 border-t-4 border-[#E57A44]">
+                        <h3 class="text-2xl font-bold mb-4">第三阶段：全球推广 (全球深水作业区)</h3>
+                        <div class="grid md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+                            <div><h4 class="font-bold">业务需求:</h4><p>将平台打造为全球标准操作系统，实现最大程度的自主运行，并驱动持续的全球性改进。</p></div>
+                            <div><h4 class="font-bold">流程清单:</h4><ul class="list-disc list-inside"><li>在全球所有深水作业区部署平台</li><li>利用全球数据持续优化和再训练模型</li><li>逐步提高自动化水平，实现“按异常管理”</li><li>集成碳排放等更多外部数据源</li></ul></div>
+                            <div><h4 class="font-bold">关键指标 (KPI):</h4><p>全球NPT降低 >10%；整体后勤与库存成本降低 >15%；实现供应链碳足迹的可视化与初步优化。</p></div>
+                            <div><h4 class="font-bold">改进点:</h4><p>从区域管理到全球集中监控；建立数据驱动的持续改进文化。</p></div>
+                            <div class="md:col-span-2"><h4 class="font-bold">业务价值:</h4><p>在公司的核心业务领域建立起持久的、难以复制的竞争优势。将供应链从成本中心转变为价值创造中心。</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p>“奥德修斯计划”交互式深度解读应用</p>
+            <p class="text-sm text-gray-400 mt-2">将数据转化为驱动未来的智能动力</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const nptData = {
+                labels: ['设备故障', '后勤与库存', '天气与环境', '运营/人为因素'],
+                costs: [225, 162.5, 300, 55], 
+                downtime: ['24 - 96 小时', '12 - 72 小时', '48 - 120 小时', '4 - 24 小时']
+            };
+
+            function formatLabel(str, maxLen) {
+                const parts = [];
+                for (let i = 0; i < str.length; i += maxLen) { parts.push(str.substring(i, i + maxLen)); }
+                return parts;
+            }
+
+            const ctx = document.getElementById('nptChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: nptData.labels,
+                    datasets: [{
+                        label: '平均单次事件预估成本 (万美元)',
+                        data: nptData.costs,
+                        backgroundColor: ['rgba(229, 122, 68, 0.6)','rgba(107, 170, 159, 0.6)','rgba(93, 139, 158, 0.6)','rgba(242, 193, 78, 0.6)'],
+                        borderColor: ['rgba(229, 122, 68, 1)','rgba(107, 170, 159, 1)','rgba(93, 139, 158, 1)','rgba(242, 193, 78, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: c => `${c.dataset.label || ''}: ${c.parsed.x} 万美元`,
+                                afterLabel: c => `平均停工时间: ${nptData.downtime[c.dataIndex]}`
+                            }
+                        }
+                    },
+                    scales: { x: { beginAtZero: true, title: { display: true, text: '预估成本 (万美元)' } }, y: { ticks: { callback: function(v) { return formatLabel(this.getLabelForValue(v), 16); } } } }
+                }
+            });
+
+            const interactiveItems = document.querySelectorAll('.layer-box, .capability-card');
+            interactiveItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const details = item.querySelector('.details-content');
+                    if (details) { details.classList.toggle('open'); }
+                });
+            });
+
+            const scenarioSelect = document.getElementById('scenario-select');
+            const alertBox = document.getElementById('simulation-alert');
+            const actionBox = document.getElementById('simulation-action');
+            const routeNormal = document.getElementById('route-normal');
+            const routeAlert = document.getElementById('route-alert');
+            const routeReroute = document.getElementById('route-reroute');
+            const iconHurricane = document.getElementById('icon-hurricane');
+            const nodePort = document.getElementById('node-port');
+
+            const scenarios = {
+                none: {
+                    alert: '请选择一个场景以启动分析...',
+                    action: '等待系统分析结果...',
+                    visuals: () => {
+                        routeNormal.style.display = 'block'; routeAlert.style.display = 'none'; routeReroute.style.display = 'none'; iconHurricane.style.display = 'none';
+                        nodePort.classList.remove('animate-pulse', 'bg-red-200', 'rounded-full');
+                    }
+                },
+                hurricane: {
+                    alert: '<strong>警报：</strong>侦测到飓风将中断墨西哥湾主要航道。预计导致补给船延误72小时，钻井平台“阿尔法”关键备件（#BOP-Seal-Ring）短缺风险为85%，可能导致NPT。',
+                    action: '<strong>策略建议：</strong>1. 将“V-123”号补给船改道至备用航线。2. 授权从阿伯丁仓库空运15项最关键备件，预估成本$80k，可避免$2M的NPT损失。',
+                    visuals: () => {
+                        routeNormal.style.display = 'none'; routeAlert.style.display = 'block'; routeReroute.style.display = 'none'; iconHurricane.style.display = 'block';
+                        nodePort.classList.remove('animate-pulse', 'bg-red-200', 'rounded-full');
+                        setTimeout(() => { routeAlert.style.display = 'none'; routeReroute.style.display = 'block'; }, 1500);
+                    }
+                },
+                strike: {
+                    alert: '<strong>警报：</strong>休斯顿港口发生罢工，预计持续5天。所有经此港口的陆运和海运将完全中断。平台“贝塔”和“伽马”的物料补给将受影响。',
+                    action: '<strong>策略建议：</strong>1. 立即从加尔维斯顿港调配现有库存。2. 评估从欧洲仓库空运高优先级物料的成本效益。3. 自动更新ERP中受影响订单的交付预期。',
+                     visuals: () => {
+                        routeNormal.style.display = 'none'; routeAlert.style.display = 'block'; routeReroute.style.display = 'none'; iconHurricane.style.display = 'none';
+                        nodePort.classList.add('animate-pulse', 'bg-red-200', 'rounded-full');
+                    }
+                },
+                failure: {
+                    alert: '<strong>警报：</strong>PdM模型预测平台“德尔塔”的P-101号泥浆泵，其主轴承剩余使用寿命（RUL）低于7天安全阈值，失效概率为92%。',
+                    action: '<strong>策略建议：</strong>1. 已自动在CMMS中生成高优先级维修工单。2. 已验证本地仓库有替换轴承库存，并生成调拨单。3. 建议在下个计划性维护窗口（48小时后）内执行更换，以避免非计划停机。',
+                    visuals: () => {
+                        routeNormal.style.display = 'block'; routeAlert.style.display = 'none'; routeReroute.style.display = 'none'; iconHurricane.style.display = 'none';
+                        nodePort.classList.remove('animate-pulse', 'bg-red-200', 'rounded-full');
+                        document.getElementById('node-platform').classList.add('animate-pulse', 'bg-red-200', 'rounded-full');
+                        setTimeout(() => { document.getElementById('node-platform').classList.remove('animate-pulse', 'bg-red-200', 'rounded-full'); }, 3000);
+                    }
+                }
+            };
+
+            scenarioSelect.addEventListener('change', (event) => {
+                const selectedScenario = scenarios[event.target.value];
+                alertBox.innerHTML = `<p>${selectedScenario.alert}</p>`;
+                actionBox.innerHTML = `<p>${selectedScenario.action}</p>`;
+                Object.values(scenarios).forEach(s => s.visuals());
+                selectedScenario.visuals();
+            });
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => { mobileMenu.classList.toggle('hidden'); });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const headerHeight = document.getElementById('header').offsetHeight;
+            
+            function smoothScroll(targetId) {
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({ top: targetElement.offsetTop - headerHeight, behavior: 'smooth' });
+                    if (!mobileMenu.classList.contains('hidden')) { mobileMenu.classList.add('hidden'); }
+                }
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', e => { e.preventDefault(); smoothScroll(e.currentTarget.getAttribute('href')); });
+            });
+
+            const sections = document.querySelectorAll('main > section');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - headerHeight - 50) { current = '#' + section.getAttribute('id'); }
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === current) { link.classList.add('active'); }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
