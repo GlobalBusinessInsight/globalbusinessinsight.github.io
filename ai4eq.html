@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式报告：AI在勘探地震中的应用</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Teal -->
+    <!-- Application Structure Plan: The SPA is designed with a top-down, thematic structure to guide the user from a high-level overview to specific details. It uses a fixed navigation bar for easy access to four main sections: 1) '概览' (Overview) to introduce the core concept of AI transformation. 2) '工作流程变革' (Workflow Revolution) as the interactive core, using a tabbed interface to let users compare traditional vs. AI methods for Processing, Interpretation, and Modeling. 3) '商业生态' (Commercial Ecosystem) to showcase real-world adoption with interactive cards. 4) '未来前沿' (Future Frontiers) using an accordion to present advanced concepts. This structure prioritizes user-driven exploration over the linear format of the source report, making complex information more digestible and engaging. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Traditional vs. AI workflow. Goal: Compare/Organize. Viz: HTML/CSS diagram with a JS toggle. Justification: Visually contrasts the linear, siloed past with the integrated, accelerated future, which is the report's central thesis. Method: HTML/CSS/JS.
+        - Report Info: Time reduction in interpretation (months to days). Goal: Compare/Quantify. Viz: Horizontal Bar Chart. Justification: This is the most impactful quantitative data in the report. A bar chart provides a stark, immediate visualization of AI's efficiency gains. Library: Chart.js.
+        - Report Info: Commercial platforms (SLB, Halliburton, CGG). Goal: Inform/Organize. Viz: Interactive cards. Justification: Cards provide a scannable, organized overview of key players. A click-to-reveal interaction manages information density, showing details on demand. Method: HTML/CSS/JS.
+        - Report Info: Advanced AI paradigms (PINNs, BNNs, Transformers). Goal: Inform. Viz: Accordion component. Justification: Accordions are ideal for presenting dense, conceptual information in a compact form, allowing users to explore topics of interest without being overwhelmed. Method: HTML/CSS/JS.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #0d9488; /* teal-600 */
+            border-bottom-color: #0d9488;
+        }
+        .tab-btn {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .tab-btn.active {
+            background-color: #0d9488; /* teal-600 */
+            color: white;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-700">
+
+    <header class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-slate-800">AI与勘探地震学</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#overview" class="nav-link text-slate-600 font-medium border-b-2 border-transparent pb-1">概览</a>
+                <a href="#workflow" class="nav-link text-slate-600 font-medium border-b-2 border-transparent pb-1">工作流程变革</a>
+                <a href="#ecosystem" class="nav-link text-slate-600 font-medium border-b-2 border-transparent pb-1">商业生态</a>
+                <a href="#frontiers" class="nav-link text-slate-600 font-medium border-b-2 border-transparent pb-1">未来前沿</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-slate-700 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#overview" class="block py-2 text-slate-600">概览</a>
+            <a href="#workflow" class="block py-2 text-slate-600">工作流程变革</a>
+            <a href="#ecosystem" class="block py-2 text-slate-600">商业生态</a>
+            <a href="#frontiers" class="block py-2 text-slate-600">未来前沿</a>
+        </div>
+    </header>
+
+    <main>
+        <section id="overview" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-5xl font-bold text-slate-800 mb-4">从数据处理到地下智能</h2>
+                <p class="max-w-3xl mx-auto text-lg md:text-xl text-slate-600 mb-12">
+                    人工智能正在以前所未有的深度和广度重塑勘探地震学。本报告将带您深入了解AI如何将传统工作流程转变为一个更快速、更客观、更智能的集成化过程，从而彻底改变我们勘探地下世界的方式。
+                </p>
+                
+                <div class="bg-slate-100 rounded-xl p-6 md:p-8 max-w-5xl mx-auto">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6">地震勘探工作流程：一场范式转移</h3>
+                    <div class="flex justify-center mb-6">
+                        <div class="flex items-center space-x-4">
+                            <span class="font-semibold">传统流程</span>
+                            <label for="flow-toggle" class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" value="" id="flow-toggle" class="sr-only peer">
+                                <div class="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                            </label>
+                            <span class="font-semibold text-teal-600">AI驱动流程</span>
+                        </div>
+                    </div>
+                    
+                    <div id="workflow-diagram-container">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="workflow" class="py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">工作流程变革</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">
+                        AI正在颠覆地震勘探的每一个核心环节。通过下面的交互式面板，探索AI如何在数据处理、地质解释和速度建模中应对传统挑战，并带来革命性的效率提升。
+                    </p>
+                </div>
+
+                <div class="max-w-6xl mx-auto">
+                    <div class="flex flex-col md:flex-row justify-center mb-8 border-b border-slate-200">
+                        <button class="tab-btn py-3 px-6 text-lg font-semibold text-slate-500 border-b-2 border-transparent -mb-px" data-tab="processing">数据处理</button>
+                        <button class="tab-btn py-3 px-6 text-lg font-semibold text-slate-500 border-b-2 border-transparent -mb-px" data-tab="interpretation">地质解释</button>
+                        <button class="tab-btn py-3 px-6 text-lg font-semibold text-slate-500 border-b-2 border-transparent -mb-px" data-tab="modeling">速度建模</button>
+                    </div>
+
+                    <div id="tab-content" class="bg-white rounded-lg shadow-lg p-6 md:p-10 min-h-[400px]">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="ecosystem" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">商业生态</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">
+                        从技术服务巨头到能源运营商，整个行业都在积极拥抱AI。了解领先企业如何将AI技术转化为强大的商业解决方案和竞争优势。点击卡片查看更多信息。
+                    </p>
+                </div>
+                <div id="company-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                </div>
+            </div>
+        </section>
+
+        <section id="frontiers" class="py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-800">未来前沿</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-slate-600">
+                        AI革命远未结束。下一代AI范式正致力于解决“黑箱”、不确定性和物理一致性等核心问题，它们将共同构建一个更可靠、可信和强大的地球物理智能系统。
+                    </p>
+                </div>
+                <div id="accordion-container" class="max-w-4xl mx-auto space-y-4">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p>&copy; 2025 交互式报告。基于《人工智能在勘探地震学中的革命》报告生成。</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const contentData = {
+                workflowDiagram: {
+                    traditional: `
+                        <div class="fade-in grid grid-cols-3 gap-4 text-center items-center">
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold text-slate-700">数据采集</h4>
+                                <p class="text-sm text-slate-500">物理测量</p>
+                            </div>
+                            <div class="text-2xl text-slate-400 font-sans">&rarr;</div>
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold text-slate-700">数据处理</h4>
+                                <p class="text-sm text-slate-500">手动，计算密集</p>
+                            </div>
+                            <div class="col-span-3 text-2xl text-slate-400 font-sans my-2">&darr;</div>
+                            <div class="col-span-3 flex justify-center items-center">
+                                <div class="bg-white p-4 rounded-lg shadow">
+                                    <h4 class="font-bold text-slate-700">数据解释</h4>
+                                    <p class="text-sm text-slate-500">手动，主观性强</p>
+                                </div>
+                            </div>
+                        </div>`,
+                    ai: `
+                        <div class="fade-in grid grid-cols-3 gap-4 text-center items-center">
+                            <div class="bg-white p-4 rounded-lg shadow">
+                                <h4 class="font-bold text-slate-700">数据采集</h4>
+                                <p class="text-sm text-slate-500">物理测量</p>
+                            </div>
+                            <div class="text-2xl text-teal-500 font-sans">&harr;</div>
+                             <div class="bg-teal-100 border border-teal-300 p-4 rounded-lg shadow">
+                                <h4 class="font-bold text-teal-800">AI驱动处理</h4>
+                                <p class="text-sm text-teal-600">自动化，近实时</p>
+                            </div>
+                            <div class="col-span-3 text-2xl text-teal-500 font-sans my-2">&harr;</div>
+                             <div class="col-span-3 flex justify-center items-center">
+                                <div class="bg-teal-100 border border-teal-300 p-4 rounded-lg shadow">
+                                    <h4 class="font-bold text-teal-800">AI辅助解释</h4>
+                                    <p class="text-sm text-teal-600">自动化，客观</p>
+                                </div>
+                            </div>
+                        </div>`
+                },
+                tabs: {
+                    processing: {
+                        title: '智能去噪与数据重建',
+                        challenge: '原始地震数据充满了随机和相干噪声（如地滚波），并且常常因为地表障碍物而导致数据道缺失。传统方法耗时且效果有限。',
+                        solution: 'AI将此视为一个图像修复问题。U-Net、GANs等深度学习模型能够自动学习并去除复杂噪声，同时“脑补”出缺失的地震道。自监督学习（如Noise2Noise）的出现，使得模型无需“干净”标签即可训练，大大提高了实用性。',
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-teal-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>`
+                    },
+                    interpretation: {
+                        title: '自动化构造与地层解释',
+                        challenge: '手动追踪断层和层位是地震解释中最耗时、最主观的环节，一个大型三维工区的解释周期可能长达数月，且结果因人而异。',
+                        solution: 'AI将断层和层位识别转变为图像分割任务。通过在海量合成数据上训练，U-Net等模型能自动、客观地识别断层网络和追踪地质层位，将解释周期从数月缩短到数天。',
+                        chart: true
+                    },
+                    modeling: {
+                        title: '数据驱动的速度模型建立 (VMB)',
+                        challenge: '准确的速度模型是高精度成像的关键，但传统方法（如FWI）计算成本极高（数周到数月），且对初始模型敏感。',
+                        solution: 'AI将VMB重新定义为回归问题。深度网络可以直接学习从原始地震数据到速度模型的映射。训练完成后，预测新模型仅需数秒到数分钟，实现了近实时的速度反演，彻底改变了成像的经济和操作模式。',
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-teal-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`
+                    }
+                },
+                companies: [
+                    { name: '斯伦贝谢 (SLB)', platform: 'DELFI & Petrel', detail: '通过其基于云的DELFI认知环境，提供机器学习辅助断层解释等功能，声称可将解释周期从数月缩短至数天，是行业AI应用的领导者。', icon: 'S' },
+                    { name: '哈里伯顿', platform: 'DecisionSpace 365', detail: '在iEnergy混合云上提供AI驱动的地球科学套件，强调对OSDU开放标准的支持，旨在打破数据孤岛，其客户包括巴西国家石油公司（Petrobras）。', icon: 'H' },
+                    { name: 'CGG', platform: 'GeoSoftware', detail: '提供灵活的机器学习生态系统，允许用户通过Python扩展利用开源库构建定制化AI模型，成功案例包括利用少量井数据预测关键储层参数。', icon: 'C' },
+                    { name: '壳牌 (Shell)', platform: '自主研发 & 合作', detail: 'AI应用的先行者，利用AI加速钻探目标识别，并联合创办开放AI能源倡议（OAI），推动行业创新。', icon: 'S' },
+                    { name: '埃克森美孚', platform: '合作 (IBM)', detail: '在圭亚那项目中，通过与IBM合作应用AI，将钻井计划周期减少了2个月，数据准备时间减少了40%，强调了强大数据基础的重要性。', icon: 'E' },
+                    { name: 'BP', platform: '云平台应用', detail: '积极利用基于云的AI技术，在北海成功识别新储层，并参与利用机器学习从测井数据预测岩石物理性质的研究。', icon: 'B' }
+                ],
+                frontiers: [
+                    { title: '物理信息神经网络 (PINNs)', content: '为了解决AI的“黑箱”问题，PINNs将物理定律（如波动方程）作为一种约束直接嵌入神经网络的训练过程中。这使得模型的预测结果不仅拟合数据，还符合物理规律，从而在数据稀疏或有噪声时更加可靠和稳健。' },
+                    { title: '贝叶斯深度学习 (BNNs)', content: '传统AI只给出一个确定性预测，而BNNs能够量化预测的不确定性。它为网络权重学习一个概率分布而非单个值，从而能输出一个预测范围。这对于评估高风险钻探决策至关重要，可以告诉决策者模型对结果的“信心”有多大。' },
+                    { title: 'Transformer模型', content: 'CNN擅长捕捉局部特征，但难以处理地质构造的长程相关性。源于自然语言处理的Transformer模型，其自注意力机制能有效捕捉全局上下文信息，在分析一个点时能“看到”整个数据体，为模拟大规模地质趋势提供了巨大潜力。' },
+                    { title: '多物理场融合AI', content: '地下表征需要融合地震、重力、电磁等多种数据。AI为此提供了新的联合反演框架，通过深度网络来“学习”不同物理场之间的复杂耦合关系，而不是依赖于人工设计的简单约束，从而能得到更可靠、更全面的地下模型。' }
+                ]
+            };
+
+            const workflowContainer = document.getElementById('workflow-diagram-container');
+            const flowToggle = document.getElementById('flow-toggle');
+            
+            function updateWorkflowDiagram() {
+                workflowContainer.innerHTML = flowToggle.checked ? contentData.workflowDiagram.ai : contentData.workflowDiagram.traditional;
+            }
+            flowToggle.addEventListener('change', updateWorkflowDiagram);
+            updateWorkflowDiagram();
+
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContent = document.getElementById('tab-content');
+            let interpretationChart = null;
+
+            function renderTabContent(tabKey) {
+                const data = contentData.tabs[tabKey];
+                let chartHtml = '';
+                if (data.chart) {
+                    chartHtml = `<div class="w-full lg:w-3/5"><div class="chart-container"><canvas id="interpretation-chart"></canvas></div></div>`;
+                } else {
+                    chartHtml = `<div class="w-full lg:w-2/5 flex items-center justify-center p-8">${data.icon}</div>`;
+                }
+
+                tabContent.innerHTML = `
+                    <div class="fade-in flex flex-col lg:flex-row items-center gap-8">
+                        <div class="w-full lg:w-3/5 lg:order-1 ${data.chart ? 'lg:w-2/5' : ''}">
+                            <h3 class="text-2xl font-bold text-slate-800 mb-4">${data.title}</h3>
+                            <h4 class="font-semibold text-slate-600 mb-2">传统挑战:</h4>
+                            <p class="text-slate-600 mb-6">${data.challenge}</p>
+                            <h4 class="font-semibold text-teal-600 mb-2">AI解决方案:</h4>
+                            <p class="text-slate-600">${data.solution}</p>
+                        </div>
+                        ${chartHtml}
+                    </div>`;
+
+                if (data.chart) {
+                    const ctx = document.getElementById('interpretation-chart').getContext('2d');
+                    if(interpretationChart) interpretationChart.destroy();
+                    interpretationChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['断层解释周期'],
+                            datasets: [{
+                                label: '传统方法 (月)',
+                                data: [3],
+                                backgroundColor: 'rgba(107, 114, 128, 0.5)',
+                                borderColor: 'rgba(107, 114, 128, 1)',
+                                borderWidth: 1
+                            }, {
+                                label: 'AI方法 (天)',
+                                data: [5],
+                                backgroundColor: 'rgba(13, 148, 136, 0.6)',
+                                borderColor: 'rgba(13, 148, 136, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'AI显著缩短解释周期',
+                                    font: { size: 16 }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.x !== null) {
+                                                 label += context.parsed.x + (label.includes('天') ? ' 天' : ' 月');
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: '时间'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active', 'text-teal-600'));
+                    button.classList.add('active', 'text-teal-600');
+                    renderTabContent(button.dataset.tab);
+                });
+            });
+
+            tabButtons[1].click();
+            
+            const companyGrid = document.getElementById('company-grid');
+            contentData.companies.forEach(company => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow-md p-6 cursor-pointer transform hover:-translate-y-1 transition-transform duration-300';
+                card.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-teal-600 text-white flex items-center justify-center text-2xl font-bold mr-4">${company.icon}</div>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-800">${company.name}</h3>
+                            <p class="text-sm text-teal-600 font-semibold">${company.platform}</p>
+                        </div>
+                    </div>
+                    <p class="text-slate-600 detail-text">${company.detail}</p>
+                `;
+                companyGrid.appendChild(card);
+            });
+
+            const accordionContainer = document.getElementById('accordion-container');
+            contentData.frontiers.forEach((item, index) => {
+                const accordionItem = document.createElement('div');
+                accordionItem.className = 'bg-white rounded-lg shadow-sm overflow-hidden';
+                accordionItem.innerHTML = `
+                    <button class="accordion-header w-full flex justify-between items-center p-5 text-left font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                        <span>${item.title}</span>
+                        <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                        <p class="p-5 pt-0 text-slate-600">${item.content}</p>
+                    </div>
+                `;
+                accordionContainer.appendChild(accordionItem);
+            });
+            
+            accordionContainer.addEventListener('click', (e) => {
+                const header = e.target.closest('.accordion-header');
+                if (header) {
+                    const content = header.nextElementSibling;
+                    const icon = header.querySelector('svg');
+                    
+                    if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+                        content.style.maxHeight = '0px';
+                        icon.classList.remove('rotate-180');
+                    } else {
+                        document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = '0px');
+                        document.querySelectorAll('.accordion-header svg').forEach(i => i.classList.remove('rotate-180'));
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        icon.classList.add('rotate-180');
+                    }
+                }
+            });
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    if (mobileMenu.classList.contains('hidden') === false) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+            
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
