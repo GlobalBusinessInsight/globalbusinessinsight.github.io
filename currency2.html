@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>货币之墙：中国流动性困境深度剖析 (翻书版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Classic Book -->
+    <!-- Application Structure Plan: The application is structured as a physical book with a cover and flippable pages. Users click on page corners to turn them. The content is laid out in a two-page spread format. This creates a highly immersive and tactile reading experience, moving beyond simple screen transitions to mimic the act of reading a real book. -->
+    <!-- Visualization & Content Choices: Content from the previous version is adapted to fit the new book layout. Charts are placed on pages where they are most relevant. The primary interaction is the page flip, keeping the focus on reading. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #e0d8c7;
+            background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+            color: #3a2a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            perspective: 2500px;
+        }
+        .book-container {
+            width: 90vw;
+            height: 90vh;
+            max-width: 1200px;
+            max-height: 800px;
+            position: relative;
+        }
+        .book {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+        }
+        .page {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            top: 0;
+            right: 0;
+            background: #fdfaf5;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            transform-origin: left center;
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 0 8px 8px 0;
+        }
+        .page-content {
+            padding: 2rem 2.5rem;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .page.flipped {
+            transform: rotateY(-180deg);
+        }
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+        }
+        .back {
+            transform: rotateY(180deg);
+            background: #f8f3ed; /* Slightly different color for back */
+        }
+        .left-page-static {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: #fdfaf5;
+            box-shadow: inset 10px 0 15px -10px rgba(0,0,0,0.3);
+            border-radius: 8px 0 0 8px;
+        }
+        .cover .page-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+        }
+        .cover {
+            background: #5c4b3a;
+            color: #fdfaf5;
+        }
+        .page-number {
+            position: absolute;
+            bottom: 1rem;
+            width: 100%;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #9c8b7b;
+        }
+        .chart-container {
+            width: 100%;
+            max-height: 300px;
+            margin: 1rem 0;
+        }
+        h1, h2, h3 { font-family: 'Noto Serif SC', serif; }
+        .en-body h1, .en-body h2, .en-body h3 { font-family: 'Source Serif 4', serif; }
+        .en-body { font-family: 'Source Serif 4', serif; }
+        .drop-cap::first-letter {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 4em;
+            font-weight: bold;
+            float: left;
+            line-height: 0.7;
+            margin-right: 0.1em;
+            color: #333;
+        }
+        .en-body .drop-cap::first-letter {
+             font-family: 'Source Serif 4', serif;
+        }
+        .nav-button {
+            position: absolute;
+            bottom: 1rem;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 1000;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        .nav-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+            opacity: 1;
+        }
+        #prevBtn { left: 1rem; }
+        #nextBtn { right: 1rem; }
+    </style>
+</head>
+<body>
+
+    <div class="book-container">
+        <div id="book" class="book">
+            <div class="left-page-static"></div>
+            <!-- Pages will be inserted here by JavaScript -->
+        </div>
+        <button id="prevBtn" class="nav-button">&larr; 上一页</button>
+        <button id="nextBtn" class="nav-button">下一页 &rarr;</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const book = document.getElementById('book');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            let pages = [];
+            let currentPage = 0;
+
+            const content = [
+                // 封面
+                { type: 'cover', content: `<div class="page-content"><h1 class="text-4xl md:text-6xl font-bold">货币之墙</h1><p class="text-lg mt-4">中国流动性困境深度剖析</p><p class="mt-8 text-sm opacity-70">2025年夏季刊</p></div>` },
+                // 第1页
+                { content: `<div class="page-content"><h2 class="text-2xl font-bold mb-4">两种货币的故事</h2><p class="text-sm leading-relaxed drop-cap">要理解中国的货币困境，必须从分析广义货币（M2）与狭义货币（M1）增长率之间惊人且持续的背离入手。这一“剪刀差”现象，是经济潜在病灶最强有力单一指标，清晰地扫描出金融系统与实体经济之间的结构性断裂。它不仅是一个技术性的金融指标，更是解读当前中国经济复杂叙事的关键密钥，反映了信心、预期与政策在现实世界中的角力。</p><h3 class="text-lg font-bold mt-3">何为M1与M2？</h3><p class="text-sm leading-relaxed">M2代表潜在购买力总和，它包括流通中现金、企业与个人活期存款，以及至关重要储蓄和定期存款。而M1（主要为企业活期存款）是衡量企业经营活力“体温计”。当M1增速停滞，则意味着企业正在“收手”，将资金从生产经营前线撤回，经济的血液循环开始放缓。</p><div class="page-number">1</div></div>` },
+                // 第2页
+                { content: `<div class="page-content"><h3 class="text-lg font-bold">历史的警钟与当前的危机</h3><p class="text-sm leading-relaxed">本轮始于2021年末的剪刀差，根源更为复杂，性质也更为严峻。它与房地产行业深度调整、以及对平台经济和教培等行业严厉监管同步发生，反映的是整个私营部门信心的结构性坍塌。图表中的数据清晰地显示，在政策驱动下，M2的增长得以维持，但M1的增长却已崩溃，这表明问题并非简单周期性放缓，而是货币政策核心传导机制已经失灵。</p><div class="chart-container"><canvas id="m1m2Chart_zh"></canvas></div><p class="text-xs text-center text-gray-500">数据来源：中国人民银行</p><div class="page-number">2</div></div>` },
+                // 第3页
+                { content: `<div class="page-content"><h3 class="text-lg font-bold">微观机制：资金如何被“冻结”？</h3><p class="text-sm leading-relaxed drop-cap">剪刀差的背后，是无数微观主体的理性选择。试想一家企业，它从银行获得一笔低息贷款（计入M2）。在理想情况下，它会用这笔钱购买原材料、更新设备或招聘员工，资金以活期存款（M1）的形式在经济中流转。但现在，由于对未来需求感到悲观，且实体投资回报率过低，企业主发现，将这笔贷款直接存为定期存款，或者购买银行发行的理财产品，其收益甚至可能高于贷款利息。这种“无风险套利”或“预防性储蓄”行为，导致资金在获得后立即从M1中流出，沉淀为M2中的非活性部分。货币被创造出来，却被立即“冻结”了。这种现象在宏观上表现为“流动性陷阱”，即无论央行注入多少流动性，都无法有效刺激信贷需求和经济活动。</p><div class="page-number">3</div></div>` },
+                // 第4页
+                { type: 'cover', content: `<div class="page-content"><h2 class="text-3xl font-bold text-gray-800 mb-4">资本的三峡</h2><p class="text-base md:text-lg text-gray-700 max-w-3xl mx-auto leading-relaxed">天量货币并未消失，而是被三座巨大的“堤坝”所拦截，困于低效的循环之中。</p><div class="flex justify-around items-center w-full mt-8 text-center"><div class="w-1/3"> <div class="text-4xl">🏛️</div> <h3 class="font-bold text-sm mt-1">国家的虹吸管</h3> </div><div class="w-1/3"> <div class="text-4xl">🏗️</div> <h3 class="font-bold text-sm mt-1">房地产的泥潭</h3> </div><div class="w-1/3"> <div class="text-4xl">🛡️</div> <h3 class="font-bold text-sm mt-1">私营部门大撤退</h3> </div></div><div class="page-number">4</div></div>` },
+                // 第5页
+                { content: `<div class="page-content"><h3 class="text-xl font-bold mb-2">第一道堤坝：国家的虹吸管</h3><p class="text-sm leading-relaxed drop-cap">这是流动性陷阱中最具中国特色的部分。在市场化经济体中，信贷主要由需求驱动；但在中国，信贷在很大程度上是政策供给驱动的。新增信贷的绝大部分，通过国家指令，被导向国有企业（SOEs）和地方政府融资平台（LGFVs）。这些资金主要用于回报率递减的基建项目，以及偿还旧债。这形成了一个巨大的资本内部循环，在账面上维持了金融稳定，但代价是资本被锁定在低效项目中，严重挤压了私营部门的融资空间。</p><div class="bg-gray-100 p-2 rounded mt-2 text-xs"><p><b>LGFV债务规模:</b> ~60-90 万亿元 (隐性债务估算)</p><p><b>政府债券占比:</b> 显著上升 (财政前置发力)</p></div><div class="page-number">5</div></div>` },
+                // 第6页
+                { content: `<div class="page-content"><h3 class="text-xl font-bold mb-2">第二道堤坝：房地产的泥潭</h3><p class="text-sm leading-relaxed drop-cap">房地产行业，这个曾经的增长引擎，如今已蜕变为一个吞噬资本的泥潭。流动性并未流向能创造价值的新项目，而是被用于一场代价高昂的“防御战”。政策的核心目标是“保交楼”，为此设立的专项借款和“白名单”制度，将资金输送给主要是国有的开发商。这些资金的本质是“续命款”，用于填补资产负债表的窟窿和完成“僵尸项目”，其机会成本是牺牲了对新兴产业的支持。</p><div class="bg-gray-100 p-2 rounded mt-2 text-xs"><p><b>房地产投资:</b> 连续负增长</p><p><b>百强房企销售:</b> 持续腰斩</p></div><div class="page-number">6</div></div>` },
+                // 第7页
+                { content: `<div class="page-content"><h3 class="text-xl font-bold mb-2">第三道堤坝：私营部门大撤退</h3><p class="text-sm leading-relaxed drop-cap">这是流动性陷阱的最终闭环。面对不确定性、通缩压力和暗淡预期，私营部门的核心行为模式从“追求利润”转向了“修复资产负债表”和“规避风险”。企业层面，表现为“投资罢工”和偿还债务。家庭层面，则表现为“超额储蓄”和消费降级。房地产价格下跌侵蚀了家庭财富，叠加对未来的忧虑，促使居民增加储蓄。这种集体性的保守行为，导致总需求萎缩，形成恶性循环。</p><div class="bg-gray-100 p-2 rounded mt-2 text-xs"><p><b>居民存款:</b> 持续高位</p><p><b>消费者信心:</b> 历史低位</p></div><div class="page-number">7</div></div>` },
+                // 第8页
+                { content: `<div class="page-content"><h2 class="text-2xl font-bold mb-4">政策回音壁：官方定调与学界争鸣</h2><h3 class="text-lg font-bold">最高决策层的战略定力</h3><p class="text-sm leading-relaxed">核心思想是“稳中求进、以进促稳、先立后破”。“稳”是压倒一切的前提，意味着极力避免“休克疗法”。“进”则体现在对“新质生产力”的强调上，标志着发展重心向国家主导的科技创新战略转移。</p><h3 class="text-lg font-bold mt-3">中国人民银行的政策话术</h3><p class="text-sm leading-relaxed">央行正试图引导市场预期，从关注信贷“总量”增长，转向注重“结构”优化和“效率”提升。这既是对“大水漫灌”模式效率递减的间接承认，也旨在稳定市场信心。</p><div class="page-number">8</div></div>` },
+                // 第9页
+                { content: `<div class="page-content"><h3 class="text-lg font-bold">经济学界的激烈辩论</h3><p class="text-sm leading-relaxed drop-cap">在官方审慎的基调之外，学术界关于如何走出当前困境的辩论则要激烈和公开得多，大致可分为两大阵营：</p><p class="text-sm leading-relaxed mt-2"><strong>“需求侧”阵营（刺激派）</strong>认为，主要矛盾是总需求不足和通缩风险，主张中央财政大规模发债，直接向居民转移支付以快速提振消费。</p><p class="text-sm leading-relaxed mt-2"><strong>“供给侧”阵营（改革派）</strong>则认为，根源在于资源错配和投资效率低下，主张深化市场化改革，通过释放私营部门的“动物精神”来内生性地创造需求。</p><div class="page-number">9</div></div>` },
+                // 第10页
+                { content: `<div class="page-content"><h2 class="text-2xl font-bold mb-4">病理诊断：一场混合型危机</h2><h3 class="text-lg font-bold">需求侧：资产负债表衰退</h3><p class="text-sm leading-relaxed">房地产泡沫破裂后，私营部门的目标从“利润最大化”转为“负债最小化”。无论利率多低，他们都优先偿还存量债务，而非借贷投资或消费，使货币政策陷入“流动性陷阱”。</p><h3 class="text-lg font-bold mt-3">供给侧：指令性经济硬化症</h3><p class="text-sm leading-relaxed">中国的金融体系服务于国家意志，信贷遵循政策指令。新增流动性被优先输送给低效的国企和地方政府平台，扼杀了效率，使得财政刺激的效果大打折扣。</p><div class="page-number">10</div></div>` },
+                // 第11页
+                { content: `<div class="page-content"><h3 class="text-lg font-bold">综合诊断：双重螺旋下的政策瘫痪</h3><p class="text-sm leading-relaxed drop-cap">中国的困境，正是这两种病症叠加形成的恶性循环。需求侧的“资产负债表衰退”导致私营部门“不借钱”；供给侧的“指令性经济硬化症”导致银行“不给私营部门借钱”。货币政策因此陷入了双重失灵：它既无法刺激有效的信贷需求，也无法控制信贷的有效流向。这两种病症相互加强，共同将中国经济锁入了一个低增长、低通胀、高负债的陷阱之中。</p><div class="page-number">11</div></div>` },
+                // 第12页
+                { content: `<div class="page-content"><h2 class="text-2xl font-bold mb-4">终章：涟漪效应与艰难的出路</h2><h3 class="text-lg font-bold">涟漪效应：停滞的代价</h3><ul class="list-disc list-inside text-sm space-y-1"><li><b>国内影响：</b>通缩螺旋的威胁、高企的青年失业率动摇社会契约、以及金融体系的脆弱性。</li><li><b>全球溢出：</b>中国正从“增长引擎”变为“风险源头”，通过输出通缩、削弱全球需求、以及加剧资本外流压力，将其内部困境传导至世界。</li></ul><h3 class="text-lg font-bold mt-3">出路何在：一场深刻的战略转向</h3><p class="text-sm leading-relaxed">面对混合型危机，修补政策已是徒劳。中国需要一场触及经济模式核心的、多管齐下的根本性战略转向。</p><div class="page-number">12</div></div>` },
+                // 第13页
+                { content: `<div class="page-content"><h3 class="text-lg font-bold">三大政策建议</h3><ul class="space-y-3 text-sm leading-relaxed mt-4"><li><strong class="text-blue-700">1. 治愈私营部门：</strong>建立稳固的社会安全网（养老、医保、失业保障），从根本上降低家庭的预防性储蓄，重燃信心。</li><li><strong class="text-blue-700">2. 重组国有部门：</strong>对地方和房企债务进行果断的中央主导重组，设立“坏账银行”剥离有毒资产，为高效的私营部门腾出空间。</li><li><strong class="text-blue-700">3. 重塑总需求：</strong>将财政重心从低效投资转向直接补贴家庭，通过消费券或现金等方式，将购买力直接交到消费者手中。</li></ul><div class="page-number">13</div></div>` },
+                
+                // 英文版封面
+                { type: 'cover', isEnglish: true, content: `<div class="page-content en-body"><h1 class="text-4xl md:text-6xl font-bold">The Wall of Money</h1><p class="text-lg mt-4">An In-depth Analysis of China's Liquidity Conundrum</p><p class="mt-8 text-sm opacity-70">Summer 2025 Issue</p></div>` },
+                // 英文版第1页
+                { isEnglish: true, content: `<div class="page-content en-body"><h2 class="text-2xl font-bold mb-4">A Tale of Two Monies</h2><p class="text-sm leading-relaxed drop-cap">To understand China's monetary predicament, one must analyze the startling divergence between broad money (M2) and narrow money (M1). This "scissors gap" is the most potent indicator of the economy's underlying pathology, imaging the fracture between the financial system and the real economy. It is not merely a technical metric but the key to deciphering China's complex economic narrative.</p><h3 class="text-lg font-bold mt-3">What are M1 and M2?</h3><p class="text-sm leading-relaxed">M2 represents total potential purchasing power, including cash, demand deposits, and crucial savings and time deposits. M1, mainly corporate demand deposits, is a "thermometer" for business vitality. When M1 growth stagnates, it signals that firms are pulling back from investment, slowing the economy's circulatory system.</p><div class="page-number">1</div></div>` },
+                // 英文版第2页
+                { isEnglish: true, content: `<div class="page-content en-body"><h3 class="text-lg font-bold">A Historical Warning & The Current Crisis</h3><p class="text-sm leading-relaxed">The current scissors gap, starting in late 2021, is more severe than past episodes, reflecting a structural collapse in private sector confidence. It coincided with the deep correction in the property sector and a sweeping regulatory crackdown, indicating that the core transmission mechanism of monetary policy has failed. The chart clearly shows that while M2 growth is sustained by policy, M1 growth has collapsed.</p><div class="chart-container"><canvas id="m1m2Chart_en"></canvas></div><p class="text-xs text-center text-gray-500">Source: People's Bank of China</p><div class="page-number">2</div></div>` },
+                // 英文版第3页
+                { isEnglish: true, content: `<div class="page-content en-body"><h3 class="text-lg font-bold">The Micro-Mechanism: How Money Gets "Frozen"</h3><p class="text-sm leading-relaxed drop-cap">Behind the scissors gap are the rational choices of countless micro-agents. Imagine a firm that gets a low-interest loan (counted in M2). Ideally, it would use this to buy materials or hire staff, circulating it as demand deposits (M1). But now, pessimistic about future demand and returns on physical investment, the owner finds it more profitable to simply put the loan into a time deposit or a wealth management product. This "risk-free arbitrage" or "precautionary saving" freezes the newly created money, preventing it from entering the real economy. On a macro level, this behavior creates a "liquidity trap."</p><div class="page-number">3</div></div>` },
+                // 英文版第4页
+                { type: 'cover', isEnglish: true, content: `<div class="page-content en-body"><h2 class="text-3xl font-bold text-gray-800 mb-4">The Three Gorges of Capital</h2><p class="text-base md:text-lg text-gray-700 max-w-3xl mx-auto leading-relaxed">The vast ocean of money has been intercepted by three colossal dams, trapped in inefficient cycles.</p><div class="flex justify-around items-center w-full mt-8 text-center"><div class="w-1/3"> <div class="text-4xl">🏛️</div> <h3 class="font-bold text-sm mt-1">The State Siphon</h3> </div><div class="w-1/3"> <div class="text-4xl">🏗️</div> <h3 class="font-bold text-sm mt-1">The Property Quagmire</h3> </div><div class="w-1/3"> <div class="text-4xl">🛡️</div> <h3 class="font-bold text-sm mt-1">The Private Sector's Retreat</h3> </div></div><div class="page-number">4</div></div>` },
+                // 英文版第5页
+                { isEnglish: true, content: `<div class="page-content en-body"><h3 class="text-xl font-bold mb-2">First Dam: The State Siphon</h3><p class="text-sm leading-relaxed drop-cap">This is the most uniquely Chinese component of the liquidity trap. The vast majority of new credit is directed by state command to SOEs and LGFVs. This capital is used to fund infrastructure projects with diminishing returns and to roll over maturing debt. This creates a massive internal capital loop that maintains stability on paper but locks capital in inefficient projects, crowding out the private sector.</p><div class="bg-gray-100 p-2 rounded mt-2 text-xs"><p><b>LGFV Debt:</b> ~60-90 Trillion RMB</p><p><b>Gov't Bonds in TSF:</b> Rising Sharply</p></div><div class="page-number">5</div></div>` },
+                // 英文版第6页
+                { isEnglish: true, content: `<div class="page-content en-body"><h3 class="text-xl font-bold mb-2">Second Dam: The Property Quagmire</h3><p class="text-sm leading-relaxed drop-cap">The property sector, once a key growth engine, is now a capital-devouring quagmire. Liquidity is not flowing to new, value-creating projects but is used in a costly defensive battle. The core policy is "ensuring delivery of pre-sold homes." Special loans and "whitelists" channel funds to mostly state-owned developers. This capital is essentially "life support" for zombie projects, sacrificing support for emerging industries.</p><div class="bg-gray-100 p-2 rounded mt-2 text-xs"><p><b>Real Estate Investment:</b> Sustained Contraction</p><p><b>Top Developers' Sales:</b> Persistently Halved</p></div><div class="page-number">6</div></div>` },
+                // 英文版第7页
+                { isEnglish: true, content: `<div class="page-content en-body"><h3 class="text-xl font-bold mb-2">Third Dam: The Private Sector's Great Retreat</h3><p class="text-sm leading-relaxed drop-cap">This is the final loop of the liquidity trap. Facing uncertainty, the private sector's behavior has shifted from "profit maximization" to "balance sheet repair." Firms are on an "investment strike." Households are engaging in "excess savings." This collective conservative behavior shrinks aggregate demand, creating a vicious cycle.</p><div class="bg-gray-100 p-2 rounded mt-2 text-xs"><p><b>Household Deposits:</b> Sustained Highs</p><p><b>Consumer Confidence:</b> Historic Lows</p></div><div class="page-number">7</div></div>` },
+                // 英文版第8页
+                { isEnglish: true, content: `<div class="page-content en-body"><h2 class="text-2xl font-bold mb-4">Policy Echo Chamber</h2><h3 class="text-lg font-bold">The Strategic Resolve of Top Leadership</h3><p class="text-sm leading-relaxed">The core principle is to "seek progress while maintaining stability," avoiding "shock therapy." "Progress" is embodied in the push for "new quality productive forces," signaling a strategic shift to state-led tech innovation.</p><h3 class="text-lg font-bold mt-3">The PBOC's Policy Rhetoric</h3><p class="text-sm leading-relaxed">The central bank is trying to shift focus from credit "quantity" to "quality" and "efficiency." This is a tacit admission of the diminishing returns of flooding the system with liquidity and aims to stabilize market confidence.</p><div class="page-number">8</div></div>` },
+                // 英文版第9页
+                { isEnglish: true, content: `<div class="page-content en-body"><h3 class="text-lg font-bold">The Fierce Debate Among Economists</h3><p class="text-sm leading-relaxed drop-cap">Outside the cautious official tone, the academic debate is far more intense, roughly divided into two camps:</p><p class="text-sm leading-relaxed mt-2">The <strong>"Demand-Side" (Stimulus) camp</strong> sees insufficient demand and deflation as the main risks, advocating for large-scale fiscal expansion to directly boost consumption.</p><p class="text-sm leading-relaxed mt-2">The <strong>"Supply-Side" (Reform) camp</strong> argues the root problem is resource misallocation, advocating for market-oriented reforms to unleash the private sector's "animal spirits."</p><div class="page-number">9</div></div>` },
+                // 英文版第10页
+                { isEnglish: true, content: `<div class="page-content en-body"><h2 class="text-2xl font-bold mb-4">The Pathology: A Hybrid Crisis</h2><h3 class="text-lg font-bold">The Demand Side: A Balance Sheet Recession</h3><p class="text-sm leading-relaxed">After the property bubble burst, the private sector's goal shifted from profit maximization to debt minimization. No matter how low interest rates go, they prioritize repaying debt over new borrowing, trapping monetary policy.</p><h3 class="text-lg font-bold mt-3">The Supply Side: Command-Economy Sclerosis</h3><p class="text-sm leading-relaxed">China's financial system serves the state's will, allocating credit by policy directive to inefficient SOEs and LGFVs. This stifles efficiency and blunts the effect of fiscal stimulus.</p><div class="page-number">10</div></div>` },
+                // 英文版第11页
+                { isEnglish: true, content: `<div class="page-content en-body"><h3 class="text-lg font-bold">Combined Diagnosis: Policy Paralysis</h3><p class="text-sm leading-relaxed drop-cap">China's predicament is a vicious cycle: the demand side "won't borrow," and the supply side "won't lend to the private sector." Monetary policy is thus doubly ineffective, unable to stimulate demand or direct credit efficiently. The two maladies reinforce each other, locking the economy in a trap of low growth, low inflation, and high debt.</p><div class="page-number">11</div></div>` },
+                // 英文版第12页
+                { isEnglish: true, content: `<div class="page-content en-body"><h2 class="text-2xl font-bold mb-4">Finale: Ripple Effects & The Difficult Way Out</h2><h3 class="text-lg font-bold">Ripple Effects: The Price of Stagnation</h3><ul class="list-disc list-inside text-sm space-y-1"><li><b>Domestic Impact:</b> The threat of a deflationary spiral, high youth unemployment eroding the social contract, and financial system fragility.</li><li><b>Global Spillover:</b> China is shifting from a "growth engine" to a "risk source," exporting deflation, weakening global demand, and increasing capital outflow pressure.</li></ul><h3 class="text-lg font-bold mt-3">The Way Out: A Profound Strategic Shift</h3><p class="text-sm leading-relaxed">Piecemeal adjustments are futile. China needs a fundamental, multi-pronged strategic pivot that addresses the core of its economic model.</p><div class="page-number">12</div></div>` },
+                // 英文版第13页
+                { isEnglish: true, content: `<div class="page-content en-body"><h3 class="text-lg font-bold">Three Policy Recommendations</h3><ul class="space-y-3 text-sm leading-relaxed mt-4"><li><strong class="text-blue-700">1. Heal the Private Sector:</strong> Build a robust social safety net (pensions, healthcare, unemployment benefits) to structurally reduce precautionary savings and restore confidence.</li><li><strong class="text-blue-700">2. Restructure the State Sector:</strong> Conduct a decisive, central-led restructuring of debt via a "bad bank" to free up credit for the productive private sector.</li><li><strong class="text-blue-700">3. Reshape Aggregate Demand:</strong> Shift fiscal policy from inefficient investment to direct household subsidies (vouchers, cash) to bypass clogged financial channels.</li></ul><div class="page-number">13</div></div>` },
+            ];
+
+            function buildBook() {
+                book.innerHTML = '<div class="left-page-static"></div>';
+                
+                content.forEach((data, i) => {
+                    const page = document.createElement('div');
+                    page.classList.add('page');
+                    if (data.type === 'cover') {
+                        page.classList.add('cover');
+                    }
+                    
+                    const front = document.createElement('div');
+                    front.classList.add('front');
+                    front.innerHTML = data.content;
+                    if(data.isEnglish) front.classList.add('en-body');
+                    
+                    const back = document.createElement('div');
+                    back.classList.add('back');
+                    
+                    page.appendChild(front);
+                    page.appendChild(back);
+                    book.appendChild(page);
+                });
+                pages = document.querySelectorAll('.page');
+                updateBookState();
+            }
+
+            function updateBookState() {
+                pages.forEach((page, i) => {
+                    page.style.zIndex = pages.length - i;
+                    if (i < currentPage) {
+                        page.classList.add('flipped');
+                    } else {
+                        page.classList.remove('flipped');
+                    }
+                });
+                prevBtn.disabled = currentPage === 0;
+                nextBtn.disabled = currentPage >= pages.length;
+            }
+
+            prevBtn.addEventListener('click', () => {
+                if (currentPage > 0) {
+                    currentPage--;
+                    updateBookState();
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentPage < pages.length) {
+                    currentPage++;
+                    updateBookState();
+                }
+            });
+            
+            buildBook();
+
+            // Chart.js setup
+            const chartData = {
+                labels: ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05', '2025-06'],
+                datasets: [
+                    { data: [7.0, 7.0, 7.0, 8.0, 7.9, 8.3], borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.3, fill: true },
+                    { data: [0.4, 0.1, 1.6, 1.5, 2.3, 4.6], borderColor: 'rgb(239, 68, 68)', backgroundColor: 'rgba(239, 68, 68, 0.1)', tension: 0.3, fill: true }
+                ]
+            };
+            const chartOptions = { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } };
+            
+            const m1m2Ctx_zh = document.getElementById('m1m2Chart_zh');
+            if (m1m2Ctx_zh) {
+                new Chart(m1m2Ctx_zh.getContext('2d'), {
+                    type: 'line',
+                    data: { ...chartData, datasets: [ { ...chartData.datasets[0], label: 'M2 同比增长 (%)' }, { ...chartData.datasets[1], label: 'M1 同比增长 (%)' } ] },
+                    options: chartOptions
+                });
+            }
+
+            const m1m2Ctx_en = document.getElementById('m1m2Chart_en');
+            if (m1m2Ctx_en) {
+                new Chart(m1m2Ctx_en.getContext('2d'), {
+                    type: 'line',
+                    data: { ...chartData, datasets: [ { ...chartData.datasets[0], label: 'M2 YoY Growth (%)' }, { ...chartData.datasets[1], label: 'M1 YoY Growth (%)' } ] },
+                    options: chartOptions
+                });
+            }
+        });
+    </script>
+</body>
+</html>
