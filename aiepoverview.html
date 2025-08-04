@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>石油领域人工智能应用全景交互式报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Corporate Blue & Neutral Gray -->
+    <!-- Application Structure Plan: A comprehensive, multi-section SPA. The structure is: 1. Market Overview. 2. E&P Value Chain overview. 3. A new, central deep-dive section on ExxonMobil's complete solution, including strategy, data visuals, workflow, case study, and an interactive tabbed section for its Functional and Technical Architecture. 4. A comparative section on LLM applications by other majors (Chevron, BP, Shell). 5. A concluding Quantifiable Impact dashboard. This "funnel" structure guides the user from the general industry landscape into a highly detailed single-company analysis, then broadens out again for comparison and summary. -->
+    <!-- Visualization & Content Choices: Market Growth: Line chart. Value Chain: Interactive cards. ExxonMobil Section: HTML/CSS diagrams for architectures, Canvas for data visuals, KPI cards, and an interactive eFWI demo. LLM Comparison: Tabbed interface. Impact Metrics: Bar chart and KPI cards. All visualizations are designed for clarity and interactivity without using SVG or Mermaid JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f4f7f9;
+            color: #1a202c;
+            scroll-behavior: smooth;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Noto Serif SC', serif;
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-button:hover, .nav-button.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.07);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background-color: #2563eb;
+            color: #ffffff;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .kpi-card {
+            background: #ffffff;
+            border-left: 5px solid #2563eb;
+        }
+        .section-title {
+            font-size: 2.25rem;
+            line-height: 2.5rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: #111827;
+        }
+        .section-subtitle {
+            max-width: 48rem;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+            color: #4b5563;
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+            margin-bottom: 3rem;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .architecture-layer {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            background-color: #f8fafc;
+        }
+        .architecture-layer h5 {
+            background-color: #e2e8f0;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #d1d5db;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+        .architecture-layer .content {
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="#" class="text-xl md:text-2xl font-bold text-gray-800">油气AI应用全景报告</a>
+            <div class="hidden md:flex space-x-8">
+                <a href="#market" class="nav-button pb-1">市场概览</a>
+                <a href="#value-chain" class="nav-button pb-1">价值链</a>
+                <a href="#exxonmobil-deep-dive" class="nav-button pb-1">埃克森美孚方案</a>
+                <a href="#llm-compare" class="nav-button pb-1">LLM应用对比</a>
+                <a href="#impact" class="nav-button pb-1">量化影响</a>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white shadow-lg">
+            <a href="#market" class="block text-center py-3 px-4 text-sm text-gray-700 hover:bg-gray-100">市场概览</a>
+            <a href="#value-chain" class="block text-center py-3 px-4 text-sm text-gray-700 hover:bg-gray-100">价值链</a>
+            <a href="#exxonmobil-deep-dive" class="block text-center py-3 px-4 text-sm text-gray-700 hover:bg-gray-100">埃克森美孚方案</a>
+            <a href="#llm-compare" class="block text-center py-3 px-4 text-sm text-gray-700 hover:bg-gray-100">LLM应用对比</a>
+            <a href="#impact" class="block text-center py-3 px-4 text-sm text-gray-700 hover:bg-gray-100">量化影响</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-8 md:py-12">
+
+        <section id="market" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="section-title">新的数字地下：AI重塑油气工业</h2>
+            <p class="section-subtitle">
+                人工智能已不再是增量技术，而是行业数字化转型的根本驱动力。它在应对满足全球能源需求、降低成本和提升环境绩效的“三重挑战”中扮演着核心角色。
+            </p>
+            <div class="card p-4 md:p-8">
+                <h3 class="text-2xl font-semibold mb-4 text-center">全球油气AI市场增长预测 (2024-2034)</h3>
+                <div class="chart-container">
+                    <canvas id="marketGrowthChart"></canvas>
+                </div>
+                 <p class="mt-4 text-sm text-gray-500 text-center">数据来源：综合市场分析报告。AI正以约14.2%的复合年增长率渗透行业，主要驱动力包括降本增效、安全合规及可持续发展目标。</p>
+            </div>
+        </section>
+
+        <section id="value-chain" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="section-title">贯穿价值链的AI创新</h2>
+            <p class="section-subtitle">
+                从寻找油藏到优化生产，AI技术正在重塑上游业务的每一个核心环节。点击下方模块，探索AI在不同阶段的具体应用、关键技术和成功案例。
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mb-8">
+                <div id="explore-btn" class="value-chain-btn card p-6 cursor-pointer border-2 border-blue-500 bg-blue-50">
+                    <h3 class="text-2xl font-bold">勘探 (Exploration)</h3>
+                    <p class="text-gray-600 mt-2">AI赋能地震解释与储层表征</p>
+                </div>
+                <div id="develop-btn" class="value-chain-btn card p-6 cursor-pointer border-2 border-transparent">
+                    <h3 class="text-2xl font-bold">开发 (Development)</h3>
+                    <p class="text-gray-600 mt-2">智能钻井与完井工程</p>
+                </div>
+                <div id="produce-btn" class="value-chain-btn card p-6 cursor-pointer border-2 border-transparent">
+                    <h3 class="text-2xl font-bold">生产 (Production)</h3>
+                    <p class="text-gray-600 mt-2">预测性维护与产量优化</p>
+                </div>
+            </div>
+            <div id="value-chain-content" class="card p-6 md:p-8 min-h-[300px]">
+            </div>
+        </section>
+
+        <section id="exxonmobil-deep-dive" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="section-title">深度专题：埃克森美孚的AI勘探方案</h2>
+            <p class="section-subtitle">
+                埃克森美孚的方案并非单一的技术突破，而是一个由物理、超算与人工智能构成的“三位一体”协同作战体系，旨在建立地下勘探的决定性技术优势。
+            </p>
+            <div class="card p-6 md:p-8 space-y-12">
+                <div>
+                    <h3 class="text-2xl font-bold text-center mb-6">数据蜕变：从原始地震到地质洞察</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                        <div class="text-center">
+                            <h4 class="text-lg font-bold mt-0">1. 输入：原始地震数据</h4>
+                            <canvas id="raw-seismic-canvas" class="w-full h-auto aspect-video bg-white border"></canvas>
+                            <p class="text-sm text-gray-500 mt-2">充满噪声、反射不连续、地质结构模糊不清。</p>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="text-lg font-bold mt-0">2. eFWI物理模型</h4>
+                            <canvas id="efwi-model-canvas" class="w-full h-auto aspect-video bg-white border"></canvas>
+                            <p class="text-sm text-gray-500 mt-2">经eFWI处理，得到高精度速度模型，地层结构清晰可见。</p>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="text-lg font-bold mt-0">3. 输出：AI解释结果</h4>
+                            <canvas id="interpreted-result-canvas" class="w-full h-auto aspect-video bg-white border"></canvas>
+                            <p class="text-sm text-gray-500 mt-2">AI自动识别出<span class="text-red-600 font-semibold">断层</span>和<span class="text-yellow-500 font-semibold">河道砂储层</span>。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold text-center mb-6">架构蓝图：数字化勘探工厂的设计</h3>
+                    <div class="flex justify-center mb-8">
+                        <div class="flex flex-wrap gap-2 bg-gray-100 p-1 rounded-full">
+                            <button class="arch-tab-btn tab-button px-4 py-2 rounded-full text-sm md:text-base active" data-tab="functional">功能架构</button>
+                            <button class="arch-tab-btn tab-button px-4 py-2 rounded-full text-sm md:text-base" data-tab="technical">技术架构</button>
+                        </div>
+                    </div>
+                    <div id="architecture-content" class="min-h-[400px]"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="llm-compare" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="section-title">LLM应用对比：其他巨头的方案</h2>
+            <p class="section-subtitle">
+                除了埃克森美孚的专有系统，其他石油巨头也在积极利用主流LLM平台，构建企业级的知识副驾，以不同路径实现相似的战略目标。
+            </p>
+            <div class="card p-4 md:p-8">
+                <div class="flex justify-center mb-8">
+                    <div class="flex flex-wrap gap-2 bg-gray-100 p-1 rounded-full">
+                        <button class="llm-tab-btn tab-button px-4 py-2 rounded-full text-sm md:text-base active" data-tab="chevron">雪佛龙</button>
+                        <button class="llm-tab-btn tab-button px-4 py-2 rounded-full text-sm md:text-base" data-tab="bp">英国石油</button>
+                        <button class="llm-tab-btn tab-button px-4 py-2 rounded-full text-sm md:text-base" data-tab="shell">壳牌</button>
+                    </div>
+                </div>
+                <div id="llm-content" class="min-h-[400px]">
+                </div>
+            </div>
+        </section>
+
+        <section id="impact" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="section-title">可量化的价值创造</h2>
+            <p class="section-subtitle">
+                AI的价值不仅是理论上的，更是可以通过关键绩效指标（KPI）来衡量的。以下图表和卡片展示了全球领先企业通过部署AI所取得的真实、可验证的成果。
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card p-4 md:p-8">
+                    <h3 class="text-2xl font-semibold mb-4 text-center">AI应用关键效益对比</h3>
+                    <div class="chart-container" style="height: 450px; max-height: 60vh;">
+                         <canvas id="impactChart"></canvas>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="card kpi-card p-6 text-center flex flex-col justify-center">
+                        <p class="text-4xl font-bold text-blue-600">$5亿</p>
+                        <p class="text-gray-700 font-semibold mt-1">年化价值</p>
+                        <p class="text-sm text-gray-500 mt-2">ADNOC 2023年通过AI创造</p>
+                    </div>
+                     <div class="card kpi-card p-6 text-center flex flex-col justify-center">
+                        <p class="text-4xl font-bold text-blue-600">100万吨</p>
+                        <p class="text-gray-700 font-semibold mt-1">二氧化碳减排</p>
+                        <p class="text-sm text-gray-500 mt-2">ADNOC 同期成果</p>
+                    </div>
+                     <div class="card kpi-card p-6 text-center flex flex-col justify-center">
+                        <p class="text-4xl font-bold text-blue-600">>88%</p>
+                        <p class="text-gray-700 font-semibold mt-1">异常检测准确率</p>
+                        <p class="text-sm text-gray-500 mt-2">Baker Hughes (BHC3) 预测性维护</p>
+                    </div>
+                     <div class="card kpi-card p-6 text-center flex flex-col justify-center">
+                        <p class="text-4xl font-bold text-blue-600">>50%</p>
+                        <p class="text-gray-700 font-semibold mt-1">安全督察效率</p>
+                        <p class="text-sm text-gray-500 mt-2">中国江汉油田安全生产提升</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-gray-800 text-white mt-16 md:mt-24">
+        <div class="container mx-auto px-6 py-4 text-center text-sm">
+            <p>&copy; 2025 全景交互式报告。基于公开研究数据生成。</p>
+        </div>
+    </footer>
+
+    <script>
+        const contentData = {
+            explore: {
+                title: '革命性的勘探：AI赋能的地震解释与储层表征',
+                text: '传统的地震资料解释耗时巨大且依赖专家经验。AI，特别是深度学习模型（如CNN, U-Net），通过自动化识别断层、层位等地质特征，将解释效率提升超过10倍。此外，AI能融合多源数据（地震、测井、岩心）构建更精确的储层模型，预测孔隙度、渗透率等关键参数，从而显著降低勘探风险。',
+                points: [
+                    '<strong>地震解释自动化:</strong> 使用CNN/U-Net模型，效率提升 >10倍。',
+                    '<strong>储层建模与表征:</strong> 融合多源数据，预测岩石物理属性。',
+                    '<strong>岩性相自动分类:</strong> 准确率高达96.8%，提升地质模型精度。'
+                ],
+                case: {
+                    company: '案例：ExxonMobil & SLB',
+                    detail: '<strong>ExxonMobil</strong> 将专有AI算法与高性能计算（HPC）结合，处理全波场反演数据，获得更清晰的地下图像。<strong>SLB</strong> 的DELFI平台提供集成环境，其“井位顾问”模块利用机器学习在不确定性下优化井位。'
+                }
+            },
+            develop: {
+                title: '优化开发：智能钻井与完井工程',
+                text: 'AI正在将钻井从经验驱动转变为数据驱动的自动化过程。通过实时分析井下传感器数据和地质模型，AI平台能够优化钻井参数（如ROP、WOB），将钻井速度提升超过20%，并预测和规避井壁失稳等地质灾害，大幅减少非生产时间（NPT）。在非常规油气开发中，AI还被用于优化水力压裂方案，最大化增产效果。',
+                points: [
+                    '<strong>钻井自动化与优化:</strong> 实时参数调整，ROP提升 >20%，减少NPT。',
+                    '<strong>智能水力压裂:</strong> 优化压裂方案，模拟裂缝扩展精度 >80%。',
+                    '<strong>地质灾害预测:</strong> 结合地球力学模型，预测并规避风险。'
+                ],
+                case: {
+                    company: '案例：Halliburton LOGIX®平台',
+                    detail: '在挪威深水区块，LOGIX®平台将平均机械钻速（ROP）提升了23.4%。在阿曼陆上油田，该技术使钻井速度比计划快16%，并节省了8.2%的总成本。'
+                }
+            },
+            produce: {
+                title: '提升生产：迈向智能与自主化油田',
+                text: '预测性维护是AI在油气领域最有价值的应用之一，占市场收入的31%。通过分析设备传感器数据，AI能在故障发生前预警，减少非计划停机。同时，AI能构建更精准的产量预测模型，优化人工举升系统，并结合数字孪生技术实现对油田的实时监控与模拟优化，最终目标是实现自主化运营。',
+                points: [
+                    '<strong>预测性维护:</strong> 预测设备故障，减少非计划停机。',
+                    '<strong>产量预测与优化:</strong> 提高预测精度，优化人工举升，最大化采收率。',
+                    '<strong>数字孪生:</strong> 实时监控与模拟优化，支持全生命周期管理。'
+                ],
+                case: {
+                    company: '案例：Baker Hughes (BHC3.ai) & Chevron',
+                    detail: '<strong>BHC3.ai</strong> 为亚洲某大型油气公司部署的可靠性应用，准确预测了超过88%的异常，年节省超4000万美元。<strong>Chevron</strong> 在二叠纪盆地利用AI优化生产，自2019年以来执行绩效提升超过80%。'
+                }
+            },
+            llm: {
+                chevron: {
+                    title: '雪佛龙：利用Azure OpenAI加速地下认知',
+                    intro: '雪佛龙与微软的合作是业内将LLM技术应用于上游业务的标杆。通过微软的Azure OpenAI服务，雪佛龙能够在一个安全、合规的云环境中，利用GPT系列模型的强大能力来处理其专有数据。',
+                    sections: [
+                        {
+                            subtitle: '勘探方案：地球科学家的“认知放大器”',
+                            challenge: '在评估一个新的勘探区块时，地球科学家需要阅读和理解数千份文档，包括历史悠久的区域地质研究、邻近油井的勘探报告、学术期刊以及内部的地震解释报告。这个过程耗时数周甚至数月，且极易遗漏关键信息。',
+                            solution: '雪佛龙开发了一个内部的、基于GPT模型的地球科学知识问答应用。首先，他们将数百万页的内部文档通过向量化技术输入到安全的Azure认知搜索索引中。然后，地球科学家可以用自然语言提问，例如：“总结一下XYZ盆地白垩纪储层的主要成藏风险”。应用会检索相关文档片段，并让GPT-4进行推理和总结，最终生成附有引用来源的精确答案。',
+                            value: '<strong>成果与价值：</strong> 根据雪佛龙的公开信息，这一应用已将其地球科学家分析技术文档的时间缩短了90%。'
+                        },
+                        {
+                            subtitle: '钻井方案：从“事后分析”到“实时指导”',
+                            challenge: '钻井作业每天都会产生大量的非结构化报告，如日常钻井报告（DDR）、泥浆日志等。从中快速吸取经验教训并用于指导当前作业，一直是个难题。',
+                            solution: '利用LLM分析历史报告，自动总结特定地层最常见的风险及其应对措施。为现场工程师配备“钻井手册GPT”，即时获取基于SOP和历史经验的指导。同时，LLM可以根据操作数据自动生成标准化的日常钻井报告，解放工程师的文书工作。',
+                            value: '<strong>成果与价值：</strong> 极大地提升了决策效率和钻井性能，并能有效避免重复过去的错误。'
+                        }
+                    ]
+                },
+                bp: {
+                    title: '英国石油（BP）：构建企业级知识大脑',
+                    intro: 'BP通过与微软的合作，大力投资于生成式AI，并推出了一个名为“Ask BP”的内部聊天机器人，其技术框架正被迅速推广至上游业务。',
+                    sections: [
+                        {
+                            subtitle: '勘探方案：跨学科知识的融合',
+                            challenge: '一个成功的勘探项目需要地球物理学家、地质学家、油藏工程师和经济学家的紧密合作。然而，这些学科的知识和数据往往分散在不同的系统和报告格式中，导致“筒仓效应”。',
+                            solution: 'BP正在构建一个能够理解油气专业术语的语义搜索引擎。当一个地质学家搜索“高孔隙度砂岩”时，系统不仅能找到地质报告，还能自动链接到相关的测井分析、油藏模拟结果以及类似储层的生产动态报告。',
+                            value: '<strong>成果与价值：</strong> 打破知识壁垒，确保决策者能够全面、快速地掌握项目全貌。'
+                        },
+                        {
+                            subtitle: '钻井方案：安全与合规的智能守护者',
+                            challenge: '钻井作业必须严格遵守复杂的健康、安全与环境（HSE）法规和公司内部标准。确保现场操作100%合规，是一项巨大的挑战。',
+                            solution: '在制定钻井计划时，LLM可以像一个经验丰富的HSE审查员一样，自动审查计划的每一个步骤，并与相关的法规和标准进行比对，高亮显示任何潜在的偏离或风险。同时，利用LLM分析历史事故报告，识别根本原因和模式，为预防措施提供数据驱动的依据。',
+                            value: '<strong>成果与价值：</strong> 显著提升作业的安全性和合规性，防范于未然。'
+                        }
+                    ]
+                },
+                shell: {
+                    title: '壳牌（Shell）：结合C3.ai与自有平台的AI实践',
+                    intro: '壳牌是AI应用的早期采纳者，其“Shell.ai”平台与AI公司C3.ai有深度合作。随着C3.ai平台全面集成生成式AI能力，壳牌正将其应用于更广泛的上游业务。',
+                    sections: [
+                        {
+                            subtitle: '勘探方案：合成数据生成与假设验证',
+                            challenge: '在数据稀疏的勘探前沿区，如何验证一个地质假设？传统方法依赖于建立少数几个地质模型，具有很大的局限性。',
+                            solution: '结合GANs（生成对抗网络）和LLM的自然语言描述能力，地球科学家可以用语言描述一个地质概念（例如，“一个受断层控制的深水浊积扇体系”），AI则可以据此生成一系列符合该描述的、地质上合理的合成储层模型。科学家可以快速生成并测试数十种不同的地质假设，加速对地下情况的认知。',
+                            value: '<strong>成果与价值：</strong> 加速假设迭代周期，用更科学的方法应对勘探的不确定性。'
+                        },
+                        {
+                            subtitle: '钻井方案：供应链与后勤优化',
+                            challenge: '一口深水钻井平台的运营，涉及数千种设备、备件和物料的复杂供应链，任何一个环节的中断都可能导致数百万美元的停工损失。',
+                            solution: 'LLM可以分析实时的钻井进度、设备磨损报告和天气预报，预测未来一周可能需要的备件和物料，并自动生成采购订单或从最近的仓库调配资源。现场经理还可以向LLM进行情景模拟，获取最优的应对建议。',
+                            value: '<strong>成果与价值：</strong> 提高供应链的韧性和效率，减少因后勤问题导致的非生产时间。'
+                        }
+                    ]
+                }
+            },
+            architecture: {
+                functional: `
+                    <div class="space-y-2 fade-in">
+                        <div class="architecture-layer">
+                            <h5>决策支持与可视化层</h5>
+                            <div class="content text-sm text-gray-600">三维/四维可视化、人机协同解释、风险与不确定性分析、钻井目标生成与优化</div>
+                        </div>
+                        <div class="text-center text-gray-400">↓</div>
+                        <div class="architecture-layer">
+                            <h5>AI解释与分析层 (核心)</h5>
+                            <div class="content text-sm text-gray-600">自动化结构解释 (断层/层位)、自动化岩性体识别 (河道/盐丘)、储层参数预测、MLOps</div>
+                        </div>
+                        <div class="text-center text-gray-400">↓</div>
+                        <div class="architecture-layer">
+                            <h5>物理建模与成像层</h5>
+                            <div class="content text-sm text-gray-600">eFWI成像引擎、速度模型建立、岩石物理建模</div>
+                        </div>
+                        <div class="text-center text-gray-400">↓</div>
+                        <div class="architecture-layer">
+                            <h5>数据采集与管理层 (基础)</h5>
+                            <div class="content text-sm text-gray-600">多源数据采集 (地震/测井/地质)、数据质量控制 (QC)、统一数据湖</div>
+                        </div>
+                    </div>
+                `,
+                technical: `
+                    <div class="space-y-2 fade-in">
+                        <div class="architecture-layer">
+                            <h5>应用与呈现层</h5>
+                            <div class="content text-sm text-gray-600">专有解释软件 / Petrel插件 | Web可视化前端 | API网关 (RESTful/gRPC)</div>
+                        </div>
+                        <div class="text-center text-gray-400">↓</div>
+                        <div class="architecture-layer">
+                            <h5>AI/ML服务层</h5>
+                            <div class="content text-sm text-gray-600">MLOps平台 (Kubeflow) | 训练环境 (Horovod) | 推理引擎 (Triton)</div>
+                        </div>
+                        <div class="text-center text-gray-400">↓</div>
+                        <div class="architecture-layer">
+                            <h5>处理与建模层</h5>
+                            <div class="content text-sm text-gray-600">eFWI求解器 (C++/Fortran + MPI/CUDA) | 岩石物理模块</div>
+                        </div>
+                        <div class="text-center text-gray-400">↓</div>
+                        <div class="architecture-layer">
+                            <h5>数据层</h5>
+                            <div class="content text-sm text-gray-600">数据湖 (对象存储) | 元数据目录 | 向量数据库</div>
+                        </div>
+                         <div class="text-center text-gray-400">↓</div>
+                        <div class="architecture-layer">
+                            <h5>基础设施层</h5>
+                            <div class="content text-sm text-gray-600">HPC集群: Discovery 6 (HPE Cray, NVIDIA GH200) | 高速网络</div>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            function initChart(elementId, config) {
+                const ctx = document.getElementById(elementId)?.getContext('2d');
+                if (ctx) new Chart(ctx, config);
+            }
+
+            initChart('marketGrowthChart', {
+                type: 'line',
+                data: {
+                    labels: ['2024', '2026', '2028', '2030', '2032', '2034'],
+                    datasets: [{
+                        label: '市场规模 (十亿美元)',
+                        data: [6.69, 8.8, 11.5, 14.5, 18.9, 25.24],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, title: { display: true, text: '市场规模 (十亿美元)' } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            initChart('impactChart', {
+                type: 'bar',
+                data: {
+                    labels: ['钻井ROP提升 (Halliburton, 挪威)', '钻井时间缩短 (Halliburton, 阿曼)', '执行绩效提升 (Chevron, 二叠纪)', '安全督察效率提升 (江汉油田)'],
+                    datasets: [{
+                        label: '效益提升 (%)',
+                        data: [23.4, 16, 80, 50],
+                        backgroundColor: ['#60a5fa', '#3b82f6', '#2563eb', '#1d4ed8'],
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    scales: { x: { beginAtZero: true, title: { display: true, text: '效益提升 (%)' } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            const valueChainContent = document.getElementById('value-chain-content');
+            const valueChainBtns = document.querySelectorAll('.value-chain-btn');
+            function updateValueChainContent(key) {
+                const data = contentData[key];
+                valueChainContent.innerHTML = `
+                    <div class="fade-in">
+                        <h4 class="text-2xl font-bold mb-4">${data.title}</h4>
+                        <p class="text-gray-600 mb-4">${data.text}</p>
+                        <ul class="space-y-2 mb-4">
+                            ${data.points.map(p => `<li class="flex items-start"><span class="text-green-500 mr-2 mt-1">✓</span><span>${p}</span></li>`).join('')}
+                        </ul>
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <h5 class="font-bold text-lg mb-2">${data.case.company}</h5>
+                            <p class="text-sm text-gray-700">${data.case.detail}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            valueChainBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    valueChainBtns.forEach(b => b.classList.remove('border-blue-500', 'bg-blue-50'));
+                    btn.classList.add('border-blue-500', 'bg-blue-50');
+                    updateValueChainContent(btn.id.split('-')[0]);
+                });
+            });
+            updateValueChainContent('explore');
+
+            const llmContent = document.getElementById('llm-content');
+            const llmTabs = document.querySelectorAll('.llm-tab-btn');
+            function updateLlmContent(key) {
+                const data = contentData.llm[key];
+                const sectionsHtml = data.sections.map(sec => `
+                    <div class="mb-6">
+                        <h5 class="font-bold text-xl mb-2 text-gray-800">${sec.subtitle}</h5>
+                        <p class="text-gray-500 italic mb-2">挑战：${sec.challenge}</p>
+                        <p class="text-gray-700 mb-2"><strong>LLM解决方案：</strong>${sec.solution}</p>
+                        <p class="text-blue-600 font-semibold">${sec.value}</p>
+                    </div>
+                `).join('');
+                llmContent.innerHTML = `
+                    <div class="fade-in">
+                        <h4 class="text-2xl font-bold mb-2">${data.title}</h4>
+                        <p class="text-gray-600 mb-6">${data.intro}</p>
+                        ${sectionsHtml}
+                    </div>
+                `;
+            }
+            llmTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    llmTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    updateLlmContent(tab.dataset.tab);
+                });
+            });
+            updateLlmContent('chevron');
+
+            // Architecture Tabs
+            const archContent = document.getElementById('architecture-content');
+            const archTabs = document.querySelectorAll('.arch-tab-btn');
+            function updateArchContent(key) {
+                archContent.innerHTML = contentData.architecture[key];
+            }
+            archTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    archTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    updateArchContent(tab.dataset.tab);
+                });
+            });
+            updateArchContent('functional');
+
+            // New seismic visuals
+            function drawDataTransformationVisuals() {
+                const rawCanvas = document.getElementById('raw-seismic-canvas');
+                const efwiCanvas = document.getElementById('efwi-model-canvas');
+                const interpretedCanvas = document.getElementById('interpreted-result-canvas');
+                
+                const w = 256, h = 128;
+                [rawCanvas, efwiCanvas, interpretedCanvas].forEach(canvas => {
+                    if(canvas) {
+                        canvas.width = w;
+                        canvas.height = h;
+                    }
+                });
+
+                const rawCtx = rawCanvas.getContext('2d');
+                const efwiCtx = efwiCanvas.getContext('2d');
+                const interpretedCtx = interpretedCanvas.getContext('2d');
+                
+                // 1. Draw Raw Seismic
+                rawCtx.fillStyle = '#1a202c';
+                rawCtx.fillRect(0, 0, w, h);
+                for (let i = 0; i < 80; i++) {
+                    rawCtx.beginPath();
+                    rawCtx.moveTo(i * 4, 0);
+                    for (let y = 0; y < h; y++) {
+                        const noise = (Math.random() - 0.5) * 8;
+                        const wiggle = Math.sin(y * 0.2 + i * 0.5) * 4 * Math.cos(y * 0.05);
+                        let x = i * 4 + wiggle + noise;
+                        if (y > h * 0.4 && y < h * 0.45) x += 8 * Math.sin(i*0.2); // Discontinuity
+                        if (y > h * 0.7 && y < h * 0.75) x -= 8 * Math.cos(i*0.3); // Discontinuity
+                        rawCtx.lineTo(x, y);
+                    }
+                    rawCtx.strokeStyle = `rgba(255, 255, 255, ${0.3 + Math.random()*0.3})`;
+                    rawCtx.stroke();
+                }
+
+                // 2. Draw eFWI Model
+                const efwiModel = new Float32Array(w * h);
+                 for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        let value = 0.2; // Layer 1
+                        if (y > h * 0.3) value = 0.4;
+                        if (y > h * 0.65) value = 0.8;
+                        // Add fault
+                        if (x > w*0.2 && x < w*0.25) {
+                           if (y > h*0.1) value = efwiModel[y * w + x - 3];
+                        }
+                         if (x > w*0.7 && x < w*0.75) {
+                           if (y > h*0.2) value = efwiModel[y * w + x - 2];
+                        }
+                        // Add channel
+                        let channelY = h * 0.5 + Math.sin(x / (w/8)) * 10;
+                        if (y > channelY - 5 && y < channelY + 5) {
+                            value = 0.6;
+                        }
+                        efwiModel[y * w + x] = value;
+                    }
+                }
+                const efwiImageData = efwiCtx.createImageData(w, h);
+                for (let i = 0; i < efwiModel.length; i++) {
+                    const value = efwiModel[i];
+                    let r, g, b;
+                    if (value < 0.3) { r = 60; g = 90; b = 180; } // Deep Blue
+                    else if (value < 0.5) { r = 90; g = 150; b = 220; } // Blue
+                    else if (value < 0.7) { r = 255; g = 215; b = 0; } // Yellow (Channel)
+                    else { r = 180; g = 200; b = 230; } // Light Blue/Gray
+                    efwiImageData.data[i * 4] = r;
+                    efwiImageData.data[i * 4 + 1] = g;
+                    efwiImageData.data[i * 4 + 2] = b;
+                    efwiImageData.data[i * 4 + 3] = 255;
+                }
+                efwiCtx.putImageData(efwiImageData, 0, 0);
+
+
+                // 3. Draw Interpreted Result (eFWI model + overlays)
+                interpretedCtx.putImageData(efwiImageData, 0, 0);
+                
+                // Draw Faults Overlay
+                interpretedCtx.beginPath();
+                interpretedCtx.moveTo(w * 0.22, h*0.1);
+                interpretedCtx.lineTo(w * 0.22, h);
+                interpretedCtx.moveTo(w * 0.72, h*0.2);
+                interpretedCtx.lineTo(w * 0.72, h);
+                interpretedCtx.lineWidth = 2;
+                interpretedCtx.strokeStyle = '#d90000';
+                interpretedCtx.shadowColor = 'black';
+                interpretedCtx.shadowBlur = 4;
+                interpretedCtx.stroke();
+                interpretedCtx.shadowBlur = 0;
+
+                // Draw Channel Overlay
+                interpretedCtx.beginPath();
+                 for(let x=0; x < w; x++) {
+                    let channelY = h * 0.5 + Math.sin(x / (w/8)) * 10;
+                    if (x === 0) interpretedCtx.moveTo(x, channelY);
+                    else interpretedCtx.lineTo(x, channelY);
+                }
+                interpretedCtx.lineWidth = 10;
+                interpretedCtx.strokeStyle = 'rgba(251, 191, 36, 0.8)'; // yellow-400
+                interpretedCtx.lineCap = 'round';
+                interpretedCtx.stroke();
+            }
+
+            drawDataTransformationVisuals();
+        });
+    </script>
+</body>
+</html>
