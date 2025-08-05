@@ -5,15 +5,15 @@
      crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中国煤炭市场三十年变迁：分析报告</title>
+    <title>中国煤炭市场三十年变迁：交互式分析报告</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Warm Neutrals with Muted Blue/Grey Accents -->
-    <!-- Application Structure Plan: A thematic, single-page dashboard design. A sticky top navigation bar allows users to jump between sections: 1. Overview & Historical Eras (landing section with interactive timeline), 2. Macroeconomic Linkages (interactive correlation charts), 3. Key Driving Factors (clickable flowchart diagram), 4. Government's Hand (vertical policy timeline), 5. Cost Breakdown Journey (visual infographic), and 6. Conclusion. This non-linear structure prioritizes user-driven exploration of interconnected themes over the report's linear chapter format, enhancing usability and insight discovery. -->
-    <!-- Visualization & Content Choices: 1. Price History -> Goal: Show change -> Viz: Interactive line chart (Chart.js) with highlighted eras -> Interaction: Hover for details, buttons to filter coal types. Justification: Best way to visualize long-term trends and volatility. 2. Macro-Data -> Goal: Show relationships -> Viz: Multi-axis line chart (Chart.js) -> Interaction: Checkboxes to toggle datasets (GDP, Power, Steel). Justification: Allows direct visual correlation analysis. 3. Driving Factors -> Goal: Organize complex relationships -> Viz: HTML/CSS flowchart -> Interaction: Click nodes to reveal detailed text. Justification: Simplifies complex cause-and-effect chains. 4. Cost Structure -> Goal: Explain a process -> Viz: HTML/CSS visual infographic -> Interaction: Static visual flow. Justification: Makes the abstract cost accumulation process concrete and easy to follow. All text is sourced from the report to provide context. -->
+    <!-- Application Structure Plan: A thematic, single-page dashboard. The structure flows logically from the Chinese domestic market to the global context: 1. CN Price History, 2. CN Macro Linkages, 3. CN Driving Factors, 4. CN Government Policy, 5. CN Production Cost Deep Dive, 6. CN Logistics Journey, 7. International Market Analysis (new section), and 8. Conclusion. This narrative flow enhances user understanding by building context layer by layer, from local specifics to global dynamics. -->
+    <!-- Visualization & Content Choices: 1. International Prices -> Goal: Compare global trends -> Viz: Interactive multi-line chart (Chart.js) for NEWC, RB, ARA benchmarks -> Interaction: Hover for details. Justification: Enables direct visual comparison of major market hubs. 2. International Drivers -> Goal: Organize complex global factors -> Viz: Reusable HTML/CSS interactive card component -> Interaction: Click to expand. Justification: Provides a consistent UI for exploring causal factors, linking the global section stylistically with the domestic analysis. 3. All other visualizations remain as previously designed, ensuring a cohesive user experience. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
@@ -51,9 +51,13 @@
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
+        .tab-button {
+            transition: background-color 0.3s, color 0.3s;
+        }
         .tab-button.active {
             background-color: #2563eb;
             color: white;
+            border-color: #2563eb;
         }
         .factor-card {
             cursor: pointer;
@@ -62,6 +66,20 @@
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.5s ease-out;
+        }
+        .process-step {
+            border-left: 3px solid #dbeafe;
+        }
+        .process-step:last-child {
+            border-left: 3px solid transparent;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #e5e7eb;
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .data-table th {
+            background-color: #f9fafb;
         }
     </style>
 </head>
@@ -75,12 +93,14 @@
                 </div>
                 <div class="hidden md:block">
                     <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">概览与时代脉络</a>
-                        <a href="#macro" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">宏观经济联动</a>
-                        <a href="#drivers" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">关键驱动因素</a>
-                        <a href="#policy" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">政府的“手”</a>
-                        <a href="#costs" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">成本解构之旅</a>
-                        <a href="#conclusion" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">结论与展望</a>
+                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">国内价格</a>
+                        <a href="#macro" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">宏观联动</a>
+                        <a href="#drivers" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">驱动因素</a>
+                        <a href="#policy" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">政府之手</a>
+                        <a href="#costs" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">成本深潜</a>
+                        <a href="#logistics" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">物流之旅</a>
+                        <a href="#international" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">国际视角</a>
+                        <a href="#conclusion" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700 border-b-2 border-transparent">结论展望</a>
                     </div>
                 </div>
                 <div class="md:hidden">
@@ -95,12 +115,14 @@
         </nav>
         <div id="mobile-menu" class="md:hidden hidden">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="#overview" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">概览与时代脉络</a>
-                <a href="#macro" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">宏观经济联动</a>
-                <a href="#drivers" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">关键驱动因素</a>
-                <a href="#policy" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">政府的“手”</a>
-                <a href="#costs" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">成本解构之旅</a>
-                <a href="#conclusion" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">结论与展望</a>
+                <a href="#overview" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">国内价格</a>
+                <a href="#macro" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">宏观联动</a>
+                <a href="#drivers" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">驱动因素</a>
+                <a href="#policy" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">政府之手</a>
+                <a href="#costs" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">成本深潜</a>
+                <a href="#logistics" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">物流之旅</a>
+                <a href="#international" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">国际视角</a>
+                <a href="#conclusion" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">结论展望</a>
             </div>
         </div>
     </header>
@@ -116,8 +138,7 @@
                 <div class="chart-container">
                     <canvas id="priceHistoryChart"></canvas>
                 </div>
-                <div class="mt-6 text-center">
-                    <p class="text-sm text-gray-500">点击下方按钮切换不同煤种的价格曲线。</p>
+                <div id="price-chart-toggles" class="mt-6 text-center space-x-2">
                 </div>
             </div>
         </section>
@@ -160,9 +181,24 @@
         </section>
         
         <section id="costs" class="mb-16 scroll-mt-16">
-            <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">成本解构之旅：一吨煤的诞生与迁徙</h2>
+            <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">成本深潜：一吨煤的诞生</h2>
             <p class="max-w-3xl mx-auto text-center text-gray-600 mb-8">
-                煤炭的最终价格由生产、物流等多个环节的成本累积而成。我们以一吨产自鄂尔多斯的煤炭运往广州电厂为例，通过可视化的方式，带您踏上一段成本解构之旅，直观感受“距离的暴政”和物流环节的极端重要性。
+                煤炭价格的起点是其坑口成本。本节将带您深入“地下”，详细拆解从开采到洗选的完整生产流程，并通过数据对比，揭示不同开采方式和地理位置如何决定了煤炭最原始的成本底线。
+            </p>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h3 class="text-xl font-semibold text-center mb-6">开采与洗选流程</h3>
+                <div id="mining-process" class="grid md:grid-cols-2 gap-8"></div>
+                <h3 class="text-xl font-semibold text-center mt-12 mb-6">主要产区生产成本对比 (元/吨, 代表值)</h3>
+                <div class="overflow-x-auto">
+                    <table id="cost-table" class="w-full text-sm data-table"></table>
+                </div>
+            </div>
+        </section>
+
+        <section id="logistics" class="mb-16 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">物流之旅：从矿山到工厂</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-8">
+                由于中国资源与消费地的分离，物流成本在最终价格中占比惊人。我们以一吨产自鄂尔多斯的煤炭运往广州电厂为例，通过可视化的方式，带您踏上一段成本累积之旅，直观感受“距离的暴政”。
             </p>
             <div class="bg-white p-6 rounded-lg shadow-lg">
                 <div id="cost-journey-container" class="flex flex-col md:flex-row items-center justify-center gap-4 p-4 space-y-4 md:space-y-0 md:space-x-2 overflow-x-auto">
@@ -171,6 +207,23 @@
                     <p class="text-lg font-bold">最终到厂价: <span id="final-cost" class="text-red-600"></span> 元/吨</p>
                     <p class="text-sm text-gray-500 mt-2">其中物流成本占比高达 <span id="logistics-percentage" class="font-semibold"></span></p>
                 </div>
+            </div>
+        </section>
+
+        <section id="international" class="mb-16 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-center mb-4 text-gray-800">国际视角：全球市场的共振与分化</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-8">
+                中国市场并非孤岛。本节将视野拓展至全球，通过对比三大国际基准煤价，分析影响国际市场的核心因素，从而更深刻地理解中国煤炭价格的全球背景和独特性。
+            </p>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-8">
+                <h3 class="text-xl font-semibold text-center mb-6">国际动力煤基准价格走势 (美元/吨)</h3>
+                <div class="chart-container">
+                    <canvas id="internationalPriceChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h3 class="text-xl font-semibold text-center mb-6">影响国际煤价的关键因素</h3>
+                <div id="international-drivers" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
         </section>
 
@@ -252,37 +305,53 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     const data = {
-        years: [1995, 2000, 2005, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023],
+        years: [2005, 2008, 2011, 2015, 2018, 2020, 2021, 2022, 2023],
         prices: {
-            power_coal: [200, 220, 450, 780, 820, 650, 610, 520, 410, 550, 680, 640, 580, 590, 1100, 1250, 900],
+            power_coal: [450, 700, 820, 410, 640, 590, 1100, 1250, 900],
+            coking_coal: [800, 1500, 1900, 600, 1300, 1100, 2800, 2500, 1800],
+            anthracite: [700, 950, 1100, 700, 900, 860, 1500, 1400, 1100],
+            newcastle: [55, 125, 120, 60, 105, 60, 140, 360, 170],
+            richards_bay: [50, 115, 110, 55, 95, 65, 130, 280, 120],
+            ara: [60, 130, 125, 58, 90, 55, 120, 295, 125]
         },
         macro: {
-            gdp_growth: [11.0, 8.5, 11.4, 10.6, 9.6, 7.9, 7.8, 7.4, 7.0, 6.8, 6.9, 6.7, 6.0, 2.2, 8.4, 3.0, 5.4],
-            power_consumption: [10079, 13477, 24975, 41999, 47046, 49645, 53417, 55627, 56029, 59749, 63731, 68939, 72501, 75231, 83128, 83887, 92242],
-            steel_production: [9536, 12850, 35586, 62665, 69550, 71654, 77904, 82270, 80383, 80837, 83173, 92826, 99634, 105300, 103279, 101796, 101908],
-            coal_production: [136000, 117100, 220500, 324000, 352000, 365000, 397000, 387000, 375000, 341000, 352000, 368000, 385000, 390000, 413000, 456000, 471000]
+            gdp_growth: [11.4, 9.7, 9.6, 7.0, 6.7, 2.2, 8.4, 3.0, 5.4],
+            power_consumption: [24975, 34556, 47046, 56029, 68939, 75231, 83128, 83887, 92242],
+            steel_production: [35586, 51238, 69550, 80383, 92826, 105300, 103279, 101796, 101908],
+            coal_production: [220500, 280100, 352000, 375000, 368000, 390000, 413000, 456000, 471000]
         },
         drivers: {
             supply: [
-                { title: '产能与政策', content: '中国煤炭供给从严重过剩到国家强力调控。2016年供给侧改革通过行政手段强制去产能，重塑供给端，使供给弹性显著下降。' },
-                { title: '安全与环保', content: '安全生产和环保法规是约束供给的“硬闸门”。重大安全事故或环保检查会引发煤矿停产减产，迅速收紧市场供应，加剧价格向上弹性。' },
-                { title: '进口煤角色', content: '进口煤是市场的“边际调节器”。国内外价差决定进口量，政府也通过关税、配额等手段主动利用进口煤调节国内供需，服务于“保供稳价”目标。' }
+                { title: '产能与政策', content: '供给格局经历了从市场化初期的混乱扩张，到2012-2015年严重过剩，再到2016年供给侧改革（SSSR）后的强力调控。SSSR不仅是简单的数量削减，更是结构优化，将产能向资源禀赋优越的“三西”地区（山西、陕西、内蒙古）集中，永久性地提升了行业集中度和国家调控力。' },
+                { title: '安全与环保', content: '安全与环保是供给的“硬约束”。重大安全事故、重要政治活动（如奥运会、党代会）前的安保升级，以及秋冬季大气污染防治行动，都会触发区域性、阶段性的停产限产，形成供给冲击，放大价格波动。' },
+                { title: '进口煤角色', content: '进口煤是调节国内供需平衡的“安全阀”。主要来源国包括印尼（低硫动力煤）、俄罗斯和澳大利亚（优质动力煤和焦煤）。政府通过关税、配额及地缘政治考量（如对澳煤的非官方限制）来主动调控进口节奏，服务于国内能源安全和价格稳定目标。' }
             ],
             demand: [
-                { title: '分部门需求', content: '动力煤主要需求来自电力、建材、化工、冶金。电力是主力，与宏观经济和季节性因素相关。焦煤需求几乎完全依赖钢铁行业景气度。' },
-                { title: '库存水平', content: '库存是供需的“蓄水池”，其水平是判断市场松紧和预测价格的关键指标。港口和电厂库存过高预示价跌，过低则可能引发恐慌性补库推高价格。' },
-                { title: '新旧经济动能', content: '“旧经济”（钢铁、水泥）需求增长空间有限，而“新经济”（数据中心、电动汽车）驱动用电量增长，短期反而加大了对煤电的需求，形成结构性矛盾。' }
+                { title: '分部门需求', content: '动力煤需求主力是电力，其波动受工业生产（工业用电）和极端天气（居民用电高峰）双重影响。焦煤需求则与房地产、基建投资周期高度绑定，是观察“旧经济”动能的晴雨表。' },
+                { title: '库存水平', content: '库存是供需关系的“温度计”。需区分看待矿口、港口、电厂三级库存。港口库存是市场情绪的放大器，而电厂可用天数则是衡量终端安全边际的核心指标。低库存会引发恐慌性补库，高库存则抑制采购意愿。' },
+                { title: '新旧经济动能', content: '“旧经济”（钢铁、水泥）需求见顶，但“新经济”（数据中心、电动汽车、高新制造）带来的电力需求增长成为新引擎。这种结构性转换，导致总用电量持续增长，短期内反而强化了对作为可靠电源的煤电的依赖。' }
             ],
             policy: [
-                { title: '“双碳”悖论', content: '长期减碳目标抑制煤炭投资，但短期能源安全需求又强化煤炭“压舱石”作用。这导致“先立后破”的策略：先保安全，再稳步替代。' },
+                { title: '“双碳”悖论', content: '长期减碳目标与短期能源安全需求形成深刻矛盾。这导致了“先立后破”的战略：一方面大力发展新能源，另一方面巩固煤炭的兜底保障作用，确保在新能源体系成熟前，能源供应万无一失。' },
             ]
         },
         policyTimeline: [
+            { year: '2002-2004', title: '电煤价格市场化', content: '逐步取消电煤国家指导价，试图推动煤电价格联动。但这导致了“市场煤、计划电”的根本性矛盾，煤价上涨而电价受管制，发电企业陷入亏损。' },
+            { year: '2008-2009', title: '“四万亿”经济刺激', content: '为应对全球金融危机，大规模的基建投资极大地刺激了煤炭需求，推动价格强劲反弹，同时也催生了后续几年的大规模产能扩张，为2012年后的产能过剩埋下伏笔。' },
+            { year: '2013', title: '取消重点电煤合同', content: '正式终结了煤炭价格“双轨制”，意图实现完全市场化。然而，此时市场已进入下行周期，政策效果被市场大势所淹没。' },
+            { year: '2015', title: '煤炭资源税改革', content: '将资源税从“从量计征”改为“从价计征”，使税收与市场价格挂钩，旨在建立更公平、更自动调节的税收机制。' },
             { year: '2016-2018', title: '供给侧结构性改革', content: '通过行政命令关闭落后煤矿，化解过剩产能，提升产业集中度，帮助煤企脱困。' },
             { year: '2021.10-至今', title: '“保供稳价”运动', content: '应对“煤荒”危机，通过命令式增产、释放储备、协调运输等手段，迅速将失控的煤价拉回可控范围。' },
             { year: '2022.02', title: '“合理价格区间”政策', content: '正式确立动力煤570-770元/吨的“合理价格区间”，将价格调控从临时管理转向制度化、常态化监管。' },
             { year: '2022-至今', title: '强化中长期合同监管', content: '持续要求提高长协合同签订比例和履约率，夯实电煤供应的“压舱石”，隔离现货市场波动。' },
             { year: '2025.01 (试行)', title: '焦煤长协煤钢联动机制', content: '建立新的焦煤长协定价机制，促进焦煤、钢铁产业链协同发展，稳定上下游利润。' }
+        ],
+        internationalDrivers: [
+            { title: '全球宏观经济', content: '全球煤炭需求的最根本驱动力。特别是中国和印度的经济增长，其电力和钢铁生产的任何变化都会直接影响全球海运煤的需求量。' },
+            { title: '能源替代品竞争', content: '天然气价格是煤炭在发电领域最直接的竞争对手，尤其在欧美市场。低气价打压煤炭需求，高气价则凸显煤炭经济性。可再生能源的长期增长则从结构上挤压煤电空间。' },
+            { title: '主要出口国供给', content: '澳大利亚（罢工、洪水）、印度尼西亚（出口禁令）等主要出口国的任何供给扰动，都会迅速影响国际市场价格。' },
+            { title: '地缘政治与贸易', content: '俄乌冲突等事件彻底重塑了全球能源贸易流向。贸易摩擦（如对澳煤的限制）也会导致区域价差扩大和贸易重新洗牌。' },
+            { title: '气候政策与融资', content: '日益趋严的全球气候政策和ESG投资理念，使得新建煤矿和煤电项目融资困难，长期来看限制了新供给进入市场，可能加剧未来价格的向上弹性。' }
         ],
         costJourney: [
             { stage: '1. 坑口成本', icon: '⛏️', cost: 250, description: '鄂尔多斯某矿井生产完全成本' },
@@ -293,165 +362,106 @@ document.addEventListener('DOMContentLoaded', function () {
         ]
     };
 
+    let priceHistoryChart;
+
     function renderPriceHistoryChart() {
         const ctx = document.getElementById('priceHistoryChart').getContext('2d');
-        new Chart(ctx, {
+        const datasets = [
+            { label: '动力煤', data: data.prices.power_coal, borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', fill: true, tension: 0.3, hidden: false },
+            { label: '炼焦煤', data: data.prices.coking_coal, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.3, hidden: true },
+            { label: '无烟煤', data: data.prices.anthracite, borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.1)', fill: true, tension: 0.3, hidden: true }
+        ];
+
+        priceHistoryChart = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels: data.years,
-                datasets: [{
-                    label: '动力煤价格 (元/吨)',
-                    data: data.prices.power_coal,
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                    fill: true,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: { display: true, text: '秦皇岛Q5500动力煤年度均价 (1995-2023)' },
-                    legend: { position: 'bottom' },
-                    annotation: {
-                        annotations: {
-                            era1: { type: 'box', xMin: 1, xMax: 4, backgroundColor: 'rgba(255, 99, 132, 0.1)', label: { content: '黄金十年', display: true, position: 'start' } },
-                            era2: { type: 'box', xMin: 5, xMax: 8, backgroundColor: 'rgba(54, 162, 235, 0.1)', label: { content: '大调整', display: true, position: 'start' } },
-                            era3: { type: 'box', xMin: 9, xMax: 13, backgroundColor: 'rgba(255, 206, 86, 0.1)', label: { content: '供给侧改革', display: true, position: 'start' } },
-                            era4: { type: 'box', xMin: 14, xMax: 16, backgroundColor: 'rgba(75, 192, 192, 0.1)', label: { content: '新波动', display: true, position: 'start' } }
-                        }
-                    }
-                },
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: '元/吨' } },
-                    x: { title: { display: true, text: '年份' } }
-                }
-            }
+            data: { labels: data.years, datasets: datasets },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: '中国不同煤种年度均价对比 (元/吨)' }, legend: { display: false } }, scales: { y: { beginAtZero: true, title: { display: true, text: '元/吨' } }, x: { title: { display: true, text: '年份' } } } }
+        });
+
+        const togglesContainer = document.getElementById('price-chart-toggles');
+        togglesContainer.innerHTML = '';
+        datasets.forEach((ds, i) => {
+            const button = document.createElement('button');
+            button.textContent = ds.label;
+            button.className = 'tab-button px-4 py-2 text-sm font-medium rounded-md border';
+            if (!ds.hidden) button.classList.add('active'); else button.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+            button.onclick = () => {
+                priceHistoryChart.data.datasets.forEach((dataset, index) => { dataset.hidden = (i !== index); });
+                priceHistoryChart.update();
+                document.querySelectorAll('#price-chart-toggles .tab-button').forEach(btn => { btn.classList.remove('active'); btn.classList.add('bg-white', 'text-gray-700', 'border-gray-300'); });
+                button.classList.add('active'); button.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+            };
+            togglesContainer.appendChild(button);
         });
     }
 
     function renderMacroFactorsChart() {
         const ctx = document.getElementById('macroFactorsChart').getContext('2d');
         const datasets = [
-            {
-                label: '动力煤价格 (元/吨)',
-                data: data.prices.power_coal,
-                borderColor: '#ef4444',
-                yAxisID: 'yPrice',
-                hidden: false
-            },
-            {
-                label: 'GDP增长率 (%)',
-                data: data.macro.gdp_growth,
-                borderColor: '#22c55e',
-                yAxisID: 'yPercent',
-                hidden: true
-            },
-            {
-                label: '全社会用电量 (亿kWh)',
-                data: data.macro.power_consumption,
-                borderColor: '#f97316',
-                yAxisID: 'yAmount',
-                hidden: true
-            },
-            {
-                label: '粗钢产量 (万吨)',
-                data: data.macro.steel_production,
-                borderColor: '#6b7280',
-                yAxisID: 'yAmount',
-                hidden: true
-            },
-            {
-                label: '原煤产量 (万吨)',
-                data: data.macro.coal_production,
-                borderColor: '#8b5cf6',
-                yAxisID: 'yAmount',
-                hidden: true
-            }
+            { label: '动力煤价格 (元/吨)', data: data.prices.power_coal, borderColor: '#ef4444', yAxisID: 'yPrice', hidden: false },
+            { label: 'GDP增长率 (%)', data: data.macro.gdp_growth, borderColor: '#22c55e', yAxisID: 'yPrice', hidden: true },
+            { label: '全社会用电量 (亿kWh)', data: data.macro.power_consumption, borderColor: '#f97316', yAxisID: 'yAmount', hidden: true },
+            { label: '粗钢产量 (万吨)', data: data.macro.steel_production, borderColor: '#6b7280', yAxisID: 'yAmount', hidden: true },
+            { label: '原煤产量 (万吨)', data: data.macro.coal_production, borderColor: '#8b5cf6', yAxisID: 'yAmount', hidden: true }
         ];
 
         const chart = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels: data.years,
-                datasets: datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
-                plugins: {
-                    title: { display: true, text: '煤炭价格与宏观经济指标关联' },
-                    legend: { display: false }
-                },
-                scales: {
-                    yPrice: { type: 'linear', display: true, position: 'left', title: { display: true, text: '价格(元/吨) & 增长率(%)' } },
-                    yAmount: { type: 'linear', display: true, position: 'right', title: { display: true, text: '产量/用电量' }, grid: { drawOnChartArea: false } }
-                }
-            }
+            data: { labels: data.years, datasets: datasets },
+            options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { title: { display: true, text: '煤炭价格与宏观经济指标关联' }, legend: { display: false } }, scales: { yPrice: { type: 'linear', display: true, position: 'left', title: { display: true, text: '价格(元/吨) & 增长率(%)' } }, yAmount: { type: 'linear', display: true, position: 'right', title: { display: true, text: '产量/用电量' }, grid: { drawOnChartArea: false } } } }
         });
 
         const togglesContainer = document.getElementById('macro-toggles');
+        togglesContainer.innerHTML = '';
         datasets.forEach((ds, i) => {
             const checked = !ds.hidden;
-            const toggleHtml = `
-                <label class="inline-flex items-center cursor-pointer">
-                    <input type="checkbox" class="form-checkbox h-5 w-5 rounded" data-dataset-index="${i}" ${checked ? 'checked' : ''} style="accent-color: ${ds.borderColor};">
-                    <span class="ml-2 text-gray-700" style="color: ${ds.borderColor};">${ds.label}</span>
-                </label>
-            `;
+            const toggleHtml = `<label class="inline-flex items-center cursor-pointer"><input type="checkbox" class="form-checkbox h-5 w-5 rounded" data-dataset-index="${i}" ${checked ? 'checked' : ''} style="accent-color: ${ds.borderColor};"><span class="ml-2 text-gray-700" style="color: ${ds.borderColor};">${ds.label}</span></label>`;
             togglesContainer.innerHTML += toggleHtml;
         });
 
-        togglesContainer.addEventListener('change', (e) => {
-            const index = e.target.dataset.datasetIndex;
-            chart.setDatasetVisibility(index, e.target.checked);
-            chart.update();
-        });
+        togglesContainer.addEventListener('change', (e) => { const index = e.target.dataset.datasetIndex; chart.setDatasetVisibility(index, e.target.checked); chart.update(); });
     }
 
     function renderDrivers() {
-        const supplyContainer = document.getElementById('supply-factors');
-        const demandContainer = document.getElementById('demand-factors');
-        const policyContainer = document.getElementById('policy-factors');
-        
-        const createCard = (item) => `
-            <div class="factor-card section-card rounded-lg p-4 shadow-sm border border-gray-200">
-                <h4 class="font-bold text-md text-gray-800">${item.title}</h4>
-                <div class="details text-sm text-gray-600 mt-2">
-                    <p>${item.content}</p>
-                </div>
-            </div>`;
-
-        supplyContainer.innerHTML = `<h3 class="text-xl font-semibold text-center text-green-700 mb-2">供给侧</h3>` + data.drivers.supply.map(createCard).join('');
-        demandContainer.innerHTML = `<h3 class="text-xl font-semibold text-center text-red-700 mb-2">需求侧</h3>` + data.drivers.demand.map(createCard).join('');
-        policyContainer.innerHTML = `<h3 class="text-xl font-semibold text-center text-blue-700 mb-2">政策与环境</h3>` + data.drivers.policy.map(createCard).join('');
-
-        document.querySelectorAll('.factor-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const details = card.querySelector('.details');
-                if (details.style.maxHeight) {
-                    details.style.maxHeight = null;
-                } else {
-                    details.style.maxHeight = details.scrollHeight + "px";
-                }
-            });
-        });
+        const createCard = (item) => `<div class="factor-card section-card rounded-lg p-4 shadow-sm border border-gray-200"><h4 class="font-bold text-md text-gray-800">${item.title}</h4><div class="details text-sm text-gray-600 mt-2"><p>${item.content}</p></div></div>`;
+        document.getElementById('supply-factors').innerHTML = `<h3 class="text-xl font-semibold text-center text-green-700 mb-2">供给侧</h3>` + data.drivers.supply.map(createCard).join('');
+        document.getElementById('demand-factors').innerHTML = `<h3 class="text-xl font-semibold text-center text-red-700 mb-2">需求侧</h3>` + data.drivers.demand.map(createCard).join('');
+        document.getElementById('policy-factors').innerHTML = `<h3 class="text-xl font-semibold text-center text-blue-700 mb-2">政策与环境</h3>` + data.drivers.policy.map(createCard).join('');
+        document.querySelectorAll('.factor-card').forEach(card => { card.addEventListener('click', () => { const details = card.querySelector('.details'); if (details.style.maxHeight) { details.style.maxHeight = null; } else { details.style.maxHeight = details.scrollHeight + "px"; } }); });
     }
 
     function renderPolicyTimeline() {
-        const container = document.getElementById('policy-timeline');
-        container.innerHTML = data.policyTimeline.map(item => `
-            <div class="mb-8 ml-8 section-card p-4 rounded-lg">
-                <span class="absolute flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full -left-3 ring-8 ring-white">
-                    <svg class="w-3 h-3 text-blue-800" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
-                </span>
-                <h3 class="flex items-center mb-1 text-lg font-semibold text-gray-900">${item.title}</h3>
-                <time class="block mb-2 text-sm font-normal leading-none text-gray-400">${item.year}</time>
-                <p class="text-base font-normal text-gray-600">${item.content}</p>
-            </div>
-        `).join('');
+        document.getElementById('policy-timeline').innerHTML = data.policyTimeline.map(item => `<div class="mb-8 ml-8 section-card p-4 rounded-lg"><span class="absolute flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full -left-3 ring-8 ring-white"><svg class="w-3 h-3 text-blue-800" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg></span><h3 class="flex items-center mb-1 text-lg font-semibold text-gray-900">${item.title}</h3><time class="block mb-2 text-sm font-normal leading-none text-gray-400">${item.year}</time><p class="text-base font-normal text-gray-600">${item.content}</p></div>`).join('');
+    }
+
+    function renderCostDeepDive() {
+        const processContainer = document.getElementById('mining-process');
+        const tableContainer = document.getElementById('cost-table');
+        const processSteps = { underground: [{ icon: '🚇', title: '开拓与准备', desc: '掘进井巷，建立通往煤层的通道。' }, { icon: '💥', title: '回采', desc: '使用采煤机或爆破方式从工作面采煤。' }, { icon: '🚚', title: '运输', desc: '通过输送机将原煤运至地面。' }, { icon: '🛡️', title: '支护', desc: '用液压支架等支撑顶板，保障安全。' }, { icon: '💨', title: '通风排水', desc: '维持井下空气流通，排除瓦斯和积水。' }], opencast: [{ icon: '🚜', title: '剥离', desc: '用挖掘机移走煤层上方的岩石和土壤。' }, { icon: '💣', title: '采煤', desc: '对暴露的煤层进行爆破或直接挖掘。' }, { icon: '🚛', title: '运输', desc: '用重型卡车将原煤运出采场。' }] };
+        const createProcessHtml = (title, steps) => { let stepsHtml = steps.map(step => `<div class="relative pl-8 pb-8 process-step"><div class="absolute -left-4 top-1 flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full text-xl">${step.icon}</div><h4 class="font-semibold">${step.title}</h4><p class="text-sm text-gray-600">${step.desc}</p></div>`).join(''); return `<div><h4 class="text-lg font-bold text-center mb-4">${title}</h4>${stepsHtml}</div>`; };
+        processContainer.innerHTML = createProcessHtml('井工开采', processSteps.underground) + createProcessHtml('露天开采', processSteps.opencast);
+        const costData = [['<b>成本构成</b>', '<b>山西</b>', '<b>陕西</b>', '<b>内蒙古</b>'], ['人工费', '100 - 150', '80 - 120', '90 - 130'], ['材料费', '50 - 80', '40 - 70', '40 - 60'], ['动力费', '30 - 50', '20 - 40', '20 - 40'], ['折旧/摊销', '40 - 70', '30 - 60', '30 - 50'], ['安全/维简等', '40 - 60', '30 - 50', '30 - 50'], ['期间费用等', '50 - 80', '30 - 50', '40 - 60'], ['<b>井工矿合计</b>', '<b>310 - 490</b>', '<b>230 - 390</b>', '<b>250 - 410</b>'], ['剥离/采装等 (露天)', 'N/A', '~80', '~70'], ['<b>露天矿合计</b>', '<b>N/A</b>', '<b>~100 - 150</b>', '<b>~90 - 140</b>']];
+        let tableHtml = '<thead><tr>'; costData[0].forEach(header => tableHtml += `<th>${header}</th>`); tableHtml += '</tr></thead><tbody>'; costData.slice(1).forEach(row => { tableHtml += '<tr>'; row.forEach(cell => tableHtml += `<td>${cell}</td>`); tableHtml += '</tr>'; }); tableHtml += '</tbody>';
+        tableContainer.innerHTML = tableHtml;
+    }
+    
+    function renderInternationalSection() {
+        const ctx = document.getElementById('internationalPriceChart').getContext('2d');
+        const datasets = [
+            { label: '纽卡斯尔(澳)', data: data.prices.newcastle, borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.1)', fill: true, tension: 0.3 },
+            { label: '理查兹湾(南非)', data: data.prices.richards_bay, borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.3 },
+            { label: 'ARA(欧洲)', data: data.prices.ara, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: true, tension: 0.3 }
+        ];
+        new Chart(ctx, {
+            type: 'line',
+            data: { labels: data.years, datasets: datasets },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, title: { display: true, text: '美元/吨' } }, x: { title: { display: true, text: '年份' } } } }
+        });
+
+        const driversContainer = document.getElementById('international-drivers');
+        const createCard = (item) => `<div class="factor-card section-card rounded-lg p-4 shadow-sm border border-gray-200"><h4 class="font-bold text-md text-gray-800">${item.title}</h4><div class="details text-sm text-gray-600 mt-2"><p>${item.content}</p></div></div>`;
+        driversContainer.innerHTML = data.internationalDrivers.map(createCard).join('');
+        driversContainer.querySelectorAll('.factor-card').forEach(card => { card.addEventListener('click', () => { const details = card.querySelector('.details'); if (details.style.maxHeight) { details.style.maxHeight = null; } else { details.style.maxHeight = details.scrollHeight + "px"; } }); });
     }
 
     function renderCostJourney() {
@@ -460,33 +470,22 @@ document.addEventListener('DOMContentLoaded', function () {
         const journeyHtml = data.costJourney.map((item, index) => {
             cumulativeCost += item.cost;
             const arrow = index < data.costJourney.length - 1 ? `<div class="text-3xl text-gray-300 mx-4 hidden md:block">&rarr;</div>` : '';
-            return `
-                <div class="flex flex-col items-center text-center">
-                    <div class="text-5xl">${item.icon}</div>
-                    <h4 class="font-bold mt-2">${item.stage}</h4>
-                    <p class="text-sm text-gray-500">${item.description}</p>
-                    <p class="text-lg font-semibold text-blue-600 mt-1">+${item.cost}元</p>
-                    <p class="text-xs text-gray-400">累计: ${cumulativeCost}元</p>
-                </div>
-                ${arrow}
-            `;
+            return `<div class="flex flex-col items-center text-center"><div class="text-5xl">${item.icon}</div><h4 class="font-bold mt-2">${item.stage}</h4><p class="text-sm text-gray-500">${item.description}</p><p class="text-lg font-semibold text-blue-600 mt-1">+${item.cost}元</p><p class="text-xs text-gray-400">累计: ${cumulativeCost}元</p></div>${arrow}`;
         }).join('');
         container.innerHTML = journeyHtml;
-
         const totalCost = cumulativeCost;
-        const productionCost = data.costJourney[0].cost;
-        const logisticsCost = totalCost - productionCost;
-        const logisticsPercentage = ((logisticsCost / totalCost) * 100).toFixed(1);
-
+        const logisticsCost = totalCost - data.costJourney[0].cost;
         document.getElementById('final-cost').textContent = totalCost;
-        document.getElementById('logistics-percentage').textContent = `${logisticsPercentage}%`;
+        document.getElementById('logistics-percentage').textContent = `${((logisticsCost / totalCost) * 100).toFixed(1)}%`;
     }
 
     renderPriceHistoryChart();
     renderMacroFactorsChart();
     renderDrivers();
     renderPolicyTimeline();
+    renderCostDeepDive();
     renderCostJourney();
+    renderInternationalSection();
 });
 </script>
 </body>
