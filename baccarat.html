@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>百家乐策略互动分析器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Analyst's Desk -->
+    <!-- Application Structure Plan: The application is designed as an interactive dashboard simulator. The primary user flow is centered around two main controls: sliders for 'Number of A Players' and 'B's Bet Multiplier'. This dashboard structure immediately engages the user, allowing them to explore scenarios and see real-time feedback on key metrics. This is more effective than a linear report as it encourages discovery. The main view presents the core paradox: high short-term win probability versus negative long-term expected value. A collapsible 'Methodology' section provides deeper context without cluttering the primary interface, catering to users who want to understand the 'why' behind the numbers. This structure prioritizes user interaction and guided discovery over passive reading. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: B's Daily Win Probability -> Goal: Inform/Impress -> Viz: Donut Chart (Chart.js) -> Interaction: Updates on slider change -> Justification: Visually impactful way to show the high probability, a key part of the strategy's deceptive appeal.
+        - Report Info: 30-Day Profit vs. Loss -> Goal: Compare -> Viz: Bar Chart (Chart.js) -> Interaction: Updates on slider change -> Justification: Clearly shows the expected number of winning vs. losing days, reinforcing the high win rate.
+        - Report Info: 30-Day Profit Probability vs. Expected Value -> Goal: Contrast -> Viz: Large number displays with color coding -> Interaction: Updates on slider change -> Justification: Juxtaposes the misleading high profit *probability* with the stark reality of the negative *expected value*. Red/green colors enhance this critical contrast.
+        - Report Info: Risk Profile -> Goal: Explain Qualitative Shift -> Viz: Dynamic Text Block -> Interaction: Text updates with player count -> Justification: Explains the changing *nature* of risk, a key insight that charts alone cannot convey.
+        - Report Info: Core Math Concepts -> Goal: Educate -> Viz: Static text and formulas in a collapsible section -> Interaction: User click to expand -> Justification: Provides foundational knowledge without overwhelming the main interactive view.
+        - Library/Method: All charts use Chart.js on Canvas. All interactions are handled by vanilla JavaScript.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F4;
+            color: #3a3a3a;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 280px; /* Increased height for mobile */
+            max-height: 300px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 350px;
+            }
+        }
+        .slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #5A8B72;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .slider-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #d3d3d3;
+            border-radius: 5px;
+        }
+        .stat-card {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1rem; /* Adjusted padding for mobile */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+         @media (min-width: 640px) {
+            .stat-card {
+                padding: 1.5rem;
+            }
+        }
+        .stat-title {
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 0.5rem; /* Adjusted margin */
+        }
+        .stat-value {
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .positive {
+            color: #38A169;
+        }
+        .negative {
+            color: #C46257;
+        }
+        .neutral {
+            color: #4A90E2;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">百家乐策略互动分析器</h1>
+            <p class="mt-2 text-base sm:text-lg text-gray-600">一个揭示短期高胜率与长期负期望悖论的模拟工具</p>
+        </header>
+
+        <main>
+            <section id="simulator" class="bg-white/80 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-lg mb-8">
+                <h2 class="text-xl sm:text-2xl font-bold text-center mb-6 text-gray-700">策略模拟器</h2>
+                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto text-sm sm:text-base">
+                    此模拟器基于您报告中提出的策略：玩家A有500元本金，只压闲，输光或赢到1000元离场。玩家B只压庄，以A的特定倍数下注，并在第一个A离场时也离场。请拖动下方的滑块来调整变量，并观察策略在不同情境下的表现。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <label for="numAPlayers" class="block mb-2 font-medium text-gray-700">玩家A的数量: <span id="numAPlayersValue" class="font-bold text-[#5A8B72]">1</span></label>
+                        <input id="numAPlayers" type="range" min="1" max="20" value="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                    <div>
+                        <label for="multiplierB" class="block mb-2 font-medium text-gray-700">玩家B的投注倍数: <span id="multiplierBValue" class="font-bold text-[#5A8B72]">10</span>x</label>
+                        <input id="multiplierB" type="range" min="1" max="100" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                    <div class="stat-card">
+                        <h3 class="stat-title text-sm sm:text-base">B的单日获胜概率</h3>
+                        <p class="stat-value text-4xl sm:text-5xl positive" id="dailyWinProb">65.56%</p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-2">B在一天结束时盈利的概率。随着A玩家数量增加，此概率急剧上升。</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 class="stat-title text-sm sm:text-base">30天盈利概率</h3>
+                        <p class="stat-value text-4xl sm:text-5xl positive" id="profitProb30Days">94.53%</p>
+                         <p class="text-xs sm:text-sm text-gray-500 mt-2">B在30天周期内实现净利润的概率。这揭示了策略的短期诱惑力。</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 class="stat-title text-sm sm:text-base">30天期望总收益 (EV)</h3>
+                        <p class="stat-value text-4xl sm:text-5xl negative" id="expectedValue30Days">-3,625 HKD</p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-2">长期来看，B的数学期望亏损。这是赌场优势不可避免的结果。</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 class="stat-title text-sm sm:text-base">风险特征</h3>
+                        <p class="stat-value text-xl sm:text-2xl neutral" id="riskProfile">频繁小波动</p>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-2" id="riskProfileDesc">策略的风险结构会随玩家数量而改变，但总期望为负的本质不变。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="charts" class="mb-8">
+                 <h2 class="text-xl sm:text-2xl font-bold text-center mb-6 text-gray-700">数据可视化</h2>
+                 <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto text-sm sm:text-base">
+                    图表直观地展示了策略的关键指标。左图显示了在30天周期内，预期获胜和失败的天数分布。右图则揭示了策略的核心矛盾：极高的短期盈利概率与必然的长期数学期望亏损之间的对比。
+                </p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                        <h3 class="text-lg sm:text-xl font-semibold text-center mb-4">30天胜负天数预期</h3>
+                        <div class="chart-container">
+                            <canvas id="winLossChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                        <h3 class="text-lg sm:text-xl font-semibold text-center mb-4">盈利概率 vs. 期望收益</h3>
+                         <div class="chart-container">
+                            <canvas id="probVsEvChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="methodology" class="bg-white/80 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-lg">
+                <details class="group">
+                    <summary class="text-xl sm:text-2xl font-bold text-gray-700 cursor-pointer list-none flex justify-between items-center">
+                        <span>策略背后的数学原理</span>
+                        <span class="transition-transform duration-300 group-open:rotate-180">▼</span>
+                    </summary>
+                    <div class="mt-6 border-t pt-6 text-sm sm:text-base">
+                        <p class="mb-6 text-gray-600">
+                           此交互式应用的所有计算均源自您报告中详细阐述的数学模型。核心在于理解百家乐的内在概率、赌场优势，以及应用“赌徒破产模型”来分析玩家A的会话动态。以下是对关键概念的简化说明。
+                        </p>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="text-lg sm:text-xl font-semibold mb-2">1. 核心概率与赌场优势</h4>
+                                <p class="text-gray-600">标准百家乐中，排除和局后，庄家获胜的有效概率约为 <strong class="text-gray-800">50.68%</strong>，闲家约为 <strong class="text-gray-800">49.32%</strong>。玩家B押注的“庄家”盘口虽然胜率更高，但赌场会抽取5%的佣金，这构成了 <strong class="text-gray-800">1.06%</strong> 的赌场优势。这意味着玩家B每投注100元，数学上期望损失1.06元。这是策略长期必然亏损的根源。</p>
+                            </div>
+                            <div>
+                                <h4 class="text-lg sm:text-xl font-semibold mb-2">2. “赌徒破产模型”的应用</h4>
+                                <p class="text-gray-600">我们用此模型计算玩家A的单日胜率。A从5个单位（500元）开始，目标是达到10个单位（总资产1000元）。由于A的单手胜率低于50%，模型计算出A赢得当日会话的概率仅为 <strong class="text-gray-800">34.44%</strong>。因此，A输掉会话的概率为 <strong class="text-gray-800">65.56%</strong>。这直接决定了1对1场景下B的单日获胜概率。</p>
+                            </div>
+                            <div>
+                                <h4 class="text-lg sm:text-xl font-semibold mb-2">3. 规模化策略的风险转变</h4>
+                                <p class="text-gray-600">当B监控10名A玩家时，B失败的条件是第一个结束游戏的A是赢家。这是一个极小概率事件。B的单日获胜概率会飙升至 <strong class="text-gray-800">>99.99%</strong>。然而，这并未消除风险，而是将风险从“频繁的小额亏损”转变为“极低概率的、足以摧毁所有利润的灾难性亏损”。期望值依然为负，只是亏损的发生方式改变了。</p>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 py-4 border-t">
+            <p class="text-sm text-gray-500">根据提供的分析报告生成的交互式数据应用。</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const P_A_WIN_SESSION = 0.3444;
+            const HOUSE_EDGE_BANKER = 0.0106;
+            const AVG_HANDS_1A = 113.6;
+
+            const numAPlayersSlider = document.getElementById('numAPlayers');
+            const multiplierBSlider = document.getElementById('multiplierB');
+            const numAPlayersValue = document.getElementById('numAPlayersValue');
+            const multiplierBValue = document.getElementById('multiplierBValue');
+
+            const dailyWinProbEl = document.getElementById('dailyWinProb');
+            const profitProb30DaysEl = document.getElementById('profitProb30Days');
+            const expectedValue30DaysEl = document.getElementById('expectedValue30Days');
+            const riskProfileEl = document.getElementById('riskProfile');
+            const riskProfileDescEl = document.getElementById('riskProfileDesc');
+
+            let winLossChart, probVsEvChart;
+
+            function calculateBinomial(n, k, p) {
+                function combinations(n, k) {
+                    let r = 1;
+                    for (let i = 1; i <= k; i++) {
+                        r = r * (n - i + 1) / i;
+                    }
+                    return r;
+                }
+                return combinations(n, k) * Math.pow(p, k) * Math.pow(1 - p, n - k);
+            }
+
+            function calculateCumulativeBinomial(n, p, startK) {
+                let totalProb = 0;
+                for (let k = startK; k <= n; k++) {
+                    totalProb += calculateBinomial(n, k, p);
+                }
+                return totalProb;
+            }
+
+            function updateSimulation() {
+                const numA = parseInt(numAPlayersSlider.value);
+                const multiplier = parseInt(multiplierBSlider.value);
+
+                numAPlayersValue.textContent = numA;
+                multiplierBValue.textContent = multiplier;
+
+                const pBLoseSession = Math.pow(P_A_WIN_SESSION, numA);
+                const pBWinSession = 1 - pBLoseSession;
+
+                const breakevenWins = 16;
+                const profitProb30Days = calculateCumulativeBinomial(30, pBWinSession, breakevenWins);
+                
+                const avgHandsMultiA = AVG_HANDS_1A / numA;
+                const ev30Days = 30 * avgHandsMultiA * (100 * multiplier) * (-HOUSE_EDGE_BANKER);
+                
+                dailyWinProbEl.textContent = `${(pBWinSession * 100).toFixed(4)}%`;
+                profitProb30DaysEl.textContent = `${(profitProb30Days * 100).toFixed(2)}%`;
+                expectedValue30DaysEl.textContent = `${Math.round(ev30Days).toLocaleString()} HKD`;
+
+                if (numA <= 3) {
+                    riskProfileEl.textContent = '频繁小波动';
+                    riskProfileDescEl.textContent = '策略表现为频繁的小额盈利，伴随可管理的、较常见的亏损。';
+                } else {
+                    riskProfileEl.textContent = '低概率高冲击';
+                    riskProfileDescEl.textContent = '策略表现为一连串几乎不间断的盈利，但隐藏着一次罕见的、足以吞噬所有利润的灾难性亏损风险。';
+                }
+
+                updateCharts(pBWinSession, profitProb30Days, ev30Days);
+            }
+
+            function createCharts() {
+                const winLossCtx = document.getElementById('winLossChart').getContext('2d');
+                winLossChart = new Chart(winLossCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['预期天数'],
+                        datasets: [{
+                            label: '获胜天数',
+                            data: [0],
+                            backgroundColor: 'rgba(56, 161, 105, 0.7)',
+                            borderColor: 'rgba(56, 161, 105, 1)',
+                            borderWidth: 1
+                        }, {
+                            label: '失败天数',
+                            data: [0],
+                            backgroundColor: 'rgba(196, 98, 87, 0.7)',
+                            borderColor: 'rgba(196, 98, 87, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                stacked: true,
+                                max: 30,
+                                title: { display: true, text: '天数' }
+                            },
+                            y: {
+                                stacked: true,
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw.toFixed(2)} 天`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                const probVsEvCtx = document.getElementById('probVsEvChart').getContext('2d');
+                probVsEvChart = new Chart(probVsEvCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['30天盈利概率', '30天期望收益 (HKD)'],
+                        datasets: [{
+                            label: '指标值',
+                            data: [0, 0],
+                            backgroundColor: [
+                                'rgba(56, 161, 105, 0.7)',
+                                'rgba(196, 98, 87, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(56, 161, 105, 1)',
+                                'rgba(196, 98, 87, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                title: { display: true, text: '数值' }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        if (context.dataIndex === 0) {
+                                            return `概率: ${(context.raw * 100).toFixed(2)}%`;
+                                        }
+                                        return `金额: ${Math.round(context.raw).toLocaleString()} HKD`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function updateCharts(pBWinSession, profitProb30Days, ev30Days) {
+                const expectedWins = 30 * pBWinSession;
+                const expectedLosses = 30 * (1 - pBWinSession);
+
+                winLossChart.data.datasets[0].data[0] = expectedWins;
+                winLossChart.data.datasets[1].data[0] = expectedLosses;
+                winLossChart.update();
+
+                probVsEvChart.data.datasets[0].data[0] = profitProb30Days;
+                probVsEvChart.data.datasets[0].data[1] = ev30Days;
+                probVsEvChart.options.scales.x.min = Math.min(0, ev30Days * 1.1);
+                probVsEvChart.update();
+            }
+
+            numAPlayersSlider.addEventListener('input', updateSimulation);
+            multiplierBSlider.addEventListener('input', updateSimulation);
+
+            createCharts();
+            updateSimulation();
+        });
+    </script>
+</body>
+</html>
