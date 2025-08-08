@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国外部平衡二十年演变：交互式分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: The application is designed as a thematic, interactive dashboard rather than a linear report. The core is a central chart linked to three "era" buttons (Accumulation, Turning Point, New Normal). Clicking an era button highlights that period on the chart and dynamically updates an adjacent text panel with the corresponding narrative from the report. This structure directly connects quantitative data with qualitative analysis, enhancing user understanding. A "Deep Dive" section with a secondary chart and toggles allows exploration of driving forces (like trade components), and a vertical timeline provides crucial policy context. This user-centric, non-linear flow from overview to detail is chosen for its superior usability and engagement compared to a static, chapter-based presentation. -->
+    <!-- Visualization & Content Choices: 1. Main Chart (Line/Bar Combo, Chart.js): Goal is to show the 20-year relationship between reserves, current account, and capital account. Interaction involves highlighting eras selected by the user, directly linking visual trends to the report's narrative. 2. Secondary Chart (Stacked Bar, Chart.js): Goal is to decompose the current account to show the dominance of goods trade. 3. Policy Timeline (HTML/Tailwind): Goal is to present key policy milestones for context. It's a visual list, more engaging than a table. 4. Dynamic Text Panels (JS): Goal is to display the report's core analysis for each era, triggered by user interaction. This ensures the narrative is central to the experience. All visualizations use Canvas, adhering to the NO SVG/Mermaid constraint. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #fdfbf8;
+            color: #3f3c3a;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 450px;
+            }
+        }
+        .era-button {
+            transition: all 0.3s ease;
+        }
+        .era-button.active {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .era-button.inactive {
+            background-color: #e2e8f0;
+            color: #4a5568;
+            opacity: 0.7;
+        }
+        .content-panel {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+        .content-hidden {
+            opacity: 0;
+            transform: translateY(10px);
+            display: none;
+        }
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 3px;
+            background-color: #e2d9d1;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -1.5px;
+        }
+        .timeline-container {
+            padding: 10px 40px;
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+        }
+        .timeline-container.left {
+            left: 0;
+        }
+        .timeline-container.right {
+            left: 50%;
+        }
+        .timeline-container::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            right: -10px;
+            background-color: #ffffff;
+            border: 4px solid #c8a788;
+            top: 15px;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        .timeline-container.right::after {
+            left: -10px;
+        }
+        .timeline-content {
+            padding: 20px 30px;
+            background-color: #fff9f2;
+            position: relative;
+            border-radius: 8px;
+            border: 1px solid #e2d9d1;
+        }
+        .stat-card {
+            background-color: #fff9f2;
+            border: 1px solid #e2d9d1;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto px-4 py-8 md:py-12">
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-5xl font-bold text-[#6b4f3a] mb-4">中国外部平衡的二十年演变</h1>
+            <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">一个关于贸易、投资、储备与资本流动的交互式数据故事 (2004-2023)</p>
+        </header>
+
+        <main>
+            <section id="dashboard" class="mb-16">
+                <div class="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+                    <div class="text-center mb-6">
+                        <p class="text-lg text-gray-700">点击下方按钮，探索中国外部平衡在三个关键时代的核心动态。图表将高亮相应时期，右侧将展示该时代的深度解读。</p>
+                    </div>
+                    <div class="flex justify-center space-x-2 md:space-x-4 mb-8 flex-wrap">
+                        <button id="era1-btn" data-era="1" class="era-button text-sm md:text-base font-semibold py-2 px-4 md:py-3 md:px-6 rounded-full shadow-md bg-[#c8a788] text-white">第一阶段: 积累时代 (2004-2014)</button>
+                        <button id="era2-btn" data-era="2" class="era-button text-sm md:text-base font-semibold py-2 px-4 md:py-3 md:px-6 rounded-full shadow-md bg-[#c8a788] text-white">第二阶段: 转折时代 (2015-2017)</button>
+                        <button id="era3-btn" data-era="3" class="era-button text-sm md:text-base font-semibold py-2 px-4 md:py-3 md:px-6 rounded-full shadow-md bg-[#c8a788] text-white">第三阶段: 新常态 (2018-至今)</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                        <div class="lg:col-span-2">
+                            <div class="chart-container">
+                                <canvas id="mainChart"></canvas>
+                            </div>
+                        </div>
+                        <div id="insights-panel" class="lg:col-span-1 min-h-[300px]">
+                            <div id="era1-content" class="content-panel">
+                                <h3 class="font-bold text-xl mb-3 text-[#6b4f3a]">积累时代: “双顺差”与储备高墙</h3>
+                                <p class="text-gray-600 text-base leading-relaxed">这一时期，中国经济呈现“双顺差”格局：庞大的货物贸易顺差和持续的外商直接投资（FDI）流入，共同构成了外汇供给的双引擎。在强制结售汇制度下，这些外汇流入被动地、几乎全额地转化为国家外汇储备，推动储备规模从不足1万亿美元飙升至近4万亿美元的历史峰值。居民部门在强烈的人民币升值预期下，倾向于将外汇结售为人民币，其行为强化而非对冲了储备积累的趋势。这个模型的内在基础，从“制度强制”悄然转变为“市场预期”，为后来的剧变埋下伏笔。</p>
+                            </div>
+                            <div id="era2-content" class="content-panel content-hidden">
+                                <h3 class="font-bold text-xl mb-3 text-[#6b4f3a]">转折时代: “811汇改”与大逆转</h3>
+                                <p class="text-gray-600 text-base leading-relaxed">2015年的“811汇改”成为催化剂，一举击碎了长达十年的单边人民币升值预期。市场预期发生180度逆转，企业和居民开始大规模将人民币换成外汇，以对冲贬值风险和偿还外债。资本流动方向从净流入转为大规模净流出，其规模超过了依然强劲的经常账户顺差。为满足市场需求并稳定汇率，央行被迫大规模抛售外汇，导致外汇储备在短短两年多内消耗约1万亿美元。居民部门的角色从被动的顺周期因素，演变为驱动宏观格局的主动力量。</p>
+                            </div>
+                            <div id="era3-content" class="content-panel content-hidden">
+                                <h3 class="font-bold text-xl mb-3 text-[#6b4f3a]">新常态: “一顺一逆”的动态平衡</h3>
+                                <p class="text-gray-600 text-base leading-relaxed">经历了剧烈调整后，中国外部平衡进入“一顺一逆”的新范式：持续的经常账户顺差与规模相当的资本和金融账户逆差相互抵消。贸易顺差提供的外汇，被企业对外投资（ODI）和居民全球资产配置（通过QDII等渠道）的需求所吸收。这种自我平衡机制使得外汇储备规模长期稳定在3.1-3.2万亿美元区间。央行角色从主要参与者转为边际调节者，货币政策独立性显著增强。居民的资本流出从昔日风险点，转变为宏观经济的“安全阀”和“稳定器”。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="deep-dive" class="mb-16">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-[#6b4f3a]">探索核心驱动力</h2>
+                    <p class="text-lg text-gray-600 mt-2">解构经常账户，观察关键组成部分的变化趋势。</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="stat-card">
+                        <h3 class="text-xl font-bold mb-4 text-[#6b4f3a]">经常账户构成 (2023年)</h3>
+                        <div class="chart-container h-64 md:h-80 max-h-[350px]">
+                            <canvas id="componentsChart"></canvas>
+                        </div>
+                         <p class="text-sm text-gray-500 mt-4">货物贸易的巨额顺差是经常账户顺差的核心来源，在很大程度上抵消了服务贸易的逆差。</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 class="text-xl font-bold mb-4 text-[#6b4f3a]">政策演进时间线</h3>
+                         <p class="text-sm text-gray-500 mb-4">关键的外汇管理政策调整，深刻影响了企业和居民的行为模式，重塑了资本流动的格局。</p>
+                        <div class="text-left space-y-3 text-sm">
+                            <div class="flex items-start">
+                                <span class="font-bold text-[#c8a788] w-16">2007年:</span>
+                                <span class="text-gray-700 flex-1">取消企业经常项目外汇账户限额，个人年度购汇便利化额度统一为5万美元。私人部门持有外汇的“选择权”被完全释放。</span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="font-bold text-[#c8a788] w-16">2015年:</span>
+                                <span class="text-gray-700 flex-1">“811汇改”，完善中间价报价机制，引发市场预期逆转。</span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="font-bold text-[#c8a788] w-16">2017年:</span>
+                                <span class="text-gray-700 flex-1">在中间价报价模型中引入“逆周期因子”，以对冲市场顺周期行为，稳定汇率预期。</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="conclusion">
+                 <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-[#6b4f3a]">结论与战略意涵</h2>
+                    <p class="text-lg text-gray-600 mt-2">二十年的演进，中国外部平衡从简单的积累模型走向复杂动态的平衡系统。</p>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-6 md:p-10">
+                    <p class="text-gray-700 leading-relaxed mb-4">回顾过去二十年，中国外部平衡关系的核心线索是**“选择权”的转移和“预期”的崛起**。从企业和居民几乎没有保留外汇的选择权，到拥有选择权但因单边升值预期而放弃，再到预期逆转后集体行使选择权引发风暴，最终到在双向波动预期下理性行使选择权以实现资产配置——这条主线贯穿了二十年的演进。</p>
+                    <p class="text-gray-700 leading-relaxed mb-4">今天，中国已构建起一个更具韧性和可持续性的外部平衡范式。它巧妙地化解了“政策三难困境”，在维持相对独立的货币政策和稳定的汇率的同时，享受贸易顺差带来的益处，而无需承担储备过度积累的压力。居民和企业的资本流出，从昔日令人担忧的风险点，转变为平衡国际收支、增强货币政策独立性的**“安全阀”**。</p>
+                    <p class="text-gray-700 leading-relaxed">然而，未来的挑战依然存在，包括贸易顺差的可持续性以及应对潜在的新一轮外部冲击。但过去二十年的经验，无疑为中国应对未来的不确定性，积累了宝贵的智慧和政策资本。</p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 pt-8 border-t border-gray-200">
+            <p class="text-sm text-gray-500">数据来源：国家外汇管理局、中国人民银行。本应用仅为数据可视化与分析展示，不构成任何投资建议。</p>
+        </footer>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const reportData = [
+        { year: 2004, goods: 689, services: -86, current: 687, capital: 1107, reserves: 6099, reserveChange: 2067 },
+        { year: 2005, goods: 1342, services: -95, current: 1608, capital: 630, reserves: 8189, reserveChange: 2090 },
+        { year: 2006, goods: 2177, services: -90, current: 2499, capital: -9, reserves: 10663, reserveChange: 2474 },
+        { year: 2007, goods: 3154, services: -57, current: 3718, capital: 1320, reserves: 15282, reserveChange: 4619 },
+        { year: 2008, goods: 3385, services: 116, current: 4206, capital: 148, reserves: 19460, reserveChange: 4178 },
+        { year: 2009, goods: 2476, services: -29, current: 2841, capital: 1847, reserves: 23992, reserveChange: 4532 },
+        { year: 2010, goods: 2548, services: -221, current: 2971, capital: 1883, reserves: 28473, reserveChange: 4481 },
+        { year: 2011, goods: 2668, services: -553, current: 1978, capital: 1681, reserves: 31811, reserveChange: 3338 },
+        { year: 2012, goods: 2865, services: -897, current: 2138, capital: 20, reserves: 33116, reserveChange: 1305 },
+        { year: 2013, goods: 3083, services: -1189, current: 1887, capital: 3262, reserves: 38213, reserveChange: 5097 },
+        { year: 2014, goods: 3927, services: -1980, current: 2197, capital: 805, reserves: 38430, reserveChange: 217 },
+        { year: 2015, goods: 5671, services: -2082, current: 3306, capital: -5045, reserves: 33304, reserveChange: -5126 },
+        { year: 2016, goods: 5427, services: -2425, current: 1964, capital: -4933, reserves: 30105, reserveChange: -3199 },
+        { year: 2017, goods: 4761, services: -2657, current: 1649, capital: 409, reserves: 31399, reserveChange: 1294 },
+        { year: 2018, goods: 4153, services: -2916, current: 243, capital: -1659, reserves: 30727, reserveChange: -672 },
+        { year: 2019, goods: 4242, services: -2153, current: 1413, capital: -889, reserves: 31079, reserveChange: 352 },
+        { year: 2020, goods: 5239, services: -1202, current: 2740, capital: -1739, reserves: 32165, reserveChange: 1086 },
+        { year: 2021, goods: 6734, services: -974, current: 3964, capital: -3026, reserves: 32502, reserveChange: 337 },
+        { year: 2022, goods: 8769, services: -1098, current: 4175, capital: -3824, reserves: 31277, reserveChange: -1225 },
+        { year: 2023, goods: 6080, services: -2294, current: 2642, capital: -2486, reserves: 32380, reserveChange: 1103 }
+    ];
+
+    const labels = reportData.map(d => d.year);
+    const reservesData = reportData.map(d => d.reserves);
+    const currentData = reportData.map(d => d.current);
+    const capitalData = reportData.map(d => d.capital);
+    const goodsData = reportData.map(d => d.goods);
+    const servicesData = reportData.map(d => d.services);
+
+    const eraButtons = document.querySelectorAll('.era-button');
+    const contentPanels = document.querySelectorAll('.content-panel');
+    let mainChartInstance;
+
+    function formatNumber(value) {
+        return new Intl.NumberFormat('en-US').format(value);
+    }
+    
+    const annotationPlugin = {
+        id: 'annotationPlugin',
+        afterDraw: (chart, args, options) => {
+            if (!options.era) return;
+            const { ctx, chartArea: { top, bottom, left, right }, scales: { x, y } } = chart;
+            
+            const eraBoundaries = {
+                1: { start: 2004, end: 2014 },
+                2: { start: 2015, end: 2017 },
+                3: { start: 2018, end: 2023 }
+            };
+
+            const { start, end } = eraBoundaries[options.era];
+            
+            const startIndex = labels.indexOf(start);
+            const endIndex = labels.indexOf(end);
+
+            if (startIndex === -1 || endIndex === -1) return;
+
+            const xStart = x.getPixelForValue(startIndex);
+            const xEnd = x.getPixelForValue(endIndex);
+            
+            ctx.save();
+            ctx.fillStyle = 'rgba(120, 80, 50, 0.1)';
+            ctx.fillRect(xStart, top, xEnd - xStart, bottom - top);
+            ctx.restore();
+        }
+    };
+
+    Chart.register(annotationPlugin);
+
+    function createMainChart(highlightEra = null) {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        if (mainChartInstance) {
+            mainChartInstance.destroy();
+        }
+        mainChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: '经常账户差额',
+                        data: currentData,
+                        backgroundColor: '#a3bfb0',
+                        yAxisID: 'y1',
+                        order: 2
+                    },
+                    {
+                        label: '资本和金融账户差额',
+                        data: capitalData,
+                        backgroundColor: '#e8c8a1',
+                        yAxisID: 'y1',
+                        order: 2
+                    },
+                    {
+                        label: '年末外汇储备',
+                        data: reservesData,
+                        type: 'line',
+                        borderColor: '#6b4f3a',
+                        backgroundColor: 'transparent',
+                        yAxisID: 'y',
+                        tension: 0.3,
+                        pointRadius: 2,
+                        borderWidth: 3,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '中国国际收支与外汇储备 (单位：亿美元)',
+                        font: { size: 16, weight: 'bold' },
+                        color: '#3f3c3a'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += formatNumber(context.parsed.y) + ' 亿美元';
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'bottom'
+                    },
+                    annotationPlugin: {
+                        era: highlightEra
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: { display: false }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: '外汇储备 (亿美元)',
+                            color: '#6b4f3a'
+                        },
+                        grid: {
+                            color: '#e2d9d1'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: '账户差额 (亿美元)'
+                        },
+                        grid: {
+                            drawOnChartArea: false, 
+                        },
+                        stacked: true
+                    }
+                }
+            }
+        });
+    }
+
+    function createComponentsChart() {
+        const ctx = document.getElementById('componentsChart').getContext('2d');
+        const data2023 = reportData.find(d => d.year === 2023);
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['货物贸易顺差', '服务贸易逆差'],
+                datasets: [{
+                    data: [data2023.goods, Math.abs(data2023.services)],
+                    backgroundColor: ['#a3bfb0', '#e8c8a1'],
+                    borderColor: '#fdfbf8',
+                    borderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += formatNumber(context.parsed) + ' 亿美元';
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function handleEraChange(era) {
+        eraButtons.forEach(btn => {
+            if (btn.dataset.era === era) {
+                btn.classList.add('active');
+                btn.classList.remove('inactive');
+                btn.style.backgroundColor = '#c8a788';
+                btn.style.color = 'white';
+            } else {
+                btn.classList.remove('active');
+                btn.classList.add('inactive');
+                btn.style.backgroundColor = '#f0f0f0';
+                btn.style.color = '#666';
+            }
+        });
+
+        contentPanels.forEach(panel => {
+            if (panel.id === `era${era}-content`) {
+                panel.classList.remove('content-hidden');
+            } else {
+                panel.classList.add('content-hidden');
+            }
+        });
+
+        createMainChart(era);
+    }
+
+    eraButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const selectedEra = e.currentTarget.dataset.era;
+            handleEraChange(selectedEra);
+        });
+    });
+
+    createComponentsChart();
+    handleEraChange('1'); 
+});
+</script>
+
+</body>
+</html>
