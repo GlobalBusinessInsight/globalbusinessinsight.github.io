@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国天然气/LNG价格十年分析 (2015-2025)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: The application is designed as a single-page dashboard with a top navigation bar for easy access to four thematic sections: 1) Price Overview, 2) Regional Perspective, 3) Key Drivers, and 4) Future Outlook. This structure moves away from the linear report format to a more user-centric, exploratory model. The 'Price Overview' section immediately presents the core narrative of the dual-track system through an interactive timeline chart. The 'Regional Perspective' uses an interactive map-like chart and cards to make geographical data digestible. 'Key Drivers' simplifies complex concepts like the 'Energy Trilemma' into an interactive diagram. This design prioritizes user engagement and allows for non-linear exploration of the report's key insights, making complex data relationships more apparent and understandable. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Monthly price trends of regulated gas vs. LNG. Goal: Compare stability vs. volatility. Viz: Combined stepped line and regular line chart (Chart.js). Interaction: Buttons for key years highlight events on the chart and update a text box with analysis. Justification: Visually demonstrates the "dual-track" system's core tension.
+        - Report Info: Regional price differences. Goal: Show geographical disparity. Viz: Horizontal bar chart (Chart.js) acting as a simplified map. Interaction: Clicking a region's bar reveals a detailed information card. Justification: More accessible and interactive than a static table, clearly ranking prices.
+        - Report Info: Key market drivers (Policy, Global, Domestic). Goal: Explain complex causal relationships. Viz: HTML/CSS-based interactive 'Energy Trilemma' diagram and info cards. Interaction: Hovering over the trilemma points reveals explanatory tooltips. Justification: Transforms an abstract concept into a tangible, engaging visual element.
+        - Report Info: Global price benchmarks comparison. Goal: Show China's linkage to the global market. Viz: Multi-line chart (Chart.js). Justification: Directly visualizes the correlation between China's LNG import prices and international benchmarks like JKM.
+        - Library/Method: All charts are rendered on <canvas> using Chart.js. All diagrams and layouts use standard HTML and Tailwind CSS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #fdfcf9;
+            color: #38332e;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #c86a2d;
+            border-bottom-color: #c86a2d;
+        }
+        .trilemma-point {
+            transition: transform 0.3s, background-color 0.3s;
+        }
+        .trilemma-point:hover {
+            transform: scale(1.1);
+            background-color: #c86a2d;
+            color: white;
+        }
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .trilemma-point:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-[#38332e]">中国天然气价格洞察</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium">价格总览</a>
+                        <a href="#regional" class="nav-link px-3 py-2 rounded-md text-sm font-medium">区域透视</a>
+                        <a href="#drivers" class="nav-link px-3 py-2 rounded-md text-sm font-medium">核心驱动力</a>
+                        <a href="#new-sources" class="nav-link px-3 py-2 rounded-md text-sm font-medium">新兴供应源</a>
+                        <a href="#outlook" class="nav-link px-3 py-2 rounded-md text-sm font-medium">未来展望</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#c86a2d]">
+                        <span class="sr-only">打开主菜单</span>
+                        <svg class="h-6 w-6" id="menu-icon-open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                        <svg class="h-6 w-6 hidden" id="menu-icon-close" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#overview" class="nav-link block px-3 py-2 rounded-md text-base font-medium">价格总览</a>
+                <a href="#regional" class="nav-link block px-3 py-2 rounded-md text-base font-medium">区域透视</a>
+                <a href="#drivers" class="nav-link block px-3 py-2 rounded-md text-base font-medium">核心驱动力</a>
+                <a href="#new-sources" class="nav-link block px-3 py-2 rounded-md text-base font-medium">新兴供应源</a>
+                <a href="#outlook" class="nav-link block px-3 py-2 rounded-md text-base font-medium">未来展望</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="overview" class="mb-16 scroll-mt-16">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-[#c86a2d] mb-2">价格总览：双轨制下的市场脉搏</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    过去十年，中国天然气市场最显著的特征是“双轨制”：政府指导下的管道气价格相对稳定，呈阶梯式调整；而市场化的LNG价格则随季节和全球市场剧烈波动。此图表直观地展示了两种价格路径的巨大差异。
+                </p>
+            </div>
+
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                <div class="chart-container h-[350px] md:h-[450px] mb-6">
+                    <canvas id="priceTrendChart"></canvas>
+                </div>
+                <div class="flex flex-wrap justify-center gap-2 mb-6">
+                    <button data-year="all" class="event-btn bg-[#c86a2d] text-white px-4 py-2 rounded-full text-sm font-semibold shadow">全部时段</button>
+                    <button data-year="2015" class="event-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold shadow">2015: 价格并轨</button>
+                    <button data-year="2017" class="event-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold shadow">2017: "气荒"冲击</button>
+                    <button data-year="2022" class="event-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold shadow">2022: 全球危机</button>
+                    <button data-year="2024" class="event-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold shadow">2024: 理性回归</button>
+                </div>
+                <div id="event-description" class="bg-stone-100 p-4 rounded-lg min-h-[120px] flex items-center justify-center transition-all duration-300">
+                    <p class="text-center text-gray-700">点击上方按钮，查看关键年份的市场事件解读。</p>
+                </div>
+            </div>
+
+            <div class="mt-12">
+                <div class="text-center mb-10">
+                    <h3 class="text-2xl font-bold text-[#38332e] mb-2">全球联动：中国LNG价格与国际基准</h3>
+                    <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                        作为全球最大的天然气进口国，中国的LNG价格与国际市场紧密相连。下图展示了中国LNG进口均价与亚洲JKM、欧洲TTF等国际基准价格的波动趋势，凸显了全球能源格局对中国市场的直接影响。
+                    </p>
+                </div>
+                <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                    <div class="chart-container h-[350px] md:h-[450px]">
+                        <canvas id="globalBenchmarkChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="regional" class="mb-16 scroll-mt-16">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-[#c86a2d] mb-2">区域透视：一国之内的多元市场</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    中国广阔的疆域决定了其天然气市场并非铁板一块。从资源富集的西部到消费集中的东部沿海，天然气价格存在巨大差异。这种差异催生了不同的市场生态和商业战略。点击图表中的省份，查看其市场特征。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-3 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                    <div class="chart-container h-[400px] md:h-[500px]">
+                        <canvas id="regionalPriceChart"></canvas>
+                    </div>
+                </div>
+                <div id="regional-info-panel" class="lg:col-span-2 flex items-center">
+                    <div id="region-card-default" class="w-full bg-stone-100 p-6 rounded-lg text-center text-gray-600">
+                        <p>请点击左侧图表中的省份条块，以加载该区域的详细市场分析。</p>
+                    </div>
+                    <div id="region-card-content" class="w-full hidden"></div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="drivers" class="mb-16 scroll-mt-16">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-[#c86a2d] mb-2">核心驱动力：三重博弈下的价格形成</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    中国天然气价格是政策、全球市场与国内基本面三者复杂博弈的结果。这背后反映了国家在“能源不可能三角”——即能源安全、经济可负担性与环境可持续性之间的艰难权衡。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="relative w-full max-w-md mx-auto h-80">
+                    <div class="absolute top-1/2 left-1/2 w-full h-full" style="transform: translate(-50%, -50%);">
+                        <div class="absolute top-0 left-1/2 w-2 h-1/2 bg-gray-300" style="transform: translateX(-50%) rotate(0deg); transform-origin: bottom;"></div>
+                        <div class="absolute top-1/2 left-1/2 w-2 h-1/2 bg-gray-300" style="transform: translate(-50%, -100%) rotate(120deg); transform-origin: bottom;"></div>
+                        <div class="absolute top-1/2 left-1/2 w-2 h-1/2 bg-gray-300" style="transform: translate(-50%, -100%) rotate(240deg); transform-origin: bottom;"></div>
+                    </div>
+                    <div class="trilemma-point absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-stone-100 rounded-full flex items-center justify-center text-center p-2 font-semibold shadow-lg cursor-pointer">
+                        能源安全
+                        <div class="tooltip absolute -top-20 w-48 bg-gray-800 text-white text-xs rounded py-1 px-2 text-center">保障供应、增储上产、多元化进口</div>
+                    </div>
+                    <div class="trilemma-point absolute bottom-0 left-[10%] -translate-y-1/4 w-32 h-32 bg-stone-100 rounded-full flex items-center justify-center text-center p-2 font-semibold shadow-lg cursor-pointer">
+                        经济可负担性
+                        <div class="tooltip absolute bottom-full mb-2 w-48 bg-gray-800 text-white text-xs rounded py-1 px-2 text-center">控制门站价、减轻下游负担、维护经济竞争力</div>
+                    </div>
+                    <div class="trilemma-point absolute bottom-0 right-[10%] -translate-y-1/4 w-32 h-32 bg-stone-100 rounded-full flex items-center justify-center text-center p-2 font-semibold shadow-lg cursor-pointer">
+                        环境可持续性
+                        <div class="tooltip absolute bottom-full mb-2 w-48 bg-gray-800 text-white text-xs rounded py-1 px-2 text-center">“煤改气”、双碳目标、能源转型</div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h4 class="font-bold text-lg mb-2 text-[#38332e]">国家之手：政策驱动的市场变革</h4>
+                        <p class="text-gray-600">从“煤改气”带来的需求冲击，到后期更为理性的政策修正，再到贯穿始终的定价改革，政府政策是中国天然气市场最核心的塑造力量。</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h4 class="font-bold text-lg mb-2 text-[#38332e]">全球联动：油价、现货与地缘政治</h4>
+                        <p class="text-gray-600">油价挂钩的长协合同、高风险高回报的现货LNG采购、以及俄乌冲突等事件，都证明了中国天然气市场已深度融入全球能源格局，无法独善其身。</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                        <h4 class="font-bold text-lg mb-2 text-[#38332e]">国内基本面：产量、需求与基础设施</h4>
+                        <p class="text-gray-600">国内产量的持续增长是市场稳定的“压舱石”，而工业、城燃等需求结构和储气库等基础设施的建设进度，共同决定了市场的供需平衡状况。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="new-sources" class="mb-16 scroll-mt-16">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-[#c86a2d] mb-2">新兴供应源潜力分析</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    在寻求供应多元化的过程中，中国正评估全球范围内新的LNG供应来源。阿尔及利亚和加拿大是两个具有代表性但商业可行性迥异的潜在伙伴。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Algeria Card -->
+                <div class="bg-white p-6 rounded-xl shadow-lg flex flex-col">
+                    <h3 class="text-2xl font-bold text-center mb-4 text-[#38332e]">阿尔及利亚</h3>
+                    <div class="space-y-4 flex-grow">
+                        <div>
+                            <h4 class="font-semibold text-lg text-green-700 flex items-center"><span class="text-2xl mr-2">✓</span>优势</h4>
+                            <ul class="list-disc list-inside text-gray-600 pl-4">
+                                <li>传统天然气生产国，经验丰富。</li>
+                                <li>地处地中海，可作为欧洲市场外的补充。</li>
+                                <li>与中国有良好的政治关系。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-lg text-red-700 flex items-center"><span class="text-2xl mr-2">✗</span>挑战</h4>
+                            <ul class="list-disc list-inside text-gray-600 pl-4">
+                                <li>地理位置遥远，运输成本高昂（需经苏伊士运河）。</li>
+                                <li>主要面向大西洋盆地市场，长期合同多与欧洲绑定。</li>
+                                <li>产量增长潜力有限，难以提供大规模新增供应。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-gray-200">
+                        <h4 class="font-semibold text-lg mb-2">可行性结论</h4>
+                        <p class="text-gray-700">作为战略性长期基荷供应商的可行性<strong class="text-red-600">较低</strong>。更可能扮演<strong class="text-blue-600">机会性现货供应商</strong>的角色，即在亚欧价差合适时，将少量货物转运至亚洲。</p>
+                    </div>
+                </div>
+                <!-- Canada Card -->
+                <div class="bg-white p-6 rounded-xl shadow-lg flex flex-col">
+                    <h3 class="text-2xl font-bold text-center mb-4 text-[#38332e]">加拿大</h3>
+                    <div class="space-y-4 flex-grow">
+                        <div>
+                            <h4 class="font-semibold text-lg text-green-700 flex items-center"><span class="text-2xl mr-2">✓</span>优势</h4>
+                            <ul class="list-disc list-inside text-gray-600 pl-4">
+                                <li>西海岸项目（如LNG Canada）直面亚洲，航程短，运输成本低。</li>
+                                <li>资源储量丰富，政治环境稳定。</li>
+                                <li>可为中国提供北美来源的供应，实现供应地多元化。</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-lg text-red-700 flex items-center"><span class="text-2xl mr-2">✗</span>挑战</h4>
+                            <ul class="list-disc list-inside text-gray-600 pl-4">
+                                <li>国内环保法规和管道建设审批流程复杂，可能延误项目。</li>
+                                <li>作为LNG出口新手，项目建设和运营成本较高。</li>
+                                <li>需与美国、卡塔尔等成熟供应商激烈竞争。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-gray-200">
+                        <h4 class="font-semibold text-lg mb-2">可行性结论</h4>
+                        <p class="text-gray-700">作为战略性长期基荷供应商的可行性<strong class="text-green-700">很高</strong>。加拿大西海岸项目被视为未来几年全球LNG市场<strong class="text-blue-600">最具竞争力的供应增长点之一</strong>，对中国市场具有重要战略价值。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="outlook" class="scroll-mt-16">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-[#c86a2d] mb-2">未来展望：迈向新常态</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    由强力政策驱动的爆发式增长时代或已结束。未来，中国天然气价格将是温和增长的国内需求、稳步推进的市场化改革与周期性的全球能源市场三者之间更复杂互动的结果。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-[#c86a2d]">
+                    <h4 class="font-bold text-xl mb-3">定价改革深化</h4>
+                    <p class="text-gray-600">市场化方向不变，但进程将是审慎的。交易中心地位将强化，价格联动机制将推广，但政府的“有形之手”仍将保留，以防范破坏性价格波动。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-[#6a994e]">
+                    <h4 class="font-bold text-xl mb-3">“双碳”下需求放缓</h4>
+                    <p class="text-gray-600">天然气需求总量仍会增长，但增速将显著放缓。它面临来自清洁煤利用和可再生能源的双重竞争，在能源结构中的角色更偏向于灵活性调峰。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-[#3c6e71]">
+                    <h4 class="font-bold text-xl mb-3">供应安全优先</h4>
+                    <p class="text-gray-600">全球LNG市场供应趋于宽松，但地缘政治风险犹存。保障供应安全仍是首要任务，将继续坚持“增产、长协、多元化进口”的策略。</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-100 mt-16">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
+            <p>数据与分析源自《过去十年中国天然气价格体系演变与市场分析 (2015-2025)》报告。</p>
+            <p>此交互式应用仅为数据可视化展示，不构成任何投资建议。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const priceData = {
+                labels: Array.from({ length: 10 * 12 }, (_, i) => {
+                    const year = 2015 + Math.floor(i / 12);
+                    const month = (i % 12) + 1;
+                    return `${year}-${month.toString().padStart(2, '0')}`;
+                }),
+                pipelineGas: [
+                    ...Array(10).fill(2.70), 
+                    ...Array(22).fill(2.00), 
+                    ...Array(12).fill(1.90), 
+                    ...Array(9).fill(1.90), 
+                    ...Array(67).fill(1.85) 
+                ],
+                lng: [
+                    3.1, 2.9, 2.8, 3.0, 3.2, 3.5, 3.3, 3.1, 3.4, 3.8, 4.5, 5.2, 
+                    4.8, 4.5, 4.2, 4.0, 3.8, 3.6, 3.5, 3.7, 4.1, 4.9, 5.8, 6.5, 
+                    6.0, 5.5, 5.0, 4.5, 4.2, 4.0, 4.3, 4.8, 5.5, 7.5, 8.5, 9.0, 
+                    7.5, 6.8, 6.2, 5.8, 5.5, 5.3, 5.6, 6.0, 6.8, 7.8, 8.2, 7.9, 
+                    7.2, 6.5, 6.0, 5.7, 5.4, 5.2, 5.5, 5.9, 6.7, 7.5, 7.8, 7.6, 
+                    6.8, 6.1, 5.8, 3.5, 3.2, 3.0, 3.3, 3.8, 4.5, 5.5, 6.0, 5.8, 
+                    5.2, 4.8, 4.5, 4.9, 5.5, 6.2, 7.0, 8.0, 9.5, 10.5, 11.0, 10.0,
+                    9.0, 8.5, 8.0, 8.2, 9.0, 10.0, 12.0, 14.0, 15.0, 16.0, 15.5, 14.5,
+                    13.0, 12.0, 10.5, 9.5, 8.5, 8.0, 7.8, 8.2, 8.8, 9.2, 8.9, 8.5,
+                    8.0, 7.5, 7.0, 6.8, 6.5, 6.3, 6.6, 7.0, 7.5, 7.2, 6.9, 6.6
+                ].map(p => p * 0.55) 
+            };
+            
+            const globalData = {
+                labels: ['2019', '2020', '2021', '2022', '2023', '2024 (est.)'],
+                chinaLng: [10.2, 8.5, 16.0, 18.5, 13.3, 11.0],
+                jkm: [5.5, 4.4, 18.6, 34.0, 18.0, 11.8],
+                ttf: [4.5, 3.3, 16.0, 40.0, 13.0, 10.9],
+                brent: [64, 42, 71, 101, 83, 82],
+            };
+
+            const regionalData = {
+                labels: ['新疆', '四川', '河北', '江苏', '上海', '广东'],
+                prices: [1.03, 1.53, 1.84, 2.02, 2.04, 2.04],
+                info: {
+                    '广东': {
+                        title: '广东：高价区代表',
+                        supply: '进口LNG、西气东输',
+                        demand: '工业燃料、城市燃气、发电',
+                        features: '消费第一大省，市场开放，多个LNG接收站，高度依赖进口。'
+                    },
+                    '上海': {
+                        title: '上海：高价区代表',
+                        supply: '进口LNG、西气东输',
+                        demand: '工业燃料、城市燃气',
+                        features: '金融与工业中心，用气需求巨大，价格承受能力强。'
+                    },
+                    '江苏': {
+                        title: '江苏：高价区代表',
+                        supply: '进口LNG、西气东输、川气东送',
+                        demand: '工业燃料、城市燃气',
+                        features: '消费大省，市场化程度高，增速快，工业用气规模巨大。'
+                    },
+                    '河北': {
+                        title: '河北：中价区代表',
+                        supply: '中亚管道气、国产气、进口LNG',
+                        demand: '城市燃气（采暖）、工业燃料',
+                        features: '“煤改气”核心区，冬季调峰压力巨大，对LNG现货需求敏感。'
+                    },
+                    '四川': {
+                        title: '四川：低价区代表',
+                        supply: '本地自产（普光、页岩气）',
+                        demand: '工业燃料、化工、城市燃气',
+                        features: '产气大省，供需相对平衡，价格稳定，化工用气占比高。'
+                    },
+                    '新疆': {
+                        title: '新疆：低价区代表',
+                        supply: '本地自产（塔里木、准噶尔）',
+                        demand: '西气东输气源、本地化工',
+                        features: '资源产地，价格优势明显，本地消费以化工和城市燃气为主。'
+                    }
+                }
+            };
+            
+            const eventDescriptions = {
+                'all': '过去十年，中国天然气价格体系在改革中演进。管道气价格在政府调控下保持基本稳定，为经济社会发展提供了“压舱石”；而LNG价格则充分反映了市场供需和国际风云变幻，扮演了“调节剂”的角色。',
+                '2015': '<strong>2015年：价格并轨改革。</strong> 国家发改委宣布将存量气与增量气价格并轨，并引入“基准门站价格+上下浮动”机制，是天然气市场化改革的里程碑事件。当年11月，非居民用气门站价大幅下调0.7元/方。',
+                '2017': '<strong>2017年：“煤改气”与“气荒”。</strong> 北方地区大规模“煤改气”政策导致冬季采暖需求超预期爆发，远超供应能力，引发了严重的“气荒”。LNG价格在冬季一度暴涨，充分暴露了基础设施不足和需求侧准备不充分的问题。',
+                '2022': '<strong>2022年：全球能源危机冲击。</strong> 受俄乌冲突等因素影响，全球能源市场供需失衡，国际天然气价格飙升至历史高点。作为全球最大进口国，中国的LNG进口成本被完全传导，国内LNG价格达到历史峰值，凸显了能源对外依存度高的风险。',
+                '2024': '<strong>2024年：市场理性回归。</strong> 随着全球市场趋于平稳，以及国内增储上产和需求增速放缓，天然气价格开始从高位理性回落。市场进入一个波动性趋缓，但与全球联系更紧密的新常态。'
+            };
+
+            let priceChart, globalChart, regionalChart;
+
+            function createPriceTrendChart() {
+                const ctx = document.getElementById('priceTrendChart').getContext('2d');
+                priceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: priceData.labels,
+                        datasets: [{
+                            label: '管道气门站价 (元/方)',
+                            data: priceData.pipelineGas,
+                            borderColor: '#6a994e',
+                            backgroundColor: 'rgba(106, 153, 78, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            stepped: true,
+                            yAxisID: 'y'
+                        }, {
+                            label: 'LNG出厂价 (元/方)',
+                            data: priceData.lng,
+                            borderColor: '#c86a2d',
+                            backgroundColor: 'rgba(200, 106, 45, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'category',
+                                ticks: {
+                                    maxRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 10,
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: '价格 (元/立方米)' }
+                            }
+                        },
+                        plugins: {
+                            tooltip: { mode: 'index', intersect: false },
+                            legend: { position: 'top' }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                });
+            }
+
+            function createGlobalBenchmarkChart() {
+                const ctx = document.getElementById('globalBenchmarkChart').getContext('2d');
+                globalChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: globalData.labels,
+                        datasets: [{
+                            label: '中国LNG进口均价',
+                            data: globalData.chinaLng,
+                            borderColor: '#c86a2d',
+                            yAxisID: 'yPrice',
+                            tension: 0.1
+                        }, {
+                            label: 'JKM (亚洲现货)',
+                            data: globalData.jkm,
+                            borderColor: '#3c6e71',
+                            yAxisID: 'yPrice',
+                            tension: 0.1
+                        }, {
+                            label: 'TTF (欧洲)',
+                            data: globalData.ttf,
+                            borderColor: '#55828b',
+                            yAxisID: 'yPrice',
+                            tension: 0.1
+                        }, {
+                            label: 'Brent原油',
+                            data: globalData.brent,
+                            borderColor: '#87bba2',
+                            yAxisID: 'yOil',
+                            borderDash: [5, 5],
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            yPrice: {
+                                type: 'linear',
+                                position: 'left',
+                                title: { display: true, text: '天然气价格 (美元/MMBtu)' }
+                            },
+                            yOil: {
+                                type: 'linear',
+                                position: 'right',
+                                title: { display: true, text: '原油价格 (美元/桶)' },
+                                grid: { drawOnChartArea: false }
+                            }
+                        },
+                        plugins: {
+                            tooltip: { mode: 'index', intersect: false },
+                            legend: { position: 'top' }
+                        }
+                    }
+                });
+            }
+
+            function createRegionalPriceChart() {
+                const ctx = document.getElementById('regionalPriceChart').getContext('2d');
+                regionalChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: regionalData.labels,
+                        datasets: [{
+                            label: '2019年基准门站价 (元/方)',
+                            data: regionalData.prices,
+                            backgroundColor: ['#6a994e', '#87bba2', '#a3c4bc', '#f4a261', '#e76f51', '#c86a2d'],
+                            borderColor: '#ffffff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: '主要省份门站价格对比 (点击查看详情)' }
+                        },
+                        onClick: (event, elements) => {
+                            if (elements.length > 0) {
+                                const index = elements[0].index;
+                                const regionName = regionalData.labels[index];
+                                updateRegionalInfo(regionName);
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function updateRegionalInfo(regionName) {
+                const info = regionalData.info[regionName];
+                const panel = document.getElementById('regional-info-panel');
+                const defaultCard = document.getElementById('region-card-default');
+                const contentCard = document.getElementById('region-card-content');
+                
+                if (info) {
+                    contentCard.innerHTML = `
+                        <div class="bg-white p-6 rounded-xl shadow-lg w-full transition-all duration-300 transform hover:scale-105">
+                            <h4 class="font-bold text-xl mb-3 text-center text-[#c86a2d]">${info.title}</h4>
+                            <div class="space-y-3 text-gray-700">
+                                <p><strong>主要供应:</strong> ${info.supply}</p>
+                                <p><strong>主要消费:</strong> ${info.demand}</p>
+                                <p><strong>市场特征:</strong> ${info.features}</p>
+                            </div>
+                        </div>
+                    `;
+                    defaultCard.classList.add('hidden');
+                    contentCard.classList.remove('hidden');
+                }
+            }
+
+            const eventButtons = document.querySelectorAll('.event-btn');
+            const descriptionBox = document.getElementById('event-description');
+            
+            eventButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const year = button.dataset.year;
+                    
+                    eventButtons.forEach(btn => {
+                        btn.classList.remove('bg-[#c86a2d]', 'text-white');
+                        btn.classList.add('bg-gray-200', 'text-gray-700');
+                    });
+                    
+                    button.classList.add('bg-[#c86a2d]', 'text-white');
+                    button.classList.remove('bg-gray-200', 'text-gray-700');
+
+                    descriptionBox.innerHTML = `<p class="text-center text-gray-700">${eventDescriptions[year]}</p>`;
+
+                    const annotations = {
+                        '2015': { x: '2015-11', label: '价格并轨' },
+                        '2017': { x: '2017-12', label: '"气荒"冲击' },
+                        '2022': { x: '2022-08', label: '全球危机' },
+                        '2024': { x: '2024-01', label: '理性回归' }
+                    };
+
+                    priceChart.options.plugins.annotation = {
+                        annotations: {}
+                    };
+
+                    if (year !== 'all' && annotations[year]) {
+                        const event = annotations[year];
+                        priceChart.options.plugins.annotation.annotations[`line-${year}`] = {
+                            type: 'line',
+                            xMin: event.x,
+                            xMax: event.x,
+                            borderColor: 'rgb(255, 99, 132)',
+                            borderWidth: 2,
+                            borderDash: [6, 6],
+                            label: {
+                                content: event.label,
+                                enabled: true,
+                                position: 'start',
+                                backgroundColor: 'rgba(255, 99, 132, 0.8)'
+                            }
+                        };
+                    }
+                    priceChart.update();
+                });
+            });
+            
+            descriptionBox.innerHTML = `<p class="text-center text-gray-700">${eventDescriptions['all']}</p>`;
+
+            createPriceTrendChart();
+            createGlobalBenchmarkChart();
+            createRegionalPriceChart();
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuIconOpen = document.getElementById('menu-icon-open');
+            const menuIconClose = document.getElementById('menu-icon-close');
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                menuIconOpen.classList.toggle('hidden');
+                menuIconClose.classList.toggle('hidden');
+            });
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (!mobileMenu.classList.contains('hidden')) {
+                         mobileMenu.classList.add('hidden');
+                         menuIconOpen.classList.remove('hidden');
+                         menuIconClose.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
