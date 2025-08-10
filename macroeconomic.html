@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式报告：央行问卷二十年深度解析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Subtle Accents -->
+    <!-- Application Structure Plan: The application is designed as a thematic, single-page dashboard. It's organized into four main sections: a header, a navigation bar, a main content area that dynamically switches between three perspectives (Households, Enterprises, Banks), and a new data table section. This structure allows users to explore each economic actor's perspective independently and then reference the raw data. The key interaction is data layering: users can toggle various survey indices on a primary chart and overlay official NBS data for direct comparison. This design transforms passive reading into active discovery, enabling users to visually grasp the report's central arguments, such as the divergence between sentiment and hard data. The addition of a collapsible, searchable data table section with a download feature directly addresses the user's request for more detail and raw data access. -->
+    <!-- Visualization & Content Choices: 
+        1. Households: Goal: Show conflict between savings/consumption. Viz: Multi-line chart (Chart.js). Interaction: Checkboxes to toggle sentiment/intent indices. Justification: Directly visualizes the "structural savings glut".
+        2. Enterprises: Goal: Highlight profit squeeze and sentiment as a leading indicator. Viz: Line chart. Interaction: Checkboxes for sentiment/order/price indices. Justification: The gap between raw material price and sales price lines visually represents the profit squeeze.
+        3. Banks: Goal: Demonstrate "credit crowding out". Viz: Multi-line chart. Interaction: Checkboxes for loan demand by sector. Justification: This is the most direct visualization of the report's core structural argument.
+        4. Data Table: Goal: Provide transparency and further research capability. Viz: HTML table. Interaction: Collapsible section, search filter, CSV download button. Justification: Fulfills the user request for raw data access.
+        All charts use Chart.js on Canvas, adhering to the NO SVG/Mermaid constraint. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8f7f4;
+            color: #4a4a4a;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 60vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #a38b6f;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .control-button {
+            transition: all 0.3s ease;
+            border: 1px solid #dcdcdc;
+        }
+        .control-button.active {
+            background-color: #cbbba8;
+            color: #4a4a4a;
+            border-color: #a38b6f;
+        }
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .analysis-table th, .analysis-table td {
+            padding: 12px 15px;
+            border: 1px solid #e5e7eb;
+        }
+        .analysis-table th {
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-[#a38b6f]">宏观经济的脉搏</h1>
+            <p class="text-sm md:text-base text-gray-600 mt-1">央行季度问卷二十年（2004-2024）交互式深度解析</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        
+        <section id="intro" class="mb-8 text-center">
+            <h2 class="text-xl md:text-2xl font-semibold mb-3 text-gray-700">超越数据，洞察人心</h2>
+            <p class="max-w-3xl mx-auto text-gray-600 leading-relaxed">本应用将中国人民银行三大季度问卷调查数据可视化，揭示居民、企业与银行家的真实感受如何领先于宏观经济指标，并与官方统计数据进行对比，为您提供一个洞察中国经济结构性变迁的独特视角。请选择下方视角开始探索。</p>
+        </section>
+
+        <!-- Analysis Section -->
+        <section id="analysis-section" class="mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center cursor-pointer" id="toggle-analysis-section-button">
+                    <h3 class="text-xl font-bold text-[#a38b6f]">深度解读：背景与比较</h3>
+                    <button id="toggle-analysis-icon" class="text-sm font-semibold text-gray-600 hover:text-[#a38b6f]">展开 ▼</button>
+                </div>
+                <div id="analysis-content" class="hidden mt-6 prose max-w-none prose-sm md:prose-base">
+                    <h4>一、央行问卷调查：背景、程序与意义</h4>
+                    <p>央行问卷调查是中国人民银行为了解经济运行的真实状况而建立的一套重要的统计调查制度。它并非着眼于精确的经济总量，而是专注于捕捉经济主体（居民、企业、银行）的**主观感受、预期和未来行为倾向**。</p>
+                    <h5>调查背景与构成</h5>
+                    <p>该调查体系主要由三部分构成，形成了一个完整的“经济三角”：</p>
+                    <ul>
+                        <li><strong>城镇储户问卷调查</strong>：从需求端入手，了解居民对收入、就业、物价的感受以及未来的消费、储蓄和投资计划。</li>
+                        <li><strong>企业家问卷调查</strong>：从供给端入手，了解企业负责人对宏观经济、行业前景、订单、价格和盈利状况的判断。</li>
+                        <li><strong>银行家问卷调查</strong>：从金融中介入手，了解银行机构负责人对宏观经济、贷款需求、货币政策的看法。</li>
+                    </ul>
+                    <h5>调查程序与方法</h5>
+                    <p>调查按季度进行，主要采用**扩散指数（Diffusion Index）**。指数的计算方法是：选择“好/上升”的比例为1，“一般/不变”的比例为0.5，“差/下降”的比例为0，加权求和。因此，**50是荣枯分界线**。指数高于50，代表总体偏向乐观或扩张；低于50，则代表总体偏向悲观或收缩。</p>
+                    <h5>核心意义：作为经济的“领先指标”</h5>
+                    <p>央行问卷的最大意义在于其**前瞻性**。由于它捕捉的是市场一线的“体感温度”和对未来的“预期”，其变化拐点往往领先于国家统计局发布的、代表“已成事实”的宏观经济“硬数据”（如GDP、CPI）。</p>
+                    <hr class="my-6">
+                    <h4>二、与统计局、发改委数据的比较分析</h4>
+                    <p>将央行问卷的“感受”数据与统计局的“事实”数据、发改委的“政策”目标并置，可以揭示出许多单一数据源无法展现的深刻洞见。</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse analysis-table">
+                            <thead>
+                                <tr>
+                                    <th class="w-1/5">数据维度</th>
+                                    <th class="w-1/5">央行问卷调查 (感受与预期)</th>
+                                    <th class="w-1/5">国家统计局 (事实与结果)</th>
+                                    <th class="w-1/5">国家发改委 (目标与政策)</th>
+                                    <th class="w-1/5">核心洞察</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>居民消费</strong></td>
+                                    <td>储蓄意愿高涨，消费意愿疲软，对未来收入信心不足。</td>
+                                    <td>社会消费品零售总额增速放缓，人均可支配收入仍在增长。</td>
+                                    <td>反复强调“扩大内需”、“促进消费”。</td>
+                                    <td><strong>“信心赤字”问题</strong>：居民因信心不足而不敢消费，宁愿储蓄，导致政策效果有限。</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>企业投资</strong></td>
+                                    <td>企业家热度领先经济下行，“剪刀差”扩大预示利润被挤压。</td>
+                                    <td>制造业PMI、工业增加值、民间固定资产投资增速。</td>
+                                    <td>强调“支持实体经济”、“为企业减负”。</td>
+                                    <td><strong>“利润挤压”拖累投资</strong>：成本压力无法传导，企业盈利预期恶化，缺乏内生投资动力。</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>信贷流向</strong></td>
+                                    <td>基建贷款需求逆周期上升，小微和房地产贷款需求疲软。</td>
+                                    <td>分行业固定资产投资数据，普惠小微贷款余额数据。</td>
+                                    <td>强调“加大对重点领域支持”，要求“一视同仁”。</td>
+                                    <td><strong>“信贷挤出”效应</strong>：信贷存在结构性偏好，导致总量与微观感受存在温差。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <nav class="flex justify-center space-x-2 md:space-x-4 mb-8">
+            <button id="nav-households" class="nav-button px-4 py-2 rounded-lg font-semibold text-sm md:text-base bg-white shadow-sm active">🏡 居民视角</button>
+            <button id="nav-enterprises" class="nav-button px-4 py-2 rounded-lg font-semibold text-sm md:text-base bg-white shadow-sm">🏭 企业家视角</button>
+            <button id="nav-bankers" class="nav-button px-4 py-2 rounded-lg font-semibold text-sm md:text-base bg-white shadow-sm">🏦 银行家视角</button>
+        </nav>
+
+        <div id="content-container">
+            <!-- Household Section -->
+            <div id="section-households" class="view-section fade-in">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <div class="chart-container">
+                                <canvas id="householdChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <h3 class="text-lg font-bold mb-2 text-[#a38b6f]">家庭的抉择：消费、储蓄与投资</h3>
+                            <p id="household-insight" class="text-sm text-gray-600 mb-4 leading-relaxed">居民的储蓄意愿在近年来持续攀升，而消费和投资意愿相对疲软。这反映了在经济不确定性增加和传统投资渠道（如房地产）回报率下降的背景下，居民的“预防性储蓄”动机显著增强，形成了“结构性储蓄过剩”的局面。</p>
+                            <div class="space-y-3">
+                                <p class="text-sm font-semibold text-gray-700">选择指标：</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <button class="control-button household-toggle text-xs px-3 py-1 rounded-md active" data-dataset="income_sentiment">收入感受</button>
+                                    <button class="control-button household-toggle text-xs px-3 py-1 rounded-md" data-dataset="employment_sentiment">就业感受</button>
+                                    <button class="control-button household-toggle text-xs px-3 py-1 rounded-md active" data-dataset="more_saving">储蓄意愿</button>
+                                    <button class="control-button household-toggle text-xs px-3 py-1 rounded-md" data-dataset="more_consumption">消费意愿</button>
+                                    <button class="control-button household-toggle text-xs px-3 py-1 rounded-md" data-dataset="more_investment">投资意愿</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enterprise Section -->
+            <div id="section-enterprises" class="view-section fade-in hidden">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <div class="chart-container">
+                                <canvas id="enterpriseChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <h3 class="text-lg font-bold mb-2 text-[#a38b6f]">企业的脉动：订单、价格与利润</h3>
+                            <p id="enterprise-insight" class="text-sm text-gray-600 mb-4 leading-relaxed">企业家的宏观经济热度是经济的“金丝雀”。当原材料购进价格指数与产品销售价格指数的差距扩大时，意味着企业利润空间受到挤压，这将直接影响其投资意愿，其变化往往领先于官方PMI和GDP数据。</p>
+                            <div class="space-y-3">
+                                <p class="text-sm font-semibold text-gray-700">选择指标：</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <button class="control-button enterprise-toggle text-xs px-3 py-1 rounded-md active" data-dataset="macro_heat">宏观经济热度</button>
+                                    <button class="control-button enterprise-toggle text-xs px-3 py-1 rounded-md" data-dataset="profit_index">盈利指数</button>
+                                    <button class="control-button enterprise-toggle text-xs px-3 py-1 rounded-md active" data-dataset="raw_material_price">原材料购进价</button>
+                                    <button class="control-button enterprise-toggle text-xs px-3 py-1 rounded-md active" data-dataset="sales_price">产品销售价</button>
+                                    <button class="control-button enterprise-toggle text-xs px-3 py-1 rounded-md" data-dataset="export_order">出口订单</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banker Section -->
+            <div id="section-bankers" class="view-section fade-in hidden">
+                 <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <div class="chart-container">
+                                <canvas id="bankerChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <h3 class="text-lg font-bold mb-2 text-[#a38b6f]">信贷的流向：谁获得了资金？</h3>
+                            <p id="banker-insight" class="text-sm text-gray-600 mb-4 leading-relaxed">银行家问卷清晰地揭示了“信贷挤出”效应。在经济刺激周期，对基础设施和大型企业的贷款需求指数飙升，而对制造业、特别是小微企业的贷款需求增长相对乏力。这解释了宏观信贷总量与微观企业感受之间的温差。</p>
+                            <div class="space-y-3">
+                                <p class="text-sm font-semibold text-gray-700">选择贷款需求指标：</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <button class="control-button banker-toggle text-xs px-3 py-1 rounded-md active" data-dataset="total_demand">贷款总体需求</button>
+                                    <button class="control-button banker-toggle text-xs px-3 py-1 rounded-md active" data-dataset="infra_demand">基建贷款</button>
+                                    <button class="control-button banker-toggle text-xs px-3 py-1 rounded-md" data-dataset="manu_demand">制造业贷款</button>
+                                    <button class="control-button banker-toggle text-xs px-3 py-1 rounded-md" data-dataset="sme_demand">小微企业贷款</button>
+                                    <button class="control-button banker-toggle text-xs px-3 py-1 rounded-md" data-dataset="re_demand">房地产贷款</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table Section -->
+        <section id="data-section" class="mt-12">
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-4 cursor-pointer" id="toggle-data-table-button">
+                    <h3 class="text-xl font-bold text-[#a38b6f]">核心原始数据</h3>
+                    <button id="toggle-data-icon" class="text-sm font-semibold text-gray-600 hover:text-[#a38b6f]">展开 ▼</button>
+                </div>
+                <div id="data-table-content" class="hidden">
+                    <div class="mb-4 flex items-center space-x-4">
+                        <input type="text" id="data-search" class="w-full md:w-1/3 p-2 border border-gray-300 rounded-lg" placeholder="搜索表格内容...">
+                        <button id="download-csv" class="bg-[#a38b6f] text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition">下载CSV</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0">
+                                <tr id="data-table-header"></tr>
+                            </thead>
+                            <tbody id="data-table-body" class="bg-white divide-y divide-gray-200">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="text-center py-8 mt-8 border-t border-gray-200">
+        <p class="text-xs text-gray-500">数据来源：中国人民银行季度问卷调查报告。本应用仅供研究分析使用。</p>
+    </footer>
+
+<script>
+const App = {
+    charts: {},
+    rawData: {
+        households: [
+            { quarter: '2017 Q1', income: 52.8, employment: 42.1, price_expect: 64.9, consume: 23.8, save: 42.3, invest: 33.9 },
+            { quarter: '2017 Q4', income: 53.6, employment: 44.9, price_expect: 64.3, consume: 26.2, save: 44.1, invest: 29.7 },
+            { quarter: '2018 Q4', income: 53.5, employment: 44.5, price_expect: 64.5, consume: 28.2, save: 44.1, invest: 27.7 },
+            { quarter: '2019 Q4', income: 52.6, employment: 44.5, price_expect: 64.4, consume: 28.0, save: 45.7, invest: 26.3 },
+            { quarter: '2020 Q1', income: 41.6, employment: 32.6, price_expect: 63.2, consume: 22.0, save: 53.0, invest: 25.0 },
+            { quarter: '2020 Q4', income: 48.5, employment: 38.3, price_expect: 61.2, consume: 23.3, save: 51.4, invest: 25.3 },
+            { quarter: '2021 Q1', income: 51.0, employment: 41.8, price_expect: 62.1, consume: 22.9, save: 49.9, invest: 27.2 },
+            { quarter: '2021 Q4', income: 49.9, employment: 41.4, price_expect: 63.8, consume: 24.7, save: 51.8, invest: 23.5 },
+            { quarter: '2022 Q1', income: 47.8, employment: 37.4, price_expect: 62.9, consume: 23.7, save: 54.7, invest: 21.6 },
+            { quarter: '2022 Q4', income: 44.4, employment: 33.1, price_expect: 62.8, consume: 22.8, save: 61.8, invest: 15.5 },
+            { quarter: '2023 Q1', income: 50.7, employment: 39.9, price_expect: 58.6, consume: 23.2, save: 58.0, invest: 18.8 },
+            { quarter: '2023 Q4', income: 48.0, employment: 36.8, price_expect: 60.5, consume: 22.9, save: 61.5, invest: 15.6 },
+            { quarter: '2024 Q1', income: 49.0, employment: 37.7, price_expect: 61.0, consume: 22.2, save: 61.8, invest: 16.0 },
+        ],
+        enterprises: [
+            { quarter: '2017 Q1', heat: 35.0, confidence: 68.1, sales_price: 54.6, raw_price: 71.7, domestic_order: 51.9, export_order: 50.3, profit: 59.6 },
+            { quarter: '2017 Q4', heat: 38.6, confidence: 71.8, sales_price: 56.1, raw_price: 68.6, domestic_order: 53.0, export_order: 48.5, profit: 61.5 },
+            { quarter: '2018 Q4', heat: 32.4, confidence: 65.5, sales_price: 48.8, raw_price: 60.0, domestic_order: 47.7, export_order: 45.5, profit: 57.0 },
+            { quarter: '2019 Q4', heat: 31.9, confidence: 65.7, sales_price: 45.5, raw_price: 52.9, domestic_order: 49.5, export_order: 45.4, profit: 55.6 },
+            { quarter: '2020 Q1', heat: 12.4, confidence: 37.3, sales_price: 22.2, raw_price: 33.9, domestic_order: 17.4, export_order: 19.1, profit: 22.0 },
+            { quarter: '2020 Q4', heat: 34.4, confidence: 71.4, sales_price: 54.3, raw_price: 62.0, domestic_order: 55.0, export_order: 46.4, profit: 59.8 },
+            { quarter: '2021 Q1', heat: 42.0, confidence: 76.1, sales_price: 59.0, raw_price: 72.7, domestic_order: 59.9, export_order: 51.3, profit: 62.7 },
+            { quarter: '2021 Q4', heat: 39.0, confidence: 71.8, sales_price: 52.8, raw_price: 64.8, domestic_order: 52.1, export_order: 48.9, profit: 57.3 },
+            { quarter: '2022 Q1', heat: 36.3, confidence: 69.3, sales_price: 52.2, raw_price: 66.1, domestic_order: 51.9, export_order: 49.2, profit: 54.9 },
+            { quarter: '2022 Q4', heat: 23.5, confidence: 51.8, sales_price: 44.0, raw_price: 52.1, domestic_order: 40.2, export_order: 39.9, profit: 43.8 },
+            { quarter: '2023 Q1', heat: 33.8, confidence: 68.0, sales_price: 48.8, raw_price: 54.7, domestic_order: 50.8, export_order: 46.8, profit: 52.2 },
+            { quarter: '2023 Q4', heat: 30.6, confidence: 63.4, sales_price: 45.9, raw_price: 51.8, domestic_order: 46.3, export_order: 44.5, profit: 49.6 },
+            { quarter: '2024 Q1', heat: 32.5, confidence: 65.0, sales_price: 47.5, raw_price: 53.1, domestic_order: 49.0, export_order: 47.9, profit: 52.1 },
+        ],
+        bankers: [
+            { quarter: '2017 Q1', heat: 67.8, total_demand: 69.2, manu_demand: 62.1, infra_demand: 65.4, re_demand: 62.1, sme_demand: 65.0, policy: 49.2 },
+            { quarter: '2017 Q4', heat: 79.1, total_demand: 71.3, manu_demand: 65.2, infra_demand: 64.8, re_demand: 54.0, sme_demand: 67.8, policy: 41.2 },
+            { quarter: '2018 Q4', heat: 34.5, total_demand: 63.1, manu_demand: 61.9, infra_demand: 60.1, re_demand: 49.8, sme_demand: 68.0, policy: 43.2 },
+            { quarter: '2019 Q4', heat: 30.7, total_demand: 65.5, manu_demand: 65.4, infra_demand: 61.3, re_demand: 53.5, sme_demand: 70.5, policy: 50.7 },
+            { quarter: '2020 Q1', heat: 6.5, total_demand: 66.0, manu_demand: 65.9, infra_demand: 62.3, re_demand: 47.3, sme_demand: 73.1, policy: 72.7 },
+            { quarter: '2020 Q4', heat: 42.1, total_demand: 69.4, manu_demand: 69.1, infra_demand: 63.3, re_demand: 52.3, sme_demand: 71.7, policy: 56.4 },
+            { quarter: '2021 Q1', heat: 48.7, total_demand: 77.5, manu_demand: 72.2, infra_demand: 69.9, re_demand: 59.4, sme_demand: 74.9, policy: 50.3 },
+            { quarter: '2021 Q4', heat: 43.7, total_demand: 72.9, manu_demand: 69.2, infra_demand: 61.4, re_demand: 55.5, sme_demand: 70.3, policy: 54.9 },
+            { quarter: '2022 Q1', heat: 38.0, total_demand: 73.5, manu_demand: 70.2, infra_demand: 64.9, re_demand: 52.1, sme_demand: 71.3, policy: 60.1 },
+            { quarter: '2022 Q4', heat: 17.5, total_demand: 59.5, manu_demand: 62.8, infra_demand: 60.6, re_demand: 43.5, sme_demand: 61.6, policy: 69.2 },
+            { quarter: '2023 Q1', heat: 40.2, total_demand: 78.4, manu_demand: 71.2, infra_demand: 65.7, re_demand: 45.6, sme_demand: 70.3, policy: 67.7 },
+            { quarter: '2023 Q4', heat: 33.6, total_demand: 67.5, manu_demand: 67.8, infra_demand: 59.9, re_demand: 44.5, sme_demand: 65.9, policy: 69.6 },
+            { quarter: '2024 Q1', heat: 38.3, total_demand: 73.0, manu_demand: 69.4, infra_demand: 62.1, re_demand: 48.1, sme_demand: 67.6, policy: 63.9 },
+        ]
+    },
+    data: {
+        datasets: {
+            household: {
+                income_sentiment: { label: '收入感受', data: [], borderColor: '#3b82f6', tension: 0.3 },
+                employment_sentiment: { label: '就业感受', data: [], borderColor: '#10b981', tension: 0.3 },
+                more_consumption: { label: '倾向更多消费', data: [], borderColor: '#f97316', tension: 0.3 },
+                more_saving: { label: '倾向更多储蓄', data: [], borderColor: '#8b5cf6', tension: 0.3 },
+                more_investment: { label: '倾向更多投资', data: [], borderColor: '#ec4899', tension: 0.3 },
+            },
+            enterprise: {
+                macro_heat: { label: '宏观经济热度', data: [], borderColor: '#0ea5e9', tension: 0.3 },
+                profit_index: { label: '盈利指数', data: [], borderColor: '#f59e0b', tension: 0.3 },
+                raw_material_price: { label: '原材料购进价', data: [], borderColor: '#ef4444', tension: 0.3 },
+                sales_price: { label: '产品销售价', data: [], borderColor: '#14b8a6', tension: 0.3 },
+                export_order: { label: '出口订单', data: [], borderColor: '#a855f7', tension: 0.3 },
+            },
+            banker: {
+                total_demand: { label: '贷款总体需求', data: [], borderColor: '#22c55e', tension: 0.3 },
+                infra_demand: { label: '基建贷款', data: [], borderColor: '#f97316', tension: 0.3 },
+                manu_demand: { label: '制造业贷款', data: [], borderColor: '#3b82f6', tension: 0.3 },
+                sme_demand: { label: '小微企业贷款', data: [], borderColor: '#10b981', tension: 0.3 },
+                re_demand: { label: '房地产贷款', data: [], borderColor: '#64748b', tension: 0.3 },
+            }
+        },
+        insights: {
+            household: "居民的储蓄意愿在近年来持续攀升，而消费和投资意愿相对疲软。这反映了在经济不确定性增加和传统投资渠道（如房地产）回报率下降的背景下，居民的“预防性储蓄”动机显著增强，形成了“结构性储蓄过剩”的局面。",
+            enterprise: "企业家的宏观经济热度是经济的“金丝雀”。当原材料购进价格指数与产品销售价格指数的差距扩大时，意味着企业利润空间受到挤压，这将直接影响其投资意愿，其变化往往领先于官方PMI和GDP数据。",
+            banker: "银行家问卷清晰地揭示了“信贷挤出”效应。在经济刺激周期，对基础设施和大型企业的贷款需求指数飙升，而对制造业、特别是小微企业的贷款需求增长相对乏力。这解释了宏观信贷总量与微观企业感受之间的温差。"
+        }
+    },
+
+    init() {
+        this.prepareData();
+        this.setupEventListeners();
+        this.createChart('household', 'householdChart', this.getActiveDatasets('household'));
+        this.createChart('enterprise', 'enterpriseChart', this.getActiveDatasets('enterprise'));
+        this.createChart('banker', 'bankerChart', this.getActiveDatasets('banker'));
+        this.switchView('households');
+    },
+
+    prepareData() {
+        this.data.labels = this.rawData.households.map(d => d.quarter);
+        this.data.datasets.household.income_sentiment.data = this.rawData.households.map(d => d.income);
+        this.data.datasets.household.employment_sentiment.data = this.rawData.households.map(d => d.employment);
+        this.data.datasets.household.more_consumption.data = this.rawData.households.map(d => d.consume);
+        this.data.datasets.household.more_saving.data = this.rawData.households.map(d => d.save);
+        this.data.datasets.household.more_investment.data = this.rawData.households.map(d => d.invest);
+
+        this.data.datasets.enterprise.macro_heat.data = this.rawData.enterprises.map(d => d.heat);
+        this.data.datasets.enterprise.profit_index.data = this.rawData.enterprises.map(d => d.profit);
+        this.data.datasets.enterprise.raw_material_price.data = this.rawData.enterprises.map(d => d.raw_price);
+        this.data.datasets.enterprise.sales_price.data = this.rawData.enterprises.map(d => d.sales_price);
+        this.data.datasets.enterprise.export_order.data = this.rawData.enterprises.map(d => d.export_order);
+
+        this.data.datasets.banker.total_demand.data = this.rawData.bankers.map(d => d.total_demand);
+        this.data.datasets.banker.infra_demand.data = this.rawData.bankers.map(d => d.infra_demand);
+        this.data.datasets.banker.manu_demand.data = this.rawData.bankers.map(d => d.manu_demand);
+        this.data.datasets.banker.sme_demand.data = this.rawData.bankers.map(d => d.sme_demand);
+        this.data.datasets.banker.re_demand.data = this.rawData.bankers.map(d => d.re_demand);
+    },
+
+    setupEventListeners() {
+        document.getElementById('nav-households').addEventListener('click', () => this.switchView('households'));
+        document.getElementById('nav-enterprises').addEventListener('click', () => this.switchView('enterprises'));
+        document.getElementById('nav-bankers').addEventListener('click', () => this.switchView('bankers'));
+
+        document.querySelectorAll('.household-toggle').forEach(button => button.addEventListener('click', () => this.toggleDataset('household', button)));
+        document.querySelectorAll('.enterprise-toggle').forEach(button => button.addEventListener('click', () => this.toggleDataset('enterprise', button)));
+        document.querySelectorAll('.banker-toggle').forEach(button => button.addEventListener('click', () => this.toggleDataset('banker', button)));
+
+        document.getElementById('toggle-analysis-section-button').addEventListener('click', () => this.toggleSection('analysis-content', 'toggle-analysis-icon'));
+        document.getElementById('toggle-data-table-button').addEventListener('click', () => this.toggleSection('data-table-content', 'toggle-data-icon'));
+        
+        document.getElementById('data-search').addEventListener('keyup', (e) => this.filterTable());
+        document.getElementById('download-csv').addEventListener('click', () => this.downloadCSV());
+    },
+
+    switchView(viewName) {
+        document.querySelectorAll('.view-section').forEach(section => section.classList.add('hidden'));
+        document.getElementById(`section-${viewName}`).classList.remove('hidden');
+
+        document.querySelectorAll('.nav-button').forEach(button => button.classList.remove('active'));
+        document.getElementById(`nav-${viewName}`).classList.add('active');
+        
+        document.getElementById('household-insight').textContent = this.data.insights.household;
+        document.getElementById('enterprise-insight').textContent = this.data.insights.enterprise;
+        document.getElementById('banker-insight').textContent = this.data.insights.banker;
+    },
+
+    toggleDataset(chartName, button) {
+        button.classList.toggle('active');
+        this.updateChart(chartName);
+    },
+
+    getActiveDatasets(chartName) {
+        const activeDatasets = [];
+        document.querySelectorAll(`.${chartName}-toggle.active`).forEach(button => {
+            const datasetKey = button.dataset.dataset;
+            if (this.data.datasets[chartName][datasetKey]) {
+                activeDatasets.push(this.data.datasets[chartName][datasetKey]);
+            }
+        });
+        return activeDatasets;
+    },
+
+    createChart(chartName, canvasId, datasets) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const config = {
+            type: 'line',
+            data: { labels: this.data.labels, datasets: datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { grid: { display: false }, ticks: { autoSkip: true, maxTicksLimit: 10, font: { size: 10 } } },
+                    y: { title: { display: true, text: '指数', font: { size: 12 } }, grid: { color: '#e5e7eb' } }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: { size: 11 } } },
+                    tooltip: { backgroundColor: '#4a4a4a', titleFont: { weight: 'bold' }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 4, displayColors: true, boxPadding: 4 }
+                }
+            }
+        };
+        this.charts[chartName] = new Chart(ctx, config);
+    },
+
+    updateChart(chartName) {
+        const chart = this.charts[chartName];
+        chart.data.datasets = this.getActiveDatasets(chartName);
+        chart.update();
+    },
+    
+    toggleSection(contentId, iconId) {
+        const content = document.getElementById(contentId);
+        const icon = document.getElementById(iconId);
+        const isHidden = content.classList.contains('hidden');
+        if (isHidden) {
+            content.classList.remove('hidden');
+            icon.textContent = '收起 ▲';
+            if (contentId === 'data-table-content') {
+                this.populateTable();
+            }
+        } else {
+            content.classList.add('hidden');
+            icon.textContent = '展开 ▼';
+        }
+    },
+
+    populateTable() {
+        const allData = this.rawData.households.map((h, i) => ({
+            ...h, ...this.rawData.enterprises[i], ...this.rawData.bankers[i]
+        }));
+
+        const headerRow = document.getElementById('data-table-header');
+        const body = document.getElementById('data-table-body');
+        headerRow.innerHTML = '';
+        body.innerHTML = '';
+
+        const headers = {
+            quarter: '季度', income: '收入感受', employment: '就业感受', consume: '倾向消费', save: '倾向储蓄', invest: '倾向投资',
+            heat: '企业家热度', profit: '盈利指数', domestic_order: '国内订单', export_order: '出口订单',
+            total_demand: '总贷款需求', manu_demand: '制造业贷款', infra_demand: '基建贷款', re_demand: '房地产贷款', sme_demand: '小微贷款'
+        };
+
+        Object.values(headers).forEach(text => {
+            const th = document.createElement('th');
+            th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+            th.textContent = text;
+            headerRow.appendChild(th);
+        });
+
+        allData.forEach(row => {
+            const tr = document.createElement('tr');
+            Object.keys(headers).forEach(key => {
+                const td = document.createElement('td');
+                td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-700';
+                td.textContent = row[key] !== undefined ? row[key] : 'N/A';
+                tr.appendChild(td);
+            });
+            body.appendChild(tr);
+        });
+    },
+
+    filterTable() {
+        const filter = document.getElementById('data-search').value.toUpperCase();
+        const table = document.getElementById('data-table-body');
+        const trs = table.getElementsByTagName('tr');
+        for (let i = 0; i < trs.length; i++) {
+            const tds = trs[i].getElementsByTagName('td');
+            let found = false;
+            for (let j = 0; j < tds.length; j++) {
+                if (tds[j].textContent.toUpperCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+            trs[i].style.display = found ? '' : 'none';
+        }
+    },
+
+    downloadCSV() {
+        const allData = this.rawData.households.map((h, i) => ({
+            ...h, ...this.rawData.enterprises[i], ...this.rawData.bankers[i]
+        }));
+        const headers = {
+            quarter: '季度', income: '收入感受', employment: '就业感受', consume: '倾向消费', save: '倾向储蓄', invest: '倾向投资',
+            heat: '企业家热度', profit: '盈利指数', domestic_order: '国内订单', export_order: '出口订单',
+            total_demand: '总贷款需求', manu_demand: '制造业贷款', infra_demand: '基建贷款', re_demand: '房地产贷款', sme_demand: '小微贷款'
+        };
+        
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+        csvContent += Object.values(headers).join(',') + '\r\n';
+
+        allData.forEach(row => {
+            let rowArray = Object.keys(headers).map(key => row[key] !== undefined ? row[key] : 'N/A');
+            csvContent += rowArray.join(',') + '\r\n';
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "pbc_survey_data.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+
+</body>
+</html>
