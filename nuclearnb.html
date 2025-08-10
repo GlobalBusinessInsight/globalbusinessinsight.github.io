@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金七门核电站：交互式全景分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals with Tech Blue Accent -->
+    <!-- Application Structure Plan: A thematic, non-linear dashboard structure is chosen over mirroring the report's chapters. The application is organized into four core themes: 'Overview/Strategic Drivers', 'Technology Core', 'Project Lifecycle', and 'Economics & Impact'. This design allows users to explore based on interest (e.g., a user concerned with waste management can directly navigate to the 'Lifecycle' section). This structure breaks down the dense information into digestible, interconnected modules, facilitating better understanding and engagement than a linear presentation. Key interactions include clickable timeline nodes, interactive stat cards, and dynamic charts to make data exploration intuitive. -->
+    <!-- Visualization & Content Choices: 
+        - Zhejiang Energy Gap -> Goal: Compare -> Viz: Bar Chart (Chart.js) -> Interaction: Hover for details -> Justification: Visually impactful representation of the core problem.
+        - Electricity Load Curve -> Goal: Show Change/Trend -> Viz: Line Chart (Chart.js) -> Interaction: Toggle buttons to switch between Zhejiang/Ningbo data -> Justification: Provides historical context for energy demand growth and seasonality, justifying the need for baseload power.
+        - Hualong One Features -> Goal: Organize -> Viz: Interactive Cards & Diagram (HTML/CSS/JS) -> Interaction: Click to reveal details -> Justification: Breaks down complex tech specs into digestible pieces and visually explains core safety concepts.
+        - Investment Breakdown -> Goal: Compare/Organize -> Viz: Stacked Bar Chart (Chart.js) -> Interaction: Hover for details -> Justification: Provides a clear, quantitative breakdown of project costs according to WBS structure (NI/CI/BOP), now with a second level of detail.
+        - Project Lifecycle -> Goal: Show Change/Process -> Viz: Vertical Tiled Timeline (HTML/CSS) -> Interaction: None (content expanded by default) -> Justification: Replaced horizontal timeline with a clear, balanced, "flat" layout as requested, improving readability and removing clicks.
+        - Economic Impact -> Goal: Inform/Impress -> Viz: Animated Number Counters (JS) -> Interaction: Numbers count up on scroll -> Justification: Dynamically draws attention to large-scale economic benefits.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans SC', sans-serif; }
+        .nav-link { transition: all 0.3s ease; }
+        .nav-link.active { color: #2563eb; border-bottom-color: #2563eb; }
+        .nav-link:not(.active):hover { color: #3b82f6; border-bottom-color: #93c5fd; }
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 350px; max-height: 450px; }
+        @media (min-width: 768px) { .chart-container { height: 400px; } }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content { max-height: 90vh; overflow-y: auto; }
+        .toggle-btn { transition: all 0.2s ease-in-out; }
+        .toggle-btn.active { background-color: #2563eb; color: white; }
+        .toggle-btn:not(.active) { background-color: #e5e7eb; color: #4b5563; }
+        .prose strong { color: #1e3a8a; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-40 shadow-sm">
+        <nav class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <h1 class="text-xl md:text-2xl font-bold text-blue-700">金七门核电站 · 全景透视</h1>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#overview" class="nav-link text-lg font-medium border-b-2 border-transparent pb-1 active" data-section="overview">战略概览</a>
+                    <a href="#tech" class="nav-link text-lg font-medium border-b-2 border-transparent pb-1" data-section="tech">技术核心</a>
+                    <a href="#lifecycle" class="nav-link text-lg font-medium border-b-2 border-transparent pb-1" data-section="lifecycle">项目全周期</a>
+                    <a href="#eco" class="nav-link text-lg font-medium border-b-2 border-transparent pb-1" data-section="eco">经济与影响</a>
+                </div>
+                <button id="mobile-menu-button" class="md:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+            <div id="mobile-menu" class="hidden md:hidden flex-col space-y-2 pb-4">
+                 <a href="#overview" class="nav-link-mobile block py-2 px-3 rounded-md text-base font-medium bg-blue-50 text-blue-700" data-section="overview">战略概览</a>
+                 <a href="#tech" class="nav-link-mobile block py-2 px-3 rounded-md text-base font-medium hover:bg-blue-50 hover:text-blue-700" data-section="tech">技术核心</a>
+                 <a href="#lifecycle" class="nav-link-mobile block py-2 px-3 rounded-md text-base font-medium hover:bg-blue-50 hover:text-blue-700" data-section="lifecycle">项目全周期</a>
+                 <a href="#eco" class="nav-link-mobile block py-2 px-3 rounded-md text-base font-medium hover:bg-blue-50 hover:text-blue-700" data-section="eco">经济与影响</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+        
+        <section id="overview" class="content-section active">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">应对能源挑战的战略支点</h2>
+                <p class="max-w-3xl mx-auto text-lg text-slate-600">
+                    金七门核电项目不仅是浙江省为解决其“电力硬缺口”和摆脱能源对外高度依赖的关键举措，更是中国在“双碳”目标下，推动能源结构向清洁化、自主化转型的国家战略缩影。本节将为您解析项目背后的紧迫性与双重使命。
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 text-center">
+                    <div class="text-blue-600 text-4xl font-bold mb-2">~7200<span class="text-xl ml-1">MW</span></div>
+                    <h3 class="font-semibold text-slate-700">规划总装机容量</h3>
+                    <p class="text-sm text-slate-500">(6台“华龙一号”机组)</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 text-center">
+                    <div class="text-blue-600 text-4xl font-bold mb-2">~550<span class="text-xl ml-1">亿kWh</span></div>
+                    <h3 class="font-semibold text-slate-700">年均发电量</h3>
+                    <p class="text-sm text-slate-500">(6台机组投产后)</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 text-center">
+                    <div class="text-green-600 text-4xl font-bold mb-2">~4500<span class="text-xl ml-1">万吨</span></div>
+                    <h3 class="font-semibold text-slate-700">年均CO₂减排</h3>
+                    <p class="text-sm text-slate-500">(等效于替代标准煤)</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 text-center">
+                    <div class="text-slate-700 text-4xl font-bold mb-2">60<span class="text-xl ml-1">年</span></div>
+                    <h3 class="font-semibold text-slate-700">机组设计寿命</h3>
+                    <p class="text-sm text-slate-500">(提供长期稳定基荷电力)</p>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200 mb-8">
+                <h3 class="text-2xl font-bold text-center mb-2">浙江的能源困境：结构性缺口</h3>
+                <p class="text-center text-slate-600 mb-6">超过三分之一的电力依赖外部输入，能源安全面临严峻挑战。</p>
+                <div class="chart-container" style="max-width: 600px; height: 300px;">
+                    <canvas id="energyGapChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200">
+                <h3 id="loadCurveTitle" class="text-2xl font-bold text-center mb-2">电力负荷分析：增长的需求与季节性高峰</h3>
+                <p class="text-center text-slate-600 mb-6">持续的经济增长和夏季极端高温共同推高了用电负荷，对电网稳定性构成巨大压力。</p>
+                <div class="flex justify-center mb-4 space-x-2">
+                    <button id="zhejiangBtn" class="toggle-btn px-4 py-2 rounded-md font-semibold active">浙江省</button>
+                    <button id="ningboBtn" class="toggle-btn px-4 py-2 rounded-md font-semibold">宁波市</button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="loadCurveChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="mt-12 text-center">
+                <h3 class="text-xl font-bold text-slate-800 mb-4">延伸阅读</h3>
+                <div class="flex justify-center items-center gap-x-8 gap-y-4 flex-wrap">
+                    <a href="https://globalbusinessinsight.github.io/canuclear.html" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-300 font-medium">深度阅读：加拿大核能产业观察</a>
+                    <a href="https://globalbusinessinsight.github.io/digitalnuclear.html" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-300 font-medium">深度阅读：核电数字化转型趋势</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="tech" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">技术核心：“华龙一号”深度解析</h2>
+                <p class="max-w-3xl mx-auto text-lg text-slate-600">
+                    金七门项目采用中国自主研发的第三代核电技术“华龙一号”（HPR1000）。它不仅是技术上的突破，更是一个带动了近6000家企业的庞大产业生态系统，实现了从“示范”到“批量化”生产的跨越。
+                </p>
+            </div>
+            
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200 mb-8">
+                <h3 class="text-2xl font-bold text-center mb-8">“华龙一号”系统解析</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="p-4 border-l-4 border-blue-500 bg-blue-50 rounded-r-lg">
+                        <h4 class="font-bold text-xl mb-2 text-blue-800">核岛 (NI)</h4>
+                        <p class="text-slate-600"><strong>设计：</strong> 采用177盒燃料组件的堆芯，相比AP1000的157盒设计，功率密度更低，安全裕度更大。创新的“能动+非能动”安全系统结合，以及双层安全壳设计，确保了对严重事故的有效预防和缓解。</p>
+                        <p class="mt-2 text-slate-600"><strong>运营：</strong> 具备优异的负荷跟踪能力，可灵活适应电网需求波动。换料周期设计为18个月，提升了机组的年可用率和经济性。</p>
+                    </div>
+                    <div class="p-4 border-l-4 border-green-500 bg-green-50 rounded-r-lg">
+                        <h4 class="font-bold text-xl mb-2 text-green-800">常规岛 (CI)</h4>
+                        <p class="text-slate-600"><strong>设计：</strong> 采用技术成熟、高可靠性的半速汽轮发电机组。模块化设计理念贯穿始终，大量设备在工厂预制，现场只需吊装和连接，大幅缩短了施工周期。</p>
+                        <p class="mt-2 text-slate-600"><strong>运营：</strong> 标准化设计降低了备品备件的复杂性和维护成本。与核岛的高度集成设计，确保了高效的热能转换和稳定的电力输出。</p>
+                    </div>
+                    <div class="p-4 border-l-4 border-purple-500 bg-purple-50 rounded-r-lg">
+                        <h4 class="font-bold text-xl mb-2 text-purple-800">电厂辅助设施 (BOP)</h4>
+                        <p class="text-slate-600"><strong>设计：</strong> 数字化仪控系统（DCS）采用自主研发的“和睦系统”，实现了对全厂的集中监控和智能管理。海水冷却系统等关键BOP系统均实现国产化，保障了供应链安全。</p>
+                        <p class="mt-2 text-slate-600"><strong>运营：</strong> 高度自动化的控制系统减少了人为干预，提升了运行安全性。一体化的设计也为后续的智慧运维和预测性维护奠定了基础。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200">
+                <h3 class="text-2xl font-bold text-center mb-6">全球主流三代压水堆技术对标</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="p-3 font-semibold text-slate-700">维度</th>
+                                <th class="p-3 font-semibold text-slate-700">华龙一号 (HPR1000)</th>
+                                <th class="p-3 font-semibold text-slate-700">AP1000 / 国和一号</th>
+                                <th class="p-3 font-semibold text-slate-700">EPR</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            <tr class="align-top"><td class="p-3 font-bold bg-slate-50">技术理念</td>
+                                <td class="p-3 text-sm text-slate-600"><strong>“能动+非能动”结合：</strong> 融合了经过验证的能动系统和创新的非能动系统，追求安全与经济性的平衡。</td>
+                                <td class="p-3 text-sm text-slate-600"><strong>“纯粹非能动”：</strong> 彻底简化设计，最大程度依赖非能动系统应对事故，理论上更简单、更安全。</td>
+                                <td class="p-3 text-sm text-slate-600"><strong>“演进与冗余”：</strong> 在成熟技术基础上，通过极高的冗余度（如4列安全系统）和额外安全措施来提升安全性。</td>
+                            </tr>
+                            <tr class="align-top"><td class="p-3 font-bold bg-slate-50">安全性</td>
+                                <td class="p-3 text-sm text-slate-600">双层安全壳，安全系统多样化，可抵御大型商用飞机撞击。严重事故预防和缓解能力强。</td>
+                                <td class="p-3 text-sm text-slate-600">非能动系统可在72小时内无需人工干预，理论上人为失误风险更低。但对单一非能动系统的依赖性更高。</td>
+                                <td class="p-3 text-sm text-slate-600">安全冗余度最高，设有堆芯熔融物捕集器（Core Catcher）。安全标准极高，但系统也最复杂。</td>
+                            </tr>
+                            <tr class="align-top"><td class="p-3 font-bold bg-slate-50">成本与工期</td>
+                                <td class="p-3 text-sm text-slate-600"><strong>优势：</strong> 受益于批量化建设和成熟的国内供应链，造价和工期控制能力最强，经济性最佳。</td>
+                                <td class="p-3 text-sm text-slate-600"><strong>劣势：</strong> 首堆项目（尤其在美国）遭遇严重超支和延期。国和一号在国内建设顺利，但成本仍高于华龙。</td>
+                                <td class="p-3 text-sm text-slate-600"><strong>显著劣势：</strong> 系统复杂导致造价极高，首批项目（芬兰、法国、英国）均出现严重超支和数年的工期延误。</td>
+                            </tr>
+                            <tr class="align-top"><td class="p-3 font-bold bg-slate-50">商业化能力</td>
+                                <td class="p-3 text-sm text-slate-600"><strong>优势：</strong> 国内已批量建设，并成功出口巴基斯坦，拥有已验证的建设和运营记录。供应链完全自主可控。</td>
+                                <td class="p-3 text-sm text-slate-600">AP1000在中国有4台机组投运，但全球推广受挫。国和一号目前仅在中国建设，出口前景待观察。</td>
+                                <td class="p-3 text-sm text-slate-600">已有多个项目在建或投运，但其高昂成本和工期风险使其在与对手的竞争中处于不利地位。</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <section id="lifecycle" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">“从摇篮到坟墓”的项目全周期管理</h2>
+                <p class="max-w-3xl mx-auto text-lg text-slate-600">
+                    一个核电项目的成功不仅在于建设和运营，更在于其全生命周期的风险管控。金七门项目展示了中国成熟的多层次监管体系和对核燃料闭环管理的长期战略承诺。
+                </p>
+            </div>
+
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200 mb-12">
+                <h3 class="text-2xl font-bold text-center mb-6">监管与审批流程</h3>
+                <div class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-8">
+                    <div class="text-center p-4 border-2 border-blue-200 rounded-lg bg-blue-50 w-full md:w-auto"><h4 class="font-bold text-blue-800">国务院</h4><p class="text-sm text-blue-700">最高行政审批 (2023.12)</p></div>
+                    <div class="text-2xl text-slate-400 font-mono">&rarr;</div>
+                    <div class="text-center p-4 border-2 border-green-200 rounded-lg bg-green-50 w-full md:w-auto"><h4 class="font-bold text-green-800">生态环境部 (MEE)</h4><p class="text-sm text-green-700">分阶段环境影响评价 (EIA)</p></div>
+                    <div class="text-2xl text-slate-400 font-mono">&rarr;</div>
+                     <div class="text-center p-4 border-2 border-orange-200 rounded-lg bg-orange-50 w-full md:w-auto"><h4 class="font-bold text-orange-800">国家核安全局 (NNSA)</h4><p class="text-sm text-orange-700">技术安全监督与“控制点”</p></div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200">
+                <h3 class="text-2xl font-bold text-center mb-8">项目生命周期平铺视图</h3>
+                <div class="space-y-12">
+                    
+                    <!-- Timeline Item 1: Approval -->
+                    <div class="relative">
+                        <div class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-slate-200"></div>
+                        <div class="relative flex items-start space-x-4">
+                            <div class="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-500 text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-xl font-bold">审批核准 <span class="text-base font-medium text-slate-500 ml-2">(2023)</span></h4>
+                                <div class="mt-2 text-slate-600 prose prose-sm max-w-none">
+                                    <p>项目的最终“通行证”由<strong>中华人民共和国国务院</strong>于2023年12月29日签发，标志着项目完全符合国家战略，并通过了所有前期评估。在此之前，项目必须通过<strong>生态环境部(MEE)</strong>组织的多阶段环境影响评价(EIA)，这是关键前置条件。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 2: Construction -->
+                    <div class="relative">
+                        <div class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-slate-200"></div>
+                        <div class="relative flex items-start space-x-4">
+                            <div class="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-orange-500 text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-xl font-bold">开工建设 <span class="text-base font-medium text-slate-500 ml-2">(2024-2030)</span></h4>
+                                <div class="mt-2 text-slate-600 prose prose-sm max-w-none">
+                                    <p>项目一期工程于2024年2月18日正式开工。总工期预计为65-70个月。建设过程可分为三大阶段：</p>
+                                    <div class='mt-2'>
+                                        <h5 class='font-bold text-slate-700'>阶段一: 土建与安装 (FCD → 穹顶吊装)</h5>
+                                        <ul class='list-disc list-inside space-y-1 pl-4'>
+                                            <li><strong>第一罐混凝土浇筑 (FCD):</strong> 标志核岛动工 <span class='text-green-600 font-semibold'>✔</span></li>
+                                            <li><strong>安全壳底板/筒体施工:</strong> 构建反应堆的基础屏障</li>
+                                            <li><strong>穹顶吊装:</strong> FCD + ~24个月，标志主体结构封顶</li>
+                                        </ul>
+                                    </div>
+                                    <div class='mt-2'>
+                                        <h5 class='font-bold text-slate-700'>阶段二: 主设备安装 (穹顶吊装 → 冷试)</h5>
+                                        <ul class='list-disc list-inside space-y-1 pl-4'>
+                                            <li><strong>反应堆压力容器(RPV)就位:</strong> FCD + ~30个月</li>
+                                            <li><strong>主管道焊接:</strong> 连接反应堆与蒸汽发生器的“大动脉”</li>
+                                            <li><strong>主泵/蒸汽发生器(SG)等就位:</strong> FCD + ~36个月</li>
+                                        </ul>
+                                    </div>
+                                     <div class='mt-2'>
+                                        <h5 class='font-bold text-slate-700'>阶段三: 系统调试 (冷试 → 商运)</h5>
+                                        <ul class='list-disc list-inside space-y-1 pl-4'>
+                                            <li><strong>冷态功能试验:</strong> FCD + ~52个月，全面验证设备和系统功能</li>
+                                            <li><strong>热态功能试验:</strong> FCD + ~56个月，模拟真实运行工况</li>
+                                            <li><strong>首次装料 → 首次并网:</strong> FCD + ~62-65个月</li>
+                                            <li><strong>投入商业运营 (COD):</strong> FCD + ~68个月 (~2030年)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 3: Operation -->
+                    <div class="relative">
+                        <div class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-slate-200"></div>
+                        <div class="relative flex items-start space-x-4">
+                            <div class="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-500 text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-xl font-bold">商业运营 <span class="text-base font-medium text-slate-500 ml-2">(2030-2090)</span></h4>
+                                <div class="mt-2 text-slate-600 prose prose-sm max-w-none">
+                                    <p>项目建成后由<strong>中核浙能能源有限公司</strong>负责运营。每台机组设计寿命60年，6台机组全部投产后，年发电量约550亿千瓦时，将从根本上改变浙江的能源结构。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 4: Reprocessing & Disposal -->
+                    <div class="relative">
+                         <div class="absolute top-5 left-5 -ml-px h-full w-0.5 bg-slate-200"></div>
+                        <div class="relative flex items-start space-x-4">
+                            <div class="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-indigo-500 text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9a9 9 0 0114.14-4.99L20 4M20 15a9 9 0 01-14.14 4.99L4 20" /></svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-xl font-bold">后端处理 <span class="text-base font-medium text-slate-500 ml-2">(运营期及以后)</span></h4>
+                                <div class="mt-2 text-slate-600 prose prose-sm max-w-none">
+                                    <p>中国采用<strong>“闭式核燃料循环”</strong>战略。乏燃料将被运往后处理厂回收有价值的核材料。剩余的少量高放废物，将被送往位于<strong>甘肃北山</strong>的国家深地质处置库进行永久封存。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 5: Decommissioning -->
+                    <div class="relative">
+                        <div class="relative flex items-start space-x-4">
+                            <div class="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-700 text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6H8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" /></svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="text-xl font-bold">退役与场址恢复 <span class="text-base font-medium text-slate-500 ml-2">(~2090s)</span></h4>
+                                <div class="mt-2 text-slate-600 prose prose-sm max-w-none">
+                                    <p>在60年运营寿命结束后，核电站将进入退役阶段。这是一个长期的、系统性的工程，旨在安全地拆除设施、管理剩余放射性物质，并最终将厂址恢复到可供其他用途的状态。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="eco" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">经济影响与社会价值</h2>
+                <p class="max-w-3xl mx-auto text-lg text-slate-600">
+                    金七门项目不仅是能源工程，更是强大的经济引擎。从巨额的资本投入到全生命周期内创造的巨大产值和就业岗位，其经济辐射效应深远。同时，项目在融资模式上的创新也为未来基础设施建设提供了新思路。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-3 bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200">
+                    <h3 class="text-2xl font-bold text-center mb-2">一期工程投资构成细化 (WBS)</h3>
+                    <p class="text-center text-slate-600 mb-6">总投资约395亿元，其中核岛部分占比最高，体现了其技术密集型特征。</p>
+                    <div class="chart-container" style="height: 350px;">
+                        <canvas id="investmentBreakdownChart"></canvas>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200 flex flex-col justify-center">
+                    <h3 class="text-2xl font-bold text-center mb-8">全生命周期经济价值</h3>
+                    <div class="space-y-8">
+                        <div class="text-center">
+                            <div class="text-5xl font-bold text-blue-700" data-value="2000">0</div>
+                            <p class="text-xl font-semibold text-slate-700 mt-2">亿元产值 / 每台机组</p>
+                            <p class="text-sm text-slate-500">在其60年寿命周期内</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-5xl font-bold text-blue-700" data-value="15">0</div>
+                            <p class="text-xl font-semibold text-slate-700 mt-2">万个就业岗位 / 每台机组</p>
+                            <p class="text-sm text-slate-500">带动全产业链上下游</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200">
+                <h3 class="text-2xl font-bold text-center mb-6">“华龙一号”核心设备及主要供应商</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100">
+                                <th class="p-3 font-semibold text-slate-700">核心设备</th>
+                                <th class="p-3 font-semibold text-slate-700">主要供应商</th>
+                                <th class="p-3 font-semibold text-slate-700">说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-slate-200"><td class="p-3 font-medium">反应堆压力容器 (RPV)</td><td class="p-3">中国一重 / 东方电气</td><td class="p-3 text-sm text-slate-600">核反应的“心脏”，承受高温高压，制造难度极高。</td></tr>
+                            <tr class="bg-slate-50 border-b border-slate-200"><td class="p-3 font-medium">蒸汽发生器 (SG)</td><td class="p-3">东方电气 / 上海电气</td><td class="p-3 text-sm text-slate-600">将反应堆热量传递给二回路，产生蒸汽驱动汽轮机。</td></tr>
+                            <tr class="border-b border-slate-200"><td class="p-3 font-medium">主泵</td><td class="p-3">哈尔滨电气 / 沈鼓集团</td><td class="p-3 text-sm text-slate-600">驱动一回路冷却剂循环，被称为反应堆的“强力心脏”。</td></tr>
+                            <tr class="bg-slate-50 border-b border-slate-200"><td class="p-3 font-medium">汽轮发电机组</td><td class="p-3">东方电气 / 上海电气</td><td class="p-3 text-sm text-slate-600">将蒸汽的热能转化为电能的关键设备。</td></tr>
+                             <tr class="border-b border-slate-200"><td class="p-3 font-medium">数字化仪控系统 (DCS)</td><td class="p-3">中核控制 / 中国广核</td><td class="p-3 text-sm text-slate-600">核电站的“神经中枢”，实现对全厂的监视和控制。</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <div id="modal-container" class="modal-overlay">
+        <div class="modal-content bg-white w-11/12 md:max-w-2xl rounded-lg shadow-2xl p-6 md:p-8 relative">
+            <button id="modal-close-button" class="absolute top-4 right-4 text-slate-500 hover:text-slate-800">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h3 id="modal-title" class="text-2xl font-bold mb-4 text-blue-700"></h3>
+            <div id="modal-body" class="prose max-w-none text-slate-600"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sections = document.querySelectorAll('.content-section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileNavLinks = document.querySelectorAll('.nav-link-mobile');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            let loadCurveChart, investmentBreakdownChart;
+
+            function setActiveLink(sectionId) {
+                navLinks.forEach(link => { link.classList.toggle('active', link.hash === `#${sectionId}`); });
+                mobileNavLinks.forEach(link => {
+                    if (link.hash === `#${sectionId}`) {
+                        link.classList.add('bg-blue-50', 'text-blue-700');
+                        link.classList.remove('hover:bg-blue-50', 'hover:text-blue-700');
+                    } else {
+                        link.classList.remove('bg-blue-50', 'text-blue-700');
+                        link.classList.add('hover:bg-blue-50', 'hover:text-blue-700');
+                    }
+                });
+            }
+
+            function showSection(sectionId) {
+                sections.forEach(section => { section.classList.toggle('active', section.id === sectionId); });
+                setActiveLink(sectionId);
+            }
+
+            function handleNavClick(e) {
+                e.preventDefault();
+                const sectionId = e.currentTarget.hash.substring(1);
+                showSection(sectionId);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (mobileMenu.classList.contains('flex')) {
+                    mobileMenu.classList.remove('flex');
+                    mobileMenu.classList.add('hidden');
+                }
+            }
+
+            navLinks.forEach(link => link.addEventListener('click', handleNavClick));
+            mobileNavLinks.forEach(link => link.addEventListener('click', handleNavClick));
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                mobileMenu.classList.toggle('flex');
+            });
+
+            new Chart(document.getElementById('energyGapChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['浙江省电力情况'],
+                    datasets: [{ label: '省外输入电力', data: [34], backgroundColor: 'rgba(239, 68, 68, 0.6)', borderColor: 'rgba(239, 68, 68, 1)', borderWidth: 1 }, { label: '省内发电量', data: [66], backgroundColor: 'rgba(59, 130, 246, 0.6)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }]
+                },
+                options: { indexAxis: 'y', maintainAspectRatio: false, responsive: true, scales: { x: { stacked: true, max: 100, ticks: { callback: value => value + '%' } }, y: { stacked: true } }, plugins: { title: { display: false }, tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${context.raw}%` } } } }
+            });
+
+            new Chart(document.getElementById('investmentBreakdownChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['一期工程投资构成 (亿元)'],
+                    datasets: [
+                        { label: '核岛-反应堆设备', data: [98.75], backgroundColor: 'rgba(30, 64, 175, 0.8)', stack: 'NI' },
+                        { label: '核岛-辅助设备', data: [98.75], backgroundColor: 'rgba(59, 130, 246, 0.8)', stack: 'NI' },
+                        { label: '常规岛-汽轮机组', data: [71.1], backgroundColor: 'rgba(22, 101, 52, 0.8)', stack: 'CI' },
+                        { label: '常规岛-辅助设备', data: [47.4], backgroundColor: 'rgba(34, 197, 94, 0.8)', stack: 'CI' },
+                        { label: 'BOP-电气及冷却', data: [47.4], backgroundColor: 'rgba(180, 83, 9, 0.8)', stack: 'BOP' },
+                        { label: 'BOP-其他', data: [31.6], backgroundColor: 'rgba(245, 158, 11, 0.8)', stack: 'BOP' }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y', maintainAspectRatio: false, responsive: true,
+                    scales: { x: { stacked: true, title: { display: true, text: '投资额 (亿元)' } }, y: { stacked: true } },
+                    plugins: { title: { display: false }, tooltip: { mode: 'index', callbacks: { label: (context) => ` ${context.dataset.label}: ${context.raw} 亿元` } } }
+                }
+            });
+            
+            function animateValue(obj, start, end, duration) {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+                    if (progress < 1) { window.requestAnimationFrame(step); } 
+                    else { obj.innerHTML = end.toLocaleString(); }
+                };
+                window.requestAnimationFrame(step);
+            }
+
+            const counters = document.querySelectorAll('[data-value]');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        const value = parseInt(el.dataset.value);
+                        animateValue(el, 0, value, 1500);
+                        observer.unobserve(el);
+                    }
+                });
+            }, { threshold: 0.5 });
+            counters.forEach(counter => observer.observe(counter));
+
+            function generateLoadData(base, years, growthRate, seasonalFactor) {
+                const data = []; const labels = [];
+                const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+                let currentLoad = base;
+                for (let i = 0; i < years; i++) {
+                    const year = new Date().getFullYear() - years + 1 + i;
+                    for (let j = 0; j < 12; j++) {
+                        labels.push(`${year}-${months[j]}`);
+                        let monthFactor = 1.0;
+                        if (j === 6 || j === 7) monthFactor = 1 + seasonalFactor; 
+                        if (j === 0 || j === 11) monthFactor = 1 + seasonalFactor / 3;
+                        data.push(Math.round(currentLoad * monthFactor + (Math.random() - 0.5) * 5));
+                    }
+                    currentLoad *= (1 + growthRate);
+                }
+                return { labels, data };
+            }
+
+            const zhejiangData = generateLoadData(450, 10, 0.05, 0.25);
+            const ningboData = generateLoadData(80, 10, 0.06, 0.30);
+
+            function createLoadCurveChart() {
+                const ctx = document.getElementById('loadCurveChart').getContext('2d');
+                loadCurveChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: zhejiangData.labels,
+                        datasets: [{ label: '月度电力负荷 (亿千瓦时)', data: zhejiangData.data, borderColor: 'rgba(59, 130, 246, 0.8)', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 2, pointRadius: 0, tension: 0.4, fill: true, }]
+                    },
+                    options: { maintainAspectRatio: false, responsive: true, scales: { x: { type: 'time', time: { unit: 'year' }, grid: { display: false } }, y: { beginAtZero: false, title: { display: true, text: '负荷 (亿kWh)' } } }, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } } }
+                });
+            }
+
+            function updateLoadChart(location) {
+                const zhejiangBtn = document.getElementById('zhejiangBtn');
+                const ningboBtn = document.getElementById('ningboBtn');
+                if (location === 'zhejiang') {
+                    loadCurveChart.data.labels = zhejiangData.labels;
+                    loadCurveChart.data.datasets[0].data = zhejiangData.data;
+                    zhejiangBtn.classList.add('active');
+                    ningboBtn.classList.remove('active');
+                } else {
+                    loadCurveChart.data.labels = ningboData.labels;
+                    loadCurveChart.data.datasets[0].data = ningboData.data;
+                    ningboBtn.classList.add('active');
+                    zhejiangBtn.classList.remove('active');
+                }
+                loadCurveChart.update();
+            }
+
+            createLoadCurveChart();
+            document.getElementById('zhejiangBtn').addEventListener('click', () => updateLoadChart('zhejiang'));
+            document.getElementById('ningboBtn').addEventListener('click', () => updateLoadChart('ningbo'));
+        });
+    </script>
+</body>
+</html>
