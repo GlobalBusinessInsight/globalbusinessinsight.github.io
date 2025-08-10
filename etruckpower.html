@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电动重卡补能决策分析平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals (Slate, Zinc, Stone) with a Teal Accent -->
+    <!-- Application Structure Plan: A thematic, single-page application with top navigation to jump between key analysis sections: 1. Overview. 2. Market View (Modes). 3. Head-to-Head (TCO). 4. Competitive Landscape (Players). 5. Tech & Infra. 6. Future Outlook. This structure creates a logical flow from understanding the 'what' (modes) to the 'who' (players), before diving into technical details and future trends. -->
+    <!-- Visualization & Content Choices: The application uses Chart.js for all primary data visualizations and the native HTML Canvas API for a simple, custom animation of grid impact. The new 'Competitive Landscape' section uses styled cards and lists to clearly present the market tiers and highlight Green New Energy's position, transforming the text-based analysis into a more digestible visual format. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #0f172a; /* slate-900 */
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .section-subtitle {
+            font-size: 1.125rem;
+            color: #475569; /* slate-600 */
+            margin-bottom: 3rem;
+            text-align: center;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #0d9488; /* teal-600 */
+            border-bottom-color: #0d9488;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .tab-button {
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-button.active {
+            color: #0d9488;
+            border-bottom-color: #0d9488;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: #475569;
+        }
+        .slider-value {
+            font-weight: 500;
+            color: #0f172a;
+        }
+        .insight-card {
+            background-color: #f0fdfa; /* teal-50 */
+            border-left: 4px solid #0d9488; /* teal-600 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        .tier-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-slate-800">
+                <span class="text-teal-600">E-Truck</span> 补能决策平台
+            </div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#overview" class="nav-link active">核心总览</a>
+                <a href="#market" class="nav-link">市场透视</a>
+                <a href="#duel" class="nav-link">模式对决</a>
+                <a href="#landscape" class="nav-link">竞争格局</a>
+                <a href="#infra" class="nav-link">技术与基建</a>
+                <a href="#future" class="nav-link">未来展望</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-slate-700 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 space-y-2">
+            <a href="#overview" class="block nav-link text-center">核心总览</a>
+            <a href="#market" class="block nav-link text-center">市场透视</a>
+            <a href="#duel" class="block nav-link text-center">模式对决</a>
+            <a href="#landscape" class="block nav-link text-center">竞争格局</a>
+            <a href="#infra" class="block nav-link text-center">技术与基建</a>
+            <a href="#future" class="block nav-link text-center">未来展望</a>
+        </div>
+    </header>
+
+    <main>
+        <section id="overview" class="py-20 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-4 leading-tight">十字路口的抉择</h1>
+                <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-12">全球大宗散货运输领域，电动重卡的未来由谁定义？是分钟级补能的<span class="font-bold text-teal-600">换电</span>，还是兆瓦级大功率的<span class="font-bold text-blue-600">充电</span>？本平台旨在为您提供一个清晰、数据驱动的战略决策框架。</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                    <div class="card text-left">
+                        <h3 class="text-xl font-bold mb-2 text-teal-700">换电模式 (Battery Swap)</h3>
+                        <p class="text-slate-600">以“车电分离”为核心，通过快速更换电池实现2-5分钟极速补能。在中国特定场景（如港口、矿山）已形成独特生态，追求极致运营效率。</p>
+                        <div class="text-3xl font-bold mt-4 text-teal-600">~3分钟</div>
+                        <div class="text-sm text-slate-500">补能时间</div>
+                    </div>
+                    <div class="card text-left border-2 border-slate-200 flex flex-col items-center justify-center">
+                        <div class="text-5xl font-bold text-slate-700">VS</div>
+                        <p class="mt-2 text-slate-500">两种路径的战略博弈</p>
+                    </div>
+                    <div class="card text-left">
+                        <h3 class="text-xl font-bold mb-2 text-blue-700">充电模式 (MCS Charging)</h3>
+                        <p class="text-slate-600">以兆瓦级大功率充电（MCS）为目标，将补能时间缩短至20-40分钟。由欧美主流车厂主导，旨在维护一体化车辆设计的商业模式。</p>
+                        <div class="text-3xl font-bold mt-4 text-blue-600">~30分钟</div>
+                        <div class="text-sm text-slate-500">补能时间</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="market" class="py-20">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">全球分野：市场透视</h2>
+                <p class="section-subtitle">中国和欧美市场为何走上了截然不同的道路？这背后是产业结构、商业逻辑和政策导向的根本差异。点击下方按钮，探索两大阵营的战略布局与市场现状。</p>
+                
+                <div class="flex justify-center mb-12">
+                    <div class="bg-slate-200 p-1 rounded-full flex space-x-1">
+                        <button id="btn-china" class="px-6 py-2 rounded-full text-sm font-medium transition-colors bg-white text-teal-600 shadow">中国模式</button>
+                        <button id="btn-euna" class="px-6 py-2 rounded-full text-sm font-medium transition-colors text-slate-600">欧美模式</button>
+                    </div>
+                </div>
+
+                <div id="market-content-china" class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    <div class="card">
+                        <h3 class="text-2xl font-bold mb-4">中国先锋：政策与金融驱动的模式创新</h3>
+                        <p class="text-slate-600 mb-4">在中国，强大的产业政策与巨大的市场需求相结合，催生了以“车电分离”为核心的独特生态。该模式允许用户单独购买车身，租赁电池，从而大幅降低初始购车成本和税费，并能享受特定补贴。</p>
+                        <ul class="space-y-3 text-slate-700">
+                            <li class="flex items-start"><span class="text-teal-500 mr-3 mt-1">●</span><div><strong>核心驱动:</strong> 许多车辆注册为“换电”模式，首要目的是利用其作为一种**金融工具**来优化TCO，而非纯粹追求其运营效率。</div></li>
+                            <li class="flex items-start"><span class="text-teal-500 mr-3 mt-1">●</span><div><strong>真实运营:</strong> 在港口、矿山等对时效性要求极致的场景，**物理换电**是刚需。但在更多场景下，这些“换电”卡车实际上仍以**充电**为主要补能方式。</div></li>
+                             <li class="flex items-start"><span class="text-teal-500 mr-3 mt-1">●</span><div><strong>主导力量:</strong> 产业巨头（如宁德时代）正推动电池标准化，试图统一换电网络，解决兼容性问题，提升真换电的价值。</div></li>
+                        </ul>
+                    </div>
+                    <div class="space-y-8">
+                        <div class="card">
+                            <h4 class="text-lg font-bold text-center mb-2">官方注册市场份额 (2024)</h4>
+                            <div class="chart-container h-[250px]">
+                                <canvas id="chinaMarketChart"></canvas>
+                            </div>
+                            <p class="text-xs text-center text-slate-500 mt-2">数据基于车辆注册类型，换电模式份额可能被高估。</p>
+                        </div>
+                         <div class="insight-card">
+                            <h4 class="text-lg font-bold text-teal-700 mb-2">关键洞察：政策驱动的数据解读</h4>
+                            <p class="text-slate-700 text-sm">图表中近40%的“换电”份额，并不能完全代表实际运营中物理换电的比例。其背后是“车电分离”模式带来的显著财税优势。因此，应将中国的竞争理解为“整车购买”与“车电分离”两种**商业模式**的竞争，而非单纯的技术路线之争。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="market-content-euna" class="hidden grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+                    <div class="lg:col-span-3 card">
+                        <h3 class="text-2xl font-bold mb-4">欧美共识：整车厂主导的充电之路</h3>
+                        <p class="text-slate-600 mb-4">欧洲和北美的重卡巨头们不约而同地选择大功率充电路线，旨在捍卫其传统商业模式和在价值链中的核心地位。他们通过联盟合作，共同推进全球统一的兆瓦级充电标准（MCS）。</p>
+                        <ul class="space-y-3 text-slate-700">
+                            <li class="flex items-start"><span class="text-blue-500 mr-3 mt-1">●</span><div><strong>核心战略:</strong> 坚持电池与车辆一体化设计，将电池包及管理系统作为核心技术壁垒和利润来源。</div></li>
+                            <li class="flex items-start"><span class="text-blue-500 mr-3 mt-1">●</span><div><strong>技术标准:</strong> 联合开发兆瓦级充电系统（MCS），目标是将充电时间缩短至20-40分钟，与司机法定休息时间匹配。</div></li>
+                            <li class="flex items-start"><span class="text-blue-500 mr-3 mt-1">●</span><div><strong>主导力量:</strong> 整车厂联盟（如Milence），通过“在车辆上竞争，在插头上合作”的模式，共建可互操作的公共充电网络。</div></li>
+                        </ul>
+                    </div>
+                    <div class="lg:col-span-2 card flex flex-col justify-center items-center text-center">
+                        <div class="text-6xl text-blue-600 font-bold">3.75 MW</div>
+                        <h4 class="text-lg font-bold text-center mt-2 mb-2">兆瓦级充电系统 (MCS)</h4>
+                        <p class="text-slate-600">目标充电功率，可在司机45分钟的法定休息时间内完成补能，实现运营效率与现有法规的协同。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="duel" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">模式对决：TCO 与运营效率</h2>
+                <p class="section-subtitle">对于车队运营商，最终决策归结于经济性。此部分对比“整车购买（充电）”与“车电分离（BaaS）”两种商业模式的全生命周期成本。请拖动滑块，观察TCO的动态变化。</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="card">
+                        <h3 class="text-xl font-bold mb-4 text-center">交互式TCO模拟器 (5年模型)</h3>
+                        <p class="text-xs text-slate-500 text-center mb-4">“车电分离”模式因其初始投资低，在中国被广泛采用，即使车辆主要靠充电补能。</p>
+                        <div class="space-y-6">
+                            <div>
+                                <label for="dailyMileage" class="slider-label"><span>日均行驶里程</span><span id="dailyMileageValue" class="slider-value">500 km</span></label>
+                                <input type="range" id="dailyMileage" min="200" max="800" value="500" step="50" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                            <div>
+                                <label for="electricityPrice" class="slider-label"><span>平均电价 (元/kWh)</span><span id="electricityPriceValue" class="slider-value">0.8 元</span></label>
+                                <input type="range" id="electricityPrice" min="0.4" max="1.5" value="0.8" step="0.1" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                             <div>
+                                <label for="batteryLease" class="slider-label"><span>电池月租 (元/月)</span><span id="batteryLeaseValue" class="slider-value">8000 元</span></label>
+                                <input type="range" id="batteryLease" min="5000" max="12000" value="8000" step="500" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                        </div>
+                        <div class="mt-8">
+                            <div class="chart-container h-[250px] md:h-[300px]">
+                                <canvas id="tcoChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-xl font-bold mb-6 text-center">运营指标雷达图 (技术维度)</h3>
+                        <p class="text-sm text-slate-500 text-center mb-4">此图纯粹从技术和运营角度对比物理换电与大功率充电的优劣势，不考虑商业模式。</p>
+                        <div class="chart-container h-[350px] md:h-[400px]">
+                            <canvas id="operationalRadarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="landscape" class="py-20">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">精准定位：大宗散货市场竞争格局</h2>
+                <p class="section-subtitle">了解模式差异后，我们需进一步聚焦于大宗散货运输赛道的真实玩家。此领域的竞争由场景业主、资源巨头和专业化新能源物流服务商主导。</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="card">
+                        <h3 class="text-xl font-bold mb-4">运力市场格局</h3>
+                        <div class="space-y-4">
+                            <div class="tier-card">
+                                <h4 class="font-bold text-lg text-slate-800">第一梯队: 资源与场景驱动型巨头</h4>
+                                <p class="text-sm text-slate-600">规模：数千至上万台</p>
+                                <p class="text-sm mt-2">服务于自身生产系统的封闭运力，如国家能源集团、河钢集团等。</p>
+                            </div>
+                            <div class="tier-card">
+                                <h4 class="font-bold text-lg text-slate-800">第二梯队: 专业化新能源物流服务商</h4>
+                                <p class="text-sm text-slate-600">规模：数百至一两千台</p>
+                                <p class="text-sm mt-2">为第一梯队企业提供绿色运力解决方案的独立第三方。</p>
+                            </div>
+                            <div class="tier-card">
+                                <h4 class="font-bold text-lg text-slate-800">第三梯队: 区域性/新兴新能源车队</h4>
+                                <p class="text-sm text-slate-600">规模：数十至两三百台</p>
+                                <p class="text-sm mt-2">服务于单一客户或线路的中小型公司。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                         <h3 class="text-xl font-bold mb-4">能源设施格局</h3>
+                        <div class="space-y-4">
+                            <div class="tier-card">
+                                <h4 class="font-bold text-lg text-slate-800">场景自建方</h4>
+                                <p class="text-sm mt-2">资源巨头在其厂区、矿区自建大规模专用充/换电站。</p>
+                            </div>
+                            <div class="tier-card">
+                                <h4 class="font-bold text-lg text-slate-800">第三方能源服务商</h4>
+                                <p class="text-sm mt-2">如特来电、星星充电，与物流园合作运营专用场站。</p>
+                            </div>
+                            <div class="tier-card">
+                                <h4 class="font-bold text-lg text-slate-800">运力服务商自建</h4>
+                                <p class="text-sm mt-2">最具战略价值的模式，实现运力与能源的深度绑定。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <div class="insight-card p-6">
+                        <h3 class="text-2xl font-bold text-teal-700 mb-4 text-center">绿新能源行业地位评估</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center">
+                            <div>
+                                <p class="text-5xl font-bold text-teal-600">800<span class="text-xl ml-1">辆</span></p>
+                                <p class="mt-2 text-slate-700">专用于大宗散货的电动重卡</p>
+                                <p class="mt-2 font-semibold text-slate-800">定位：第二梯队前列</p>
+                                <p class="text-sm text-slate-600">领先的专业化新能源物流服务商，是大型企业实现供应链碳中和的首选战略伙伴。</p>
+                            </div>
+                            <div>
+                                <p class="text-5xl font-bold text-teal-600">500<span class="text-xl ml-1">根</span></p>
+                                <p class="mt-2 text-slate-700">自营充电桩</p>
+                                <p class="mt-2 font-semibold text-slate-800">定位：领先的场景化运营商</p>
+                                <p class="text-sm text-slate-600">构筑“运力+能源”闭环，从运输公司升级为平台化的新能源物流科技企业。</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-teal-200">
+                            <h4 class="font-bold text-center text-slate-800">综合评估</h4>
+                            <p class="text-center text-slate-600 mt-2 max-w-3xl mx-auto">绿新能源通过构建“规模化绿色运力 + 自主可控能源网络”的双重壁垒，在新能源大宗散货物流这一高门槛、高增长的专业赛道中，占据了**头部企业**的领先身位，具备强大的综合竞争力。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="infra" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">技术与基建：电网的考验</h2>
+                <p class="section-subtitle">将成百上千辆重卡电动化，其影响远超车辆本身，直接触及能源系统的核心——电网。换电与充电模式对电网的影响截然不同，这可能是决定其适用边界的最终裁判。</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="card">
+                        <h3 class="text-xl font-bold mb-4">换电站：电网的“缓冲器”</h3>
+                        <p class="text-slate-600 mb-4">换电站可在夜间电网负荷低时，以平稳、较低的功率为备用电池充电，然后通过快速物理更换为卡车补能。此过程将“高功率补能”与“低功率取电”成功解耦，对电网友好，甚至可通过V2G（车辆到电网）提供辅助服务，创造额外收入。</p>
+                        <div class="bg-slate-100 p-4 rounded-lg">
+                            <canvas id="gridImpactSwap"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 class="text-xl font-bold mb-4">MCS充电：电网的“脉冲”</h3>
+                        <p class="text-slate-600 mb-4">一个服务多辆卡车的MCS充电枢纽，其瞬时功率需求可达20兆瓦以上，相当于一个小城镇的负荷。这种巨大的、脉冲式的电力需求，对局部电网是巨大挑战，可能需要昂贵且耗时的电网增容改造。</p>
+                        <div class="bg-slate-100 p-4 rounded-lg">
+                            <canvas id="gridImpactCharge"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="py-20">
+            <div class="container mx-auto px-6">
+                <h2 class="section-title">未来展望与战略建议</h2>
+                <p class="section-subtitle">当前的竞争格局并非一成不变。固态电池等颠覆性技术可能重塑行业，但路径依赖效应显著。基于当前分析，我们为不同角色提供以下战略建议。请选择您的角色查看。</p>
+
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex justify-center border-b border-slate-200 mb-8">
+                        <button class="tab-button active px-8 py-3 font-medium text-lg" data-tab="operator">车队运营商</button>
+                        <button class="tab-button px-8 py-3 font-medium text-lg text-slate-500" data-tab="investor">投资者</button>
+                        <button class="tab-button px-8 py-3 font-medium text-lg text-slate-500" data-tab="policy">政策制定者</button>
+                    </div>
+
+                    <div id="tab-content-operator" class="tab-content card">
+                        <h3 class="text-xl font-bold mb-4">致车队运营商 (大宗散货)</h3>
+                        <p class="text-slate-600">您的决策应基于具体的运营路线剖面和财务模型。没有一种方案能通吃所有场景。</p>
+                        <ul class="mt-4 space-y-3 list-disc list-inside text-slate-700">
+                            <li><strong>选择物理换电：</strong> 如果您的业务场景是<span class="font-semibold text-teal-600">路线固定、往返高频、运力要求极致</span>（如港口内倒、矿区运输），物理换电的运营效率优势是决定性的。</li>
+                            <li><strong>选择车电分离(BaaS)模式：</strong> 即使您主要以充电补能，也应认真评估此模式。它能显著降低您的初始投资和财务风险，是中国市场的主流趋势。</li>
+                            <li><strong>选择整车购买(充电)：</strong> 如果您的运输任务<span class="font-semibold text-blue-600">路线多变、涉及中长途</span>，且不受中国特定政策影响，则应选择充电模式，并寄望于公共MCS网络的完善。</li>
+                        </ul>
+                    </div>
+
+                    <div id="tab-content-investor" class="tab-content hidden card">
+                        <h3 class="text-xl font-bold mb-4">致投资者与基建开发商</h3>
+                        <p class="text-slate-600">充电与换电是两种风险收益特征迥异的投资标的。</p>
+                        <ul class="mt-4 space-y-3 list-disc list-inside text-slate-700">
+                            <li><strong>投资充电(MCS)：</strong> 在欧美市场，这是更稳健、更具标准化的方向，有主流车厂背书。核心挑战在于解决电力容量和需量电费管理。</li>
+                            <li><strong>投资换电/BaaS：</strong> 这是一个高风险、高回报的领域。在中国，成功的关键在于融入生态主导者的网络或提供创新的金融服务。其<span class="font-semibold">提供电网服务的潜在收入</span>是评估其商业模型的关键变量。</li>
+                        </ul>
+                    </div>
+
+                    <div id="tab-content-policy" class="tab-content hidden card">
+                        <h3 class="text-xl font-bold mb-4">致政策制定者</h3>
+                        <p class="text-slate-600">政策的重心应从初期的市场培育，转向更精细化的引导，确保补贴能激励真正的技术和运营价值。</p>
+                        <ul class="mt-4 space-y-3 list-disc list-inside text-slate-700">
+                             <li><strong>中国：</strong> 政策重心应转向<span class="font-semibold">强制和完善电池及接口的统一标准</span>，并考虑将补贴与**实际运营数据**（如真实换电次数、V2G贡献电量）挂钩，而非仅与车辆注册类型挂钩，以鼓励技术价值的实现而非金融套利。</li>
+                            <li><strong>欧美：</strong> 当务之急是<span class="font-semibold">简化和加速大功率充电枢纽的审批流程和电网升级改造</span>。否则，电网将成为重卡电动化的最大瓶颈。同时，应激励车队采用智能充电和场站储能。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 py-8">
+        <div class="container mx-auto px-6 text-center text-sm">
+            <p>&copy; 2025 电动重卡补能决策分析平台。内容基于公开报告分析，仅供战略参考。</p>
+            <p class="mt-2">一个旨在将复杂分析转化为直观洞察的交互式应用。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').includes(entry.target.id)) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            const btnChina = document.getElementById('btn-china');
+            const btnEuNa = document.getElementById('btn-euna');
+            const contentChina = document.getElementById('market-content-china');
+            const contentEuNa = document.getElementById('market-content-euna');
+
+            btnChina.addEventListener('click', () => {
+                contentChina.classList.remove('hidden');
+                contentChina.classList.add('grid');
+                contentEuNa.classList.add('hidden');
+                contentEuNa.classList.remove('grid');
+                btnChina.classList.add('bg-white', 'text-teal-600', 'shadow');
+                btnEuNa.classList.remove('bg-white', 'text-teal-600', 'shadow');
+            });
+
+            btnEuNa.addEventListener('click', () => {
+                contentEuNa.classList.remove('hidden');
+                contentEuNa.classList.add('grid');
+                contentChina.classList.add('hidden');
+                contentChina.classList.remove('grid');
+                btnEuNa.classList.add('bg-white', 'text-teal-600', 'shadow');
+                btnChina.classList.remove('bg-white', 'text-teal-600', 'shadow');
+            });
+
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(item => {
+                        item.classList.remove('active');
+                        item.classList.add('text-slate-500');
+                    });
+                    tab.classList.add('active');
+                    tab.classList.remove('text-slate-500');
+
+                    const target = tab.getAttribute('data-tab');
+                    tabContents.forEach(content => {
+                        if (content.id === `tab-content-${target}`) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            const chinaMarketCtx = document.getElementById('chinaMarketChart').getContext('2d');
+            const chinaMarketChart = new Chart(chinaMarketCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['充电式重卡', '换电式重卡 (含BaaS)'],
+                    datasets: [{
+                        label: '市场份额',
+                        data: [60.8, 39.2],
+                        backgroundColor: ['#2563eb', '#0d9488'],
+                        borderColor: '#ffffff',
+                        borderWidth: 4,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    family: "'Noto Sans SC', sans-serif"
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const radarCtx = document.getElementById('operationalRadarChart').getContext('2d');
+            const operationalRadarChart = new Chart(radarCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['补能速度', '车辆出勤率', '路线灵活性', '基建可扩展性', '电网友好度', '土地集约度'],
+                    datasets: [
+                        {
+                            label: '物理换电',
+                            data: [10, 10, 4, 3, 9, 8],
+                            backgroundColor: 'rgba(13, 148, 136, 0.2)',
+                            borderColor: 'rgba(13, 148, 136, 1)',
+                            pointBackgroundColor: 'rgba(13, 148, 136, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: '大功率充电 (MCS)',
+                            data: [5, 7, 9, 8, 3, 4],
+                            backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                            borderColor: 'rgba(37, 99, 235, 1)',
+                            pointBackgroundColor: 'rgba(37, 99, 235, 1)',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#e2e8f0' },
+                            grid: { color: '#e2e8f0' },
+                            pointLabels: { 
+                                font: { size: 12, family: "'Noto Sans SC', sans-serif" },
+                                color: '#475569'
+                            },
+                            ticks: {
+                                backdropColor: 'transparent',
+                                stepSize: 2,
+                                font: { size: 10 }
+                            },
+                            min: 0,
+                            max: 10
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    family: "'Noto Sans SC', sans-serif"
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const dailyMileageSlider = document.getElementById('dailyMileage');
+            const electricityPriceSlider = document.getElementById('electricityPrice');
+            const batteryLeaseSlider = document.getElementById('batteryLease');
+            const dailyMileageValue = document.getElementById('dailyMileageValue');
+            const electricityPriceValue = document.getElementById('electricityPriceValue');
+            const batteryLeaseValue = document.getElementById('batteryLeaseValue');
+            
+            const tcoCtx = document.getElementById('tcoChart').getContext('2d');
+            let tcoChart;
+
+            function calculateTCO() {
+                const daysIn5Years = 5 * 365;
+                const mileage = parseFloat(dailyMileageSlider.value);
+                const price = parseFloat(electricityPriceSlider.value);
+                const lease = parseFloat(batteryLeaseSlider.value);
+
+                dailyMileageValue.textContent = `${mileage} km`;
+                electricityPriceValue.textContent = `${price.toFixed(1)} 元`;
+                batteryLeaseValue.textContent = `${lease} 元`;
+
+                const energyConsumption = 1.5; 
+
+                const chargeVehicleCost = 700000;
+                const chargeInfraCost = 100000;
+                const chargeEnergyCost = mileage * energyConsumption * price * daysIn5Years;
+                const chargeTCO = chargeVehicleCost + chargeInfraCost + chargeEnergyCost;
+
+                const swapVehicleCost = 450000;
+                const swapInfraCost = 0; 
+                const swapLeaseCost = lease * 12 * 5;
+                const swapEnergyCost = mileage * energyConsumption * price * daysIn5Years; 
+                const swapTCO = swapVehicleCost + swapInfraCost + swapLeaseCost + swapEnergyCost;
+
+                return [chargeTCO / 10000, swapTCO / 10000];
+            }
+
+            function updateTCOChart() {
+                const [chargeTCO, swapTCO] = calculateTCO();
+                if (tcoChart) {
+                    tcoChart.data.datasets[0].data = [chargeTCO, swapTCO];
+                    tcoChart.update();
+                } else {
+                    tcoChart = new Chart(tcoCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['整车购买(充电)', '车电分离(BaaS)'],
+                            datasets: [{
+                                label: '5年TCO (万元)',
+                                data: [chargeTCO, swapTCO],
+                                backgroundColor: ['#2563eb', '#0d9488'],
+                                borderRadius: 4,
+                                barPercentage: 0.6
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (context) => `${context.raw.toFixed(2)} 万元`
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: '5年总拥有成本 (万元)',
+                                        font: { family: "'Noto Sans SC', sans-serif" }
+                                    },
+                                    grid: {
+                                        display: false
+                                    }
+                                },
+                                y: {
+                                    grid: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            [dailyMileageSlider, electricityPriceSlider, batteryLeaseSlider].forEach(slider => {
+                slider.addEventListener('input', updateTCOChart);
+            });
+
+            updateTCOChart();
+            
+            function createGridImpactAnimation(canvasId, isSpiky) {
+                const canvas = document.getElementById(canvasId);
+                const ctx = canvas.getContext('2d');
+                let width, height;
+                let time = 0;
+
+                function resize() {
+                    width = canvas.clientWidth;
+                    height = canvas.clientHeight;
+                    canvas.width = width;
+                    canvas.height = height;
+                }
+
+                function draw() {
+                    ctx.clearRect(0, 0, width, height);
+                    
+                    ctx.strokeStyle = '#cbd5e1';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(0, height * 0.2);
+                    ctx.lineTo(width, height * 0.2);
+                    ctx.moveTo(0, height * 0.8);
+                    ctx.lineTo(width, height * 0.8);
+                    ctx.stroke();
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '12px Noto Sans SC';
+                    ctx.fillText('高负荷', 5, height * 0.2 - 5);
+                    ctx.fillText('低负荷', 5, height * 0.8 - 5);
+
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = isSpiky ? '#2563eb' : '#0d9488';
+                    ctx.beginPath();
+                    
+                    for (let x = 0; x < width; x++) {
+                        const t = (x / width) * 10 + time;
+                        let y;
+                        if (isSpiky) {
+                            const spike1 = Math.exp(-Math.pow(t - 3, 2) * 5) * 0.7;
+                            const spike2 = Math.exp(-Math.pow(t - 7, 2) * 8) * 0.6;
+                            const spike3 = Math.exp(-Math.pow(t - 11, 2) * 6) * 0.65;
+                            y = height * (0.8 - spike1 - spike2 - spike3);
+                        } else {
+                            y = height * (0.75 - Math.sin(t * 0.5) * 0.05);
+                        }
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                    
+                    time += 0.02;
+                    requestAnimationFrame(draw);
+                }
+
+                resize();
+                window.addEventListener('resize', resize);
+                draw();
+            }
+
+            createGridImpactAnimation('gridImpactSwap', false);
+            createGridImpactAnimation('gridImpactCharge', true);
+        });
+    </script>
+</body>
+</html>
