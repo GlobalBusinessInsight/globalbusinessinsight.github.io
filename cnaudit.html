@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>十年审计透视：中国经济健康检查 (2014-2024)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: A thematic, dashboard-style single-page application. The structure is designed for intuitive exploration rather than linear reading. It starts with a high-level summary and key risk indicators. Users can then dive into specific areas via a clear navigation bar: 1) Key Risk Dashboard (核心风险看板), 2) Institutional Deep Dive (机构深潜), 3) Regional Analysis (区域透视), and 4) People & Policy (民生与政策). This structure allows users to quickly grasp the main points and then explore areas of interest, such as SOE issues or local government debt, in detail. The user flow is non-linear, encouraging interaction and comparison between different sections. This design was chosen because the source report is dense; a thematic dashboard makes the complex information more digestible and highlights the interconnectedness of the risks identified. -->
+    <!-- Visualization & Content Choices: 
+        - Goal: Compare SOE financial issues. Viz: Interactive Bar Chart (Chart.js). Interaction: Tooltips on hover show exact figures. Justification: Bar charts are excellent for comparing magnitudes of distinct categories (revenue, cost, profit manipulation).
+        - Goal: Show evolution of local debt issues. Viz: Stacked Bar Chart (Chart.js) showing different types of debt issues over years. Interaction: Users can click on legend items to toggle the visibility of different debt types. Justification: A stacked bar chart effectively displays the composition of a total over time, revealing the shift from traditional hidden debt to issues with Special Purpose Bonds (SPBs).
+        - Goal: Illustrate the audit-rectification loop. Viz: HTML/CSS/Tailwind diagram. Interaction: Hovering over each stage reveals a tooltip with a brief explanation. Justification: A simple, clear visual flow is more effective than a complex chart for explaining a process. No SVG/Mermaid is needed.
+        - Goal: Present key findings for different entities (Ministries, SOEs, Banks). Viz: Tabbed content cards (HTML/CSS/JS). Interaction: Clicking tabs reveals detailed findings for each entity. Justification: Tabs organize a large amount of related information cleanly, preventing cognitive overload and allowing for easy comparison.
+        - Goal: Highlight key statistics. Viz: Large number "Key Performance Indicator" (KPI) cards (HTML/CSS). Interaction: None, static display for high impact. Justification: Emphasizes the scale of the issues (e.g., total rectified funds).
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8f7f4;
+            color: #3d3d3d;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+        .nav-link.active, .nav-link:hover {
+            background-color: #eaddd7;
+            color: #604d41;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            transform: translateY(-4px);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-button.active {
+            border-bottom-color: #a58d7f;
+            color: #604d41;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto px-4 py-8 md:py-12">
+
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-5xl font-bold text-[#604d41] mb-4">十年审计透视</h1>
+            <p class="text-lg md:text-xl text-gray-600">中国经济健康检查交互式报告 (2014-2024)</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="flex justify-center items-center flex-wrap gap-2 md:gap-4 mb-12 sticky top-4 z-10 bg-[#f8f7f4]/80 backdrop-blur-sm p-2 rounded-full">
+            <a class="nav-link active" data-target="summary">概览与核心风险</a>
+            <a class="nav-link" data-target="institutions">机构深潜</a>
+            <a class="nav-link" data-target="regions">区域透视</a>
+            <a class="nav-link" data-target="people">民生与政策</a>
+            <a class="nav-link" data-target="trends">趋势与前瞻</a>
+        </nav>
+
+        <main>
+            <!-- Section: Summary -->
+            <section id="summary" class="space-y-8">
+                <div class="card">
+                    <h2 class="text-2xl font-bold text-[#604d41] mb-4">执行摘要</h2>
+                    <p class="text-gray-700 leading-relaxed">本交互式报告旨在将国家审计署过去十年的报告转化为直观的洞察。分析显示，审计署的角色已从单纯的财务“看门狗”演变为保障中央政策执行、识别系统性风险的关键治理工具。我们发现，<strong class="text-[#a58d7f]">地方政府隐性债务</strong>、<strong class="text-[#a58d7f]">国企会计信息不实</strong>和<strong class="text-[#a58d7f]">公共资金使用效率低下</strong>是长期存在的顽固性问题。此应用旨在帮助您通过交互探索这些核心发现。</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="card text-center">
+                        <h3 class="text-lg font-semibold text-gray-500">2023年整改问题金额</h3>
+                        <p class="text-4xl font-bold text-[#a58d7f] mt-2">5380亿+</p>
+                        <p class="text-sm text-gray-500 mt-1">人民币</p>
+                    </div>
+                    <div class="card text-center">
+                        <h3 class="text-lg font-semibold text-gray-500">2023年追责问责人数</h3>
+                        <p class="text-4xl font-bold text-[#a58d7f] mt-2">2800+</p>
+                         <p class="text-sm text-gray-500 mt-1">人</p>
+                    </div>
+                    <div class="card text-center">
+                        <h3 class="text-lg font-semibold text-gray-500">核心顽固性问题</h3>
+                        <p class="text-xl font-bold text-[#a58d7f] mt-2 leading-tight">隐性债务<br>会计不实<br>资金低效</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="text-2xl font-bold text-[#604d41] mb-4">审计-整改闭环</h2>
+                    <p class="text-gray-600 mb-6">审计的威力不仅在于发现问题，更在于其后启动的整改问责流程。这个循环已成为中央强化对地方和部门控制力的政治工具，确保中央政令畅通。将鼠标悬停在下方流程的每个阶段上以获取更多信息。</p>
+                    <div class="flex flex-col md:flex-row justify-around items-center space-y-4 md:space-y-0 md:space-x-4">
+                         <div class="relative flex items-center justify-center w-32 h-32 rounded-full bg-[#eaddd7] text-center p-4 group">
+                            <span class="font-semibold text-[#604d41]">1. 审计发现</span>
+                            <div class="absolute bottom-full mb-2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                审计署通过年度审计，揭示财政收支、国企运营、金融活动中的违规行为和系统性风险。
+                                <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-gray-800"></div>
+                            </div>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-400">→</div>
+                        <div class="relative flex items-center justify-center w-32 h-32 rounded-full bg-[#eaddd7] text-center p-4 group">
+                             <span class="font-semibold text-[#604d41]">2. 问题曝光</span>
+                             <div class="absolute bottom-full mb-2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                审计工作报告向全国人大常委会报告，并向社会公布，形成强大的舆论和政治压力。
+                                <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-gray-800"></div>
+                            </div>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-400">→</div>
+                         <div class="relative flex items-center justify-center w-32 h-32 rounded-full bg-[#eaddd7] text-center p-4 group">
+                             <span class="font-semibold text-[#604d41]">3. 整改问责</span>
+                             <div class="absolute bottom-full mb-2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                相关地方、部门和单位被要求限期整改，追缴资金，完善制度，并对相关责任人进行追责问责。
+                                <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-gray-800"></div>
+                            </div>
+                        </div>
+                         <div class="text-2xl font-bold text-gray-400">→</div>
+                        <div class="relative flex items-center justify-center w-32 h-32 rounded-full bg-[#eaddd7] text-center p-4 group">
+                             <span class="font-semibold text-[#604d41]">4. 结果报告</span>
+                             <div class="absolute bottom-full mb-2 w-64 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                国务院向全国人大常委会提交整改报告，公开整改成果，形成问责闭环，并对其他官员构成威慑。
+                                <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-gray-800"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Institutions -->
+            <section id="institutions" class="hidden space-y-8">
+                <div class="card">
+                    <h2 class="text-2xl font-bold text-[#604d41] mb-2">机构深潜：部委、国企与金融机构</h2>
+                    <p class="text-gray-600 mb-6">本部分深入剖析执行政策、驱动经济的关键机构。通过下方的选项卡，您可以切换查看中央部委、国有企业和金融机构在审计监督下暴露的运作模式与系统性问题。</p>
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                            <button class="tab-button py-4 px-1 text-lg font-medium text-gray-500 hover:text-gray-700 active" data-tab="soes">国有企业</button>
+                            <button class="tab-button py-4 px-1 text-lg font-medium text-gray-500 hover:text-gray-700" data-tab="ministries">中央部委</button>
+                            <button class="tab-button py-4 px-1 text-lg font-medium text-gray-500 hover:text-gray-700" data-tab="financial">金融机构</button>
+                        </nav>
+                    </div>
+
+                    <div id="tab-content-soes" class="tab-content space-y-6">
+                        <div>
+                            <h3 class="text-xl font-semibold text-[#a58d7f] mb-4">核心问题一：会计信息不实</h3>
+                            <p class="text-gray-700 mb-4">这是国企审计中最突出、金额巨大且持续存在的顽疾。下图展示了近年审计报告中披露的中央企业主要会计违规情况。这种行为不仅是管理问题，更是国企在追求商业目标和承担国家政策双重角色之间内在冲突的体现。</p>
+                            <div class="chart-container mx-auto h-96 md:h-[500px]">
+                                <canvas id="soeChart"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-[#a58d7f] mb-4">核心问题二：运营与投资效率低下</h3>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li><strong>“三重一大”决策执行不严：</strong>重大决策程序违规、论证不充分，造成巨额损失。</li>
+                                <li><strong>偏离主业与违规经营：</strong>部分央企“脱实向虚”，违规开展房地产、金融等业务。</li>
+                                <li><strong>投资效益不彰：</strong>政府投资基金大量资金闲置，未能有效支持创新创业。</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="tab-content-ministries" class="tab-content hidden space-y-4">
+                         <h3 class="text-xl font-semibold text-[#a58d7f] mb-2">审计国家机器：中央部委</h3>
+                         <p class="text-gray-700">对中央部委的审计揭示了国家行政中枢在资源使用和内部管理方面存在的普遍性问题，特别是“下属漂移”现象——即将合规风险活动转移至监管较松的下属单位。</p>
+                         <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>违反“过紧日子”要求：</strong>尽管三令五申，超需求申领预算、胡支乱花“三公”经费等现象依然存在。</li>
+                            <li><strong>采购与外包违规：</strong>普遍存在规避公开招标、违规分包或先实施后招标等问题。</li>
+                            <li><strong>利用下属单位规避监管：</strong>通过下属协会、事业单位等违规收费或摊派，形成“预算外收入”。</li>
+                        </ul>
+                    </div>
+                    <div id="tab-content-financial" class="tab-content hidden space-y-4">
+                        <h3 class="text-xl font-semibold text-[#a58d7f] mb-2">金融领域：防范系统性风险</h3>
+                        <p class="text-gray-700">对金融机构的审计旨在识别和预警系统性风险。审计署正扮演“影子金融监管者”的角色，其报告为评估中国真实金融风险提供了独立交叉验证。</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>偏离服务实体经济：</strong>存在“即贷即收”虚增信贷、贷款与存款挂钩进行资金空转等问题。</li>
+                            <li><strong>资产质量与风险隐瞒：</strong>通过“无效重组”、违规展期等方式掩盖不良贷款，扭曲金融体系的风险信号。2018年审计发现部分机构掩盖不良贷款高达1005.84亿元。</li>
+                            <li><strong>金融监管存在薄弱环节：</strong>对地方金融机构监管存在漏洞，新兴金融业态监管规则缺失。</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Regions -->
+            <section id="regions" class="hidden space-y-8">
+                 <div class="card">
+                    <h2 class="text-2xl font-bold text-[#604d41] mb-2">区域透视：地方政府的挑战</h2>
+                    <p class="text-gray-600 mb-6">本部分将分析重点下沉至地方层面。中央的政策最终在此落地，而中国一些最重大的财政风险也在此积聚。地方政府债务问题揭示了中央“去杠杆”指令与地方“促发展”政治任务之间的根本性矛盾。</p>
+                    <div class="chart-container mx-auto h-96 md:h-[500px]">
+                        <canvas id="localGovDebtChart"></canvas>
+                    </div>
+                    <div class="mt-6">
+                        <h3 class="text-xl font-semibold text-[#a58d7f] mb-2">案例分析：北京市</h3>
+                        <p class="text-gray-700 mb-4">以北京为例，省级/直辖市层面同样存在严重的财政管理问题，生动展示了“财政逐级递减”的无效率现象——资金在下拨过程中效率被层层削弱。</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><strong>预算管理混乱：</strong>一般公共预算与国资经营预算资金混用，资金拨付严重滞后。</li>
+                            <li><strong>违规举债与投资风险：</strong>存在违规举债用于非公益项目、专项债偿还风险较大、重大项目投资缓慢（75%预算资金年底结存）等问题。</li>
+                            <li><strong>国有资产管理混乱：</strong>行政事业单位资产核算不实、超标配置与低效闲置并存。</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: People -->
+            <section id="people" class="hidden space-y-8">
+                 <div class="card">
+                    <h2 class="text-2xl font-bold text-[#604d41] mb-2">为民审计：重大项目与民生资金</h2>
+                    <p class="text-gray-600 mb-6">本部分检视审计系统如何监督直接影响公民生活和国家战略的支出。对民生资金的高度关注和公开化，服务于一个重要的政治目标：构建和维护执政党的合法性，展示其“为人民服务”的执政叙事。</p>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="p-6 rounded-lg bg-[#eaddd7]/50">
+                            <h3 class="text-xl font-semibold text-[#604d41] mb-3">重大基础设施项目</h3>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li><strong>投资效率低下：</strong>项目审批流程冗长复杂，如高速公路平均审批周期长达三年半。</li>
+                                <li><strong>成本与管理失控：</strong>轨道交通项目普遍存在工期滞后、超概算投资、土地管理不善等问题。</li>
+                                <li><strong>规划脱离实际：</strong>重大引调水工程存在立项规模偏大、运营维护不到位等问题。</li>
+                            </ul>
+                        </div>
+                        <div class="p-6 rounded-lg bg-[#eaddd7]/50">
+                            <h3 class="text-xl font-semibold text-[#604d41] mb-3">重点民生资金</h3>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li><strong>教育资金：</strong>营养餐计划资金被挪用挤占，全国整改40.39亿元，处理1200人。</li>
+                                <li><strong>就业与社保：</strong>就业补助、失业保险金存在发放不精准、被骗取套取问题。</li>
+                                <li><strong>医疗保障基金：</strong>药品集采政策未全面落实，存在骗取医保基金漏洞。</li>
+                                <li><strong>乡村振兴资金：</strong>返贫监测不力，集体“三资”管理混乱，项目建设脱离实际。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Trends -->
+            <section id="trends" class="hidden space-y-8">
+                <div class="card">
+                    <h2 class="text-2xl font-bold text-[#604d41] mb-4">综合与前瞻性分析</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-xl font-semibold text-[#a58d7f] mb-3">审计优先事项的演变</h3>
+                            <div class="relative border-l-2 border-[#eaddd7] pl-6 space-y-8">
+                                <div class="relative">
+                                    <div class="absolute -left-[35px] top-1 w-4 h-4 bg-[#a58d7f] rounded-full"></div>
+                                    <h4 class="font-bold">十年初期 (约2014-2017)</h4>
+                                    <p class="text-gray-700">焦点：反腐败、“三公”经费、遏制浪费。</p>
+                                </div>
+                                <div class="relative">
+                                    <div class="absolute -left-[35px] top-1 w-4 h-4 bg-[#a58d7f] rounded-full"></div>
+                                    <h4 class="font-bold">十年中期 (约2018-2020)</h4>
+                                    <p class="text-gray-700">重心转向：防范化解系统性风险（地方债务、金融风险）。</p>
+                                </div>
+                                <div class="relative">
+                                    <div class="absolute -left-[35px] top-1 w-4 h-4 bg-[#a58d7f] rounded-full"></div>
+                                    <h4 class="font-bold">近年 (约2021-2024)</h4>
+                                    <p class="text-gray-700">与顶层战略融合：确保“高质量发展”、“国家安全”、“共同富裕”。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-[#a58d7f] mb-3">识别的核心系统性风险</h3>
+                             <ul class="list-decimal list-inside space-y-3 text-gray-700 font-medium">
+                                <li><strong class="text-[#604d41]">风险共振：</strong>地方债务与本地银行体系形成脆弱的风险闭环。</li>
+                                <li><strong class="text-[#604d41]">数据质量疑云：</strong>国企和银行普遍存在的会计操纵，对官方经济数据的可靠性提出质疑。</li>
+                                <li><strong class="text-[#604d41]">投资效率陷阱：</strong>国家主导的大规模投资普遍存在效率低下、规划不善和资本闲置问题。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="text-center mt-16 text-gray-500 text-sm">
+            <p>数据来源：中华人民共和国国家审计署 (CNAO) 年度审计报告 (2014-2024)。</p>
+            <p>本页面为基于公开报告的交互式分析，仅供研究参考。</p>
+        </footer>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main > section');
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            function showSection(targetId) {
+                sections.forEach(section => {
+                    section.classList.toggle('hidden', section.id !== targetId);
+                });
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.dataset.target === targetId);
+                });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = e.target.dataset.target;
+                    showSection(targetId);
+                });
+            });
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    const targetId = e.target.dataset.tab;
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    tabContents.forEach(content => {
+                        content.classList.toggle('hidden', content.id !== `tab-content-${targetId}`);
+                    });
+                });
+            });
+
+            const soeChartCtx = document.getElementById('soeChart').getContext('2d');
+            const soeChart = new Chart(soeChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['2018年 (22户)', '2022年 (10户)', '2023年 (22户)'],
+                    datasets: [{
+                        label: '虚增收入 (亿元)',
+                        data: [90.70, 81.38, 1182.07],
+                        backgroundColor: 'rgba(165, 141, 127, 0.6)',
+                        borderColor: 'rgba(165, 141, 127, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: '虚增利润 (亿元)',
+                        data: [45.23, 133.10, 526.72],
+                        backgroundColor: 'rgba(234, 221, 215, 0.8)',
+                        borderColor: 'rgba(234, 221, 215, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '部分年份央企会计信息不实情况 (单位: 亿元)',
+                            font: { size: 16, weight: 'bold' },
+                            color: '#3d3d3d'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + ' 亿元';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '金额 (亿元)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            const localGovDebtCtx = document.getElementById('localGovDebtChart').getContext('2d');
+            const localGovDebtChart = new Chart(localGovDebtCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['2015年', '2018年', '2022年'],
+                    datasets: [
+                        {
+                            label: '新增/变相举借隐性债务 (亿元)',
+                            data: [153.50, 154.22, 415.16],
+                            backgroundColor: 'rgba(188, 71, 73, 0.6)',
+                            stack: 'stack0'
+                        },
+                        {
+                            label: '违规发行/使用专项债 (亿元)',
+                            data: [0, 0, 198.21],
+                            backgroundColor: 'rgba(237, 134, 88, 0.6)',
+                             stack: 'stack0'
+                        },
+                        {
+                            label: '债务/置换债资金闲置 (亿元)',
+                            data: [138.40, 290.40, 0],
+                            backgroundColor: 'rgba(156, 163, 175, 0.6)',
+                             stack: 'stack1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '审计报告揭示的地方政府债务问题演变 (单位: 亿元)',
+                            font: { size: 16, weight: 'bold' },
+                            color: '#3d3d3d'
+                        },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + ' 亿元';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                        },
+                        y: {
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: '金额 (亿元)'
+                            }
+                        }
+                    }
+                }
+            });
+
+        });
+    </script>
+
+</body>
+</html>
