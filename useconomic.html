@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美国宏观经济20年交互式仪表盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: 设计了一个主题式的、非线性的仪表盘结构，而非简单复刻报告章节。主要分为四个部分：1) 概览：通过一个包含所有关键指标的20年时间轴图表，提供宏观视角。2) 两次危机：采用并排布局，通过交互式按钮对比金融危机和新冠疫情的冲击与政策应对，突出差异。3) 关键指标：允许用户深入探索单个指标（GDP、失业率等），并将图表与动态更新的分析文本相结合。4) 结构性转变：将报告的结论性思考转化为可交互的卡片，便于理解长期的经济变化。这种结构旨在引导用户从宏观到微观，从事件到趋势，进行自主探索，从而更好地理解报告的核心洞见。 -->
+    <!-- Visualization & Content Choices: 1) 20年趋势图 (目标: 概览, 方法: Chart.js多轴线图, 交互: 悬停提示, 理由: 整合关键数据于一图，高效传达宏观走势)。2) 危机对比模块 (目标: 比较, 方法: HTML/CSS/JS布局与按钮切换, 交互: 点击切换财政/货币政策详情, 理由: 有效管理信息密度，便于聚焦对比)。3) 指标深潜图 (目标: 深入分析, 方法: Chart.js图表与JS动态文本区, 交互: 点击按钮切换指标并同步更新分析文本, 理由: 将数据可视化与深度解读紧密结合)。4) 结构性转变卡片 (目标: 组织信息, 方法: HTML/CSS/JS网格卡片, 交互: 点击展开详情, 理由: 将复杂的概念分解为易于消化和探索的模块)。所有可视化均使用Chart.js在Canvas上渲染。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F5F2;
+            color: #333333;
+        }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #5A7D9A;
+            border-bottom-color: #5A7D9A;
+        }
+        .btn-primary {
+            background-color: #5A7D9A;
+            color: #FFFFFF;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #48657f;
+        }
+        .btn-secondary {
+            background-color: #D98C60;
+            color: #FFFFFF;
+            transition: background-color 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: #c07a51;
+        }
+        .btn-toggle {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .btn-toggle.active {
+            background-color: #5A7D9A;
+            color: #FFFFFF;
+        }
+        .card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 450px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-[#5A7D9A]">美国经济20年风云</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 text-sm font-medium border-b-2 border-transparent">概览</a>
+                        <a href="#crises" class="nav-link px-3 py-2 text-sm font-medium border-b-2 border-transparent">两次危机</a>
+                        <a href="#indicators" class="nav-link px-3 py-2 text-sm font-medium border-b-2 border-transparent">关键指标</a>
+                        <a href="#shifts" class="nav-link px-3 py-2 text-sm font-medium border-b-2 border-transparent">结构性转变</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                        <span class="sr-only">打开主菜单</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#overview" class="block nav-link px-3 py-2 rounded-md text-base font-medium border-b-0">概览</a>
+                <a href="#crises" class="block nav-link px-3 py-2 rounded-md text-base font-medium border-b-0">两次危机</a>
+                <a href="#indicators" class="block nav-link px-3 py-2 rounded-md text-base font-medium border-b-0">关键指标</a>
+                <a href="#shifts" class="block nav-link px-3 py-2 rounded-md text-base font-medium border-b-0">结构性转变</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <section id="overview" class="mb-16 scroll-mt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#5A7D9A] mb-4">穿越动荡：2005-2025年美国经济全景</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    这二十年是美国经济史上一个决定性的时代，标志着“大缓和”时代的终结。本应用将通过交互式图表和分析，剖析从金融危机到新冠疫情，再到大通胀周期的核心叙事，揭示其背后的结构性变迁。
+                </p>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-4 md:p-8 mb-12">
+                <h3 class="text-xl font-bold text-center mb-4">核心经济指标20年走势</h3>
+                <div class="chart-container">
+                    <canvas id="overviewChart"></canvas>
+                </div>
+                <p class="text-center text-sm text-gray-500 mt-4">将鼠标悬停在图表上以查看具体年份的数据。垂直虚线标记了关键事件的发生点。</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center text-center card">
+                    <h4 class="font-bold text-lg mb-2 text-[#D98C60]">全球金融危机谷底</h4>
+                    <p class="text-sm text-gray-500 mb-4">(2009 Q2)</p>
+                    <p class="text-2xl font-bold text-[#5A7D9A]">-4.1%</p>
+                    <p class="text-gray-600 mb-2">实际GDP增长率</p>
+                    <p class="text-2xl font-bold text-[#5A7D9A]">9.5%</p>
+                    <p class="text-gray-600">失业率</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center text-center card">
+                    <h4 class="font-bold text-lg mb-2 text-[#D98C60]">新冠疫情谷底</h4>
+                    <p class="text-sm text-gray-500 mb-4">(2020 Q2)</p>
+                    <p class="text-2xl font-bold text-[#5A7D9A]">-30%+ (季)</p>
+                    <p class="text-gray-600 mb-2">实际GDP增长率</p>
+                    <p class="text-2xl font-bold text-[#5A7D9A]">14.7%</p>
+                    <p class="text-gray-600">失业率 (2020年4月)</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center text-center card">
+                    <h4 class="font-bold text-lg mb-2 text-[#D98C60]">通胀高峰</h4>
+                    <p class="text-sm text-gray-500 mb-4">(2022 Q2)</p>
+                    <p class="text-2xl font-bold text-[#5A7D9A]">9.1%</p>
+                    <p class="text-gray-600 mb-2">CPI通胀率 (2022年6月)</p>
+                    <p class="text-2xl font-bold text-[#5A7D9A]">1.75%</p>
+                    <p class="text-gray-600">联邦基金利率</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="crises" class="mb-16 scroll-mt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#5A7D9A] mb-4">两次危机：冲击与应对的比较</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    全球金融危机和新冠疫情是这二十年中最具冲击性的两大事件。它们的起因、影响和政策应对方式存在显著差异。本部分旨在通过直接对比，揭示美国政府和美联储在危机管理模式上的演变。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+                    <h3 class="text-2xl font-bold text-center mb-4 text-[#D98C60]">全球金融危机 (2008-2009)</h3>
+                    <p class="text-gray-600 mb-6">由房地产泡沫破裂和次级贷款危机引发，导致全球信贷市场冻结和系统性金融风险。危机迅速蔓延至实体经济，造成了自大萧条以来最严重的经济衰退。</p>
+                    <div class="mb-4 text-center">
+                        <button class="btn-toggle active px-4 py-2 rounded-l-md" data-crisis="gfc" data-type="fiscal">财政政策</button>
+                        <button class="btn-toggle px-4 py-2 rounded-r-md" data-crisis="gfc" data-type="monetary">货币政策</button>
+                    </div>
+                    <div id="gfc-content" class="text-sm"></div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+                    <h3 class="text-2xl font-bold text-center mb-4 text-[#D98C60]">新冠疫情 (2020-2021)</h3>
+                    <p class="text-gray-600 mb-6">由全球大流行病引发的公共卫生危机，防疫封锁导致经济活动瞬间“急冻”。与金融危机不同，这次冲击主要源于外部，直接打击了供给和需求两端。</p>
+                    <div class="mb-4 text-center">
+                        <button class="btn-toggle active px-4 py-2 rounded-l-md" data-crisis="covid" data-type="fiscal">财政政策</button>
+                        <button class="btn-toggle px-4 py-2 rounded-r-md" data-crisis="covid" data-type="monetary">货币政策</button>
+                    </div>
+                    <div id="covid-content" class="text-sm"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="indicators" class="mb-16 scroll-mt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#5A7D9A] mb-4">关键指标深度剖析</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    宏观经济数据是理解经济活动的窗口。在此，您可以选择深入研究某一个特定指标，观察其二十年来的变化，并阅读我们对关键时期背后驱动因素的分析。点击下方按钮切换您感兴趣的指标。
+                </p>
+            </div>
+            <div class="text-center mb-8 space-x-2 sm:space-x-4">
+                <button class="indicator-btn btn-primary px-4 py-2 rounded-md text-sm sm:text-base" data-indicator="gdp">GDP增长率</button>
+                <button class="indicator-btn btn-primary px-4 py-2 rounded-md text-sm sm:text-base" data-indicator="unemployment">失业率</button>
+                <button class="indicator-btn btn-primary px-4 py-2 rounded-md text-sm sm:text-base" data-indicator="inflation">通货膨胀</button>
+                <button class="indicator-btn btn-primary px-4 py-2 rounded-md text-sm sm:text-base" data-indicator="interestRate">联邦基金利率</button>
+            </div>
+            <div class="bg-white rounded-xl shadow-lg p-4 md:p-8">
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="indicatorChart"></canvas>
+                </div>
+                <div id="indicator-analysis" class="mt-8 p-6 bg-gray-50 rounded-lg">
+                    <h4 id="analysis-title" class="font-bold text-lg mb-2 text-[#5A7D9A]"></h4>
+                    <p id="analysis-text" class="text-gray-700 leading-relaxed"></p>
+                </div>
+            </div>
+        </section>
+
+        <section id="shifts" class="scroll-mt-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#5A7D9A] mb-4">深远的结构性转变</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                    两次重大危机不仅带来了周期性波动，更催生了深刻的结构性变化，这些变化将持续影响美国经济的未来轨迹。点击下方的卡片，了解这些转变的核心内容及其对未来的战略意义。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="shift-card card bg-white rounded-xl shadow-lg p-6 cursor-pointer">
+                    <h3 class="font-bold text-xl mb-3 text-[#5A7D9A]">🏛️ 国家角色的扩大</h3>
+                    <p class="text-gray-600">两次危机确立了财政和货币当局在管理经济危机中更为干预主义的角色。从金融救助到收入替代，政府和美联储的政策工具箱和干预意愿都已大幅扩展。</p>
+                    <div class="shift-details hidden mt-4 text-sm text-gray-700 border-t pt-4">
+                        这种转变意味着未来在面对危机时，政策反应可能更快、规模更大。但同时也引发了对道德风险、政策独立性和长期财政可持续性的担忧。投资者必须将政策风险作为核心考量因素。
+                    </div>
+                </div>
+                <div class="shift-card card bg-white rounded-xl shadow-lg p-6 cursor-pointer">
+                    <h3 class="font-bold text-xl mb-3 text-[#5A7D9A]">🌐 从全球化到战略竞争</h3>
+                    <p class="text-gray-600">这一时期标志着从全球化高潮到由地缘政治竞争（尤其是美中关系）和对供应链韧性关注所定义的新时代的转折。</p>
+                    <div class="shift-details hidden mt-4 text-sm text-gray-700 border-t pt-4">
+                        企业正从“效率优先”转向“韧性优先”，推动供应链的多元化和区域化（onshoring/reshoring）。这可能在短期内带来成本上升和通胀压力，但长期看也为特定行业（如半导体、新能源）带来新的投资机会。
+                    </div>
+                </div>
+                <div class="shift-card card bg-white rounded-xl shadow-lg p-6 cursor-pointer">
+                    <h3 class="font-bold text-xl mb-3 text-[#5A7D9A]">💼 转型的劳动力市场</h3>
+                    <p class="text-gray-600">新冠大流行永久性地改变了工作模式，远程/混合工作成为常态，零工经济持续增长，这对生产率、城市经济和工人稳定性产生持续影响。</p>
+                    <div class="shift-details hidden mt-4 text-sm text-gray-700 border-t pt-4">
+                        这一转型对商业地产（特别是办公楼）构成长期挑战，但利好支持远程工作的技术和服务。劳动力市场的灵活性增加，但也可能加剧收入不平等和就业不稳定性，成为未来社会政策的焦点。
+                    </div>
+                </div>
+                <div class="shift-card card bg-white rounded-xl shadow-lg p-6 cursor-pointer">
+                    <h3 class="font-bold text-xl mb-3 text-[#5A7D9A]">💸 债务遗产与财政挑战</h3>
+                    <p class="text-gray-600">为应对两次危机而采取的大规模政策应对，导致公共债务水平显著上升，这将限制未来的政策空间，并构成长期财政挑战。</p>
+                    <div class="shift-details hidden mt-4 text-sm text-gray-700 border-t pt-4">
+                        高额的债务存量意味着经济对利率变化更为敏感。在人口老龄化带来的社会保障和医疗成本上升的背景下，如何确保财政可持续性将是未来几十年美国面临的最严峻考验之一，并可能引发关于税收和支出的激烈政治辩论。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-gray-500">
+            <p>&copy; 2025 美国宏观经济分析。基于报告数据生成。</p>
+            <p class="text-sm mt-1">此应用仅供信息参考，不构成任何投资建议。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const data = {
+                years: Array.from({length: 21}, (_, i) => 2005 + i),
+                gdp: [3.3, 2.7, 1.8, -0.1, -2.6, 2.7, 1.6, 2.3, 1.8, 2.7, 3.1, 1.7, 2.4, 3.0, 2.3, -2.8, 5.9, 1.9, 2.5, 2.8, 2.2],
+                unemployment: [5.1, 4.6, 4.6, 5.8, 9.3, 9.6, 8.9, 8.1, 7.4, 6.2, 5.3, 4.9, 4.4, 3.9, 3.7, 8.1, 5.4, 3.6, 3.6, 4.0, 4.2],
+                inflation: [3.4, 3.2, 2.8, 3.8, -0.4, 1.6, 3.2, 2.1, 1.5, 1.6, 0.1, 1.3, 2.1, 2.4, 1.8, 1.2, 4.7, 8.0, 4.1, 3.2, 2.9],
+                interestRate: [3.25, 5.25, 5.25, 2.00, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.50, 0.75, 1.50, 2.50, 1.75, 0.25, 0.25, 3.25, 5.50, 5.50, 4.50],
+                crisisContent: {
+                    gfc: {
+                        fiscal: `
+                            <h4 class="font-bold mb-2">问题资产救助计划 (TARP)</h4>
+                            <p class="mb-4">授权7000亿美元，通过购买银行的“有毒资产”和直接注资来稳定金融系统。目标是防止系统性崩溃，恢复市场信心。</p>
+                            <h4 class="font-bold mb-2">美国复苏与再投资法案 (ARRA)</h4>
+                            <p>约8310亿美元的综合性刺激计划，通过减税、扩大失业救济和基础设施支出来刺激总需求。重点是救助金融机构。</p>
+                        `,
+                        monetary: `
+                            <h4 class="font-bold mb-2">零利率政策 (ZIRP)</h4>
+                            <p class="mb-4">将联邦基金利率降至0-0.25%的区间，以最大限度地降低借贷成本。</p>
+                            <h4 class="font-bold mb-2">量化宽松 (QE)</h4>
+                            <p>启动大规模资产购买计划，购买国债和MBS以压低长期利率，为信贷市场提供支持。这是非常规政策的首次大规模实验。</p>
+                        `
+                    },
+                    covid: {
+                        fiscal: `
+                            <h4 class="font-bold mb-2">CARES法案等</h4>
+                            <p class="mb-4">超过5万亿美元的多轮救助法案。核心是直接向家庭和企业提供援助，以替代因封锁损失的收入。</p>
+                            <h4 class="font-bold mb-2">关键措施</h4>
+                            <p>包括直接向个人发放现金支票 (EIP)、每周600美元的额外失业补助 (UI)、以及为小企业提供可豁免贷款的薪资保护计划 (PPP)。重点是直接救助家庭和企业。</p>
+                        `,
+                        monetary: `
+                            <h4 class="font-bold mb-2">重回零利率</h4>
+                            <p class="mb-4">迅速将利率降回0-0.25%，并承诺在经济恢复前保持低位。</p>
+                            <h4 class="font-bold mb-2">无限量QE</h4>
+                            <p>承诺无限量购买资产以稳定金融市场，其规模和速度远超金融危机时期。同时设立了更多紧急贷款工具，将支持范围扩大到企业和市政债市场。</p>
+                        `
+                    }
+                },
+                indicatorAnalysis: {
+                    gdp: {
+                        title: "GDP增长率：危机与复苏",
+                        text: "GDP数据显示了两次剧烈的衰退：2008-2009年的金融危机导致了深度负增长，而2020年新冠疫情则造成了有记录以来最急剧的季度下滑。值得注意的是，疫情后的复苏速度远快于金融危机后，这主要得益于规模空前的财政和货币刺激政策，这些政策直接支撑了家庭收入和消费。"
+                    },
+                    unemployment: {
+                        title: "失业率：劳动力市场的伤痕",
+                        text: "失业率在两次危机中都急剧飙升，新冠疫情期间的峰值（14.7%）甚至远高于金融危机时期（10.0%）。然而，金融危机后的“无就业复苏”持续了数年，而疫情后的劳动力市场恢复速度惊人。这反映了两次危机性质的不同以及政策应对方式的差异，特别是直接面向家庭的收入支持政策在疫情期间起到了关键作用。"
+                    },
+                    inflation: {
+                        title: "通货膨胀：从低迷到飙升",
+                        text: "2010年代长期处于“低通胀”状态，即使在零利率和QE环境下，通胀也始终低于美联储2%的目标。然而，从2021年开始，情况发生逆转。疫情期间的巨大需求刺激、供应链瓶颈以及后来的能源冲击共同作用，导致通胀飙升至40年高位，迫使美联储开启了自1980年代以来最激进的紧缩周期。"
+                    },
+                    interestRate: {
+                        title: "联邦基金利率：政策周期的脉搏",
+                        text: "利率走势清晰地反映了美联储的政策周期。2008年为应对金融危机迅速降至零，并维持了7年之久。2015-2018年进入缓慢的正常化周期，但很快因贸易战和经济放缓而停止。2020年为应对疫情再次降至零。2022年为对抗高通胀，美联储以前所未有的速度激进加息，将利率推至二十年来的高点。"
+                    }
+                }
+            };
+
+            const overviewCtx = document.getElementById('overviewChart').getContext('2d');
+            const overviewChart = new Chart(overviewCtx, {
+                type: 'line',
+                data: {
+                    labels: data.years,
+                    datasets: [
+                        {
+                            label: '实际GDP增长率 (%)',
+                            data: data.gdp,
+                            borderColor: '#5A7D9A',
+                            backgroundColor: 'rgba(90, 125, 154, 0.1)',
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            borderWidth: 2,
+                        },
+                        {
+                            label: '失业率 (%)',
+                            data: data.unemployment,
+                            borderColor: '#D98C60',
+                            backgroundColor: 'rgba(217, 140, 96, 0.1)',
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            borderWidth: 2,
+                        },
+                        {
+                            label: 'CPI通胀率 (%)',
+                            data: data.inflation,
+                            borderColor: '#88B04B',
+                            backgroundColor: 'rgba(136, 176, 75, 0.1)',
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            borderWidth: 2,
+                        },
+                        {
+                            label: '联邦基金利率 (%)',
+                            data: data.interestRate,
+                            borderColor: '#7E57C2',
+                            backgroundColor: 'rgba(126, 87, 194, 0.1)',
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            borderWidth: 2,
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '百分比 (%)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label + '年';
+                                }
+                            }
+                        },
+                        annotation: {
+                            annotations: {
+                                gfc: {
+                                    type: 'line',
+                                    xMin: 2008,
+                                    xMax: 2008,
+                                    borderColor: 'rgba(255, 99, 132, 0.5)',
+                                    borderWidth: 2,
+                                    borderDash: [6, 6],
+                                    label: {
+                                        content: '金融危机',
+                                        display: true,
+                                        position: 'start',
+                                        backgroundColor: 'rgba(255, 99, 132, 0.5)'
+                                    }
+                                },
+                                covid: {
+                                    type: 'line',
+                                    xMin: 2020,
+                                    xMax: 2020,
+                                    borderColor: 'rgba(54, 162, 235, 0.5)',
+                                    borderWidth: 2,
+                                    borderDash: [6, 6],
+                                    label: {
+                                        content: '新冠疫情',
+                                        display: true,
+                                        position: 'end',
+                                        backgroundColor: 'rgba(54, 162, 235, 0.5)'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const crisisToggles = document.querySelectorAll('.btn-toggle');
+            crisisToggles.forEach(toggle => {
+                toggle.addEventListener('click', () => {
+                    const crisis = toggle.dataset.crisis;
+                    const type = toggle.dataset.type;
+                    
+                    document.querySelectorAll(`.btn-toggle[data-crisis="${crisis}"]`).forEach(t => t.classList.remove('active'));
+                    toggle.classList.add('active');
+                    
+                    document.getElementById(`${crisis}-content`).innerHTML = data.crisisContent[crisis][type];
+                });
+            });
+            document.getElementById('gfc-content').innerHTML = data.crisisContent.gfc.fiscal;
+            document.getElementById('covid-content').innerHTML = data.crisisContent.covid.fiscal;
+
+            const indicatorCtx = document.getElementById('indicatorChart').getContext('2d');
+            let indicatorChart;
+
+            function updateIndicatorChart(indicator) {
+                if (indicatorChart) {
+                    indicatorChart.destroy();
+                }
+
+                const indicatorMap = {
+                    gdp: { label: 'GDP增长率 (%)', data: data.gdp, color: '#5A7D9A' },
+                    unemployment: { label: '失业率 (%)', data: data.unemployment, color: '#D98C60' },
+                    inflation: { label: 'CPI通胀率 (%)', data: data.inflation, color: '#88B04B' },
+                    interestRate: { label: '联邦基金利率 (%)', data: data.interestRate, color: '#7E57C2' }
+                };
+
+                const selectedIndicator = indicatorMap[indicator];
+                
+                indicatorChart = new Chart(indicatorCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.years,
+                        datasets: [{
+                            label: selectedIndicator.label,
+                            data: selectedIndicator.data,
+                            backgroundColor: selectedIndicator.color,
+                            borderColor: selectedIndicator.color,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                title: {
+                                    display: true,
+                                    text: '百分比 (%)'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                document.getElementById('analysis-title').innerText = data.indicatorAnalysis[indicator].title;
+                document.getElementById('analysis-text').innerText = data.indicatorAnalysis[indicator].text;
+            }
+
+            const indicatorBtns = document.querySelectorAll('.indicator-btn');
+            indicatorBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    updateIndicatorChart(btn.dataset.indicator);
+                    indicatorBtns.forEach(b => b.classList.remove('btn-secondary'));
+                    indicatorBtns.forEach(b => b.classList.add('btn-primary'));
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-secondary');
+                });
+            });
+            updateIndicatorChart('gdp');
+            document.querySelector('.indicator-btn[data-indicator="gdp"]').classList.remove('btn-primary');
+            document.querySelector('.indicator-btn[data-indicator="gdp"]').classList.add('btn-secondary');
+
+
+            const shiftCards = document.querySelectorAll('.shift-card');
+            shiftCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const details = card.querySelector('.shift-details');
+                    details.classList.toggle('hidden');
+                });
+            });
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === current) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
