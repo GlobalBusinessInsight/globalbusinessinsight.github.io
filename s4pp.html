@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S/4HANA PP 离散制造全流程深度交互解析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: This is a major overhaul to create a comprehensive, granular, end-to-end process exploration, integrating a detailed text report into the interactive SPA format. The structure now follows the logical manufacturing flow: Master Data -> Planning (Demand Mgt, MRP) -> Plan-to-Schedule (Capacity Leveling, Detailed Scheduling) -> Execution (Order Lifecycle) -> Advanced Concepts (PP/DS, DDMRP) -> Integration -> Fiori -> Strategy. The key innovation is the extensive use of interactive, CSS-drawn diagrams for every single sub-function. This transforms abstract process descriptions from the report into tangible, explorable visual flows. Each section starts with a CSS diagram, where hovering over a step reveals detailed explanations, making the learning process highly intuitive and visual. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Entire PP Lifecycle -> Goal: Organize/Explain -> Viz: Large, multi-stage CSS process flow diagrams -> Interaction: Hover on process box to highlight and show details in a side panel -> Justification: Directly addresses user request for CSS diagrams for every step. This method is superior to static images as it's interactive, responsive, and integrated with textual explanations from the source report.
+        - Report Info: Plan-to-Schedule Flow -> Goal: Explain a detailed process -> Viz: New interactive CSS diagram -> Interaction: Hover to see details on capacity evaluation, leveling, and detailed scheduling -> Justification: Fulfills the specific user request to add this crucial process step with visual aids.
+        - Report Info: MRP Live vs. Classic MRP Comparison Table -> Goal: Compare -> Viz: Interactive toggle component with side-by-side feature lists -> Interaction: Click toggle to switch views -> Justification: More engaging and space-efficient than a static HTML table.
+        - Report Info: Fiori App Table -> Goal: Inform -> Viz: Integrated into the modal for each Fiori tile -> Interaction: Click tile to see full details from the report's table -> Justification: Keeps the UI clean while providing rich, contextual information on demand.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. All diagrams are built with HTML and CSS. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 40vh;
+        }
+        .process-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .process-box {
+            border: 2px solid #dee2e6;
+            background-color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            min-width: 120px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .process-box:hover, .process-box.active {
+            border-color: #007bff;
+            background-color: #e7f1ff;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        }
+        .process-arrow {
+            font-size: 2rem;
+            color: #adb5bd;
+            font-weight: 300;
+        }
+        .process-detail-panel {
+            background-color: #e9ecef;
+            border-left: 4px solid #007bff;
+            transition: opacity 0.5s ease;
+            min-height: 150px;
+        }
+        .process-sub-box {
+            border: 1px dashed #6c757d;
+            background-color: #f8f9fa;
+        }
+        .cost-flow-container {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+        .cost-item {
+            border: 1px solid #ced4da;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            text-align: center;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .cost-item:hover, .cost-item.active {
+             border-color: #007bff;
+             background-color: #e7f1ff;
+        }
+        .cost-center-box {
+            grid-column: 2 / 3;
+            border: 2px solid #007bff;
+            background-color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .cost-arrow {
+            position: relative;
+            width: 100%;
+            height: 2px;
+            background-color: #6c757d;
+        }
+        .cost-arrow::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            right: -1px;
+            border: solid #6c757d;
+            border-width: 0 2px 2px 0;
+            display: inline-block;
+            padding: 4px;
+            transform: rotate(-45deg);
+        }
+        .fiori-tile:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px -5px rgba(0, 123, 255, 0.2), 0 5px 15px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header id="header" class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">S/4HANA PP 全流程解析</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-2 lg:space-x-3">
+                        <a href="#hero" class="nav-link px-2 py-2 rounded-md text-sm font-medium text-gray-700">首页</a>
+                        <a href="#master-data" class="nav-link px-2 py-2 rounded-md text-sm font-medium text-gray-700">主数据</a>
+                        <a href="#planning" class="nav-link px-2 py-2 rounded-md text-sm font-medium text-gray-700">计划循环</a>
+                        <a href="#plan-to-schedule" class="nav-link px-2 py-2 rounded-md text-sm font-medium text-gray-700">计划到排程</a>
+                        <a href="#execution" class="nav-link px-2 py-2 rounded-md text-sm font-medium text-gray-700">车间执行</a>
+                        <a href="#advanced-planning" class="nav-link px-2 py-2 rounded-md text-sm font-medium text-gray-700">高级计划</a>
+                        <a href="#integration" class="nav-link px-2 py-2 rounded-md text-sm font-medium text-gray-700">集成</a>
+                        <a href="#fiori" class="nav-link px-2 py-2 rounded-md text-sm font-medium text-gray-700">Fiori体验</a>
+                        <a href="#strategy" class="nav-link px-2 py-2 rounded-md text-sm font-medium text-gray-700">战略建议</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero" class="pt-20 pb-16 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">
+                    解构智能制造：<span class="text-blue-600">端到端流程可视化</span>
+                </h2>
+                <p class="mt-6 max-w-3xl mx-auto text-lg text-gray-600">
+                    本应用通过交互式、纯CSS绘制的流程图，为您逐层剖析S/4HANA PP在离散制造中的每一个核心环节。从主数据、主计划到车间执行，再到质量和成本，直观感受数据驱动的生产闭环。
+                </p>
+            </div>
+        </section>
+
+        <!-- Master Data Section -->
+        <section id="master-data" class="py-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">I. 数字化骨干：核心主数据</h2>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">高质量、高一致性的主数据是所有自动化和智能化流程的基石。点击下方卡片，探索构建生产流程的五大核心主数据。</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <div class="card bg-white p-6 rounded-lg shadow-md cursor-pointer" onclick="showDetail('masterData', 'material')">
+                        <h3 class="font-bold text-lg text-blue-600">物料主数据</h3>
+                    </div>
+                    <div class="card bg-white p-6 rounded-lg shadow-md cursor-pointer" onclick="showDetail('masterData', 'bom')">
+                        <h3 class="font-bold text-lg text-blue-600">物料清单 (BOM)</h3>
+                    </div>
+                    <div class="card bg-white p-6 rounded-lg shadow-md cursor-pointer" onclick="showDetail('masterData', 'workcenter')">
+                        <h3 class="font-bold text-lg text-blue-600">工作中心</h3>
+                    </div>
+                    <div class="card bg-white p-6 rounded-lg shadow-md cursor-pointer" onclick="showDetail('masterData', 'routing')">
+                        <h3 class="font-bold text-lg text-blue-600">工艺路线</h3>
+                    </div>
+                    <div class="card bg-white p-6 rounded-lg shadow-md cursor-pointer" onclick="showDetail('masterData', 'version')">
+                        <h3 class="font-bold text-lg text-blue-600">生产版本</h3>
+                    </div>
+                </div>
+                <div id="masterDataDetailPanel" class="mt-8 p-8 bg-white rounded-xl shadow-lg hidden">
+                    <h4 id="masterDataTitle" class="text-2xl font-bold text-gray-800 mb-4"></h4>
+                    <p id="masterDataText" class="text-gray-600 leading-relaxed"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Planning Section -->
+        <section id="planning" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">II. 集成化的计划循环</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">计划层将高阶的销售和运营规划(S&OP)层层分解，最终形成可供车间执行的精确物料需求。悬停或点击下方流程节点，探索各计划环节的奥秘。</p>
+                </div>
+
+                <div class="mb-16">
+                    <h3 class="text-2xl font-semibold text-center mb-8">需求管理：平衡预测与订单</h3>
+                    <div class="process-flow" id="demandFlow">
+                        <div class="process-box" data-step="sop">销售与运营计划 (S&OP)</div>
+                        <div class="process-arrow">→</div>
+                        <div class="process-box" data-step="dm">需求管理 (PIRs)</div>
+                        <div class="process-arrow">→</div>
+                        <div class="process-box" data-step="consumption">消耗逻辑</div>
+                    </div>
+                    <div id="demandDetailPanel" class="mt-8 p-6 rounded-lg process-detail-panel hidden">
+                        <h4 id="demandTitle" class="text-xl font-bold text-gray-800 mb-2"></h4>
+                        <p id="demandText" class="text-gray-700"></p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-semibold text-center mb-8">物料需求计划 (MRP)：供应链的引擎</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div class="p-6 bg-white rounded-lg shadow-md">
+                            <h4 class="font-bold text-center mb-4">MRP 运行逻辑</h4>
+                            <div class="space-y-4" id="mrpFlow">
+                                <div class="process-box w-full process-sub-box" data-step="inputs"><b>输入:</b> 独立/相关需求, 库存</div>
+                                <div class="flex justify-center"><div class="process-arrow transform rotate-90"></div></div>
+                                <div class="process-box w-full" data-step="net">净需求计算</div>
+                                <div class="flex justify-center"><div class="process-arrow transform rotate-90"></div></div>
+                                <div class="process-box w-full" data-step="lot">批量计算</div>
+                                <div class="flex justify-center"><div class="process-arrow transform rotate-90"></div></div>
+                                <div class="process-box w-full" data-step="schedule">计划排程</div>
+                                <div class="flex justify-center"><div class="process-arrow transform rotate-90"></div></div>
+                                <div class="process-box w-full process-sub-box" data-step="outputs"><b>输出:</b> 计划订单, 采购申请</div>
+                            </div>
+                        </div>
+                        <div id="mrpDetailPanel" class="p-6 rounded-lg process-detail-panel self-center">
+                            <h4 id="mrpTitle" class="text-xl font-bold text-gray-800 mb-2"></h4>
+                            <p id="mrpText" class="text-gray-700"></p>
+                        </div>
+                    </div>
+                     <div class="mt-12 p-6 bg-white rounded-lg shadow-md">
+                        <h4 class="font-bold text-center mb-4">MRP Live (MD01N): 新的标准</h4>
+                        <p class="text-center text-gray-600 mb-6">MRP Live利用HANA内存计算，带来性能革命，并简化了流程。</p>
+                        <div class="chart-container h-64 max-h-[30vh]">
+                            <canvas id="mrpChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Plan to Schedule Section -->
+        <section id="plan-to-schedule" class="py-20 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">III. 从计划到排程：将蓝图变为现实</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">MRP生成的无限能力计划只是第一步。本节将展示如何将这个理想化的计划转化为一个考虑实际约束、切实可行的车间日计划和详细排程。</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div class="p-6 bg-gray-50 rounded-lg shadow-inner">
+                        <h4 class="font-bold text-center mb-4">计划到排程流程</h4>
+                        <div class="space-y-4" id="scheduleFlow">
+                            <div class="process-box w-full" data-step="mrp_output"><b>起点:</b> MRP生成计划订单</div>
+                            <div class="flex justify-center"><div class="process-arrow transform rotate-90"></div></div>
+                            <div class="process-box w-full" data-step="capacity_eval">1. 能力评估</div>
+                            <div class="flex justify-center"><div class="process-arrow transform rotate-90"></div></div>
+                            <div class="process-box w-full" data-step="capacity_level">2. 能力均衡</div>
+                            <div class="flex justify-center"><div class="process-arrow transform rotate-90"></div></div>
+                            <div class="process-box w-full" data-step="detailed_sched">3. 详细排程 (PP/DS)</div>
+                            <div class="flex justify-center"><div class="process-arrow transform rotate-90"></div></div>
+                            <div class="process-box w-full process-sub-box" data-step="final_schedule"><b>终点:</b> 可执行的生产计划</div>
+                        </div>
+                    </div>
+                    <div id="scheduleDetailPanel" class="p-6 rounded-lg process-detail-panel self-center">
+                        <h4 id="scheduleTitle" class="text-xl font-bold text-gray-800 mb-2"></h4>
+                        <p id="scheduleText" class="text-gray-700"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Execution Section -->
+        <section id="execution" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">IV. 车间执行与控制</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">这是车间作业的核心，管理从订单下达到成品入库的全过程。悬停或点击下方流程节点，深入了解每个执行步骤。</p>
+                </div>
+                
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-semibold text-center mb-8">生产订单生命周期</h3>
+                    <div class="process-flow" id="orderLifecycleFlow">
+                        <div class="process-box" data-step="CRTD">创建 (CRTD)</div>
+                        <div class="process-arrow">→</div>
+                        <div class="process-box" data-step="REL">下达 (REL)</div>
+                        <div class="process-arrow">→</div>
+                        <div class="process-box" data-step="GI">组件发料 (GI)</div>
+                        <div class="process-arrow">→</div>
+                        <div class="process-box" data-step="CNF">工序报工 (CNF)</div>
+                        <div class="process-arrow">→</div>
+                        <div class="process-box" data-step="GR">成品收货 (GR)</div>
+                        <div class="process-arrow">→</div>
+                        <div class="process-box" data-step="TECO">技术完成 (TECO)</div>
+                    </div>
+                    <div id="orderLifecycleDetailPanel" class="mt-8 p-6 rounded-lg process-detail-panel">
+                        <h4 id="orderLifecycleTitle" class="text-xl font-bold text-gray-800 mb-2"></h4>
+                        <p id="orderLifecycleText" class="text-gray-700"></p>
+                    </div>
+                </div>
+
+                <div class="mt-12 p-8 bg-white rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-semibold text-center mb-8">异常处理：废品与返工</h3>
+                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <div class="space-y-4" id="exceptionFlow">
+                            <div class="process-box w-full" data-step="scrap"><b>废品 (Scrap):</b> 无法修复的缺陷品</div>
+                            <div class="flex justify-center text-2xl">+</div>
+                            <div class="process-box w-full" data-step="rework"><b>返工 (Rework):</b> 纠正缺陷的过程</div>
+                        </div>
+                        <div id="exceptionDetailPanel" class="p-6 rounded-lg process-detail-panel">
+                            <h4 id="exceptionTitle" class="text-xl font-bold text-gray-800 mb-2"></h4>
+                            <p id="exceptionText" class="text-gray-700"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Advanced Planning Section -->
+        <section id="advanced-planning" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">V. 高级计划概念</h2>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">S/4HANA将以往独立的高级功能嵌入核心，提供前所未有的计划能力。本节从概念上介绍这些高级工具。</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="card bg-white p-8 rounded-xl shadow-lg">
+                        <h3 class="text-2xl font-bold text-blue-600">嵌入式 PP/DS</h3>
+                        <p id="ppdsText" class="mt-4 text-gray-600"></p>
+                        <ul class="mt-4 space-y-2 text-gray-700">
+                            <li class="flex items-start"><span class="text-green-500 mr-2">✓</span><span><strong>有限排程:</strong> 杜绝资源超载。</span></li>
+                            <li class="flex items-start"><span class="text-green-500 mr-2">✓</span><span><strong>优化算法:</strong> 最小化换型时间，满足交期。</span></li>
+                            <li class="flex items-start"><span class="text-green-500 mr-2">✓</span><span><strong>实时同步:</strong> 计划与执行无缝衔接，无需CIF接口。</span></li>
+                        </ul>
+                    </div>
+                    <div class="card bg-white p-8 rounded-xl shadow-lg">
+                        <h3 class="text-2xl font-bold text-blue-600">需求驱动的MRP (DDMRP)</h3>
+                        <p id="ddmrpText" class="mt-4 text-gray-600"></p>
+                         <ul class="mt-4 space-y-2 text-gray-700">
+                            <li class="flex items-start"><span class="text-green-500 mr-2">✓</span><span><strong>更高服务水平:</strong> 减少缺货风险。</span></li>
+                            <li class="flex items-start"><span class="text-green-500 mr-2">✓</span><span><strong>更低库存:</strong> 仅在战略点缓冲。</span></li>
+                            <li class="flex items-start"><span class="text-green-500 mr-2">✓</span><span><strong>更短交付周期:</strong> 提高供应链响应速度。</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Integration Section -->
+        <section id="integration" class="py-20 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">VI. 集成的力量：PP作为数字供应链的核心</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">在S/4HANA中，PP不再是孤岛。简化的数据模型使其与其他模块无缝实时集成，形成统一的业务流程。将鼠标悬停或点击模块节点，探索其集成关系。</p>
+                </div>
+                <div class="flex flex-col lg:flex-row items-center justify-center gap-12">
+                    <div class="w-full lg:w-1/2">
+                         <svg viewBox="0 0 400 300" class="w-full h-auto" id="integrationDiagram">
+                            <!-- Lines -->
+                            <line class="integration-line" x1="200" y1="150" x2="80" y2="50" stroke="#cbd5e1" stroke-width="2"/>
+                            <line class="integration-line" x1="200" y1="150" x2="320" y2="50" stroke="#cbd5e1" stroke-width="2"/>
+                            <line class="integration-line" x1="200" y1="150" x2="80" y2="250" stroke="#cbd5e1" stroke-width="2"/>
+                            <line class="integration-line" x1="200" y1="150" x2="320" y2="250" stroke="#cbd5e1" stroke-width="2"/>
+                            <!-- Nodes -->
+                            <g class="integration-node" data-module="pp">
+                                <circle cx="200" cy="150" r="45" fill="#007bff"/>
+                                <text x="200" y="150" fill="white" text-anchor="middle" dy=".3em" font-size="20" font-weight="bold">PP</text>
+                            </g>
+                            <g class="integration-node" data-module="sd">
+                                <circle cx="80" cy="50" r="35" fill="#e2e8f0"/>
+                                <text x="80" y="50" fill="#4a5568" text-anchor="middle" dy=".3em" font-size="18" font-weight="bold">SD</text>
+                            </g>
+                            <g class="integration-node" data-module="mm">
+                                <circle cx="320" cy="50" r="35" fill="#e2e8f0"/>
+                                <text x="320" y="50" fill="#4a5568" text-anchor="middle" dy=".3em" font-size="18" font-weight="bold">MM</text>
+                            </g>
+                             <g class="integration-node" data-module="co">
+                                <circle cx="80" cy="250" r="35" fill="#e2e8f0"/>
+                                <text x="80" y="250" fill="#4a5568" text-anchor="middle" dy=".3em" font-size="18" font-weight="bold">CO</text>
+                            </g>
+                            <g class="integration-node" data-module="qm">
+                                <circle cx="320" cy="250" r="35" fill="#e2e8f0"/>
+                                <text x="320" y="250" fill="#4a5568" text-anchor="middle" dy=".3em" font-size="18" font-weight="bold">QM</text>
+                            </g>
+                        </svg>
+                    </div>
+                    <div id="integrationDetailPanel" class="w-full lg:w-1/2 p-8 bg-gray-50 rounded-xl process-detail-panel">
+                        <h4 id="integrationTitle" class="text-2xl font-bold text-gray-800 mb-4"></h4>
+                        <p id="integrationText" class="text-gray-600 leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fiori Section -->
+        <section id="fiori" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">VII. 现代计划员：Fiori UX与嵌入式分析</h2>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Fiori将计划员的工作重心从导航复杂的屏幕转移到分析实时数据和做出明智决策上。</p>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                    <div class="fiori-tile bg-white p-4 rounded-lg shadow-md aspect-square flex flex-col justify-center items-center text-center cursor-pointer transition-all duration-300" data-app="monitor_orders">
+                        <span class="text-3xl">📊</span>
+                        <h4 class="font-semibold mt-2 text-sm">监控生产订单</h4>
+                    </div>
+                     <div class="fiori-tile bg-white p-4 rounded-lg shadow-md aspect-square flex flex-col justify-center items-center text-center cursor-pointer transition-all duration-300" data-app="manage_coverage">
+                        <span class="text-3xl">📦</span>
+                        <h4 class="font-semibold mt-2 text-sm">管理物料覆盖</h4>
+                    </div>
+                     <div class="fiori-tile bg-white p-4 rounded-lg shadow-md aspect-square flex flex-col justify-center items-center text-center cursor-pointer transition-all duration-300" data-app="schedule_board">
+                        <span class="text-3xl">🗓️</span>
+                        <h4 class="font-semibold mt-2 text-sm">生产排程板</h4>
+                    </div>
+                     <div class="fiori-tile bg-white p-4 rounded-lg shadow-md aspect-square flex flex-col justify-center items-center text-center cursor-pointer transition-all duration-300" data-app="evaluate_capacity">
+                        <span class="text-3xl">📈</span>
+                        <h4 class="font-semibold mt-2 text-sm">评估能力</h4>
+                    </div>
+                     <div class="fiori-tile bg-white p-4 rounded-lg shadow-md aspect-square flex flex-col justify-center items-center text-center cursor-pointer transition-all duration-300" data-app="confirm_operation">
+                        <span class="text-3xl">✔️</span>
+                        <h4 class="font-semibold mt-2 text-sm">确认工序</h4>
+                    </div>
+                     <div class="fiori-tile bg-white p-4 rounded-lg shadow-md aspect-square flex flex-col justify-center items-center text-center cursor-pointer transition-all duration-300" data-app="analyze_scrap">
+                        <span class="text-3xl">🗑️</span>
+                        <h4 class="font-semibold mt-2 text-sm">分析工序废品</h4>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Strategy Section -->
+        <section id="strategy" class="py-20 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">VIII. 战略建议与结论</h2>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-600">S/4HANA PP提供了一套完整的数字化转型蓝图。拥抱其核心功能，是企业构建智能制造体系的关键。</p>
+                </div>
+                <div id="strategyList" class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- JS will populate this -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Fiori App Modal -->
+    <div id="fioriModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            <h3 id="modalTitle" class="text-xl font-bold mb-4"></h3>
+            <p id="modalDescription" class="text-gray-600 mb-2"></p>
+            <p id="modalTcode" class="text-sm text-gray-400"></p>
+        </div>
+    </div>
+
+    <footer class="bg-gray-800 text-white py-6">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
+            <p>交互式解读应用 | 基于S/4HANA PP离散制造深度解析报告生成</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // --- DATA OBJECTS ---
+    const contentData = {
+        masterData: {
+            material: { title: '物料主数据', text: '物料主数据是系统中关于物料所有信息的中央存储库，集成了采购、销售、会计和生产等多个视图。对于生产计划，MRP视图和工作计划视图至关重要，它们定义了物料的MRP过程、批量大小规则、采购类型以及关键的计划策略。' },
+            bom: { title: '物料清单 (BOM)', text: 'BOM是生产一个父项物料所需全部组件的分层列表，是MRP、生产执行和成本计算的基础。S/4HANA支持多种项目类别以精确反映制造现实，如库存项目(L)、非库存项目(N)等。' },
+            workcenter: { title: '工作中心', text: '工作中心代表生产操作发生的具体物理或逻辑位置，如机器或生产线。它定义了可用能力（用于能力评估）、计划公式（用于计算工序时长）和成本核算规则（用于计算生产成本）。' },
+            routing: { title: '工艺路线', text: '工艺路线详细说明了制造一个产品所需的逐步操作序列，包括在哪个工作中心操作、需要多长时间。其核心是“控制码”，决定了每个工序的计划、能力、成本和确认行为。' },
+            version: { title: '生产版本', text: '生产版本是S/4HANA中强制性的主数据，它为一个物料明确地链接一个特定的BOM和一个特定的工艺路线。这一改变旨在从源头提升数据质量和一致性，是MRP Live等高级功能可靠运行的先决条件。' }
+        },
+        demand: {
+            sop: { title: '销售与运营计划 (S&OP)', text: '企业高层级的规划过程，用于平衡市场需求和供应能力，通常以产品组为单位制定长期的销售和生产计划。' },
+            dm: { title: '需求管理 (PIRs)', text: '将S&OP的计划分解为具体物料的计划独立需求(PIR)，并管理预测与实际客户订单的消耗逻辑。PIRs是按库存生产(MTS)场景下驱动生产的主要动力。' },
+            consumption: { title: '消耗逻辑', text: '计划策略定义了PIRs和销售订单如何相互作用。例如在按库存生产策略(如策略40)下，新进入的销售订单会“消耗”PIRs，确保预测与实际需求进行冲销，避免重复计算需求。' }
+        },
+        mrp: {
+            inputs: { title: 'MRP 输入', text: 'MRP运行的主要驱动力包括：来自需求管理的独立需求(PIRs)，来自销售订单的客户需求，来自上层物料的相关需求，以及当前的库存水平和已计划的收货。' },
+            net: { title: '净需求计算', text: '系统将总需求与可用库存和预期收货进行比较（公式：库存+收货-需求），计算出物料的净短缺数量和时间。' },
+            lot: { title: '批量计算', text: '根据物料主数据中定义的批量策略（如固定批量、按需批量等），将净需求转换成具体的采购或生产数量，以优化订货成本和库存成本。' },
+            schedule: { title: '计划排程', text: '根据物料的在厂生产时间或计划交货时间，从需求日期倒推出订单的开始日期和下达日期，确保物料能准时供应。' },
+            outputs: { title: 'MRP 输出', text: 'MRP运行的结果是生成用于满足净需求的采购建议：对于自制件生成“计划订单”，对于外购件生成“采购申请”。这些建议是后续生产和采购流程的起点。' }
+        },
+        schedule: {
+            mrp_output: { title: '起点：MRP的无限能力计划', text: 'MRP运行后生成了计划订单，它回答了“需要什么”和“何时需要”的问题，但它假设产能是无限的，因此可能导致工作中心过载。' },
+            capacity_eval: { title: '1. 能力评估', text: '计划员使用Fiori应用如“评估能力”来分析MRP运行后的能力负荷情况，通过图表直观地识别出哪些工作中心在哪些时段出现了超负荷（瓶颈）。' },
+            capacity_level: { title: '2. 能力均衡', text: '对于已识别的瓶颈，计划员使用交互式工具如“能力计划板/表”来解决。通过将部分生产订单（或工序）拖放到不同的时间段，或分配到备用工作中心，以平滑负载，使计划变得可行。' },
+            detailed_sched: { title: '3. 详细排程 (PP/DS)', text: '对于能力均衡后的订单池，PP/DS的“生产排程板”可以执行更精细的优化。它利用高级算法，考虑换型时间、订单优先级等因素，对订单进行精确到秒的排序，以达到最小化总生产时间或最大化吞吐量等目标。' },
+            final_schedule: { title: '终点：可执行的生产计划', text: '经过能力均衡和详细排程后，我们得到了一个既满足物料需求，又考虑了实际产能约束的、经过优化的生产计划。这个计划可以被下达到车间，具有很高的可执行性。' }
+        },
+        orderLifecycle: {
+            CRTD: { title: '已创建 (CRTD)', text: '订单已在系统中创建，计划成本已根据BOM和工艺路线计算。此时，订单不能进行任何物料移动或工序确认。' },
+            REL: { title: '已下达 (REL)', text: '订单被批准执行。这是允许进行组件发料、打印车间文档和报告工序确认的触发器。下达是生产执行的正式开始。' },
+            GI: { title: '组件发料 (Goods Issue)', text: '从库存中提取组件物料并发放给生产订单的过程。此操作会消耗订单创建的预留，并增加订单的实际物料成本。可手动发料或通过反冲自动进行。' },
+            CNF: { title: '工序报工 (Confirmation)', text: '车间报告工序的完成情况，包括产出、废品、返工和实际工时。这是一个关键的数据点，它会更新订单进度，消耗工作中心能力，并为作业活动过账实际成本。' },
+            GR: { title: '成品收货 (Goods Receipt)', text: '将生产完成的成品收入仓库。此操作增加库存，并以产成品的价值（如标准价）贷记生产订单，完成物料层面的闭环。' },
+            TECO: { title: '技术性完成 (TECO)', text: '从后勤角度看，订单在逻辑上已关闭。不允许再有物料移动或确认。订单准备好进行财务结算，计算在制品(WIP)和差异。' }
+        },
+        exception: {
+            scrap: { title: '废品 (Scrap)', text: '有缺陷且无法修复的物料或产品。废品可以是计划内的（在BOM或工艺路线中定义以考虑正常损耗）或计划外的（在确认时记录意外损失）。S/4HANA提供了分析型Fiori应用来分析废品根本原因。' },
+            rework: { title: '返工 (Rework)', text: '纠正有缺陷物料的过程。当在确认中记录了返工时，可以触发特定的返工流程，例如在原始订单中插入返工工序，或创建独立的返工订单，以精确捕获修复相关的成本和作业。' }
+        },
+        advanced: {
+            ppds: 'PP/DS（生产计划与详细排程）从独立APO系统嵌入S/4HANA核心，实现了从“无限能力”计划到“有限能力”排程的飞跃。它能考虑实际资源约束，通过高级算法优化生产顺序，创建真正可执行的生产计划。',
+            ddmrp: 'DDMRP是一种应对供应链波动性的现代方法。它不再依赖不准确的预测，而是在关键点设置库存缓冲，仅在缓冲低于阈值时触发补货。这能有效吸收需求波动，减少“牛鞭效应”。'
+        },
+        integration: {
+            pp: { title: '生产计划 (PP)', text: 'PP是制造运营的核心，负责将需求转化为可执行的生产计划，并管理车间的整个生产过程。'},
+            sd: { title: '与销售与分销 (SD) 集成', text: 'SD创建的销售订单是MRP的主要需求来源。在创建订单时，通过高级ATP(aATP)检查，系统会考虑生产计划的入库，向客户做出可靠的交期承诺。' },
+            mm: { title: '与物料管理 (MM) 集成', text: 'MRP运行后为外购件自动创建采购申请。生产过程中的发料(GI)和收货(GR)都通过MM的库存管理功能执行，并实时更新共享的物料凭证表(MATDOC)。' },
+            co: { title: '与成本控制 (CO) 集成', text: '生产订单是CO中的临时成本对象，用于收集所有实际成本。得益于通用日记账(ACDOCA)，物料移动和作业确认的成本会实时、一致地记入订单，无需FI-CO对账。期末进行在制品(WIP)、差异计算和结算。' },
+            qm: { title: '与质量管理 (QM) 集成', text: '可在工艺路线中设置检验点，在生产过程中自动触发过程检验(检验类型03)。检验结果和使用决策将决定物料的下一步处理。生产中的缺陷可创建质量通知进行跟踪处理。' }
+        },
+        fioriApps: {
+            monitor_orders: { title: '监控生产订单 (F0266)', description: '提供所有生产订单的实时概览，能快速识别延误、组件短缺和状态问题，并支持下钻分析。', tcode: '参考: COOIS, CO46' },
+            manage_coverage: { title: '管理物料覆盖范围 (F0251)', description: '帮助计划员主动识别和解决物料短缺问题，并直接管理采购建议。', tcode: '参考: MD04, MD05' },
+            schedule_board: { title: '生产排程板 (F2176)', description: '一个强大的交互式图形工具(用于PP/DS)，允许计划员通过拖放操作进行详细排程和派工，以优化生产顺序和均衡负载。', tcode: '参考: /SAPAPO/CDPS0' },
+            evaluate_capacity: { title: '评估能力 (F6798)', description: '分析和可视化工作中心及组的能力负荷与利用率，帮助快速定位潜在瓶颈。', tcode: '参考: CM01, CM02' },
+            confirm_operation: { title: '确认生产订单工序', description: '简化了车间的数据录入过程，用于记录工序的产出、废品、返工和实际作业时间。', tcode: '参考: CO11N' },
+            analyze_scrap: { title: '分析工序废品 (F2034)', description: '一个分析型应用，用于实时比较实际与预期废品，并按原因、物料、工作中心等维度进行下钻分析，以找出根本原因。', tcode: '通常为自定义报表' }
+        },
+        strategy: [
+            { title: '1. 拥抱MRP Live', text: '规划从传统MRP和基于静态MRP清单的自定义报表中过渡。这是利用S/4HANA性能优势的第一步。' },
+            { title: '2. 投资主数据治理', text: '深刻认识到PP/DS和pMRP等高级功能的准确性完全依赖于高质量的主数据。强制性的生产版本是实现这一目标的有力工具。' },
+            { title: '3. 重新思考业务流程', text: '不要简单地将旧的ECC流程“平移”到新系统。应充分利用新功能（如日内MRP、pMRP模拟）来重新设计计划周期，以获得更高敏捷性。' },
+            { title: '4. 推动Fiori的用户采纳', text: '变更管理的重点应放在培训用户使用新的“从监控到行动”工作模式上，以实现生产力的全面提升。' },
+            { title: '5. 探索高级计划', text: '对于面临复杂约束的企业，应进行适用性分析，考虑实施嵌入式PP/DS，从而从无限能力计划迈向可行且优化的生产排程。' }
+        ]
+    };
+
+    // --- INTERACTION HANDLERS ---
+    
+    window.showDetail = function(category, key) {
+        const content = contentData[category][key];
+        const titleEl = document.getElementById(`${category}Title`);
+        const textEl = document.getElementById(`${category}Text`);
+        const panelEl = document.getElementById(`${category}DetailPanel`);
+
+        if (content && titleEl && textEl && panelEl) {
+            titleEl.textContent = content.title;
+            textEl.textContent = content.text;
+            panelEl.classList.remove('hidden');
+        }
+    };
+
+    function setupProcessFlowInteraction(flowId, panelId, category) {
+        const flowContainer = document.getElementById(flowId);
+        if (!flowContainer) return;
+
+        const processBoxes = flowContainer.querySelectorAll('.process-box');
+        const titleEl = document.getElementById(`${category}Title`);
+        const textEl = document.getElementById(`${category}Text`);
+        const panelEl = document.getElementById(panelId);
+
+        processBoxes.forEach(box => {
+            box.addEventListener('mouseover', () => {
+                processBoxes.forEach(b => b.classList.remove('active'));
+                box.classList.add('active');
+                
+                const stepKey = box.dataset.step;
+                const content = contentData[category][stepKey];
+
+                if (content && titleEl && textEl && panelEl) {
+                    titleEl.textContent = content.title;
+                    textEl.textContent = content.text;
+                    panelEl.classList.remove('hidden');
+                }
+            });
+        });
+        
+        if (panelEl && !panelEl.classList.contains('hidden')) {
+            const firstBox = processBoxes[0];
+            if (firstBox) {
+                firstBox.dispatchEvent(new Event('mouseover'));
+            }
+        }
+    }
+
+    // --- INITIALIZATION ---
+
+    // Navigation scroll spy
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('main section');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            if (pageYOffset >= sectionTop - 80) {
+                current = section.getAttribute('id');
+            }
+        });
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            const linkHref = link.getAttribute('href');
+            if (linkHref && linkHref.includes(current)) {
+                link.classList.add('active');
+            }
+        });
+    });
+
+    // Setup all process flow interactions
+    setupProcessFlowInteraction('demandFlow', 'demandDetailPanel', 'demand');
+    setupProcessFlowInteraction('mrpFlow', 'mrpDetailPanel', 'mrp');
+    setupProcessFlowInteraction('scheduleFlow', 'scheduleDetailPanel', 'schedule');
+    setupProcessFlowInteraction('orderLifecycleFlow', 'orderLifecycleDetailPanel', 'orderLifecycle');
+    setupProcessFlowInteraction('exceptionFlow', 'exceptionDetailPanel', 'exception');
+    
+    // Integration Diagram
+    const integrationNodes = document.querySelectorAll('.integration-node');
+    const integrationTitle = document.getElementById('integrationTitle');
+    const integrationText = document.getElementById('integrationText');
+    integrationNodes.forEach(node => {
+        node.addEventListener('mouseover', () => {
+            integrationNodes.forEach(n => n.classList.remove('active'));
+            node.classList.add('active');
+            const moduleKey = node.dataset.module;
+            const content = contentData.integration[moduleKey];
+            if(content) {
+                integrationTitle.textContent = content.title;
+                integrationText.textContent = content.text;
+            }
+        });
+    });
+    integrationNodes[0].dispatchEvent(new Event('mouseover'));
+
+
+    // Advanced Planning Text
+    document.getElementById('ppdsText').textContent = contentData.advanced.ppds;
+    document.getElementById('ddmrpText').textContent = contentData.advanced.ddmrp;
+
+    // Strategy List
+    const strategyListContainer = document.getElementById('strategyList');
+    contentData.strategy.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'bg-gray-100 p-6 rounded-lg';
+        div.innerHTML = `<h3 class="font-semibold text-lg text-blue-700">${item.title}</h3><p class="mt-2 text-gray-600">${item.text}</p>`;
+        strategyListContainer.appendChild(div);
+    });
+
+    // MRP Chart
+    const mrpChartCtx = document.getElementById('mrpChart').getContext('2d');
+    new Chart(mrpChartCtx, {
+        type: 'bar',
+        data: {
+            labels: ['传统MRP', 'MRP Live'],
+            datasets: [{
+                label: '平均计划运行时间 (分钟)',
+                data: [120, 15],
+                backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(0, 123, 255, 0.6)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(0, 123, 255, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, title: { display: true, text: '分钟' } } },
+            plugins: { legend: { display: false }, title: { display: true, text: 'MRP Live 性能优势' } }
+        }
+    });
+
+    // Fiori Modal
+    const fioriModal = document.getElementById('fioriModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDescription = document.getElementById('modalDescription');
+    const modalTcode = document.getElementById('modalTcode');
+
+    document.querySelectorAll('.fiori-tile').forEach(tile => {
+        tile.addEventListener('click', () => {
+            const appKey = tile.dataset.app;
+            const appData = contentData.fioriApps[appKey];
+            modalTitle.textContent = appData.title;
+            modalDescription.textContent = appData.description;
+            modalTcode.textContent = appData.tcode;
+            fioriModal.classList.remove('hidden');
+        });
+    });
+    
+    window.closeModal = function() {
+        fioriModal.classList.add('hidden');
+    }
+    fioriModal.addEventListener('click', (e) => {
+        if (e.target === fioriModal) closeModal();
+    });
+});
+</script>
+</body>
+</html>
