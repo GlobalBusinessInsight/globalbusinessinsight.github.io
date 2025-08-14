@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全球电动货运前景展望</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (Warm Neutrals) -->
+    <!-- Application Structure Plan: The application is designed as a single-page interactive dashboard. The core structure is a "Global Ecosystem Explorer" that allows users to switch between North America and Europe. This non-linear design was chosen because the report's primary insight is the divergence of these ecosystems. This structure allows users to directly compare and contrast the regions, which is more intuitive than a linear report format. Below the main explorer, thematic sections for "Business Models" and "Charging Technology" provide deep dives into cross-cutting topics, avoiding repetition and enabling focused learning. The user flow is: 1. Grasp the core concept of different ecosystems. 2. Interactively explore and compare each region. 3. Deepen understanding of specific innovations and technologies. -->
+    <!-- Visualization & Content Choices: 
+        - Region Comparison (Fleet Size): Report Info -> Fleet sizes/orders for companies in each region. Goal -> Compare scale. Viz -> Dynamic Bar Chart (Chart.js). Interaction -> Updates on region button click. Justification -> A bar chart is ideal for comparing quantitative data across categories (companies). Dynamic updates make the comparison direct and engaging.
+        - Business Models (Einride vs. CATL): Report Info -> Descriptions of "Capacity-as-a-Service". Goal -> Explain abstract concepts. Viz -> Side-by-side HTML/CSS grid layout with icons and key points. Interaction -> None. Justification -> A visual, structured layout makes complex business models easier to understand than dense text.
+        - Charging Tech (MCS/V2G/CCS): Report Info -> Technical details and strategic implications of different charging standards. Goal -> Inform and compare. Viz -> Tab-like content switcher. Interaction -> Click buttons to show/hide technology details. Justification -> Organizes dense technical data into digestible chunks, preventing user overload.
+        - Key Players: Report Info -> Company profiles. Goal -> Inform. Viz -> HTML/CSS cards. Interaction -> None. Justification -> Standard UI pattern for presenting discrete items.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F4; /* Warm Neutral Background */
+            color: #3a3a3a;
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+            border-bottom: 4px solid transparent;
+        }
+        .nav-button.active {
+            border-bottom-color: #4A90E2; /* Accent Blue */
+            color: #2c5282;
+        }
+        .content-card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 450px;
+        }
+        .tech-toggle-btn {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .tech-toggle-btn.active {
+            background-color: #4A90E2;
+            color: white;
+        }
+        .section-title {
+            font-weight: 700;
+            font-size: 1.75rem;
+            color: #3a3a3a;
+            border-bottom: 3px solid #4A90E2;
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800">全球电动货运前景展望</h1>
+                <p class="hidden md:block text-gray-500">重卡与充电网络分析</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="intro" class="text-center mb-12 md:mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">两个分化的生态系统</h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                全球重型货运的电动化转型正在分化为由不同政策、资本和基础设施理念塑造的独特生态系统：北美和欧洲。本应用将带您交互式地探索这些差异。
+            </p>
+        </section>
+
+        <section id="explorer" class="bg-gray-50 p-6 md:p-8 rounded-xl shadow-inner mb-12 md:mb-16">
+            <h2 class="section-title mb-8">全球生态系统浏览器</h2>
+            <div class="mb-8 border-b border-gray-300 flex justify-center space-x-4 md:space-x-8">
+                <button id="btn-na" class="nav-button text-lg md:text-xl font-semibold py-3 px-4 active">北美</button>
+                <button id="btn-eu" class="nav-button text-lg md:text-xl font-semibold py-3 px-4">欧洲</button>
+            </div>
+
+            <div id="region-content" class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-2">
+                    <div id="region-summary" class="content-card p-6 h-full">
+                    </div>
+                </div>
+                <div class="lg:col-span-3">
+                    <div class="content-card p-6">
+                        <h3 class="text-xl font-bold mb-4 text-center">区域关键参与者与规模</h3>
+                        <div class="chart-container">
+                            <canvas id="regionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="models" class="mb-12 md:mb-16">
+            <h2 class="section-title mb-8">商业模式创新</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="content-card p-6 md:col-span-2">
+                    <h3 class="text-2xl font-bold mb-4 text-center">📦 运力即服务 (CaaS)</h3>
+                    <p class="text-gray-600 mb-4 max-w-3xl mx-auto text-center">此模式将车辆、充电、维护和运营软件打包成一个基于订阅的服务，将高昂的前期资本支出转变为可预测的运营支出。托运人无需管理复杂的电气化转型过程，可以专注于其核心业务。</p>
+                    <ul class="space-y-2 flex flex-col items-center">
+                        <li class="flex items-start"><span class="mr-2 text-green-500">✔</span><strong>代表企业:</strong> Einride</li>
+                        <li class="flex items-start"><span class="mr-2 text-green-500">✔</span><strong>核心价值:</strong> 降低风险、简化运营</li>
+                        <li class="flex items-start"><span class="mr-2 text-green-500">✔</span><strong>适用市场:</strong> 北美、欧洲</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="tech" class="mb-12 md:mb-16">
+            <h2 class="section-title mb-8">关键充电技术对比</h2>
+            <div class="flex flex-col md:flex-row gap-8">
+                <div class="md:w-1/3">
+                    <div class="flex md:flex-col space-x-2 md:space-x-0 md:space-y-2">
+                        <button class="tech-toggle-btn w-full text-left p-4 rounded-lg font-semibold active" data-tech="mcs">⚡️ 兆瓦级充电 (MCS)</button>
+                        <button class="tech-toggle-btn w-full text-left p-4 rounded-lg font-semibold" data-tech="v2g">↔️ 车辆到电网 (V2G)</button>
+                        <button class="tech-toggle-btn w-full text-left p-4 rounded-lg font-semibold" data-tech="ccs">🔌 联合充电系统 (CCS)</button>
+                    </div>
+                </div>
+                <div class="md:w-2/3">
+                    <div id="tech-content-mcs" class="tech-content content-card p-6">
+                        <h3 class="text-xl font-bold mb-2">兆瓦级充电系统 (MCS)</h3>
+                        <p class="text-gray-600">专为重型车辆设计的高功率充电标准，功率超过1兆瓦。其目标是在30-45分钟内为长途卡车充满电，与司机强制休息时间相匹配，从而使长途电动运输在运营上成为可能。</p>
+                        <ul class="mt-4 space-y-2">
+                            <li><strong>优势:</strong> 充电速度极快，无缝融入运营计划。</li>
+                            <li><strong>挑战:</strong> 对电网冲击巨大，需要大规模基础设施升级。</li>
+                            <li><strong>应用场景:</strong> 高速公路沿线的公共充电站，用于长途运输途中补能。</li>
+                        </ul>
+                    </div>
+                    <div id="tech-content-v2g" class="tech-content content-card p-6 hidden">
+                        <h3 class="text-xl font-bold mb-2">车辆到电网 (V2G)</h3>
+                        <p class="text-gray-600">支持能量双向流动的技术，允许卡车电池在需要时将电力反馈回电网，以提供电网稳定服务。这有可能将车队从成本中心转变为收入来源。</p>
+                        <ul class="mt-4 space-y-2">
+                            <li><strong>优势:</strong> 降低总拥有成本 (TCO)，支持电网稳定。</li>
+                            <li><strong>挑战:</strong> 电池衰减担忧，缺乏标准和成熟的补偿机制。</li>
+                            <li><strong>应用场景:</strong> 在车厂长时间停放（如夜间）的区域性中心辐射型车队。</li>
+                        </ul>
+                    </div>
+                    <div id="tech-content-ccs" class="tech-content content-card p-6 hidden">
+                        <h3 class="text-xl font-bold mb-2">联合充电系统 (CCS)</h3>
+                        <p class="text-gray-600">目前乘用车和商用车广泛使用的直流快充标准，功率通常在350-400千瓦。对于重卡来说，充满电需要数小时，因此更适合夜间在车厂进行充电。</p>
+                        <ul class="mt-4 space-y-2">
+                            <li><strong>优势:</strong> 技术成熟，应用广泛。</li>
+                            <li><strong>挑战:</strong> 充电速度对于长途运输途中补能来说太慢。</li>
+                            <li><strong>应用场景:</strong> 车队自有车厂内的夜间充电或机会充电。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="trends" class="mb-12 md:mb-16">
+            <h2 class="section-title mb-8">货运卡车电动化趋势分析</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="content-card p-6">
+                    <h3 class="font-bold text-lg mb-2">📈 加速实现TCO平价</h3>
+                    <p class="text-gray-700">电池成本的持续下降、生产规模的扩大以及柴油/碳价格的上涨，正共同推动电动卡车总拥有成本（TCO）与柴油车持平。政府激励措施（如美国的《通货膨胀削减法案》）正在显著加速这一进程。</p>
+                </div>
+                <div class="content-card p-6">
+                    <h3 class="font-bold text-lg mb-2">🚀 技术进步与多元化</h3>
+                    <p class="text-gray-700">电池能量密度的不断提升（如固态电池的研发）将带来更轻、续航里程更长的车辆。同时，氢燃料电池技术正成为超长途运输路线的可行替代方案，形成技术互补格局。</p>
+                </div>
+                <div class="content-card p-6">
+                    <h3 class="font-bold text-lg mb-2">🤖 与自动驾驶的融合</h3>
+                    <p class="text-gray-700">电动化与自动驾驶技术的结合是物流业的未来。这种融合有望彻底改变行业，在提高安全性和效率的同时，显著降低对劳动力的依赖和相关成本，创造新的运营模式。</p>
+                </div>
+                <div class="content-card p-6">
+                    <h3 class="font-bold text-lg mb-2">👥 劳动力与人才的转变</h3>
+                    <p class="text-gray-700">行业转型催生了对新技能的需求，如数据分析、电气工程和高级车队管理。同时，电动卡车更安静、更平稳的驾驶体验和环保形象，可能有助于吸引更多元化的人才进入驾驶员行业。</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="outlook">
+            <h2 class="section-title mb-8">战略分析与前瞻</h2>
+             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="content-card p-6 bg-amber-50">
+                    <h3 class="font-bold text-lg mb-2">💰 高昂前期成本</h3>
+                    <p class="text-gray-700 text-sm">电动卡车购买价格是柴油车的2倍以上，目前严重依赖政府补贴来弥合总拥有成本(TCO)差距。</p>
+                </div>
+                <div class="content-card p-6 bg-sky-50">
+                    <h3 class="font-bold text-lg mb-2">🔌 充电设施缺口</h3>
+                    <p class="text-gray-700 text-sm">缺乏广泛、可靠的高功率公共充电网络是最大的后勤障碍，限制了运营范围。</p>
+                </div>
+                <div class="content-card p-6 bg-rose-50">
+                    <h3 class="font-bold text-lg mb-2">🌐 电网整合压力</h3>
+                    <p class="text-gray-700 text-sm">大规模车队充电，特别是MCS，将对电网造成巨大压力，需要耗时且昂贵的电网升级。</p>
+                </div>
+                <div class="content-card p-6 bg-lime-50">
+                    <h3 class="font-bold text-lg mb-2">🔧 运营技术挑战</h3>
+                    <p class="text-gray-700 text-sm">包括续航里程焦虑、电池寿命与回收，以及缺乏训练有素的技术人员和驾驶员。</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="container mx-auto px-8 py-6 text-center">
+            <p>&copy; 2025 全球电动货运前景展望。基于公开报告数据生成。</p>
+        </div>
+    </footer>
+
+    <script>
+        const appData = {
+            na: {
+                summary: {
+                    title: "北美：“公私合作试验场”模式",
+                    description: "由大型企业车队主导，通过利用大规模、公共补贴的“试验场”项目来应对高昂的前期成本。特点是企业积极自建车厂充电基础设施。",
+                    points: [
+                        "<strong>驱动力:</strong> 企业自愿行动 + 公共资金",
+                        "<strong>基础设施:</strong> 以车厂自建充电为主",
+                        "<strong>融资模式:</strong> 公私合作 (如JETSI) + 企业资本支出"
+                    ]
+                },
+                chart: {
+                    labels: ['施耐德', '百事公司', '沃尔玛', '亚马逊'],
+                    data: [100, 21, 9500, 50],
+                    label: '车队规模/订单 (辆)'
+                }
+            },
+            eu: {
+                summary: {
+                    title: "欧洲：“OEM主导的生态系统”模式",
+                    description: "在严格的欧盟排放法规驱动下，卡车OEM（原始设备制造商）扮演核心角色，它们不仅销售卡车，还通过成立合资企业（如Milence）来建设泛欧公共充电网络。",
+                    points: [
+                        "<strong>驱动力:</strong> 欧盟排放法规",
+                        "<strong>基础设施:</strong> OEM协作共建公共网络",
+                        "<strong>合作模式:</strong> 物流公司与OEM建立深度合作"
+                    ]
+                },
+                chart: {
+                    labels: ['德铁信可 (Volta)', 'Girteka (斯堪尼亚)', '基华物流'],
+                    data: [1500, 600, 23],
+                    label: '新增/订单车辆 (辆)'
+                }
+            }
+        };
+
+        let regionChart;
+
+        function initChart() {
+            const ctx = document.getElementById('regionChart').getContext('2d');
+            regionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '',
+                        data: [],
+                        backgroundColor: 'rgba(74, 144, 226, 0.6)',
+                        borderColor: 'rgba(74, 144, 226, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#3a3a3a'
+                            },
+                            grid: {
+                                color: '#e5e7eb'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#3a3a3a',
+                                font: {
+                                    size: 14
+                                }
+                            },
+                             grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#3a3a3a',
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('zh-CN').format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateRegionView(region) {
+            const data = appData[region];
+            
+            const summaryEl = document.getElementById('region-summary');
+            summaryEl.innerHTML = `
+                <h3 class="text-2xl font-bold mb-3">${data.summary.title}</h3>
+                <p class="text-gray-600 mb-4">${data.summary.description}</p>
+                <ul class="space-y-2 text-gray-700">
+                    ${data.summary.points.map(p => `<li class="flex items-start"><span class="mr-2 mt-1 text-blue-500">▶</span><span>${p}</span></li>`).join('')}
+                </ul>
+            `;
+
+            regionChart.data.labels = data.chart.labels;
+            regionChart.data.datasets[0].data = data.chart.data;
+            regionChart.data.datasets[0].label = data.chart.label;
+            regionChart.update();
+            
+            document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${region}`).classList.add('active');
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const region = e.target.id.split('-')[1];
+                    updateRegionView(region);
+                });
+            });
+
+            const techToggles = document.querySelectorAll('.tech-toggle-btn');
+            const techContents = document.querySelectorAll('.tech-content');
+            techToggles.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tech = btn.dataset.tech;
+                    
+                    techToggles.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    techContents.forEach(content => {
+                        if (content.id === `tech-content-${tech}`) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            updateRegionView('na');
+            setupEventListeners();
+        });
+    </script>
+</body>
+</html>
