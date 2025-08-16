@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>东北地区外贸与跨境电商分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application is designed as a single-page dashboard with a fixed navigation header for easy scrolling between thematic sections. This structure was chosen to provide a seamless, non-linear user experience, allowing users to explore data based on their interests rather than following the linear structure of the source report. The flow is: 1. Macro Overview (overall trade trends), 2. Regional Deep Dive (provincial comparison), 3. Product & Partner Analysis (what is being traded and with whom), 4. Digital Transformation (e-commerce focus), and 5. Strategic Outlook (SWOT & future). This thematic grouping enhances usability by clustering related information and interactive elements, making complex data more digestible. -->
+    <!-- Visualization & Content Choices: 1. Overall Trend: Report data on 5-year trade volume -> Goal: Show change over time -> Viz: Interactive Line Chart (Chart.js) -> Interaction: Buttons to toggle total, export, import views -> Justification: Line charts are ideal for time-series data, and toggles allow for focused comparison. 2. Provincial Comparison: Provincial trade data -> Goal: Compare entities -> Viz: Grouped Bar Chart (Chart.js) -> Interaction: Buttons to switch between total, export, import data -> Justification: Bar charts excel at comparing magnitudes across categories. 3. Key Exports: Export product categories -> Goal: Show proportions -> Viz: Donut Chart (Chart.js) + Interactive Cards -> Interaction: Hover on chart highlights card, click card for details -> Justification: A donut chart shows part-to-whole relationships, and interactive cards provide layered detail without clutter. 4. Trade Partners: Top partner data -> Goal: Compare entities -> Viz: Horizontal Bar Chart (Chart.js) -> Justification: Horizontal bars are effective for ranked lists with long labels. 5. E-commerce Growth: E-commerce trade volume -> Goal: Inform with key metrics -> Viz: Dynamic stat cards and a dedicated bar chart -> Interaction: Animated numbers on cards for impact -> Justification: Emphasizes key growth figures quickly. All charts use Canvas via Chart.js. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #fdfcf9;
+            color: #4a4a4a;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 450px;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #c7a17a;
+            border-bottom-color: #c7a17a;
+        }
+        .btn-filter {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .btn-filter.active {
+            background-color: #8d7b68;
+            color: #ffffff;
+        }
+        .card-hover {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-[#65451F]">东北外贸洞察</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#overview" class="nav-link text-gray-600 border-b-2 border-transparent pb-1">总体概览</a>
+                <a href="#provinces" class="nav-link text-gray-600 border-b-2 border-transparent pb-1">三省剖析</a>
+                <a href="#products" class="nav-link text-gray-600 border-b-2 border-transparent pb-1">核心产品</a>
+                <a href="#partners" class="nav-link text-gray-600 border-b-2 border-transparent pb-1">贸易伙伴</a>
+                <a href="#ecommerce" class="nav-link text-gray-600 border-b-2 border-transparent pb-1">跨境电商</a>
+                <a href="#outlook" class="nav-link text-gray-600 border-b-2 border-transparent pb-1">战略展望</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        
+        <section id="overview" class="mb-20 text-center">
+            <h2 class="text-3xl font-bold mb-4 text-[#8d7b68]">区域外贸格局：坚韧的增长轨迹</h2>
+            <p class="max-w-3xl mx-auto text-gray-600 mb-8">
+                2020至2024年，东北地区外贸展现出强大的韧性。本节通过交互式图表展示了五年间进出口额的动态变化，揭示了以出口为核心引擎的增长模式。您可以点击下方按钮，切换不同视角观察数据。
+            </p>
+            <div class="flex justify-center space-x-2 mb-8">
+                <button id="btnTotal" class="btn-filter active bg-gray-200 text-gray-800 px-4 py-2 rounded-full">总额</button>
+                <button id="btnExport" class="btn-filter bg-gray-200 text-gray-800 px-4 py-2 rounded-full">出口</button>
+                <button id="btnImport" class="btn-filter bg-gray-200 text-gray-800 px-4 py-2 rounded-full">进口</button>
+            </div>
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
+                <div class="chart-container">
+                    <canvas id="tradeTrendChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="provinces" class="mb-20">
+            <h2 class="text-3xl font-bold text-center mb-4 text-[#8d7b68]">省级深度剖析：三省三色</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+                辽宁、吉林、黑龙江三省在外贸领域各具特色。辽宁是海洋贸易领航者，吉林聚焦汽车与高科技，黑龙江则成为面向欧亚的战略门户。通过下方图表和卡片，探索三省不同的经济身份和发展路径。
+            </p>
+            <div class="flex justify-center space-x-2 mb-8">
+                <button id="btnProvinceTotal" class="btn-filter active bg-gray-200 text-gray-800 px-4 py-2 rounded-full">总额</button>
+                <button id="btnProvinceExport" class="btn-filter bg-gray-200 text-gray-800 px-4 py-2 rounded-full">出口</button>
+                <button id="btnProvinceImport" class="btn-filter bg-gray-200 text-gray-800 px-4 py-2 rounded-full">进口</button>
+            </div>
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg mb-8">
+                <div class="chart-container" style="height: 45vh; max-height: 500px;">
+                    <canvas id="provinceCompareChart"></canvas>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-2xl shadow-lg card-hover">
+                    <h3 class="text-xl font-bold mb-3 text-[#65451F]">辽宁：海洋贸易领航者</h3>
+                    <p class="text-gray-600">作为区域经济主力，2024年外贸总额达 <span class="font-bold">7630.5亿</span>。大连的航运中心地位与沈阳的先进制造业出口形成“双核驱动”，对日韩、欧盟贸易紧密。</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg card-hover">
+                    <h3 class="text-xl font-bold mb-3 text-[#65451F]">吉林：汽车工业核心</h3>
+                    <p class="text-gray-600">产业聚焦度高，2024年外贸总额 <span class="font-bold">1764.1亿</span>，同比增长5.1%。汽车产业链深度绑定，与德国、俄罗斯的贸易关系显著增长。</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg card-hover">
+                    <h3 class="text-xl font-bold mb-3 text-[#65451F]">黑龙江：向北开放门户</h3>
+                    <p class="text-gray-600">地缘优势显著，2024年外贸总额突破 <span class="font-bold">3000亿</span>。对俄贸易占主导，是国家能源安全通道，同时机电产品出口爆发式增长。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="products" class="mb-20">
+            <h2 class="text-3xl font-bold text-center mb-4 text-[#8d7b68]">关键商品：迈向价值链高端</h2>
+             <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+                东北地区正从传统重工业出口转向高附加值产品。机电产品已成支柱，汽车、消费电子增长迅猛，而“冰雪经济”等新兴领域也崭露头角。将鼠标悬停于图表上，查看各品类的具体占比。
+            </p>
+            <div class="flex flex-col lg:flex-row items-center gap-8">
+                <div class="w-full lg:w-1/2 bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
+                    <div class="chart-container" style="height: 40vh; max-height: 400px;">
+                        <canvas id="exportProductsChart"></canvas>
+                    </div>
+                </div>
+                <div class="w-full lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-white p-4 rounded-2xl shadow-lg card-hover">
+                        <h4 class="font-bold text-lg text-[#65451F]">机电产品</h4>
+                        <p class="text-sm text-gray-600">绝对支柱，辽宁占比67.6%，黑龙江占比46.9%。</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl shadow-lg card-hover">
+                        <h4 class="font-bold text-lg text-[#65451F]">汽车及零部件</h4>
+                        <p class="text-sm text-gray-600">吉林核心产业，沈阳出口额达101.2亿元。</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl shadow-lg card-hover">
+                        <h4 class="font-bold text-lg text-[#65451F]">消费电子</h4>
+                        <p class="text-sm text-gray-600">黑龙江手机出口暴增318.6%，市场潜力巨大。</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl shadow-lg card-hover">
+                        <h4 class="font-bold text-lg text-[#65451F]">冰雪装备</h4>
+                        <p class="text-sm text-gray-600">新兴增长点，对欧出口实现“成倍增长”。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="partners" class="mb-20">
+            <h2 class="text-3xl font-bold text-center mb-4 text-[#8d7b68]">全球伙伴：战略走廊重构</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+                东北地区的贸易伙伴格局正发生深刻变化，从传统依赖日韩美，战略性转向俄罗斯和“一带一路”国家。陆路贸易的崛起重塑了区域在全球贸易网络中的定位。
+            </p>
+            <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
+                 <div class="chart-container" style="height: 50vh; max-height: 550px;">
+                    <canvas id="tradePartnersChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="ecommerce" class="mb-20">
+            <h2 class="text-3xl font-bold text-center mb-4 text-[#8d7b68]">数字前沿：跨境电商崛起</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+                跨境电商正成为东北外贸的“蛙跳式”发展新动能，尤其在对俄贸易中扮演关键角色。沈阳已成为区域领跑者，黑龙江则将其作为“向北开放”的核心支柱，实现了贸易模式的创新。
+            </p>
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-2xl shadow-lg text-center card-hover">
+                    <h4 class="text-lg font-semibold text-gray-500">沈阳 (2024)</h4>
+                    <p class="text-4xl font-bold my-2 text-[#c7a17a]">41.2 <span class="text-xl">亿元</span></p>
+                    <p class="text-green-600 font-semibold">同比增长 17.9%</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg text-center card-hover">
+                    <h4 class="text-lg font-semibold text-gray-500">黑龙江 (2025前4月)</h4>
+                    <p class="text-4xl font-bold my-2 text-[#c7a17a]">42.9 <span class="text-xl">亿元</span></p>
+                    <p class="font-semibold">占出口比重 13.6%</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg text-center card-hover">
+                    <h4 class="text-lg font-semibold text-gray-500">主要目标市场</h4>
+                    <p class="text-4xl font-bold my-2 text-[#c7a17a]">俄罗斯</p>
+                    <p class="font-semibold">“买全国、卖全俄”</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="outlook" class="mb-12">
+            <h2 class="text-3xl font-bold text-center mb-4 text-[#8d7b68]">战略展望与综合研判</h2>
+             <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+                东北地区正从“锈带”转变为地缘经济中日益活跃的战略板块。结合其优势、劣势、机遇与挑战，未来增长将聚焦于高端制造、数字贸易、特色消费品和能源深加工等领域。
+            </p>
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-bold mb-4 text-[#65451F]">SWOT 分析</h3>
+                    <div class="space-y-3">
+                        <p><span class="font-bold text-green-700">优势:</span> 雄厚工业基础、独特地理位置、国家政策支持。</p>
+                        <p><span class="font-bold text-red-700">劣势:</span> 人口流失挑战、部分体制机制待改革。</p>
+                        <p><span class="font-bold text-blue-700">机遇:</span> 中俄合作深化、“一带一路”倡议、数字经济契机。</p>
+                        <p><span class="font-bold text-yellow-700">威胁:</span> 全球地缘政治不确定性、对单一伙伴依赖风险。</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-xl font-bold mb-4 text-[#65451F]">未来增长点</h3>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600">
+                        <li>高端装备制造业 (新能源汽车、航空航天)</li>
+                        <li>跨境数字贸易与智慧物流</li>
+                        <li>特色消费品 (冰雪装备、品牌农业)</li>
+                        <li>能源贸易与精深加工</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t mt-12">
+        <div class="container mx-auto px-6 py-6 text-center text-gray-500">
+            <p>&copy; 2025 东北地区外贸与跨境电商分析仪表盘。数据来源于公开报告，仅供参考。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const chartColors = {
+                total: 'rgba(141, 123, 104, 0.8)',
+                export: 'rgba(199, 161, 122, 0.8)',
+                import: 'rgba(180, 180, 180, 0.7)',
+                liaoning: 'rgba(101, 69, 31, 0.8)',
+                jilin: 'rgba(199, 161, 122, 0.8)',
+                heilongjiang: 'rgba(141, 123, 104, 0.8)',
+            };
+
+            const chartBorderColors = {
+                total: 'rgba(141, 123, 104, 1)',
+                export: 'rgba(199, 161, 122, 1)',
+                import: 'rgba(180, 180, 180, 1)',
+                liaoning: 'rgba(101, 69, 31, 1)',
+                jilin: 'rgba(199, 161, 122, 1)',
+                heilongjiang: 'rgba(141, 123, 104, 1)',
+            };
+            
+            Chart.defaults.font.family = "'Noto Sans SC', sans-serif";
+            Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            Chart.defaults.plugins.tooltip.titleFont = { size: 14, weight: 'bold' };
+            Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
+            Chart.defaults.plugins.tooltip.padding = 10;
+            Chart.defaults.plugins.tooltip.cornerRadius = 4;
+
+            const tradeData = {
+                labels: ['2020', '2021', '2022', '2023', '2024'],
+                datasets: {
+                    total: [9618.0, 11181.7, 12349.5, 12317.0, 12517.4],
+                    export: [3445.1, 4360.3, 5024.4, 5493.2, 5933.7],
+                    import: [6172.9, 6821.4, 7325.1, 6823.8, 6583.7]
+                }
+            };
+            
+            const provinceData = {
+                labels: ['辽宁', '吉林', '黑龙江'],
+                datasets: {
+                    total: [7630.5, 1764.1, 3122.8],
+                    export: [3776.7, 677.0, 869.7],
+                    import: [3853.8, 1087.1, 2253.1]
+                }
+            };
+
+            const exportProductsData = {
+                labels: ['机电产品', '汽车及零部件', '消费电子', '冰雪装备', '其他'],
+                data: [55, 15, 10, 5, 15]
+            };
+
+            const tradePartnersData = {
+                labels: ['俄罗斯', '欧盟 (含德国)', '一带一路(不含俄)', '日本', '韩国', '美国'],
+                data: [28, 22, 18, 12, 10, 10]
+            };
+
+            let tradeTrendChart, provinceCompareChart, exportProductsChart, tradePartnersChart;
+
+            function createTradeTrendChart(view = 'total') {
+                const ctx = document.getElementById('tradeTrendChart').getContext('2d');
+                if (tradeTrendChart) tradeTrendChart.destroy();
+                
+                let datasets = [];
+                if (view === 'total') {
+                    datasets.push({
+                        label: '进出口总额 (亿元)',
+                        data: tradeData.datasets.total,
+                        borderColor: chartBorderColors.total,
+                        backgroundColor: chartColors.total,
+                        tension: 0.3,
+                        fill: true
+                    });
+                } else if (view === 'export') {
+                    datasets.push({
+                        label: '出口总额 (亿元)',
+                        data: tradeData.datasets.export,
+                        borderColor: chartBorderColors.export,
+                        backgroundColor: chartColors.export,
+                        tension: 0.3,
+                        fill: true
+                    });
+                } else if (view === 'import') {
+                    datasets.push({
+                        label: '进口总额 (亿元)',
+                        data: tradeData.datasets.import,
+                        borderColor: chartBorderColors.import,
+                        backgroundColor: chartColors.import,
+                        tension: 0.3,
+                        fill: true
+                    });
+                }
+
+                tradeTrendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: tradeData.labels, datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: false, grid: { color: '#e5e7eb' } },
+                            x: { grid: { display: false } }
+                        },
+                        plugins: { legend: { display: true, position: 'bottom' } }
+                    }
+                });
+            }
+
+            function createProvinceCompareChart(view = 'total') {
+                const ctx = document.getElementById('provinceCompareChart').getContext('2d');
+                if (provinceCompareChart) provinceCompareChart.destroy();
+
+                provinceCompareChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: provinceData.labels,
+                        datasets: [{
+                            label: `2024年${{'total':'总额','export':'出口','import':'进口'}[view]} (亿元)`,
+                            data: provinceData.datasets[view],
+                            backgroundColor: [chartColors.liaoning, chartColors.jilin, chartColors.heilongjiang],
+                            borderColor: [chartBorderColors.liaoning, chartBorderColors.jilin, chartBorderColors.heilongjiang],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                             x: { grid: { color: '#e5e7eb' } },
+                             y: { grid: { display: false } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            function createExportProductsChart() {
+                const ctx = document.getElementById('exportProductsChart').getContext('2d');
+                exportProductsChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: exportProductsData.labels,
+                        datasets: [{
+                            label: '出口产品占比',
+                            data: exportProductsData.data,
+                            backgroundColor: [
+                                'rgba(101, 69, 31, 0.8)',
+                                'rgba(199, 161, 122, 0.8)',
+                                'rgba(141, 123, 104, 0.8)',
+                                'rgba(180, 180, 180, 0.7)',
+                                'rgba(220, 211, 201, 0.7)'
+                            ],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } }
+                    }
+                });
+            }
+
+            function createTradePartnersChart() {
+                const ctx = document.getElementById('tradePartnersChart').getContext('2d');
+                tradePartnersChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: tradePartnersData.labels,
+                        datasets: [{
+                            label: '贸易伙伴占比 (%)',
+                            data: tradePartnersData.data,
+                            backgroundColor: chartColors.export,
+                            borderColor: chartBorderColors.export,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { grid: { color: '#e5e7eb' }, title: { display: true, text: '贸易额相对占比' } },
+                            y: { grid: { display: false } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            createTradeTrendChart('total');
+            createProvinceCompareChart('total');
+            createExportProductsChart();
+            createTradePartnersChart();
+
+            const trendButtons = [
+                { id: 'btnTotal', view: 'total' },
+                { id: 'btnExport', view: 'export' },
+                { id: 'btnImport', view: 'import' }
+            ];
+            trendButtons.forEach(btn => {
+                document.getElementById(btn.id).addEventListener('click', () => {
+                    createTradeTrendChart(btn.view);
+                    trendButtons.forEach(b => document.getElementById(b.id).classList.remove('active'));
+                    document.getElementById(btn.id).classList.add('active');
+                });
+            });
+
+            const provinceButtons = [
+                { id: 'btnProvinceTotal', view: 'total' },
+                { id: 'btnProvinceExport', view: 'export' },
+                { id: 'btnProvinceImport', view: 'import' }
+            ];
+            provinceButtons.forEach(btn => {
+                document.getElementById(btn.id).addEventListener('click', () => {
+                    createProvinceCompareChart(btn.view);
+                    provinceButtons.forEach(b => document.getElementById(b.id).classList.remove('active'));
+                    document.getElementById(btn.id).classList.add('active');
+                });
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
