@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMNI X 蓝图 | 全球供应链交互式解析 (最终版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application is structured as a narrative journey through a complex supply chain model. It starts with a high-level, platform-based '模型概览' diagram. Users can then drill down into '核心参与者', an interactive '端到端流程' flowchart, and a new accordion-style section for '挑战与对策'. The centerpiece is the '控制塔模拟器', which allows users to interact with variables and see real-time impacts on KPIs and a visual inventory chart. This structure was chosen to layer information from general to specific, and from conceptual to interactive, making a dense report highly digestible and engaging. -->
+    <!-- Visualization & Content Choices: 1. Platform Diagram (HTML/CSS): Goal: Organize. A hub-and-spoke diagram showing the many-to-many relationship between global manufacturing, the central platform, and diverse market channels. 2. Process Flowchart (HTML/CSS): Goal: Organize/Inform. A multi-lane flowchart explicitly showing process steps with EDI codes and parallel cost considerations. 3. Challenges Accordion (HTML/JS): Goal: Inform. An interactive accordion to manage the large amount of text in the new 'Challenges' section, preventing information overload. 4. Control Tower Simulator (HTML/JS/CSS): Goal: Simulate/Engage. A combination of sliders, radio buttons, dynamic text readouts, and a CSS-based bar chart for inventory visualization. This provides a hands-on experience. 5. Advantages Chart (Chart.js): Goal: Compare. A simple doughnut chart to summarize key benefits. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Noto Sans SC', sans-serif; scroll-behavior: smooth; }
+        .bg-warm-gray-50 { background-color: #F9F9F9; }
+        .text-warm-gray-800 { color: #1F2937; }
+        .text-warm-gray-600 { color: #4B5563; }
+        .accent-color { color: #3B82F6; }
+        .diagram-node { transition: all 0.3s ease-in-out; cursor: pointer; z-index: 10; }
+        .diagram-node:hover { transform: scale(1.05); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .chart-container { position: relative; width: 100%; max-width: 400px; margin-left: auto; margin-right: auto; height: 400px; max-height: 400px; }
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #3B82F6; cursor: pointer; margin-top: -6px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #D1D5DB; border-radius: 5px; }
+        
+        .flowchart-container { display: flex; flex-direction: column; }
+        .flowchart-track { display: flex; align-items: center; position: relative; }
+        .flowchart-track .line { flex-grow: 1; height: 2px; background-color: #9CA3AF; }
+        .flowchart-step { position: relative; text-align: center; padding: 0 1rem; }
+        .flowchart-step .dot { width: 16px; height: 16px; background-color: #3B82F6; border-radius: 50%; margin: 0 auto; }
+        .flowchart-step .label { font-weight: 500; margin-top: 0.5rem; white-space: nowrap; }
+        .flowchart-step .desc { font-size: 0.75rem; color: #6B7280; white-space: normal; width: 120px; margin: 0 auto; }
+
+        .planning-track { display: flex; align-items: center; position: relative; margin-top: 3rem; }
+        .planning-track .line { flex-grow: 1; height: 2px; background-color: #FBBF24; }
+        .planning-marker { position: absolute; top: 50%; transform: translateY(-50%); text-align: center; }
+        .planning-marker .dot { width: 16px; height: 16px; background-color: #FBBF24; border-radius: 50%; margin: 0 auto;}
+        .planning-connector { position: absolute; width: 1px; background-color: #FCD34D; left: 50%; top: -3rem; height: 3rem; }
+        .planning-label { font-size: 0.75rem; color: #6B7280; white-space: nowrap; margin-top: 0.5rem; }
+
+        .inventory-viz { display: flex; justify-content: space-around; align-items: flex-end; height: 250px; padding: 1rem; background-color: #F3F4F6; border-radius: 0.5rem; border: 1px solid #E5E7EB; }
+        .inventory-location { width: 20%; text-align: center; }
+        .inventory-bar-container { height: 200px; background-color: #E5E7EB; border-radius: 4px; position: relative; display: flex; align-items: flex-end; }
+        .inventory-bar { width: 100%; background-color: #34D399; border-radius: 4px; transition: height 0.3s ease-out, background-color 0.3s ease-out; }
+        .inventory-label { font-size: 0.875rem; font-weight: 500; margin-top: 0.5rem; }
+
+        .platform-diagram { display: flex; align-items: center; justify-content: center; position: relative; min-height: 600px; }
+        .platform-col { display: flex; flex-direction: column; align-items: center; justify-content: space-around; z-index: 10; height: 500px; }
+        .platform-hub { padding: 1.5rem; border: 2px solid #3B82F6; }
+        .platform-connector { position: absolute; background-color: #9CA3AF; z-index: 1; }
+        .financial-flow { position: absolute; border-style: dashed; border-color: #10B981; z-index: 5; }
+        
+        .challenge-card { background-color: white; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); padding: 1.5rem; }
+        .challenge-card h4 { font-size: 1.125rem; font-weight: 600; color: #1F2937; }
+        .challenge-card p { font-size: 0.875rem; color: #4B5563; }
+
+        @media (max-width: 1024px) {
+            .flowchart-container { overflow-x: auto; padding-bottom: 1rem; }
+            .flowchart-track, .planning-track { min-width: 1200px; }
+            .platform-diagram { flex-direction: column; min-height: auto; }
+            .platform-col { height: auto; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+            .platform-col > .diagram-node { margin-bottom: 1rem; }
+        }
+    </style>
+</head>
+<body class="bg-warm-gray-50 text-warm-gray-800">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold accent-color">OMNI X 全球供应链蓝图</h1>
+            <div class="hidden md:flex space-x-6">
+                <a href="#overview" class="text-warm-gray-600 hover:accent-color transition">模型概览</a>
+                <a href="#participants" class="text-warm-gray-600 hover:accent-color transition">核心参与者</a>
+                <a href="#process" class="text-warm-gray-600 hover:accent-color transition">供应链核心流程</a>
+                <a href="#challenges" class="text-warm-gray-600 hover:accent-color transition">挑战与对策</a>
+                <a href="#planning" class="text-warm-gray-600 hover:accent-color transition">控制塔模拟器</a>
+                <a href="#advantages" class="text-warm-gray-600 hover:accent-color transition">战略优势</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden focus:outline-none"><span class="text-3xl">☰</span></button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-white py-2">
+             <a href="#overview" class="block text-center py-2 px-4 text-sm text-warm-gray-600 hover:accent-color transition">模型概览</a>
+             <a href="#participants" class="block text-center py-2 px-4 text-sm text-warm-gray-600 hover:accent-color transition">核心参与者</a>
+             <a href="#process" class="block text-center py-2 px-4 text-sm text-warm-gray-600 hover:accent-color transition">供应链核心流程</a>
+             <a href="#challenges" class="block text-center py-2 px-4 text-sm text-warm-gray-600 hover:accent-color transition">挑战与对策</a>
+             <a href="#planning" class="block text-center py-2 px-4 text-sm text-warm-gray-600 hover:accent-color transition">控制塔模拟器</a>
+             <a href="#advantages" class="block text-center py-2 px-4 text-sm text-warm-gray-600 hover:accent-color transition">战略优势</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        <section id="overview" class="text-center mb-24">
+            <h2 class="text-4xl font-bold mb-4">OMNI X 模型概览 (平台化架构)</h2>
+            <p class="max-w-3xl mx-auto text-warm-gray-600 mb-12">
+                OMNI X 模型的精髓在于其平台化架构：汇聚全球多元化的制造资源，通过中央销售平台进行高效匹配与管理，再精准地服务于分布在全球各地的区域市场和多样化的销售渠道。
+            </p>
+            <div class="platform-diagram">
+                <!-- Physical/Info Flow Connectors -->
+                <div class="platform-connector" style="width: 2px; height: 100%; left: 30%;"></div>
+                <div class="platform-connector" style="width: 40%; height: 2px; left: 30%; top: 50%;"></div>
+                <div class="platform-connector" style="width: 2px; height: 100%; left: 70%;"></div>
+
+                <!-- Financial Flow Connectors -->
+                <div class="financial-flow" style="width: 20%; height: 2px; top: 15%; left: 10%;"></div>
+                <div class="financial-flow" style="width: 2px; height: 35%; top: 15%; left: 10%;"></div>
+                <div class="financial-flow" style="width: 40%; height: 2px; top: 50%; left: 10%;"></div>
+                <div class="financial-flow" style="width: 2px; height: 35%; top: 50%; left: 50%;"></div>
+                <div class="financial-flow" style="width: 20%; height: 2px; top: 85%; left: 50%;"></div>
+                <div class="financial-flow" style="width: 2px; height: 35%; top: 50%; left: 70%;"></div>
+
+                <!-- Left Column: Manufacturing -->
+                <div class="platform-col mx-8">
+                    <div class="diagram-node bg-white p-4 rounded-lg shadow-md border-2 border-orange-400 w-48 text-center" data-target="participant-cn"><div class="text-2xl">🇨🇳</div><h3 class="font-bold">中国制造基地</h3></div>
+                    <div class="diagram-node bg-white p-4 rounded-lg shadow-md border-2 border-orange-400 w-48 text-center" data-target="participant-cn"><div class="text-2xl">🇲🇽</div><h3 class="font-bold">墨西哥制造基地</h3></div>
+                    <div class="diagram-node bg-white p-4 rounded-lg shadow-md border-2 border-orange-400 w-48 text-center" data-target="participant-cn"><div class="text-2xl">🇻🇳</div><h3 class="font-bold">东南亚制造基地</h3></div>
+                </div>
+
+                <!-- Center Column: Hubs -->
+                <div class="platform-col mx-8 space-y-8">
+                    <div class="diagram-node bg-white p-4 rounded-lg shadow-md border-2 border-green-400 w-56 text-center" data-target="participant-hk"><div class="text-2xl">🏦</div><h3 class="text-xl font-bold">全球结算中心</h3></div>
+                    <div class="diagram-node platform-hub bg-white p-4 rounded-lg shadow-xl w-56 text-center" data-target="participant-na"><div class="text-2xl">🌐</div><h3 class="text-xl font-bold">全球销售平台</h3></div>
+                </div>
+
+                <!-- Right Column: Markets & Channels -->
+                <div class="platform-col mx-8">
+                    <div class="diagram-node bg-white p-4 rounded-lg shadow-md border-2 border-purple-400 w-56 text-center" data-target="participant-dealer"><div class="text-2xl">🇺🇸</div><h3 class="font-bold">北美市场平台</h3><p class="text-xs">多个分销渠道和很多直接客户</p></div>
+                    <div class="diagram-node bg-white p-4 rounded-lg shadow-md border-2 border-purple-400 w-56 text-center" data-target="participant-dealer"><div class="text-2xl">🇪🇺</div><h3 class="font-bold">欧洲市场平台</h3><p class="text-xs">多个分销渠道和很多直接客户</p></div>
+                    <div class="diagram-node bg-white p-4 rounded-lg shadow-md border-2 border-purple-400 w-56 text-center" data-target="participant-dealer"><div class="text-2xl">🇯🇵</div><h3 class="font-bold">亚太市场平台</h3><p class="text-xs">多个分销渠道和很多直接客户</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="participants" class="mb-24">
+            <h2 class="text-4xl font-bold text-center mb-4">核心参与者</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div id="participant-cn" class="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-400"><h3 class="text-xl font-bold mb-2">多元化制造基地</h3><p class="text-warm-gray-600">全球化的生产网络，利用各地区优势平衡成本、效率与地缘政治风险，为中央平台提供稳定的货源。</p></div>
+                <div id="participant-na" class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-400"><h3 class="text-xl font-bold mb-2">全球销售平台</h3><p class="text-warm-gray-600">供应链的“大脑”，负责整合上游供应，管理全球库存，并为下游各区域市场平台提供产品、数据和运营支持。</p></div>
+                <div id="participant-dealer" class="bg-white p-6 rounded-lg shadow-md border-l-4 border-purple-400"><h3 class="text-xl font-bold mb-2">区域市场与渠道</h3><p class="text-warm-gray-600">分布在不同国家的本地化运营单元，负责管理多个分销渠道和众多直接客户，精准触达终端消费者。</p></div>
+                <div id="participant-hk" class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-400"><h3 class="text-xl font-bold mb-2">全球结算中心</h3><p class="text-warm-gray-600">集团财务神经中枢，独立于实体业务，负责结算从制造基地到各国市场平台的所有资金流动，并进行税务优化。</p></div>
+                <div id="participant-consumer" class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-400"><h3 class="text-xl font-bold mb-2">消费者</h3><p class="text-warm-gray-600">供应链的终极驱动力，其在不同渠道的购买行为，是整个需求驱动模型的起点。</p></div>
+            </div>
+        </section>
+
+        <section id="process" class="mb-24">
+            <h2 class="text-4xl font-bold text-center mb-4">供应链核心流程</h2>
+            <p class="max-w-3xl mx-auto text-warm-gray-600 mb-12 text-center">
+                由 <strong>ProcessGo Plus Suite</strong> 系统支撑，模型通过标准化的闭环流程精密编排业务。下方的黄色轨道展示了在各阶段的关键“计划与成本”考量点。
+            </p>
+            <div class="flowchart-container">
+                <div class="flowchart-track">
+                    <div class="flowchart-step" style="flex-basis: 11.1%;"><div class="dot"></div><div class="label">1. 销售计划</div><div class="desc">(EDI 850)</div></div>
+                    <div class="line"></div>
+                    <div class="flowchart-step" style="flex-basis: 11.1%;"><div class="dot"></div><div class="label">2. 内部转换</div><div class="desc"></div></div>
+                    <div class="line"></div>
+                    <div class="flowchart-step" style="flex-basis: 11.1%;"><div class="dot"></div><div class="label">3. 发货通知</div><div class="desc">(EDI 856)</div></div>
+                    <div class="line"></div>
+                    <div class="flowchart-step" style="flex-basis: 11.1%;"><div class="dot"></div><div class="label">4. 海运同步</div><div class="desc">(EDI 315)</div></div>
+                    <div class="line"></div>
+                    <div class="flowchart-step" style="flex-basis: 11.1%;"><div class="dot"></div><div class="label">5. 内部结算</div><div class="desc">(EDI 810)</div></div>
+                    <div class="line"></div>
+                    <div class="flowchart-step" style="flex-basis: 11.1%;"><div class="dot"></div><div class="label">6. 经销商收货</div><div class="desc"></div></div>
+                    <div class="line"></div>
+                    <div class="flowchart-step" style="flex-basis: 11.1%;"><div class="dot"></div><div class="label">7. 销售反馈</div><div class="desc">(EDI 852)</div></div>
+                    <div class="line"></div>
+                    <div class="flowchart-step" style="flex-basis: 11.1%;"><div class="dot"></div><div class="label">8. 出库确认</div><div class="desc"></div></div>
+                    <div class="line"></div>
+                    <div class="flowchart-step" style="flex-basis: 11.1%;"><div class="dot"></div><div class="label">9. 对外开票</div><div class="desc">(EDI 810)</div></div>
+                </div>
+                <div class="planning-track">
+                    <div class="line"></div>
+                    <div class="planning-marker" style="left: 5.5%;"><div class="connector"></div><div class="dot"></div><div class="planning-label">需求预测</div></div>
+                    <div class="planning-marker" style="left: 16.6%;"><div class="connector"></div><div class="dot"></div><div class="planning-label">生产采购</div></div>
+                    <div class="planning-marker" style="left: 33.3%;"><div class="connector"></div><div class="dot"></div><div class="planning-label">国际物流</div></div>
+                    <div class="planning-marker" style="left: 61.1%;"><div class="connector"></div><div class="dot"></div><div class="planning-label">库存持有</div></div>
+                    <div class="planning-marker" style="left: 88.8%;"><div class="connector"></div><div class="dot"></div><div class="planning-label">应收账款</div></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="challenges" class="mb-24">
+            <h2 class="text-4xl font-bold text-center mb-4">全球供应链管理的挑战与对策</h2>
+            <p class="max-w-3xl mx-auto text-warm-gray-600 mb-12 text-center">
+                构建并运营全球化供应链模型，需直面一系列复杂且动态的挑战。
+            </p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="challenge-card">
+                    <div class="text-3xl mb-3">🌍</div>
+                    <h4>地缘政治的挑战</h4>
+                    <p class="font-semibold mt-2">挑战:</p>
+                    <p>关税壁垒和贸易管制频发，使得供应链成本和稳定性不可预测。</p>
+                    <p class="font-semibold mt-2">对策与案例:</p>
+                    <p>建立全球化的供给能力。例如，苹果公司为应对中美贸易摩擦，已将其部分iPhone生产线战略性地转移至印度和越南，实现了生产基地的多元化。</p>
+                </div>
+                <div class="challenge-card">
+                    <div class="text-3xl mb-3">🚢</div>
+                    <h4>国际航运及本地物流的挑战</h4>
+                    <p class="font-semibold mt-2">挑战:</p>
+                    <p>国际航运面临运力波动和港口拥堵，本地物流则面临高昂的“最后一公里”成本。</p>
+                    <p class="font-semibold mt-2">对策与案例:</p>
+                    <p>优化物流网络。例如，沃尔玛在疫情期间为保证供应，曾直接包租货船；同时，亚马逊通过在全球建立大量靠近消费者的履约中心，极大地优化了本地配送效率。</p>
+                </div>
+                <div class="challenge-card">
+                    <div class="text-3xl mb-3">💰</div>
+                    <h4>整体税收的挑战</h4>
+                    <p class="font-semibold mt-2">挑战:</p>
+                    <p>需应对复杂的跨国税收体系，包括关税、增值税、转移定价等。</p>
+                    <p class="font-semibold mt-2">对策与案例:</p>
+                    <p>进行精密的税务筹划。例如，许多跨国科技公司通过在爱尔兰或新加坡等低税率地区设立知识产权（IP）控股公司，合法地优化其全球税负结构。</p>
+                </div>
+                <div class="challenge-card">
+                    <div class="text-3xl mb-3">📊</div>
+                    <h4>端到端供应链计划的挑战</h4>
+                    <p class="font-semibold mt-2">挑战:</p>
+                    <p>信息传递失真（牛鞭效应）和突发事件频发，传统静态计划已失效。</p>
+                    <p class="font-semibold mt-2">对策与案例:</p>
+                    <p>建立“控制塔”系统。例如，宝洁（P&G）通过与沃尔玛进行数据直连，实时获取零售数据来指导生产和补货，是协同计划、预测与补货（CPFR）的典范。</p>
+                </div>
+                <div class="challenge-card">
+                    <div class="text-3xl mb-3">↩️</div>
+                    <h4>逆向物流的挑战</h4>
+                    <p class="font-semibold mt-2">挑战:</p>
+                    <p>跨境退货、返修流程复杂、成本高昂，容易侵蚀利润。</p>
+                    <p class="font-semibold mt-2">对策与案例:</p>
+                    <p>设计本地化的逆向解决方案。例如，Zara等快时尚品牌通过优化尺码推荐算法和店内退货流程，从源头减少退货率；苹果则通过其官方翻新计划，在本地处理和再销售退回的设备。</p>
+                </div>
+                 <div class="challenge-card">
+                    <div class="text-3xl mb-3">📦</div>
+                    <h4>按品类分析的挑战</h4>
+                    <p class="font-semibold mt-2">挑战:</p>
+                    <p>不同品类对供应链的要求迥异，无法“一刀切”。</p>
+                    <p class="font-semibold mt-2">对策与案例:</p>
+                    <p class="text-xs">
+                        <b>电子产品:</b> 生命周期短，需战略性地多源采购芯片等关键部件。<br>
+                        <b>服饰鞋帽:</b> 强趋势驱动，需采用Zara的“快速时尚”模式，实现敏捷制造。<br>
+                        <b>家电家具:</b> 体积大，需像宜家（IKEA）一样通过平板包装和区域分拨中心优化物流成本。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="planning" class="mb-24">
+            <h2 class="text-4xl font-bold text-center mb-4">全球供应链控制塔模拟器</h2>
+            <p class="max-w-3xl mx-auto text-warm-gray-600 mb-12 text-center">
+                请尝试调整参数，模拟不同市场和运营条件，并选择最优供给路径，实时观察其对全球库存分布和供应链关键指标的影响。
+            </p>
+            <div class="bg-white p-8 rounded-lg shadow-lg">
+                <div class="grid lg:grid-cols-5 gap-8 items-start">
+                    <!-- Controls -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div>
+                            <label for="tariffs" class="font-medium">目标市场关税与政策 (宽松 &rarr; 严苛)</label>
+                            <input type="range" id="tariffs" min="5" max="50" value="15" class="w-full">
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <label class="font-medium">全球供给路径选择 (建议路径: <span id="suggested-path" class="font-bold text-green-600">A</span>)</label>
+                            <div class="mt-2 space-y-2" id="path-options">
+                                <label class="flex items-center"><input type="radio" name="path" value="A" checked class="mr-2">路径 A: 中国制造 &rarr; 北美 (基准)</label>
+                                <label class="flex items-center"><input type="radio" name="path" value="B" class="mr-2">路径 B: 东南亚制造 &rarr; 北美 (关税较低)</label>
+                                <label class="flex items-center"><input type="radio" name="path" value="C" class="mr-2">路径 C: 墨西哥制造 &rarr; 北美 (近岸外包)</label>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="local-forecast" class="font-medium">本地销售预测 (悲观 &rarr; 乐观)</label>
+                            <input type="range" id="local-forecast" min="70" max="130" value="100" class="w-full">
+                        </div>
+                        <div>
+                            <label for="inventory" class="font-medium">海外本地库存水平 (30-90天)</label>
+                            <input type="range" id="inventory" min="30" max="90" value="45" class="w-full">
+                        </div>
+                        <div>
+                            <label for="shipping" class="font-medium">国际航运成本 (低 &rarr; 高)</label>
+                            <input type="range" id="shipping" min="80" max="200" value="100" class="w-full">
+                        </div>
+                    </div>
+                    <!-- Results -->
+                    <div class="lg:col-span-1 bg-gray-100 p-6 rounded-lg text-center border">
+                        <h3 class="text-xl font-bold mb-4">模拟结果分析</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm text-gray-500">总成本指数</p>
+                                <p id="total-cost" class="text-3xl font-bold text-red-500">100</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">订单满足率</p>
+                                <p id="fill-rate" class="text-3xl font-bold text-green-500">98%</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">交付时间</p>
+                                <p id="delivery-time" class="text-3xl font-bold text-blue-500">45天</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">风险等级</p>
+                                <p id="risk-level" class="text-xl font-bold text-yellow-500 bg-yellow-100 rounded-full py-1">中</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Inventory Visualization -->
+                    <div class="lg:col-span-2">
+                        <h3 class="text-xl font-bold mb-4 text-center">全球库存可视化</h3>
+                        <div class="inventory-viz">
+                            <div class="inventory-location">
+                                <div class="inventory-bar-container">
+                                    <div id="inv-factory" class="inventory-bar" style="height: 80%;"></div>
+                                </div>
+                                <div id="inv-factory-label" class="inventory-label">中国工厂</div>
+                            </div>
+                            <div class="inventory-location">
+                                <div class="inventory-bar-container">
+                                    <div id="inv-transit" class="inventory-bar" style="height: 40%;"></div>
+                                </div>
+                                <div class="inventory-label">在途海运</div>
+                            </div>
+                            <div class="inventory-location">
+                                <div class="inventory-bar-container">
+                                    <div id="inv-wh-na" class="inventory-bar" style="height: 50%;"></div>
+                                </div>
+                                <div class="inventory-label">北美仓库</div>
+                            </div>
+                             <div class="inventory-location">
+                                <div class="inventory-bar-container">
+                                    <div id="inv-wh-eu" class="inventory-bar" style="height: 60%;"></div>
+                                </div>
+                                <div class="inventory-label">欧洲仓库</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="advantages" class="text-center">
+            <h2 class="text-4xl font-bold mb-4">核心战略优势</h2>
+            <div class="flex flex-col md:flex-row items-center gap-12">
+                <div class="w-full md:w-1/2 text-left space-y-6">
+                    <div><h3 class="text-xl font-bold accent-color mb-2">财务与税务优化</h3><p class="text-warm-gray-600">将利润归集于低税率地区，最大化全球税后利润，提升资本效率。</p></div>
+                    <div><h3 class="text-xl font-bold accent-color mb-2">市场渗透与扩张</h3><p class="text-warm-gray-600">寄售模式激励经销商快速铺货，实现轻资产、高效率的市场扩张。</p></div>
+                    <div><h3 class="text-xl font-bold accent-color mb-2">风险隔离与韧性</h3><p class="text-warm-gray-600">独立的法人实体构建了法律和金融防火墙，有效对冲全球运营风险。</p></div>
+                    <div><h3 class="text-xl font-bold accent-color mb-2">运营效率与自动化</h3><p class="text-warm-gray-600">以EDI和超自动化为核心，实现端到端流程自动化，降本增效。</p></div>
+                </div>
+                <div class="w-full md:w-1/2">
+                    <div class="chart-container"><canvas id="advantagesChart"></canvas></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-warm-gray-800 text-white mt-24">
+        <div class="container mx-auto px-6 py-8 text-center"><p>&copy; 2024 OMNI X 蓝图解析。保留所有权利。</p></div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Mobile Menu
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => { mobileMenu.classList.toggle('hidden'); });
+            document.querySelectorAll('#mobile-menu a, header nav a').forEach(link => {
+                link.addEventListener('click', () => { mobileMenu.classList.add('hidden'); });
+            });
+
+            // Diagram Node Click
+            document.querySelectorAll('.diagram-node').forEach(node => {
+                node.addEventListener('click', () => {
+                    const targetId = node.getAttribute('data-target');
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        targetElement.classList.add('scale-105', 'shadow-xl', 'transition-transform', 'duration-300');
+                        setTimeout(() => { targetElement.classList.remove('scale-105', 'shadow-xl'); }, 1500);
+                    }
+                });
+            });
+
+            // Control Tower Simulator
+            const tariffsSlider = document.getElementById('tariffs');
+            const inventorySlider = document.getElementById('inventory');
+            const shippingSlider = document.getElementById('shipping');
+            const localForecastSlider = document.getElementById('local-forecast');
+            const pathOptions = document.getElementById('path-options');
+            
+            const suggestedPathEl = document.getElementById('suggested-path');
+            const totalCostEl = document.getElementById('total-cost');
+            const fillRateEl = document.getElementById('fill-rate');
+            const deliveryTimeEl = document.getElementById('delivery-time');
+            const riskLevelEl = document.getElementById('risk-level');
+
+            const invFactoryBar = document.getElementById('inv-factory');
+            const invFactoryLabel = document.getElementById('inv-factory-label');
+            const invTransitBar = document.getElementById('inv-transit');
+            const invWhNaBar = document.getElementById('inv-wh-na');
+            const invWhEuBar = document.getElementById('inv-wh-eu');
+
+            const pathData = {
+                A: { name: "中国", cost_mod: 1.0, time_mod: 1.0, tariff_mod: 1.0, risk_base: 50 },
+                B: { name: "东南亚", cost_mod: 1.15, time_mod: 1.1, tariff_mod: 0.5, risk_base: 70 },
+                C: { name: "墨西哥", cost_mod: 1.25, time_mod: 0.6, tariff_mod: 0.1, risk_base: 60 }
+            };
+
+            function setBar(element, percentage) {
+                percentage = Math.max(0, Math.min(100, percentage));
+                element.style.height = `${percentage}%`;
+                if (percentage < 25) {
+                    element.style.backgroundColor = '#EF4444'; // red-500
+                } else if (percentage < 50) {
+                    element.style.backgroundColor = '#FBBF24'; // amber-400
+                } else {
+                    element.style.backgroundColor = '#34D399'; // green-400
+                }
+            }
+
+            function updateSimulation() {
+                const tariffs = parseInt(tariffsSlider.value);
+                const inventoryPolicy = parseInt(inventorySlider.value);
+                const shipping = parseInt(shippingSlider.value);
+                const localForecast = parseInt(localForecastSlider.value);
+                const selectedPath = pathOptions.querySelector('input[name="path"]:checked').value;
+                
+                const path = pathData[selectedPath];
+
+                // --- Calculate path costs for suggestion ---
+                const costA = 100 * pathData.A.cost_mod + tariffs * pathData.A.tariff_mod;
+                const costB = 100 * pathData.B.cost_mod + tariffs * pathData.B.tariff_mod;
+                const costC = 100 * pathData.C.cost_mod + tariffs * pathData.C.tariff_mod;
+                
+                let bestPath = 'A';
+                let minCost = costA;
+                if (costB < minCost) { minCost = costB; bestPath = 'B'; }
+                if (costC < minCost) { minCost = costC; bestPath = 'C'; }
+                suggestedPathEl.textContent = bestPath;
+
+                // --- Calculate final metrics based on SELECTED path ---
+                const baseCost = 40;
+                const productionCost = 60 * path.cost_mod;
+                const tariffCost = tariffs * path.tariff_mod;
+                const shippingCost = (shipping / 10);
+                const inventoryCost = (inventoryPolicy / 10);
+
+                const totalCost = Math.round(baseCost + productionCost + tariffCost + shippingCost + inventoryCost);
+                totalCostEl.textContent = totalCost;
+
+                const deliveryTime = Math.round(45 * path.time_mod + (shipping - 100) / 20);
+                deliveryTimeEl.textContent = `${deliveryTime}天`;
+
+                const inventoryCoverageDays = inventoryPolicy;
+                const forecastDemandRate = localForecast / 100;
+                const fillRate = Math.min(95 + ((inventoryCoverageDays / 30) - forecastDemandRate) * 5, 99.8).toFixed(1);
+                fillRateEl.textContent = `${fillRate}%`;
+
+                const riskScore = path.risk_base + (shipping - 80) + (tariffs * 1.5) + (90 - inventoryPolicy) + Math.abs(localForecast - 100);
+                
+                if (riskScore < 180) {
+                    riskLevelEl.textContent = '低';
+                    riskLevelEl.className = 'text-xl font-bold text-green-500 bg-green-100 rounded-full py-1';
+                } else if (riskScore < 260) {
+                    riskLevelEl.textContent = '中';
+                    riskLevelEl.className = 'text-xl font-bold text-yellow-500 bg-yellow-100 rounded-full py-1';
+                } else {
+                    riskLevelEl.textContent = '高';
+                    riskLevelEl.className = 'text-xl font-bold text-red-500 bg-red-100 rounded-full py-1';
+                }
+
+                // --- Update Inventory Visualization ---
+                invFactoryLabel.textContent = `${path.name}工厂`;
+                
+                // Factory inventory is inversely related to demand forecast and positively to path cost (cheaper paths get used more)
+                const factoryLevel = 120 - (localForecast) + (path.cost_mod - 1) * 50;
+                setBar(invFactoryBar, factoryLevel);
+
+                // In-transit is proportional to delivery time
+                const transitLevel = deliveryTime * 1.5;
+                setBar(invTransitBar, transitLevel);
+
+                // Warehouse inventory is a function of policy and forecast
+                const warehouseNaLevel = (inventoryPolicy / 90 * 100) - (localForecast - 100) / 2;
+                setBar(invWhNaBar, warehouseNaLevel);
+                // Simulate EU warehouse with slightly different dynamics
+                const warehouseEuLevel = (inventoryPolicy / 90 * 100) - (localForecast - 110) / 2;
+                setBar(invWhEuBar, warehouseEuLevel);
+            }
+
+            [tariffsSlider, inventorySlider, shippingSlider, localForecastSlider, pathOptions].forEach(el => {
+                el.addEventListener('input', updateSimulation);
+            });
+            
+            updateSimulation(); // Initial calculation
+
+            // Advantages Chart
+            const ctx = document.getElementById('advantagesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['财务与税务优化', '市场渗透与扩张', '风险隔离与韧性', '运营效率与自动化'],
+                    datasets: [{
+                        label: '战略优势分布',
+                        data: [35, 30, 20, 15],
+                        backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(139, 92, 246, 0.7)', 'rgba(239, 68, 68, 0.7)'],
+                        borderColor: ['#3B82F6', '#10B981', '#8B5CF6', '#EF4444'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
