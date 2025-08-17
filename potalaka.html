@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圣地之名：Potalaka的文化流变之旅</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Earth Tones -->
+    <!-- Application Structure Plan: 本应用采用主题式、分段探索的结构，而非简单复刻报告章节。核心设计思路是通过并列对比和互动卡片，引导用户主动发现信息间的关联。结构分为四个核心部分：1. **“源起”**：奠定梵文原型Potalaka的基础。2. **“圣地演变”**：此为应用核心，通过交互式并列布局，让用户直观对比Potalaka在西藏、汉地、日本、韩国的四种不同“在地化”模式，从命名、传说到文化意涵，突出其传播的适应性与创造性。3. **“文化回响”**：通过雷达图和翻转卡片，将报告的比较分析和语言学遗产进行可视化，将抽象概念转化为可度量的特征和有趣的互动。4. **“结语”**：总结升华。此结构旨在将线性的学术阅读，转变为非线性的、以比较和发现为驱动的探索体验，极大地提升了信息的可消费性和趣味性。 -->
+    <!-- Visualization & Content Choices: 1. **雷达图 (Chart.js)**: 目标是综合对比四大圣地在多个维度上的特性。选择雷达图是因为它最适合展示多变量数据点的对比，能将报告中分散的描述性分析（如政治性、民间性、音韵保真度等）凝聚成一个清晰的视觉模型，实现“一图胜千言”的效果。交互：鼠标悬停显示具体数值，按钮可切换显示不同圣地的数据。2. **交互式对比卡片 (HTML/CSS/JS)**: 目标是清晰呈现每个圣地的多方面信息。采用Tab切换的卡片设计，将命名、传说、意涵等信息分层，既保持了界面的整洁，又鼓励用户点击探索，主动进行横向对比。3. **翻转卡片 (HTML/CSS/JS)**: 目标是将报告第五章的静态表格转化为动态的学习工具。翻转效果增加了趣味性，将“现代词汇”与“梵文溯源”这两个信息面分离开，引导用户主动探寻答案，强化记忆。所有图表和动态元素均使用Canvas或原生Web技术实现，完全遵循无SVG/Mermaid的要求。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background-color: #FDFBF5;
+            color: #402E32;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #C57B57;
+            border-bottom-color: #C57B57;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background-color: #C57B57;
+            color: #FDFBF5;
+        }
+        .content-pane {
+            display: none;
+        }
+        .content-pane.active {
+            display: block;
+        }
+        .flip-card {
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card.is-flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        .flip-card-front {
+            background-color: #EAD7C5;
+        }
+        .flip-card-back {
+            background-color: #D6B293;
+            transform: rotateY(180deg);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 50vh;
+            max-height: 500px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-[#FDFBF5]/80 backdrop-blur-md sticky top-0 z-50 border-b border-[#EAD7C5]">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-[#402E32]">圣地之名</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#origin" class="nav-link text-lg">源起 · Potalaka</a>
+                <a href="#sites" class="nav-link text-lg">圣地 · 演变</a>
+                <a href="#legacy" class="nav-link text-lg">文化 · 回响</a>
+                <a href="#conclusion" class="nav-link text-lg">结语</a>
+            </div>
+            <div class="md:hidden">
+                <select id="mobile-nav" class="bg-[#EAD7C5] border border-[#D6B293] text-[#402E32] text-sm rounded-lg focus:ring-[#C57B57] focus:border-[#C57B57] block w-full p-2.5">
+                    <option value="#origin">源起 · Potalaka</option>
+                    <option value="#sites">圣地 · 演变</option>
+                    <option value="#legacy">文化 · 回响</option>
+                    <option value="#conclusion">结语</option>
+                </select>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="origin" class="text-center mb-24 min-h-[60vh] flex flex-col justify-center">
+            <h2 class="text-4xl md:text-6xl font-bold mb-4 tracking-wider">一个名字的旅程：普陀山和布达拉宫是一个师傅</h2>
+            <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-600 leading-relaxed">
+                从古印度的梵文经典，到一个神话中的光明圣境 <span class="font-semibold text-2xl text-[#C57B57]">Potalaka</span> (पोतलक)，再到雪域高原的雄伟宫殿与东海之滨的观音道场。这不仅是词汇的流传，更是一场跨越千年的文化、信仰与想象力的伟大交融。
+            </p>
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white/50 p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-2 text-[#C57B57]">光明之境</h3>
+                    <p class="text-gray-600">“Potalaka”在梵文及南印度语言中，与“光明”、“火焰”相关，描绘了圣地超凡脱俗、光芒璀璨的景象。</p>
+                </div>
+                <div class="bg-white/50 p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-2 text-[#C57B57]">慈悲之所</h3>
+                    <p class="text-gray-600">《华严经》记载，Potalaka是观世音菩萨的道场，一个位于南方大海中、凡人难以抵达的慈悲净土。</p>
+                </div>
+                <div class="bg-white/50 p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-semibold mb-2 text-[#C57B57]">小白花树</h3>
+                    <p class="text-gray-600">汉传佛教将其意译为“小白华树山”，这一视觉意象为日后普陀山的命名提供了关键的文化连接点。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="sites" class="mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-2">圣地演变：同一个源头，不同的故事</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">“Potalaka”的神话原型如同一颗种子，在亚洲不同的文化土壤中，生长出形态各异的圣地。点击下方的标签，探索它们在命名、传说和文化意涵上的独特演变路径。</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
+                
+                <div class="bg-white/60 p-6 rounded-lg shadow-md border border-gray-200" data-location="tibet">
+                    <h3 class="text-2xl font-bold mb-4 text-center">西藏 · 布达拉 <span class="text-lg font-normal">(Potala)</span></h3>
+                    <div class="flex justify-center border-b border-gray-300 mb-4">
+                        <button class="tab-button px-4 py-2 -mb-px font-semibold active" data-tab="name">名称演变</button>
+                        <button class="tab-button px-4 py-2 -mb-px font-semibold" data-tab="story">核心故事</button>
+                        <button class="tab-button px-4 py-2 -mb-px font-semibold" data-tab="meaning">文化意涵</button>
+                    </div>
+                    <div class="content-pane active" data-tab="name">
+                        <p class="text-2xl text-center font-serif tracking-widest p-4">Potalaka → <span class="text-[#C57B57] font-bold">Potala (པོ་ཏ་ལ་)</span></p>
+                        <p class="text-gray-600 mt-2">梵文词汇被高度忠实地直接音译为藏文，保留了原始音韵，体现了对佛法源头语言的尊崇。</p>
+                    </div>
+                    <div class="content-pane" data-tab="story">
+                        <p class="text-gray-600 leading-relaxed">公元17世纪，五世达赖喇嘛为巩固政教合一的统治，在拉萨红山大规模扩建宫殿。他依据佛经，将此地命名为“Potala”，将自己作为观世音菩萨化身的身份与神话居所绑定，实现了神权与政权的在地化合一。</p>
+                    </div>
+                    <div class="content-pane" data-tab="meaning">
+                        <p class="font-semibold text-lg mb-2">自上而下的神学工程</p>
+                        <p class="text-gray-600 leading-relaxed">布达拉宫的诞生是一次服务于政治目的的钦定行为。它将天界净土在人间具象化，成为西藏政教权力的中心和国家象征，是利用宗教观念合法化统治权威的典范。</p>
+                    </div>
+                </div>
+
+                <div class="bg-white/60 p-6 rounded-lg shadow-md border border-gray-200" data-location="china">
+                    <h3 class="text-2xl font-bold mb-4 text-center">汉地 · 普陀 <span class="text-lg font-normal">(Putuo)</span></h3>
+                    <div class="flex justify-center border-b border-gray-300 mb-4">
+                        <button class="tab-button px-4 py-2 -mb-px font-semibold active" data-tab="name">名称演变</button>
+                        <button class="tab-button px-4 py-2 -mb-px font-semibold" data-tab="story">核心故事</button>
+                        <button class="tab-button px-4 py-2 -mb-px font-semibold" data-tab="meaning">文化意涵</button>
+                    </div>
+                    <div class="content-pane active" data-tab="name">
+                        <p class="text-2xl text-center font-serif tracking-widest p-4">Potalaka → 补陀洛迦 → <span class="text-[#C57B57] font-bold">普陀</span></p>
+                        <p class="text-gray-600 mt-2">为适应汉语双音节习惯，冗长的多音节音译词“补陀洛迦山”被不断简化，最终定格为“普陀山”。</p>
+                    </div>
+                    <div class="content-pane" data-tab="story">
+                        <p class="text-gray-600 leading-relaxed">公元9世纪，日本僧人慧谔欲将一尊观音像带回国，途经舟山群岛时遇风浪受阻，海现铁莲花。他悟到观音不愿离去，遂于岛上建“不肯去观音院”。此传说为普陀山注入了最初的神圣基因。</p>
+                    </div>
+                    <div class="content-pane" data-tab="meaning">
+                        <p class="font-semibold text-lg mb-2">自下而上的信仰聚合</p>
+                        <p class="text-gray-600 leading-relaxed">普陀山的圣化始于民间传说，后经由宋代文人发现其地理特征（位于南海、多小白花）与佛经描述高度吻合，最终确立其观音道场地位。是民间叙事与精英解读结合的产物。</p>
+                    </div>
+                </div>
+
+                <div class="bg-white/60 p-6 rounded-lg shadow-md border border-gray-200" data-location="japan">
+                    <h3 class="text-2xl font-bold mb-4 text-center">日本 · 补陀洛 <span class="text-lg font-normal">(Fudaraku)</span></h3>
+                    <div class="flex justify-center border-b border-gray-300 mb-4">
+                        <button class="tab-button px-4 py-2 -mb-px font-semibold active" data-tab="name">名称演变</button>
+                        <button class="tab-button px-4 py-2 -mb-px font-semibold" data-tab="story">核心故事</button>
+                        <button class="tab-button px-4 py-2 -mb-px font-semibold" data-tab="meaning">文化意涵</button>
+                    </div>
+                    <div class="content-pane active" data-tab="name">
+                        <p class="text-2xl text-center font-serif tracking-widest p-4">Potalaka → <span class="text-[#C57B57] font-bold">Fudaraku (補陀洛)</span></p>
+                        <p class="text-gray-600 mt-2">梵文词汇被音译为“Fudaraku”，在日本信仰中，它是一个位于南方大海彼岸的观音净土。</p>
+                    </div>
+                    <div class="content-pane" data-tab="story">
+                        <p class="text-gray-600 leading-relaxed">和歌山县的补陀洛山寺是一种极端宗教实践“补陀洛渡海”的出发点。信徒自愿被封入无舵小船，漂入太平洋，他们相信通过这种海上献身，能肉身直达观音的“Fudaraku”净土。</p>
+                    </div>
+                    <div class="content-pane" data-tab="meaning">
+                        <p class="font-semibold text-lg mb-2">极致的献身实践</p>
+                        <p class="text-gray-600 leading-relaxed">日本的Fudaraku信仰将神话旅程付诸于最字面、最决绝的现实行动。这种独特的实践方式，深刻反映了日本文化中某种独特的审美与宗教精神，是对彼岸净土最极致的追求。</p>
+                    </div>
+                </div>
+
+                <div class="bg-white/60 p-6 rounded-lg shadow-md border border-gray-200" data-location="korea">
+                    <h3 class="text-2xl font-bold mb-4 text-center">韩国 · 洛山 <span class="text-lg font-normal">(Naksan)</span></h3>
+                    <div class="flex justify-center border-b border-gray-300 mb-4">
+                        <button class="tab-button px-4 py-2 -mb-px font-semibold active" data-tab="name">名称演变</button>
+                        <button class="tab-button px-4 py-2 -mb-px font-semibold" data-tab="story">核心故事</button>
+                        <button class="tab-button px-4 py-2 -mb-px font-semibold" data-tab="meaning">文化意涵</button>
+                    </div>
+                    <div class="content-pane active" data-tab="name">
+                        <p class="text-2xl text-center font-serif tracking-widest p-4">Potalaka → 补陀洛伽山 → <span class="text-[#C57B57] font-bold">洛山 (낙산)</span></p>
+                        <p class="text-gray-600 mt-2">与汉语类似，全称“Botarakgasan (补陀洛伽山)”被简化，取其简称“Naksan (洛山)”作为寺名。</p>
+                    </div>
+                    <div class="content-pane" data-tab="story">
+                        <p class="text-gray-600 leading-relaxed">公元7世纪，高僧义湘在东海岸的洞窟中虔诚祈祷，感得观音菩萨现身，指示他在此地建寺，即为洛山寺。其选址临海，也与“南方大海中”的经文描述相呼应。</p>
+                    </div>
+                    <div class="content-pane" data-tab="meaning">
+                        <p class="font-semibold text-lg mb-2">融合共生的智慧</p>
+                        <p class="text-gray-600 leading-relaxed">洛山寺的信仰体系展现了外来佛教与本土传统的和谐共生。在这里，对观音菩萨的崇拜与对本土萨满信仰中“水龙王”的祭祀并行不悖，形成了新的信仰复合体，共同护佑着这片土地。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="legacy" class="mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-2">文化回响：从神圣到世俗的语言印记</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">“Potalaka”的旅程只是冰山一角。佛教的传入为汉语注入了大量词汇，它们中的许多已经脱离宗教语境，成为我们日常语言的一部分。下面的图表和卡片，将为您揭示这场深刻的语言融合。</p>
+            </div>
+
+            <div class="bg-white/60 p-6 md:p-8 rounded-lg shadow-md border border-gray-200 mb-12">
+                 <h3 class="text-2xl font-bold text-center mb-4">圣地特征多维比较</h3>
+                 <p class="text-center text-gray-600 mb-6 max-w-2xl mx-auto">下图从五个维度，直观比较了“Potalaka”神话在四个地区演变后的不同文化特征。您可以点击下方的图例来显示或隐藏特定圣地的数据，以便进行更清晰的对比。</p>
+                <div class="chart-container">
+                    <canvas id="legacyChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="flip-card h-48 rounded-lg cursor-pointer">
+                    <div class="flip-card-inner shadow-md">
+                        <div class="flip-card-front">
+                            <p class="text-3xl font-bold">刹那</p>
+                            <p class="mt-2 text-sm text-gray-500">点击探索其来源</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <p class="text-sm font-semibold">梵文: <span class="font-mono">kṣaṇa</span></p>
+                            <p class="text-sm mt-2">原意：佛教最小时间单位，一弹指有六十刹那。</p>
+                            <p class="text-sm mt-2">现义：一个瞬间，极短的时间。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-48 rounded-lg cursor-pointer">
+                    <div class="flip-card-inner shadow-md">
+                        <div class="flip-card-front">
+                            <p class="text-3xl font-bold">涅槃</p>
+                            <p class="mt-2 text-sm text-gray-500">点击探索其来源</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <p class="text-sm font-semibold">梵文: <span class="font-mono">nirvāṇa</span></p>
+                            <p class="text-sm mt-2">原意：“吹灭”，熄灭贪嗔痴之火，从轮回中解脱。</p>
+                            <p class="text-sm mt-2">现义：最高境界；对逝者的敬称。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-48 rounded-lg cursor-pointer">
+                    <div class="flip-card-inner shadow-md">
+                        <div class="flip-card-front">
+                            <p class="text-3xl font-bold">菩萨</p>
+                            <p class="mt-2 text-sm text-gray-500">点击探索其来源</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <p class="text-sm font-semibold">梵文: <span class="font-mono">bodhisattva</span></p>
+                            <p class="text-sm mt-2">原意：“觉有情”，为利益众生而修行的未来佛。</p>
+                            <p class="text-sm mt-2">现义：形容心地善良、乐于助人者。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-48 rounded-lg cursor-pointer">
+                    <div class="flip-card-inner shadow-md">
+                        <div class="flip-card-front">
+                            <p class="text-3xl font-bold">塔</p>
+                            <p class="mt-2 text-sm text-gray-500">点击探索其来源</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <p class="text-sm font-semibold">梵文: <span class="font-mono">stūpa</span></p>
+                            <p class="text-sm mt-2">原意：窣堵坡，存放舍利的半球形纪念建筑。</p>
+                            <p class="text-sm mt-2">现义：泛指高耸的塔状建筑，如电视塔。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card h-48 rounded-lg cursor-pointer">
+                    <div class="flip-card-inner shadow-md">
+                        <div class="flip-card-front">
+                            <p class="text-3xl font-bold">魔</p>
+                            <p class="mt-2 text-sm text-gray-500">点击探索其来源</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <p class="text-sm font-semibold">梵文: <span class="font-mono">māra</span></p>
+                            <p class="text-sm mt-2">原意：魔罗，妨碍修行证悟的天魔。</p>
+                            <p class="text-sm mt-2">现义：魔鬼；或指极度着迷者，如“球迷”。</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="flip-card h-48 rounded-lg cursor-pointer">
+                    <div class="flip-card-inner shadow-md">
+                        <div class="flip-card-front">
+                            <p class="text-3xl font-bold">世界</p>
+                            <p class="mt-2 text-sm text-gray-500">点击探索其来源</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <p class="text-sm font-semibold">梵文: <span class="font-mono">lokadhātu</span></p>
+                            <p class="text-sm mt-2">原意：佛教宇宙观，指时间与空间的统一体。</p>
+                            <p class="text-sm mt-2">现义：地球、人类社会、自然界总称。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="conclusion" class="text-center py-12 border-t border-gray-200">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">结论：一个名字的恒久力量</h2>
+            <p class="text-lg max-w-3xl mx-auto text-gray-600 leading-relaxed">
+                从“Potalaka”到“布达拉”与“普陀”，我们见证了一个神圣概念如何被不同文化创造性地再诠释。西藏的宏伟宫殿是权力与神权的宣告，而汉地的海天佛国则是民间信仰与经典解读的共鸣。这场古老的文化交流，其遗产不仅凝固于建筑，更已无形地融入我们的语言，塑造着我们今天的世界观。
+            </p>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#EAD7C5] py-6">
+        <div class="container mx-auto text-center text-[#402E32]/70">
+            <p>&copy; 2024 Potalaka文化流变探索。内容基于学术报告生成。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const locationCard = button.closest('[data-location]');
+                    const targetTab = button.dataset.tab;
+
+                    locationCard.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    locationCard.querySelectorAll('.content-pane').forEach(pane => {
+                        pane.classList.remove('active');
+                        if (pane.dataset.tab === targetTab) {
+                            pane.classList.add('active');
+                        }
+                    });
+                });
+            });
+
+            const flipCards = document.querySelectorAll('.flip-card');
+            flipCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    card.classList.toggle('is-flipped');
+                });
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileNav = document.getElementById('mobile-nav');
+
+            function smoothScroll(targetId) {
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    smoothScroll(link.getAttribute('href'));
+                });
+            });
+
+            mobileNav.addEventListener('change', (e) => {
+                smoothScroll(e.target.value);
+            });
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = '#' + entry.target.id;
+                        document.querySelectorAll('.nav-link').forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href') === id);
+                        });
+                        if (document.querySelector(`option[value="${id}"]`)) {
+                            mobileNav.value = id;
+                        }
+                    }
+                });
+            }, { rootMargin: '-30% 0px -70% 0px', threshold: 0 });
+
+            document.querySelectorAll('section').forEach(section => {
+                observer.observe(section);
+            });
+
+
+            const ctx = document.getElementById('legacyChart').getContext('2d');
+            const chartData = {
+                labels: ['政治权力', '民间信仰', '音韵保真', '神话契合', '实践极端性'],
+                datasets: [
+                    {
+                        label: '西藏 · 布达拉',
+                        data: [9, 3, 9, 8, 2],
+                        backgroundColor: 'rgba(197, 123, 87, 0.2)',
+                        borderColor: 'rgba(197, 123, 87, 1)',
+                        pointBackgroundColor: 'rgba(197, 123, 87, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(197, 123, 87, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: '汉地 · 普陀',
+                        data: [3, 9, 4, 9, 3],
+                        backgroundColor: 'rgba(97, 130, 100, 0.2)',
+                        borderColor: 'rgba(97, 130, 100, 1)',
+                        pointBackgroundColor: 'rgba(97, 130, 100, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(97, 130, 100, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: '日本 · 补陀洛',
+                        data: [2, 6, 7, 5, 10],
+                        backgroundColor: 'rgba(142, 68, 68, 0.2)',
+                        borderColor: 'rgba(142, 68, 68, 1)',
+                        pointBackgroundColor: 'rgba(142, 68, 68, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(142, 68, 68, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: '韩国 · 洛山',
+                        data: [2, 8, 5, 7, 2],
+                        backgroundColor: 'rgba(69, 104, 151, 0.2)',
+                        borderColor: 'rgba(69, 104, 151, 1)',
+                        pointBackgroundColor: 'rgba(69, 104, 151, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(69, 104, 151, 1)',
+                        borderWidth: 2
+                    }
+                ]
+            };
+
+            const legacyChart = new Chart(ctx, {
+                type: 'radar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    family: "'Noto Serif SC', serif",
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            bodyFont: {
+                                family: "'Noto Serif SC', serif"
+                            },
+                            titleFont: {
+                                family: "'Noto Serif SC', serif"
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(64, 46, 50, 0.2)'
+                            },
+                            grid: {
+                                color: 'rgba(64, 46, 50, 0.2)'
+                            },
+                            pointLabels: {
+                                font: {
+                                    family: "'Noto Serif SC', serif",
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                color: '#402E32'
+                            },
+                            ticks: {
+                                backdropColor: '#FDFBF5',
+                                color: 'rgba(64, 46, 50, 0.7)',
+                                stepSize: 2
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
