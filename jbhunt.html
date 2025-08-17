@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.B. Hunt (JBHT) 交互式分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Subtle Blue Accent -->
+    <!-- Application Structure Plan: The application is designed as a top-down narrative dashboard. It starts with a high-level summary (公司概览), then allows users to dive into specific operational areas through an interactive business segment explorer (核心业务解析). Following this, two dedicated sections present dynamic historical data for financial and stock performance (财务与股票表现), enabling trend analysis. A new section on sustainability outlines future strategy. Finally, it concludes with a qualitative competitive landscape view (竞争格局). This structure was chosen to guide the user from a broad understanding to detailed, data-driven exploration, making complex information digestible and facilitating non-linear investigation based on user interest. Key interactions include tab-based navigation for business segments and dynamic chart updates via dropdowns for financial metrics. -->
+    <!-- Visualization & Content Choices: 1. Business Segments: Goal=Compare/Inform. Method=Tabbed interface with donut charts. Interaction=Clicking tabs reveals detailed text and a visual breakdown of revenue contribution. Justification=Allows for quick comparison of segment scale and performance. Library=Chart.js. 2. Financial Performance: Goal=Analyze Change. Method=Line and bar charts. Interaction=Dropdown to switch between Revenue, Net Income, and EPS. Justification=Enables users to visualize trends over a decade for key metrics. Library=Chart.js. 3. Stock Performance: Goal=Analyze Change/Compare. Method=Combined line and bar chart for Price/Dividends, and a separate line chart for valuation multiples. Interaction=Dropdown to switch between P/E and P/B ratios. Justification=Provides a comprehensive view of shareholder return and historical valuation context. Library=Chart.js. 4. Competitive Matrix: Goal=Compare. Method=Styled HTML table. Interaction=Static display. Justification=Offers a clear, direct comparison of key competitors on multiple dimensions. 5. Sustainability: Goal=Inform. Method=Styled cards and text blocks. Interaction=Static. Justification=Clearly presents the multi-faceted strategy for decarbonization. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: #f8f7f4;
+            color: #4a4a4a;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .active-tab {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .tab {
+            transition: all 0.3s ease;
+        }
+        .kpi-card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-2">J.B. Hunt (JBHT)</h1>
+            <p class="text-lg text-gray-600">技术驱动的多式联运领导者深度剖析</p>
+        </header>
+
+        <nav class="sticky top-0 z-10 bg-[#f8f7f4]/80 backdrop-blur-md mb-12 py-4 border-b">
+            <ul class="flex items-center justify-center space-x-4 md:space-x-8 text-sm md:text-base font-medium text-gray-500">
+                <li><a href="#overview" class="hover:text-blue-600 transition-colors">公司概览</a></li>
+                <li><a href="#business-segments" class="hover:text-blue-600 transition-colors">核心业务</a></li>
+                <li><a href="#financials" class="hover:text-blue-600 transition-colors">财务表现</a></li>
+                <li><a href="#stock" class="hover:text-blue-600 transition-colors">股票指标</a></li>
+                <li><a href="#competition" class="hover:text-blue-600 transition-colors">竞争格局</a></li>
+                <li><a href="#sustainability" class="hover:text-blue-600 transition-colors">未来战略</a></li>
+            </ul>
+        </nav>
+
+        <main class="space-y-16">
+
+            <section id="overview">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">公司概览与战略定位</h2>
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <p class="mb-4 text-gray-700 leading-relaxed">J.B. Hunt 运输服务公司（纳斯达克股票代码：JBHT）已从一家传统的卡车运输公司成功转型为一家以技术为核心、业务多元化的多式联运和供应链解决方案领导者。公司的核心投资论点建立在其独特的战略定位、卓越的运营韧性以及由行业领先的 J.B. Hunt 360° 平台所构筑的持久竞争优势之上。这种资产与技术相结合的“混合”模式，使其能够兼具资产所有者的可靠性和数字经纪商的灵活性，构成了难以复制的结构性优势。</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 text-center">
+                        <div class="kpi-card">
+                            <h4 class="text-lg font-semibold text-gray-500 mb-2">总资产</h4>
+                            <p class="text-4xl font-bold text-blue-600">$84.3<span class="text-2xl">亿</span></p>
+                            <p class="text-sm text-gray-400 mt-1">(截至2024年Q1)</p>
+                        </div>
+                        <div class="kpi-card">
+                            <h4 class="text-lg font-semibold text-gray-500 mb-2">员工总数</h4>
+                            <p class="text-4xl font-bold text-blue-600">33,000+</p>
+                            <p class="text-sm text-gray-400 mt-1">遍布北美</p>
+                        </div>
+                        <div class="kpi-card">
+                            <h4 class="text-lg font-semibold text-gray-500 mb-2">企业愿景</h4>
+                            <p class="text-xl font-semibold text-blue-600 leading-tight">在北美创建最高效的运输网络</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="business-segments">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">核心业务解析</h2>
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <p class="text-center text-gray-600 mb-8">J.B. Hunt 的多元化业务组合为其提供了显著的周期性缓冲。点击下方标签，探索各业务分部的运营模式、最新业绩表现及其在公司整体战略中的独特角色。</p>
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="-mb-px flex justify-center space-x-2 md:space-x-6" aria-label="Tabs">
+                            <button id="tab-jbi" class="tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm md:text-base border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">联运 (JBI)</button>
+                            <button id="tab-dcs" class="tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm md:text-base border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">专业合约 (DCS)</button>
+                            <button id="tab-ics" class="tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm md:text-base border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">综合运力 (ICS)</button>
+                            <button id="tab-fms" class="tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm md:text-base border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">最后一英里 (FMS)</button>
+                            <button id="tab-jbt" class="tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm md:text-base border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">整车运输 (JBT)</button>
+                        </nav>
+                    </div>
+                    <div id="segment-content" class="grid grid-cols-1 md:grid-cols-5 gap-8 items-center">
+                        <div class="md:col-span-3">
+                            <h3 id="segment-title" class="text-2xl font-bold text-gray-800 mb-3"></h3>
+                            <p id="segment-description" class="text-gray-700 leading-relaxed"></p>
+                        </div>
+                        <div class="md:col-span-2 chart-container h-64 md:h-80">
+                            <canvas id="segmentRevenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="financials">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">十年财务表现 (2015-2024)</h2>
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <div class="flex justify-center mb-6">
+                        <select id="financial-metric-selector" class="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="revenue" selected>总收入</option>
+                            <option value="netIncome">净利润</option>
+                            <option value="eps">稀释后每股收益</option>
+                        </select>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="financialsChart"></canvas>
+                    </div>
+                    <p class="text-center text-gray-600 mt-4">使用下拉菜单查看不同财务指标的十年趋势。数据显示了公司在不同市场周期中的增长与韧性。</p>
+                </div>
+            </section>
+
+            <section id="stock">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">十年股票指标 (2015-2024)</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-8 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">股价与每股股息</h3>
+                        <div class="chart-container h-80">
+                            <canvas id="stockPriceChart"></canvas>
+                        </div>
+                        <p class="text-center text-gray-600 mt-4">展示了年终股价与年度每股股息的增长趋势，反映了股东价值的创造。</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">历史估值倍数</h3>
+                         <div class="flex justify-center mb-4">
+                            <select id="valuation-metric-selector" class="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="pe" selected>市盈率 (P/E)</option>
+                                <option value="pb">市净率 (P/B)</option>
+                            </select>
+                        </div>
+                        <div class="chart-container h-80">
+                            <canvas id="valuationChart"></canvas>
+                        </div>
+                        <p class="text-center text-gray-600 mt-4">市盈率在周期低谷时偏高，反映市场对未来复苏的预期。高市净率则体现了市场对公司无形资产（如360°平台）的高度认可。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="competition">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">竞争格局</h2>
+                <div class="bg-white p-8 rounded-xl shadow-lg overflow-x-auto">
+                     <p class="text-center text-gray-600 mb-8">J.B. Hunt 在多个细分市场与不同类型的对手竞争。其混合业务模式（资产+技术）是其核心差异化优势，提供了纯资产或纯技术型竞争对手难以匹敌的综合价值主张。</p>
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">指标</th>
+                                <th scope="col" class="px-6 py-3">J.B. Hunt (JBHT)</th>
+                                <th scope="col" class="px-6 py-3">C.H. Robinson (CHRW)</th>
+                                <th scope="col" class="px-6 py-3">Knight-Swift (KNX)</th>
+                                <th scope="col" class="px-6 py-3">Old Dominion (ODFL)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-white border-b">
+                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">商业模式</th>
+                                <td class="px-6 py-4 font-semibold text-blue-600">混合模式（资产+技术）</td>
+                                <td class="px-6 py-4">轻资产（货运经纪）</td>
+                                <td class="px-6 py-4">重资产（卡车运输）</td>
+                                <td class="px-6 py-4">重资产（零担货运）</td>
+                            </tr>
+                            <tr class="bg-gray-50 border-b">
+                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">核心优势</th>
+                                <td class="px-6 py-4 font-semibold text-blue-600">一体化多式联运, 360°平台</td>
+                                <td class="px-6 py-4">全球网络, 轻资产灵活性</td>
+                                <td class="px-6 py-4">北美最大卡车运力</td>
+                                <td class="px-6 py-4">卓越LTL服务质量</td>
+                            </tr>
+                             <tr class="bg-white border-b">
+                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">核心劣势</th>
+                                <td class="px-6 py-4">资本密集, 受周期影响</td>
+                                <td class="px-6 py-4">缺乏自有资产控制</td>
+                                <td class="px-6 py-4">资本密集, 依赖司机</td>
+                                <td class="px-6 py-4">业务集中于LTL市场</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <section id="sustainability">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">战略展望与可持续发展</h2>
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <p class="text-center text-gray-600 mb-8">面对行业脱碳的长期趋势，J.B. Hunt 采取了一种积极探索与务实推进并行的审慎策略。公司的目标是在2034年前将碳排放强度降低32%（以2019年为基准），其发展思路并非孤注一掷于单一技术，而是多路径并行，优先发展当前最具经济可行性的减排方案。</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">核心减排战略</h3>
+                            <div class="space-y-6">
+                                <div class="p-6 bg-blue-50 rounded-lg">
+                                    <h4 class="font-semibold text-blue-800">🌍 优先发展联运</h4>
+                                    <p class="text-sm text-blue-700 mt-1">将更多公路运输转移到更高效的铁路是目前最具成本效益的减排方式。2023年，该业务帮助避免了约350万吨二氧化碳排放。</p>
+                                </div>
+                                <div class="p-6 bg-green-50 rounded-lg">
+                                    <h4 class="font-semibold text-green-800">🌿 扩大生物燃料使用</h4>
+                                    <p class="text-sm text-green-700 mt-1">积极测试并扩大可再生天然气（RNG）和生物柴油的使用。目前公司燃料消耗的约24%来自可再生资源。</p>
+                                </div>
+                                <div class="p-6 bg-orange-50 rounded-lg">
+                                    <h4 class="font-semibold text-orange-800">⚙️ 提升车队效率</h4>
+                                    <p class="text-sm text-orange-700 mt-1">保持车队年轻化，采用最新的节油技术和空气动力学套件，持续优化运营效率以降低单位油耗。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">零排放技术试点</h3>
+                            <div class="space-y-4">
+                                <p class="text-gray-700">公司正通过小规模试点项目，积极探索电动和氢燃料技术的实际应用，为未来技术成熟时的规模化应用积累经验。</p>
+                                <ul class="list-disc list-inside space-y-2 text-gray-600">
+                                    <li>与戴姆勒合作，测试 <span class="font-semibold text-gray-800">Freightliner eCascadia</span> 纯电重卡用于区域联运。</li>
+                                    <li>采购 <span class="font-semibold text-gray-800">Nikola</span> 的10辆纯电和3辆氢燃料电池卡车，在加州和亚利桑那州进行实际运营测试。</li>
+                                    <li>与客户及合作伙伴共建充电生态，在其部分场站安装充电桩以支持试点项目。</li>
+                                </ul>
+                                <div class="mt-6 p-4 border-l-4 border-yellow-400 bg-yellow-50">
+                                    <h4 class="font-bold text-yellow-800">面临的挑战</h4>
+                                    <p class="text-sm text-yellow-700 mt-1">公司高层指出，大规模电气化面临严峻的基础设施挑战。为J.B. Hunt整个车队提供快充所需的电力，相当于美国1%家庭的用电量，这在当前电网条件下不具备可行性。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="text-center mt-16 py-8 border-t">
+            <p class="text-gray-500">数据来源：J.B. Hunt 公司财报及公开市场数据。此应用仅供信息参考。</p>
+        </footer>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const segmentData = {
+                jbi: {
+                    title: '联运 (JBI): 多式联运的支柱',
+                    description: 'JBI是公司规模最大、最具战略意义的业务，专注于结合铁路的长途成本效益和卡车的门到门灵活性。近期与BNSF和GMXT合作推出新服务，显示其向高增长的跨境贸易市场扩展的战略意图。',
+                    revenue: 1440,
+                },
+                dcs: {
+                    title: '专业性合约服务 (DCS): 合同业务的压舱石',
+                    description: 'DCS为客户提供专业车队、司机和现场管理，基于长期合同运作，是公司收入稳定性和可预测性的主要来源。其产生的持续现金流为其他业务的投资和创新提供了坚实基础。',
+                    revenue: 847,
+                },
+                ics: {
+                    title: '综合运力解决方案 (ICS): 数字货运经纪引擎',
+                    description: 'ICS是公司的轻资产货运经纪部门，完全由J.B. Hunt 360°平台驱动。它将托运人的需求与庞大的第三方承运商网络进行匹配，即使在行业下行周期中也能驱动效率提升。',
+                    revenue: 260,
+                },
+                fms: {
+                    title: '最后一英里服务 (FMS): 面向消费者的解决方案',
+                    description: 'FMS专注于将大件商品（如家具、家电）运送至消费者家中或企业，并提供安装等增值服务。该业务与消费者支出趋势紧密相关，直接反映宏观经济环境。',
+                    revenue: 211,
+                },
+                jbt: {
+                    title: '整车运输 (JBT): 资产型业务的基础',
+                    description: 'JBT利用公司自有的拖拉机和拖车车队，提供传统的点对点整车公路运输服务。该业务同样由360°平台赋能，以提高资产利用率和订单获取效率。',
+                    revenue: 177,
+                }
+            };
+
+            const totalRevenue = Object.values(segmentData).reduce((sum, seg) => sum + seg.revenue, 0);
+            
+            let segmentChart;
+            const segmentTabs = document.querySelectorAll('.tab');
+            const segmentTitle = document.getElementById('segment-title');
+            const segmentDescription = document.getElementById('segment-description');
+
+            function updateSegmentContent(segmentKey) {
+                const data = segmentData[segmentKey];
+                segmentTitle.textContent = data.title;
+                segmentDescription.textContent = data.description;
+                
+                segmentTabs.forEach(t => t.classList.remove('active-tab'));
+                document.getElementById(`tab-${segmentKey}`).classList.add('active-tab');
+
+                const chartData = {
+                    labels: ['该业务收入', '其他业务收入'],
+                    datasets: [{
+                        data: [data.revenue, totalRevenue - data.revenue],
+                        backgroundColor: ['#3b82f6', '#e5e7eb'],
+                        borderColor: '#f8f7f4',
+                        borderWidth: 4,
+                        hoverOffset: 4
+                    }]
+                };
+
+                if (segmentChart) {
+                    segmentChart.data = chartData;
+                    segmentChart.update();
+                } else {
+                    const ctx = document.getElementById('segmentRevenueChart').getContext('2d');
+                    segmentChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: chartData,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                },
+                                title: {
+                                    display: true,
+                                    text: '收入贡献占比 (基于2025 Q2)',
+                                    font: { size: 14 }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed !== null) {
+                                                label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact' }).format(context.parsed * 1000000);
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            cutout: '60%',
+                        }
+                    });
+                }
+            }
+            
+            segmentTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const segmentKey = tab.id.split('-')[1];
+                    updateSegmentContent(segmentKey);
+                });
+            });
+
+            updateSegmentContent('jbi');
+
+            const financialData = {
+                years: [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024],
+                revenue: [61.88, 65.55, 71.90, 86.15, 91.65, 96.37, 121.68, 148.14, 128.30, 120.87],
+                netIncome: [401.78, 427.02, 384.09, 564.35, 516.32, 506.04, 760.81, 969.35, 728.29, 570.89],
+                eps: [3.46, 3.83, 3.45, 5.17, 4.78, 4.74, 7.14, 9.21, 6.97, 5.56]
+            };
+
+            const stockData = {
+                years: [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024],
+                price: [71.51, 97.32, 115.63, 92.05, 115.54, 130.84, 197.10, 169.66, 196.11, 169.14],
+                dividend: [0.84, 0.88, 0.92, 0.96, 1.04, 1.08, 1.18, 1.60, 1.68, 1.72],
+                pe: [18.29, 23.44, 17.30, 19.68, 21.85, 28.54, 28.21, 18.62, 28.29, 30.14],
+                pb: [4.38, 5.48, 5.61, 4.15, 4.88, 5.55, 6.89, 4.92, 5.02, 4.29]
+            };
+
+            let financialsChartInstance;
+            const financialSelector = document.getElementById('financial-metric-selector');
+            
+            function renderFinancialsChart(metric) {
+                const datasets = {
+                    revenue: {
+                        label: '总收入 (亿美元)',
+                        data: financialData.revenue,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        yAxisID: 'y',
+                        type: 'bar',
+                    },
+                    netIncome: {
+                        label: '净利润 (百万美元)',
+                        data: financialData.netIncome,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        yAxisID: 'y',
+                        type: 'line',
+                        tension: 0.3
+                    },
+                    eps: {
+                        label: '稀释后每股收益 ($)',
+                        data: financialData.eps,
+                        borderColor: '#f97316',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        yAxisID: 'y',
+                        type: 'line',
+                        tension: 0.3
+                    }
+                };
+
+                const data = {
+                    labels: financialData.years,
+                    datasets: [datasets[metric]]
+                };
+
+                if (financialsChartInstance) {
+                    financialsChartInstance.data = data;
+                    financialsChartInstance.options.plugins.title.text = datasets[metric].label;
+                    financialsChartInstance.update();
+                } else {
+                    const ctx = document.getElementById('financialsChart').getContext('2d');
+                    financialsChartInstance = new Chart(ctx, {
+                        type: 'bar',
+                        data: data,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: true, text: datasets[metric].label, font: { size: 16 } },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                }
+                            },
+                            scales: {
+                                x: { grid: { display: false } },
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: '#e5e7eb' }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            financialSelector.addEventListener('change', (e) => renderFinancialsChart(e.target.value));
+            renderFinancialsChart('revenue');
+
+            const stockPriceCtx = document.getElementById('stockPriceChart').getContext('2d');
+            new Chart(stockPriceCtx, {
+                type: 'bar',
+                data: {
+                    labels: stockData.years,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: '年终股价 ($)',
+                            data: stockData.price,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'transparent',
+                            yAxisID: 'y-price',
+                            tension: 0.3
+                        },
+                        {
+                            type: 'bar',
+                            label: '每股股息 ($)',
+                            data: stockData.dividend,
+                            backgroundColor: '#a5b4fc',
+                            yAxisID: 'y-dividend'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        'y-price': {
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: '股价 ($)' }
+                        },
+                        'y-dividend': {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: '股息 ($)' },
+                            grid: { drawOnChartArea: false }
+                        },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        tooltip: { mode: 'index', intersect: false }
+                    }
+                }
+            });
+
+            let valuationChartInstance;
+            const valuationSelector = document.getElementById('valuation-metric-selector');
+
+            function renderValuationChart(metric) {
+                const datasets = {
+                    pe: {
+                        label: '市盈率 (P/E)',
+                        data: stockData.pe,
+                        borderColor: '#ef4444',
+                    },
+                    pb: {
+                        label: '市净率 (P/B)',
+                        data: stockData.pb,
+                        borderColor: '#8b5cf6',
+                    }
+                };
+                
+                const data = {
+                    labels: stockData.years,
+                    datasets: [{
+                        label: datasets[metric].label,
+                        data: datasets[metric].data,
+                        borderColor: datasets[metric].borderColor,
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        fill: false
+                    }]
+                };
+
+                if (valuationChartInstance) {
+                    valuationChartInstance.data = data;
+                    valuationChartInstance.update();
+                } else {
+                    const ctx = document.getElementById('valuationChart').getContext('2d');
+                    valuationChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: data,
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                            },
+                             scales: {
+                                x: { grid: { display: false } },
+                                y: {
+                                    beginAtZero: false,
+                                    grid: { color: '#e5e7eb' }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            valuationSelector.addEventListener('change', (e) => renderValuationChart(e.target.value));
+            renderValuationChart('pe');
+
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
