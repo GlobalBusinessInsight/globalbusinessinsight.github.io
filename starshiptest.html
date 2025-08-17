@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星舰集成测试飞行历程</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Bold Accents -->
+    <!-- Application Structure Plan: The application is a single, long-scrolling "poster" or infographic format. All information is presented statically. Each of the 9 flights is a distinct visual section. Within each section, a three-column layout is used to display "Successes," "Failures," and "Improvements". This version adds CSS-drawn diagrams into the "Improvements" column to visually represent key engineering changes, enhancing the infographic nature of the design. -->
+    <!-- Visualization & Content Choices: Report Info -> Goal -> Presentation Method -> Justification. 1. All Flight Details -> Inform/Compare -> Static three-column sections -> Eliminates clicks for easy side-by-side comparison. 2. Key Improvements -> Illustrate -> CSS-drawn diagrams -> Provides a quick, visual summary of complex engineering solutions, making the poster more engaging and easier to understand at a glance. -> Custom CSS. 3. Overall Narrative -> Guide the user -> Large headings and visual separators -> Creates a clear information hierarchy. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: #f8f7f6;
+            color: #44403c;
+        }
+        .poster-section:nth-child(even) {
+            background-color: #ffffff;
+        }
+        .category-title {
+            font-weight: 700;
+            font-family: 'Noto Sans SC', sans-serif;
+            border-bottom: 2px solid #0ea5e9;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            color: #0369a1;
+        }
+        .css-drawings-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px dashed #cbd5e1;
+        }
+        .css-drawing {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100px;
+        }
+        .css-drawing .visual {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+        .css-drawing .label {
+            font-size: 0.75rem;
+            color: #475569;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Drawing: Water-cooled Steel Plate */
+        .steel-plate .visual {
+            background-color: #94a3b8;
+            border-radius: 4px;
+        }
+        .steel-plate .visual::before, .steel-plate .visual::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 12px;
+            background-color: #38bdf8;
+            border-radius: 50%;
+            bottom: -10px;
+            animation: drip 1.5s infinite ease-in-out;
+        }
+        .steel-plate .visual::before { left: 15px; }
+        .steel-plate .visual::after { left: 35px; animation-delay: -0.7s; }
+        @keyframes drip { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(20px); opacity: 0; } }
+
+        /* Drawing: Hot Staging */
+        .hot-staging .visual .booster {
+            position: absolute;
+            bottom: 0;
+            left: 15px;
+            width: 30px;
+            height: 35px;
+            background-color: #e2e8f0;
+            border-radius: 4px 4px 0 0;
+        }
+        .hot-staging .visual .ship {
+            position: absolute;
+            top: 0;
+            left: 15px;
+            width: 30px;
+            height: 25px;
+            background-color: #94a3b8;
+            border-radius: 15px 15px 0 0;
+        }
+        .hot-staging .visual .flame {
+            position: absolute;
+            bottom: 25px;
+            left: 22.5px;
+            width: 15px;
+            height: 15px;
+            background-color: #f59e0b;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+        }
+
+        /* Drawing: e-TVC */
+        .e-tvc .visual .engine {
+            width: 30px;
+            height: 30px;
+            background: #64748b;
+            border-radius: 0 0 15px 15px;
+            position: absolute;
+            top: 10px; left: 15px;
+        }
+        .e-tvc .visual .bolt {
+            position: absolute;
+            top: 20px; left: 25px;
+            width: 0; height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 10px solid #facc15;
+            transform: rotate(30deg);
+        }
+        .e-tvc .visual .bolt::after {
+            content: '';
+            position: absolute;
+            top: 5px; left: -5px;
+            width: 0; height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 10px solid #facc15;
+        }
+        
+        /* Drawing: Upgraded Filter */
+        .filter .visual {
+            background-color: #e2e8f0;
+            border: 3px solid #94a3b8;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+        .filter .visual::before, .filter .visual::after {
+            content: '';
+            position: absolute;
+            background: #cbd5e1;
+        }
+        .filter .visual::before { width: 100%; height: 4px; top: 25px; left: 0; }
+        .filter .visual::after { width: 4px; height: 100%; left: 25px; top: 0; }
+
+        /* Drawing: Redundant Thrusters */
+        .thrusters .visual .ship-body {
+            width: 20px; height: 40px; background: #94a3b8;
+            position: absolute; top: 10px; left: 20px;
+            border-radius: 4px;
+        }
+        .thrusters .visual .thruster {
+            width: 0; height: 0; border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            position: absolute;
+        }
+        .thrusters .visual .t1 { border-right: 8px solid #f59e0b; left: 12px; top: 15px; }
+        .thrusters .visual .t2 { border-left: 8px solid #f59e0b; right: 12px; top: 15px; }
+        .thrusters .visual .t3 { border-right: 8px solid #fbbf24; left: 12px; top: 30px; }
+        .thrusters .visual .t4 { border-left: 8px solid #fbbf24; right: 12px; top: 30px; }
+
+        /* Drawing: Optimized TPS */
+        .tps .visual {
+            transform: perspective(30px) rotateX(10deg);
+        }
+        .tps .visual .hex {
+            position: absolute;
+            width: 20px; height: 11.55px;
+            background-color: #334155;
+            margin: 5.77px 0;
+        }
+        .tps .visual .hex::before, .tps .visual .hex::after {
+            content: ""; position: absolute;
+            width: 0; border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+        }
+        .tps .visual .hex::before { bottom: 100%; border-bottom: 5.77px solid #334155; }
+        .tps .visual .hex::after { top: 100%; width: 0; border-top: 5.77px solid #334155; }
+        .tps .visual .h1 { top: 0px; left: 19px; }
+        .tps .visual .h2 { top: 11.55px; left: 9px; }
+        .tps .visual .h3 { top: 11.55px; left: 29px; }
+        .tps .visual .h4 { top: 23.1px; left: 19px; }
+    </style>
+</head>
+<body class="bg-stone-100 text-stone-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <header class="text-center mb-10 md:mb-16 py-8">
+            <h1 class="text-5xl md:text-7xl font-black text-sky-800 mb-2 tracking-wider">迭代式攀登</h1>
+            <p class="text-xl md:text-2xl text-stone-600">SpaceX星舰前九次集成测试飞行全览</p>
+        </header>
+
+        <main>
+            <section id="intro" class="max-w-4xl mx-auto text-center mb-12 md:mb-20">
+                <p class="text-base md:text-lg leading-relaxed text-stone-700">
+                    SpaceX的星舰项目遵循一种激进的、以测试驱动的迭代工程哲学。本文将带您回顾前九次集成测试飞行（IFT），平铺展示每次飞行的目标、成果、故障及其背后的工程改进，揭示星舰如何从一次次“快速的非计划性解体”中逐步走向成熟。
+                </p>
+            </section>
+
+            <div id="flights-container" class="space-y-12 md:space-y-16">
+            </div>
+
+            <section id="conclusion" class="max-w-4xl mx-auto mt-16 md:mt-24 pt-8 border-t-4 border-sky-800">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 text-sky-700">迭代引擎：火箭开发的新范式</h2>
+                <div class="space-y-4 text-base md:text-lg leading-relaxed text-stone-700 text-left md:text-justify">
+                    <p>
+                        九次飞行的历程清晰地勾勒出星舰系统“问题-解决-新问题”的演进循环。星舰的测试项目以其对公开、高调失败的接纳，从根本上挑战并重塑了传统的航空航天开发周期。测试、失败、分析、实施纠正措施的快速循环，是该项目进展的核心“引擎”。
+                    </p>
+                    <p>
+                        尽管取得了巨大进展，星舰要实现其最终目标仍面临诸多障碍。前九次集成飞行已证明其核心设计的可行性，接下来的测试将更多地聚焦于验证其操作上的可靠性和经济上的可行性，从而真正开启廉价、高效进入太空的新时代。
+                    </p>
+                </div>
+            </section>
+        </main>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const flightData = [
+                {
+                    id: 'ift-1', title: 'IFT-1', date: '2023年4月20日', vehicle: 'B7/S24', result: '解体',
+                    resultColor: 'bg-red-100 text-red-800 border border-red-300',
+                    successes: `<ul><li>首次对完整集成系统进行测试。</li><li>成功离开发射塔，这是首要目标。</li></ul>`,
+                    failures: `<ul><li><strong>发动机故障：</strong>起飞时3台发动机未点火，上升中又有数台失效。</li><li><strong>失控：</strong>助推器尾部火灾导致TVC系统失效。</li><li><strong>级分离失败：</strong>因失控翻滚，未能执行级分离。</li><li><strong>发射台被摧毁：</strong>巨大的冲击力彻底损毁了混凝土地基。</li></ul>`,
+                    improvements: `<ul><li><strong>水冷钢板火焰导流器：</strong>为保护发射台，安装了巨大的水冷钢板系统。</li><li><strong>实施热分离：</strong>改用更可靠的热分离方案。</li><li><strong>电动推力矢量控制(e-TVC)：</strong>将液压TVC替换为更坚固的电动系统。</li></ul>`,
+                    improvementVisuals: [
+                        { class: 'steel-plate', label: '水冷钢板' },
+                        { class: 'hot-staging', label: '热分离' },
+                        { class: 'e-tvc', label: '电动TVC' }
+                    ]
+                },
+                {
+                    id: 'ift-2', title: 'IFT-2', date: '2023年11月18日', vehicle: 'B9/S25', result: '解体',
+                    resultColor: 'bg-red-100 text-red-800 border border-red-300',
+                    successes: `<ul><li><strong>发射台验证成功：</strong>水冷火焰导流器表现完美。</li><li><strong>33台发动机全点火：</strong>所有发动机成功点火并持续工作。</li><li><strong>热分离成功：</strong>首次成功执行热分离操作。</li></ul>`,
+                    failures: `<ul><li><strong>助推器损毁：</strong>因液氧（LOX）过滤器堵塞导致发动机连锁故障。</li><li><strong>飞船损毁：</strong>排放多余液氧时尾部发生泄漏，引发火灾。</li></ul>`,
+                    improvements: `<ul><li><strong>升级过滤器：</strong>改进助推器和飞船的液氧过滤器，防止堵塞。</li><li><strong>改进推进剂排放程序：</strong>优化排放过程，降低火灾风险。</li></ul>`,
+                    improvementVisuals: [
+                        { class: 'filter', label: '升级过滤器' }
+                    ]
+                },
+                {
+                    id: 'ift-3', title: 'IFT-3', date: '2024年3月14日', vehicle: 'B10/S28', result: '再入时解体',
+                    resultColor: 'bg-amber-100 text-amber-800 border border-amber-300',
+                    successes: `<ul><li><strong>抵达轨道速度：</strong>飞船首次达到预定轨道速度。</li><li><strong>在轨系统测试：</strong>成功开合有效载荷舱门。</li><li><strong>燃料转移演示：</strong>完成了一次低温推进剂在轨转移演示。</li></ul>`,
+                    failures: `<ul><li><strong>助推器损毁：</strong>液氧过滤器再次堵塞，导致着陆燃烧失败。</li><li><strong>飞船损毁：</strong>滚动控制的推进器阀门堵塞，导致姿态失控。</li></ul>`,
+                    improvements: `<ul><li><strong>增加冗余控制：</strong>为飞船增加额外的滚动控制推进器。</li><li><strong>升级阀门硬件：</strong>升级阀门设计，增强其抗堵塞能力。</li></ul>`,
+                    improvementVisuals: [
+                        { class: 'thrusters', label: '冗余推进器' }
+                    ]
+                },
+                {
+                    id: 'ift-4', title: 'IFT-4', date: '2024年6月6日', vehicle: 'B11/S29', result: '成功软着水',
+                    resultColor: 'bg-green-100 text-green-800 border border-green-300',
+                    successes: `<ul><li><strong>首次完成全任务剖面：</strong>实现了所有主要飞行目标。</li><li><strong>助推器软着水：</strong>首次在墨西哥湾成功实现软着水。</li><li><strong>飞船幸存再入并着水：</strong>尽管襟翼严重烧蚀，依然保持控制并成功着水。</li></ul>`,
+                    failures: `<ul><li><strong>热防护系统损伤：</strong>飞船在再入过程中，襟翼和部分热防护瓦片出现可见的严重损伤。</li></ul>`,
+                    improvements: `<ul><li><strong>优化热防护系统（TPS）：</strong>根据本次飞行数据，对瓦片的设计、材料及安装工艺进行优化。</li></ul>`,
+                    improvementVisuals: [
+                        { class: 'tps', label: '优化热防护罩' }
+                    ]
+                },
+                {
+                    id: 'ift-5', title: 'IFT-5', date: '2024年10月13日', vehicle: 'B12/S30', result: '首次捕获助推器',
+                    resultColor: 'bg-green-100 text-green-800 border border-green-300',
+                    successes: `<ul><li><strong>里程碑式成就：</strong>首次成功使用发射塔的“筷子”机械臂捕获返回的超重助推器。</li><li><strong>验证地面回收架构：</strong>验证了星舰可复用系统中最关键的一环。</li></ul>`,
+                    failures: `<ul><li>本次飞行的主要目标圆满完成，未报告重大故障。</li></ul>`,
+                    improvements: `<ul><li><strong>优化捕获流程：</strong>根据首次捕获的数据，精确调整助推器返回轨迹和“筷子”臂的控制算法。</li></ul>`,
+                    improvementVisuals: []
+                },
+                {
+                    id: 'ift-6', title: 'IFT-6', date: '2024年11月19日', vehicle: 'B13/S31', result: '上级故障',
+                    resultColor: 'bg-red-100 text-red-800 border border-red-300',
+                    successes: `<ul><li>继续高频次测试，为解决上级（飞船）的可靠性问题收集数据。</li></ul>`,
+                    failures: `<ul><li><strong>飞船（上级）出现故障：</strong>表明飞船的可靠性仍是挑战。</li></ul>`,
+                    improvements: `<ul><li><strong>聚焦上级可靠性：</strong>对飞船的子系统进行深入排查和设计迭代。</li></ul>`,
+                    improvementVisuals: []
+                },
+                {
+                    id: 'ift-7', title: 'IFT-7', date: '2025年1月17日', vehicle: '-', result: '上级故障',
+                    resultColor: 'bg-red-100 text-red-800 border border-red-300',
+                    successes: `<ul><li>持续进行飞行测试，以识别和解决飞船在实际飞行环境中的潜在问题。</li></ul>`,
+                    failures: `<ul><li><strong>飞船（上级）再次出现故障：</strong>进一步凸显了解决上级可靠性问题的紧迫性。</li></ul>`,
+                    improvements: `<ul><li><strong>系统性审查：</strong>对飞船的设计、制造和测试流程进行全面审查。</li></ul>`,
+                    improvementVisuals: []
+                },
+                {
+                    id: 'ift-8', title: 'IFT-8', date: '2025年3月6日', vehicle: '-', result: '均出现故障',
+                    resultColor: 'bg-red-100 text-red-800 border border-red-300',
+                    successes: `<ul><li>揭示了在更精细层面上的新故障模式，为提升系统鲁棒性提供了关键数据。</li></ul>`,
+                    failures: `<ul><li><strong>助推器故障：</strong>发动机点火器因返航时的局部热环境问题而未能重新点火。</li><li><strong>飞船故障：</strong>一台中央猛禽发动机发生硬件故障。</li></ul>`,
+                    improvements: `<ul><li><strong>优化隔热：</strong>为助推器发动机点火器增加更多隔热材料。</li><li><strong>发动机硬件改进：</strong>针对猛禽发动机的故障模式进行硬件层面的改进。</li></ul>`,
+                    improvementVisuals: []
+                },
+                {
+                    id: 'ift-9', title: 'IFT-9', date: '2025年5月27日', vehicle: '-', result: '均出现故障',
+                    resultColor: 'bg-red-100 text-red-800 border border-red-300',
+                    successes: `<ul><li><strong>极限性能数据收集：</strong>有意让助推器以高攻角飞行，收集到其性能极限的宝贵气动数据。</li></ul>`,
+                    failures: `<ul><li><strong>助推器故障（设计内）：</strong>高攻角试验导致内部燃料输送管结构损坏。</li><li><strong>飞船故障：</strong>主燃料箱增压系统扩散器发生故障。</li></ul>`,
+                    improvements: `<ul><li><strong>结构强化：</strong>根据极限测试数据，对助推器内部结构进行加固。</li><li><strong>增压系统改进：</strong>重新设计或加固增压系统扩散器。</li></ul>`,
+                    improvementVisuals: []
+                }
+            ];
+
+            const flightsContainer = document.getElementById('flights-container');
+
+            function renderFlightsAsPoster() {
+                let allFlightsHtml = '';
+                flightData.forEach(flight => {
+                    let visualsHtml = '';
+                    if (flight.improvementVisuals && flight.improvementVisuals.length > 0) {
+                        visualsHtml += '<div class="css-drawings-container">';
+                        flight.improvementVisuals.forEach(visual => {
+                            visualsHtml += `
+                                <div class="css-drawing ${visual.class}">
+                                    <div class="visual">
+                                        ${visual.class === 'hot-staging' ? '<div class="booster"></div><div class="ship"></div><div class="flame"></div>' : ''}
+                                        ${visual.class === 'e-tvc' ? '<div class="engine"></div><div class="bolt"></div>' : ''}
+                                        ${visual.class === 'thrusters' ? '<div class="ship-body"></div><div class="thruster t1"></div><div class="thruster t2"></div><div class="thruster t3"></div><div class="thruster t4"></div>' : ''}
+                                        ${visual.class === 'tps' ? '<div class="hex h1"></div><div class="hex h2"></div><div class="hex h3"></div><div class="hex h4"></div>' : ''}
+                                    </div>
+                                    <div class="label">${visual.label}</div>
+                                </div>
+                            `;
+                        });
+                        visualsHtml += '</div>';
+                    }
+
+                    allFlightsHtml += `
+                        <section class="poster-section rounded-2xl shadow-lg p-6 md:p-8">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                                <div>
+                                    <h2 class="text-4xl md:text-5xl font-extrabold text-sky-700">${flight.title}</h2>
+                                    <p class="text-stone-500 mt-1 text-base md:text-lg">${flight.date} | ${flight.vehicle}</p>
+                                </div>
+                                <div class="mt-4 md:mt-0 text-lg font-semibold px-4 py-2 rounded-full ${flight.resultColor}">
+                                    ${flight.result}
+                                </div>
+                            </div>
+                            <div class="grid md:grid-cols-3 gap-6 md:gap-8 mt-8">
+                                <div class="prose prose-stone max-w-none">
+                                    <h3 class="category-title text-xl">✅ 成果</h3>
+                                    ${flight.successes}
+                                </div>
+                                <div class="prose prose-stone max-w-none">
+                                    <h3 class="category-title text-xl">💥 故障</h3>
+                                    ${flight.failures}
+                                </div>
+                                <div class="prose prose-stone max-w-none">
+                                    <h3 class="category-title text-xl">🔧 改进</h3>
+                                    ${flight.improvements}
+                                    ${visualsHtml}
+                                </div>
+                            </div>
+                        </section>
+                    `;
+                });
+                flightsContainer.innerHTML = allFlightsHtml;
+            }
+
+            renderFlightsAsPoster();
+        });
+    </script>
+</body>
+</html>
