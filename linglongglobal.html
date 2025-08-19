@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式报告：三大企业海外营销策略对比分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals & Subtle Accents -->
+    <!-- Application Structure Plan: The application is designed as a single-page interactive dashboard. It starts with a hero section summarizing the report's core thesis. The main content is divided into three logical, tab-navigated sections: 1) "战略模型对比" (Strategy Model Comparison), which allows users to directly compare Beifa, SANY, and Linglong across key strategic dimensions using an interactive chart and detailed cards. This structure was chosen to facilitate direct comparison, which is a core analytical method of the report. 2) "案例深度剖析" (In-depth Case Studies), where users can select a company to view a detailed breakdown of its strategy, including a new timeline and detailed strategy breakdown for Linglong. This allows for focused learning. 3) "玲珑轮胎战略进化" (Linglong's Strategy Evolution), which presents final recommendations in an actionable, card-based format. This user flow—from high-level comparison to deep-dive analysis to future-focused recommendations—provides a logical and intuitive path for understanding the report's complex information. -->
+    <!-- Visualization & Content Choices: 1. Strategy Comparison: A dynamic Radar Chart (Chart.js) is used to visually compare the three companies' strategic focus areas. Goal: Compare. Interaction: Hovering over the chart reveals tooltips with scores. Justification: A radar chart is excellent for comparing multiple entities across multiple variables. 2. Linglong Timeline: A custom-built vertical timeline using HTML/Tailwind CSS is added to the Linglong analysis section. Goal: Show Change. Interaction: Static display. Justification: Clearly visualizes the evolution of Linglong's 30-year strategy. 3. Linglong Strategy Breakdown: A grid of cards is used to detail Linglong's strategy by region, product, and brand. Goal: Organize. Interaction: Content revealed on tab selection. Justification: Breaks down complex information into digestible thematic chunks. 4. Recommendations: The four key recommendations for Linglong are presented in a 2x2 grid of cards with expandable details. Goal: Inform/Organize. Interaction: Static display with rich content. Justification: Presents actionable advice in a clear, balanced, and detailed format. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #FDFBF8;
+            color: #4A4A4A;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #A0522D;
+            color: #FFFFFF;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .nav-button:not(.active) {
+            background-color: #FFFFFF;
+            color: #A0522D;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8">
+        
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-[#A0522D] mb-2">铸就全球品牌</h1>
+            <p class="text-lg md:text-xl text-gray-600 max-w-4xl mx-auto">中国企业的全球化正从“中国制造”输出转向“中国品牌”深耕。本报告通过对比贝发、三一重工与玲珑轮胎的全球化路径，旨在为玲珑轮胎构建一个更具韧性、更深层次的全球营销体系提供战略镜鉴。</p>
+        </header>
+
+        <main>
+            <nav class="flex justify-center space-x-2 sm:space-x-4 mb-8">
+                <button id="btn-comparison" class="nav-button active font-semibold py-2 px-4 sm:px-6 rounded-full shadow-md">战略模型对比</button>
+                <button id="btn-analysis" class="nav-button font-semibold py-2 px-4 sm:px-6 rounded-full shadow-md">案例深度剖析</button>
+                <button id="btn-recommendation" class="nav-button font-semibold py-2 px-4 sm:px-6 rounded-full shadow-md">玲珑轮胎战略进化</button>
+            </nav>
+
+            <div id="content-area">
+                
+                <section id="section-comparison" class="fade-in">
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800">跨行业战略镜鉴</h2>
+                        <p class="mt-2 text-gray-600 max-w-3xl mx-auto">通过系统性对比贝发、三一重工与玲珑轮胎的国际化战略，揭示其在核心驱动力、渠道模式及竞争优势上的本质差异，为理解不同全球化路径提供清晰参照。</p>
+                    </div>
+                    <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                        <div class="chart-container mx-auto">
+                            <canvas id="strategyRadarChart"></canvas>
+                        </div>
+                    </div>
+                    <div id="comparison-details" class="mt-8 grid md:grid-cols-3 gap-6">
+                    </div>
+                </section>
+
+                <section id="section-analysis" class="hidden fade-in">
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800">三大出海模式深度剖析</h2>
+                        <p class="mt-2 text-gray-600 max-w-3xl mx-auto">选择一家公司，深入了解其独特的全球化战略、核心竞争力以及对中国企业出海的普遍启示。</p>
+                    </div>
+                    <div class="flex justify-center space-x-4 mb-6">
+                        <button class="case-btn active bg-[#A0522D] text-white py-2 px-5 rounded-lg" data-company="beifa">宁波贝发</button>
+                        <button class="case-btn bg-white text-[#A0522D] py-2 px-5 rounded-lg" data-company="sany">三一重工</button>
+                        <button class="case-btn bg-white text-[#A0522D] py-2 px-5 rounded-lg" data-company="linglong">玲珑轮胎</button>
+                    </div>
+                    <div id="analysis-content" class="bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+                    </div>
+                </section>
+
+                <section id="section-recommendation" class="hidden fade-in">
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800">玲珑轮胎海外营销进化战略</h2>
+                        <p class="mt-2 text-gray-600 max-w-3xl mx-auto">基于对比分析，融合贝发的渠道赋能与三一的服务生态理念，为玲珑轮胎构建一个整合、坚韧且能创造深度客户价值的全球化体系，提出四大战略建议。</p>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="card p-6">
+                            <h3 class="font-bold text-xl mb-3 text-[#A0522D]">1. 升级为“区域生态系统”</h3>
+                            <p class="text-gray-700 mb-4">将海外工厂从“生产中心”升级为集研发、制造、营销、服务于一体的“区域总部”，实现深度本土化，从“在欧洲生产的中国品牌”转变为真正的“欧洲本土品牌”。</p>
+                            <details class="text-sm">
+                                <summary class="font-semibold text-gray-600 cursor-pointer">展开实施细节</summary>
+                                <div class="mt-2 space-y-2 text-gray-600">
+                                    <p><strong>研发本土化：</strong>设立区域研发中心，针对欧洲湿地抓地力、北美全季节轮胎等特定需求进行定制化研发。</p>
+                                    <p><strong>服务体系化：</strong>建立世界级技术培训中心，为本地经销商、零售商提供系统化培训，确保全球服务质量一致。</p>
+                                    <p><strong>供应链区域化：</strong>培育本地供应商，构建更具韧性和成本效益的区域供应链，提升市场响应速度。</p>
+                                </div>
+                            </details>
+                        </div>
+                        <div class="card p-6">
+                            <h3 class="font-bold text-xl mb-3 text-[#A0522D]">2. 打造“品牌体验中心”</h3>
+                            <p class="text-gray-700 mb-4">借鉴贝发模式，在关键市场建立旗舰级“品牌体验中心”，将体育营销的空中声量转化为地面的品牌感知和销售转化，有效赋能渠道伙伴。</p>
+                             <details class="text-sm">
+                                <summary class="font-semibold text-gray-600 cursor-pointer">展开实施细节</summary>
+                                <div class="mt-2 space-y-2 text-gray-600">
+                                    <p><strong>功能复合化：</strong>集品牌故事展示、技术互动教育、合作伙伴赋能于一体，成为多功能品牌圣殿。</p>
+                                    <p><strong>体验具象化：</strong>通过VR体验、切割模型等方式，让消费者直观理解产品技术优势，将赞助关系转化为品牌实力感知。</p>
+                                </div>
+                            </details>
+                        </div>
+                        <div class="card p-6">
+                            <h3 class="font-bold text-xl mb-3 text-[#A0522D]">3. 构建多维度品牌叙事</h3>
+                            <p class="text-gray-700 mb-4">超越单一的体育营销，大力传播“科技领导力”、“可持续发展”和“服务可靠性”的故事，构建更立体、更有说服力的全球品牌形象。</p>
+                             <details class="text-sm">
+                                <summary class="font-semibold text-gray-600 cursor-pointer">展开实施细节</summary>
+                                <div class="mt-2 space-y-2 text-gray-600">
+                                    <p><strong>科技叙事：</strong>与科技媒体合作，深度解读环保轮胎、智能RFID轮胎等前沿技术。</p>
+                                    <p><strong>绿色叙事：</strong>宣传碳中和目标及加入GPSNR的责任担当，在注重环保的市场建立负责任的企业形象。</p>
+                                    <p><strong>服务叙事：</strong>传播“阿特拉斯卡友之家”等服务网络的成功案例和客户证言，吸引对可靠性要求高的车队客户。</p>
+                                </div>
+                            </details>
+                        </div>
+                        <div class="card p-6">
+                            <h3 class="font-bold text-xl mb-3 text-[#A0522D]">4. 构筑知识产权护城河</h3>
+                            <p class="text-gray-700 mb-4">效仿贝发的战略性IP管理，进行前瞻性的全球专利布局，将知识产权从合规问题提升为核心战略武器，保护研发投入，赢得高端客户。</p>
+                             <details class="text-sm">
+                                <summary class="font-semibold text-gray-600 cursor-pointer">展开实施细节</summary>
+                                <div class="mt-2 space-y-2 text-gray-600">
+                                    <p><strong>全球专利布局：</strong>围绕新材料、智能轮胎技术、绿色制造工艺等核心领域进行前瞻性、攻击性的专利布局。</p>
+                                    <p><strong>IP商业化运用：</strong>将专利组合作为营销工具，主动宣传技术领先地位，并在洽谈OE业务时作为核心优势。</p>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+        
+        <footer class="text-center mt-12 pt-8 border-t border-gray-200">
+            <p class="text-gray-600 mb-4">深入了解其他案例分析：</p>
+            <div class="flex justify-center space-x-6">
+                <a href="https://globalbusinessinsight.github.io/beifamarketing.html" target="_blank" class="text-[#A0522D] hover:underline transition-colors">宁波贝发营销策略</a>
+                <a href="https://globalbusinessinsight.github.io/sanyglobal.html" target="_blank" class="text-[#A0522D] hover:underline transition-colors">三一集团全球化战略</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sections = {
+                comparison: document.getElementById('section-comparison'),
+                analysis: document.getElementById('section-analysis'),
+                recommendation: document.getElementById('section-recommendation')
+            };
+
+            const navButtons = {
+                comparison: document.getElementById('btn-comparison'),
+                analysis: document.getElementById('btn-analysis'),
+                recommendation: document.getElementById('btn-recommendation')
+            };
+            
+            const caseButtons = document.querySelectorAll('.case-btn');
+            const analysisContent = document.getElementById('analysis-content');
+            const comparisonDetailsContainer = document.getElementById('comparison-details');
+
+            const data = {
+                radar: {
+                    labels: ['渠道/服务', '品牌建设', '生产布局', '驱动力', '核心优势'],
+                    datasets: [
+                        {
+                            label: '宁波贝发 (敏捷渗透者)',
+                            data: [4, 3, 2, 4, 5],
+                            backgroundColor: 'rgba(210, 105, 30, 0.2)',
+                            borderColor: 'rgba(210, 105, 30, 1)',
+                            pointBackgroundColor: 'rgba(210, 105, 30, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(210, 105, 30, 1)'
+                        },
+                        {
+                            label: '三一重工 (深度整合者)',
+                            data: [5, 4, 5, 3, 4],
+                            backgroundColor: 'rgba(70, 130, 180, 0.2)',
+                            borderColor: 'rgba(70, 130, 180, 1)',
+                            pointBackgroundColor: 'rgba(70, 130, 180, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(70, 130, 180, 1)'
+                        },
+                        {
+                            label: '玲珑轮胎 (混合战略者)',
+                            data: [3, 5, 4, 2, 3],
+                            backgroundColor: 'rgba(60, 179, 113, 0.2)',
+                            borderColor: 'rgba(60, 179, 113, 1)',
+                            pointBackgroundColor: 'rgba(60, 179, 113, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(60, 179, 113, 1)'
+                        }
+                    ]
+                },
+                comparisonDetails: {
+                    beifa: {
+                        title: '宁波贝发 (敏捷渗透者)',
+                        color: 'text-[#D2691E]',
+                        points: [
+                            '<strong>核心战略:</strong> “一支笔、一条链、一个平台”的生态系统战略。',
+                            '<strong>主要驱动力:</strong> 市场寻求 & OEM转型升级。',
+                            '<strong>渠道/服务模式:</strong> 轻资产的“品牌中心”模式，赋能本地合作伙伴。',
+                            '<strong>核心竞争优势:</strong> 敏捷性、知识产权保护、渠道杠杆效应。'
+                        ]
+                    },
+                    sany: {
+                        title: '三一重工 (深度整合者)',
+                        color: 'text-[#4682B4]',
+                        points: [
+                            '<strong>核心战略:</strong> “制造+服务”主导的深度捆绑战略。',
+                            '<strong>主要驱动力:</strong> 国内市场周期性放缓 & 全球领导者雄心。',
+                            '<strong>渠道/服务模式:</strong> 重资产的自营“6S”服务网络，提供一体化解决方案。',
+                            '<strong>核心竞争优势:</strong> 无可匹敌的服务网络、深度本土化能力。'
+                        ]
+                    },
+                    linglong: {
+                        title: '玲珑轮胎 (混合战略者)',
+                        color: 'text-[#3CB371]',
+                        points: [
+                            '<strong>核心战略:</strong> “7+5”全球产能布局 + 高能见度品牌营销。',
+                            '<strong>主要驱动力:</strong> 规避贸易壁垒 & 保障市场准入。',
+                            '<strong>渠道/服务模式:</strong> 发展中的“新零售”与加盟商网络。',
+                            '<strong>核心竞争优势:</strong> 地缘政治风险对冲、成本控制、快速的品牌认知构建。'
+                        ]
+                    }
+                },
+                analysisDetails: {
+                    beifa: {
+                        title: "贝发模式：敏捷市场渗透",
+                        content: `
+                        <div class="space-y-4 text-gray-700">
+                            <p>宁波贝发代表了一种轻资产、高效率的海外市场渗透模式。其成功的核心在于<strong>渠道创新</strong>与<strong>知识产权壁垒</strong>的构建。</p>
+                            <div>
+                                <h4 class="font-semibold text-lg mb-2 text-gray-800">核心战略：“一支笔、一条链、一个平台”</h4>
+                                <ul class="list-disc list-inside space-y-2 pl-2">
+                                    <li><strong>“一支笔”：</strong>根植于产品创新，平均每三天研发一个新产品，申请一项专利，以技术迭代构筑核心竞争力。</li>
+                                    <li><strong>“一条链”：</strong>从单一制造延伸至完整文具产业链，扮演“链主”角色，增强供应链稳定性。</li>
+                                    <li><strong>“一个平台”：</strong>搭建数字化合作平台，连接全球资源，为创新的海外渠道模式提供基础设施。</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg mb-2 text-gray-800">渠道优先：“品牌中心”蓝图</h4>
+                                <p>采用“轻资产、高杠杆”策略，在全球建立品牌中心作为战略支点，赋能本地承销商，实现快速、低风险的市场覆盖。计划5年内建设60个品牌中心，培育3000个承销商。</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg mb-2 text-gray-800">知识产权：战略护城河</h4>
+                                <p>在全球72个国家注册商标，累计申请数千项专利。成功应对美国“377调查”是其标志性胜利，坚实的IP基础是其赢得世界500强客户信任的“入场券”。</p>
+                            </div>
+                            <p class="mt-4 font-semibold text-gray-800">启示：对于消费品企业，渠道的深度和知识产权的高度，共同决定了其全球化的最终高度。</p>
+                        </div>`
+                    },
+                    sany: {
+                        title: "三一法则：深度本土化与服务主导",
+                        content: `
+                        <div class="space-y-4 text-gray-700">
+                            <p>三一重工展示了一种“重度投资、深度融合”的B2B全球化模式，其颠覆性地将<strong>服务</strong>提升为超越产品的核心竞争力。</p>
+                            <div>
+                                <h4 class="font-semibold text-lg mb-2 text-gray-800">全球化生产与深度本土化</h4>
+                                <ul class="list-disc list-inside space-y-2 pl-2">
+                                    <li><strong>全球布局：</strong>在美国、德国、印度等地建立集研发、制造于一体的产业园，实现深度本土化。</li>
+                                    <li><strong>跨越式并购：</strong>收购德国“大象”普茨迈斯特，迅速获得全球第一品牌、顶尖技术和成熟销售网络。</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg mb-2 text-gray-800">服务即核心竞争力</h4>
+                                <p>秉持“先服务，后销售”的革命性理念，承诺全球“2小时到现场，24小时完工”。依托全球1700多个服务中心和唯一的ECC物联网平台，从根本上解决客户后顾之忧。</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg mb-2 text-gray-800">构建“制造+服务”生态系统</h4>
+                                <p>提供设备、服务、配件、融资租赁等一揽子解决方案，深度绑定客户，创造极高的转换成本和客户忠诚度。紧抓“一带一路”机遇，海外收益60%来自沿线国家。</p>
+                            </div>
+                            <p class="mt-4 font-semibold text-gray-800">启示：对于高价值B2B产品，压倒性的服务优势可以弥补新兴品牌在品牌资产上的赤字。</p>
+                        </div>`
+                    },
+                    linglong: {
+                        title: "玲珑征程：产能布局与品牌曝光双轮驱动",
+                        summary: `<p class="mb-6">玲珑轮胎的全球化是一场精心策划的“两线作战”，旨在同时解决<strong>市场准入</strong>和<strong>品牌认知</strong>两大核心挑战。其战略以“7+5”全球生产蓝图为“硬实力”基础，有效规避贸易壁垒；以高举高打的体育营销为“软实力”牵引，快速拉升全球品牌形象。然而，其生产端和品牌端之间，仍需构建更强大的渠道与服务体系进行传导。</p>`,
+                        timeline: [
+                            { year: '1990s - 2010s', event: '<strong>初步探索期:</strong> 以产品出口和OEM业务为主，积累海外市场经验。' },
+                            { year: '2014', event: '<strong>战略转折点:</strong> 首个海外基地在泰国投产，主动应对国际贸易摩擦。' },
+                            { year: '2015 - 2018', event: '<strong>品牌发力期:</strong> 泰国工厂成为重要利润中心(净利率高达20.23%)，并开始赞助沃尔夫斯堡等欧洲顶级球队，启动体育营销。' },
+                            { year: '2019 - 2023', event: '<strong>全球深耕期:</strong> 欧洲首个工厂在塞尔维亚投产，提出“新零售”构想，并与皇马等顶级IP合作，品牌影响力持续扩大。' },
+                            { year: '2024 - 未来', event: '<strong>生态构建期:</strong> 规划巴西工厂，完善全球“7+5”布局，战略重心转向渠道深化与区域生态系统构建。' }
+                        ],
+                        strategyBreakdown: {
+                            regional: { 
+                                title: '区域战略：全球化生产，本土化深耕', 
+                                points: [
+                                    '<strong>亚太 (泰国):</strong> 作为规避贸易壁垒的桥头堡和利润中心，辐射东南亚市场。',
+                                    '<strong>欧洲 (塞尔维亚):</strong> 直接服务欧洲OE配套和零售市场，缩短供应链，提升响应速度。',
+                                    '<strong>美洲 (巴西规划中):</strong> 瞄准南北美市场，实现“地产地销”，规避地缘政治风险。'
+                                ] 
+                            },
+                            product: { 
+                                title: '产品与渠道：乘商并举，服务下沉', 
+                                points: [
+                                    '<strong>乘用车 (PCR):</strong> 依托“玲珑养车驿站”品牌，向专业化、品牌化的汽车后市场服务转型。',
+                                    '<strong>商用车 (TBR):</strong> 建立“阿特拉斯卡友之家”，为车队客户提供轮胎、维保等一站式解决方案。',
+                                    '<strong>新零售3.0:</strong> 打造线上线下一体化平台，整合销售、服务、物流，提升渠道效率和用户体验。'
+                                ] 
+                            },
+                            brand: { 
+                                title: '品牌战略：顶级体育IP，高端形象塑造', 
+                                points: [
+                                    '<strong>借船出海:</strong> 与沃尔夫斯堡、皇家马德里等顶级体育IP绑定，快速建立全球知名度。',
+                                    '<strong>形象迁移:</strong> 将体育的“高性能”、“激情”、“顶级”等标签，转移至玲珑品牌，塑造高端形象。',
+                                    '<strong>空中拉动:</strong> 通过大规模品牌曝光，为空中加油，为地面渠道的销售转化提供强大支持。'
+                                ] 
+                            }
+                        }
+                    }
+                }
+            };
+
+            function switchSection(targetId) {
+                Object.values(sections).forEach(section => section.classList.add('hidden'));
+                Object.values(navButtons).forEach(button => button.classList.remove('active'));
+                
+                sections[targetId].classList.remove('hidden');
+                navButtons[targetId].classList.add('active');
+            }
+
+            navButtons.comparison.addEventListener('click', () => switchSection('comparison'));
+            navButtons.analysis.addEventListener('click', () => switchSection('analysis'));
+            navButtons.recommendation.addEventListener('click', () => switchSection('recommendation'));
+
+            const radarCtx = document.getElementById('strategyRadarChart').getContext('2d');
+            const strategyRadarChart = new Chart(radarCtx, {
+                type: 'radar',
+                data: data.radar,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.r !== null) {
+                                        label += context.parsed.r;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5,
+                            ticks: {
+                                stepSize: 1
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            function updateComparisonDetails() {
+                comparisonDetailsContainer.innerHTML = '';
+                Object.values(data.comparisonDetails).forEach(detail => {
+                    const card = `
+                        <div class="card p-6 fade-in">
+                            <h3 class="font-bold text-xl mb-3 ${detail.color}">${detail.title}</h3>
+                            <ul class="space-y-2 text-gray-700 text-sm">
+                                ${detail.points.map(p => `<li>${p}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                    comparisonDetailsContainer.innerHTML += card;
+                });
+            }
+
+            function updateAnalysisContent(company) {
+                const detail = data.analysisDetails[company];
+                let contentHtml = '';
+
+                if (company === 'linglong') {
+                    const timelineHtml = detail.timeline.map(item => `
+                        <div class="flex items-start">
+                            <div class="flex flex-col items-center mr-4 shrink-0">
+                                <div class="w-4 h-4 rounded-full bg-[#3CB371] border-2 border-white mt-1"></div>
+                                <div class="w-px flex-1 bg-gray-300"></div>
+                            </div>
+                            <div class="pb-8">
+                                <p class="font-bold text-gray-800">${item.year}</p>
+                                <p class="text-gray-600">${item.event}</p>
+                            </div>
+                        </div>
+                    `).join('').replace(/(<div class="w-px flex-1 bg-gray-300"><\/div>)$/, '');
+
+
+                    const breakdownHtml = `
+                        <div class="grid md:grid-cols-3 gap-6 mt-6">
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <h4 class="font-bold text-lg mb-2 text-[#3CB371]">${detail.strategyBreakdown.regional.title}</h4>
+                                <ul class="list-disc list-inside space-y-1 text-sm text-gray-700">${detail.strategyBreakdown.regional.points.map(p => `<li>${p}</li>`).join('')}</ul>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <h4 class="font-bold text-lg mb-2 text-[#3CB371]">${detail.strategyBreakdown.product.title}</h4>
+                                <ul class="list-disc list-inside space-y-1 text-sm text-gray-700">${detail.strategyBreakdown.product.points.map(p => `<li>${p}</li>`).join('')}</ul>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <h4 class="font-bold text-lg mb-2 text-[#3CB371]">${detail.strategyBreakdown.brand.title}</h4>
+                                <ul class="list-disc list-inside space-y-1 text-sm text-gray-700">${detail.strategyBreakdown.brand.points.map(p => `<li>${p}</li>`).join('')}</ul>
+                            </div>
+                        </div>
+                    `;
+
+                    contentHtml = `
+                        <div class="fade-in">
+                            <h3 class="font-bold text-2xl mb-4 text-gray-800">${detail.title}</h3>
+                            ${detail.summary}
+                            <div class="mt-8">
+                                <h4 class="font-bold text-xl mb-4 text-center text-gray-700">30年全球化征程时间线</h4>
+                                <div class="relative">${timelineHtml}</div>
+                            </div>
+                            <div class="mt-8">
+                                <h4 class="font-bold text-xl mb-4 text-center text-gray-700">全球营销战略深度拆解</h4>
+                                ${breakdownHtml}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    contentHtml = `
+                        <div class="fade-in">
+                            <h3 class="font-bold text-2xl mb-4 text-gray-800">${detail.title}</h3>
+                            ${detail.content}
+                        </div>
+                    `;
+                }
+                analysisContent.innerHTML = contentHtml;
+            }
+
+            caseButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    caseButtons.forEach(btn => {
+                        btn.classList.remove('active', 'bg-[#A0522D]', 'text-white');
+                        btn.classList.add('bg-white', 'text-[#A0522D]');
+                    });
+                    this.classList.add('active', 'bg-[#A0522D]', 'text-white');
+                    this.classList.remove('bg-white', 'text-[#A0522D]');
+                    updateAnalysisContent(this.dataset.company);
+                });
+            });
+
+            updateComparisonDetails();
+            updateAnalysisContent('beifa');
+        });
+    </script>
+</body>
+</html>
