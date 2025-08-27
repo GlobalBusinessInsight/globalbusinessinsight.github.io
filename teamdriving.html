@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电动重卡编队驾驶技术交互式报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Tech Blue accent -->
+    <!-- Application Structure Plan: The application is designed as a single-page, multi-section dashboard. This structure allows users to get a quick overview from the top-level KPIs, then dive into specific areas of interest (Why it matters, How it works, Challenges, and Future) in a non-linear fashion. This is more engaging than a linear report, promoting exploration. Key interactions include toggling between Electric vs. Diesel data on charts and clicking on technology components to reveal detailed descriptions. This user flow is designed to first present the core value proposition (the 'what' and 'why'), then explain the underlying technology (the 'how'), address the complexities (the 'but'), provide a practical implementation guide (the 'how-to'), offer a detailed technical breakdown (the 'deep-dive'), and finally look forward (the 'what's next'), creating a comprehensive narrative journey. -->
+    <!-- Visualization & Content Choices: 
+        - Key Metrics (Energy Savings, etc.): Goal: Inform/Impact. Method: Large number display cards. Interaction: Static. Justification: Immediately grabs user attention with the most compelling data points.
+        - Energy Savings Comparison Chart: Goal: Compare. Method: Bar Chart (Chart.js). Interaction: Toggle buttons to switch between Electric and Diesel data. Justification: Directly visualizes the amplified benefit for electric trucks, a core thesis of the report.
+        - Technology Stack Diagram: Goal: Organize/Inform. Method: Interactive HTML/CSS grid. Interaction: Click to reveal details. Justification: Breaks down a complex system into digestible parts, encouraging user engagement and self-paced learning.
+        - Deep Dive Section: Goal: Inform/Detail. Method: Structured text with headings, lists, and icons. Interaction: Static. Justification: Presents complex technical and operational details in a clear, organized, and scannable format for expert users.
+        - Implementation Blueprint Section: Goal: Guide/Inform. Method: Card layout for prerequisites and a vertical timeline for the rollout plan. Interaction: Static. Justification: Provides a clear, actionable framework for a real-world business case.
+        - Future Roadmap: Goal: Change/Inform. Method: Vertical timeline with HTML/CSS. Interaction: Static. Justification: Intuitively shows the progression of the technology over time.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f8f7f4;
+            color: #3d3d3d;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+        .tech-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .tech-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-toggle {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .btn-toggle.active {
+            background-color: #2563eb;
+            color: white;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.75rem;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #d1d5db;
+            border: 4px solid #f8f7f4;
+            z-index: 10;
+        }
+        .timeline-line {
+            content: '';
+            position: absolute;
+            left: -2.3rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #d1d5db;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-gray-800">电动重卡编队驾驶技术</h1>
+            <div class="hidden md:flex space-x-4 lg:space-x-6 text-sm lg:text-base">
+                <a href="#value" class="nav-link border-b-2 border-transparent pb-1">核心价值</a>
+                <a href="#tech" class="nav-link border-b-2 border-transparent pb-1">技术解析</a>
+                <a href="#deep-dive" class="nav-link border-b-2 border-transparent pb-1">深度解析</a>
+                <a href="#challenges" class="nav-link border-b-2 border-transparent pb-1">挑战与障碍</a>
+                <a href="#blueprint" class="nav-link border-b-2 border-transparent pb-1">实施蓝图</a>
+                <a href="#future" class="nav-link border-b-2 border-transparent pb-1">未来之路</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="hero" class="text-center mb-20">
+            <h2 class="text-3xl md:text-5xl font-bold mb-4 text-gray-900">迈向可持续货运的战略路径</h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600">
+                本报告深入剖析电动重卡编队驾驶的核心价值、技术架构与未来趋势。通过V2V通信与高级辅助驾驶，该技术不仅是提升能效的工具，更是克服电动重卡续航瓶颈、重塑未来物流格局的关键。
+            </p>
+        </section>
+
+        <section id="value" class="mb-20 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-4">核心价值主张</h3>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">编队驾驶为电动重卡带来了超越传统柴油卡车的放大效应，从单纯的成本优化工具转变为关键的运营赋能技术。它不仅显著降低能耗，更直接解决了电动长途货运的核心痛点——续航里程。</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 text-center">
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <h4 class="text-5xl font-bold text-blue-600 mb-2">33.4%</h4>
+                    <p class="text-gray-700 font-semibold">最高能量节省</p>
+                    <p class="text-sm text-gray-500 mt-1">远超柴油卡车的节能效率，有效延长续航。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <h4 class="text-5xl font-bold text-blue-600 mb-2">>40%</h4>
+                    <p class="text-gray-700 font-semibold">道路通行能力提升</p>
+                    <p class="text-sm text-gray-500 mt-1">通过缩短车距，实现“虚拟的基础设施扩容”。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                    <h4 class="text-5xl font-bold text-blue-600 mb-2">~30ms</h4>
+                    <p class="text-gray-700 font-semibold">协同制动反应</p>
+                    <p class="text-sm text-gray-500 mt-1">远快于人类驾驶员，大幅提升道路安全。</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-100">
+                <h4 class="text-xl font-bold text-center mb-2">能源效率对比：电动 vs. 柴油</h4>
+                <p class="text-center text-gray-500 mb-6 text-sm">点击按钮查看不同动力类型卡车在编队驾驶中的节能潜力差异。</p>
+                <div class="flex justify-center mb-6">
+                    <div class="inline-flex rounded-md shadow-sm" role="group">
+                        <button type="button" id="showElectricBtn" class="btn-toggle active px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100">
+                            电动卡车
+                        </button>
+                        <button type="button" id="showDieselBtn" class="btn-toggle px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-md hover:bg-gray-100">
+                            柴油卡车
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="efficiencyChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="tech" class="mb-20 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-4">技术框架解析</h3>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">编队驾驶并非单一技术，而是V2V通信、多模式传感器和高级驾驶辅助系统（ADAS）的深度集成。点击下方卡片，了解各项关键使能组件。</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="tech-card p-6 bg-white rounded-xl shadow-lg border border-gray-100 cursor-pointer" onclick="showTechDetail('v2v')">
+                    <h4 class="font-bold text-lg mb-2">📡 车对车 (V2V) 通信</h4>
+                    <p class="text-gray-600 text-sm">作为系统的“中枢神经”，实现车辆间速度、位置和指令的实时交换。</p>
+                </div>
+                <div class="tech-card p-6 bg-white rounded-xl shadow-lg border border-gray-100 cursor-pointer" onclick="showTechDetail('sensors')">
+                    <h4 class="font-bold text-lg mb-2">👁️ 感知与传感套件</h4>
+                    <p class="text-gray-600 text-sm">融合雷达、激光雷达和摄像头，为车辆提供精确的环境感知能力。</p>
+                </div>
+                <div class="tech-card p-6 bg-white rounded-xl shadow-lg border border-gray-100 cursor-pointer" onclick="showTechDetail('adas')">
+                    <h4 class="font-bold text-lg mb-2">🧠 先进驾驶辅助系统 (ADAS)</h4>
+                    <p class="text-gray-600 text-sm">构建于CACC之上，集成LKA、AEB等功能，是协同自动化的基础。</p>
+                </div>
+            </div>
+
+            <div id="techDetail" class="bg-white p-8 rounded-xl shadow-inner border border-gray-100 bg-gray-50 hidden">
+                <h5 id="techDetailTitle" class="font-bold text-xl mb-3 text-blue-700"></h5>
+                <p id="techDetailText" class="text-gray-700"></p>
+            </div>
+        </section>
+        
+        <section id="deep-dive" class="mb-20 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-4">深度解析：技术与运营</h3>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">成功的编队驾驶运营，不仅依赖先进的车辆技术，更需要一个精细、严谨的管理体系。以下是对两大核心领域的详细展开。</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <article>
+                    <h4 class="text-2xl font-bold mb-6 text-center">核心技术细节</h4>
+                    <div class="space-y-8">
+                        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                            <h5 class="font-bold text-lg mb-3">📡 V2V 通信系统：车队的“神经系统”</h5>
+                            <ul class="space-y-2 text-sm text-gray-600 list-disc list-inside">
+                                <li><strong>通信协议:</strong> DSRC（低延迟）或 C-V2X（广覆盖），对于固定线路，企业级私有5G是理想选择。</li>
+                                <li><strong>核心数据包 (BSM):</strong> 每秒交换10次，包含动态信息、控制状态、车辆属性（含总质量）和系统状态。</li>
+                                <li><strong>网络安全:</strong> 采用PKI证书进行身份验证，数据加密传输，并配备入侵检测系统。</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                            <h5 class="font-bold text-lg mb-3">👁️ 感知与传感器融合：“驾驶员”的眼睛</h5>
+                            <ul class="space-y-2 text-sm text-gray-600 list-disc list-inside">
+                                <li><strong>传感器配置:</strong> 毫米波雷达（全天候测距）、摄像头（识别车道线/物体）、激光雷达（高精度3D建模）。</li>
+                                <li><strong>融合算法:</strong> 核心技术壁垒，通过卡尔曼滤波等算法，融合多源数据，创建统一、精确的环境模型。</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                            <h5 class="font-bold text-lg mb-3">🧠 车辆控制系统：车辆的“大脑与四肢”</h5>
+                            <ul class="space-y-2 text-sm text-gray-600 list-disc list-inside">
+                                <li><strong>协同自适应巡航 (CACC):</strong> 核心功能，依赖V2V数据直接响应头车指令，实现超短反应时间。</li>
+                                <li><strong>控制算法:</strong> 必须平顺，避免“弹簧效应”，同时精准执行横向（转向）和纵向（加减速）控制。</li>
+                                <li><strong>故障安全策略:</strong> 任何关键部件故障，系统必须能自动报警、安全增大车距并平稳移交控制权。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </article>
+                <article>
+                    <h4 class="text-2xl font-bold mb-6 text-center">运营管理体系</h4>
+                     <div class="space-y-8">
+                        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                            <h5 class="font-bold text-lg mb-3">🏢 编队运营中心 (POC)：车队的“智慧大脑”</h5>
+                            <ul class="space-y-2 text-sm text-gray-600 list-disc list-inside">
+                                <li><strong>核心功能:</strong> 实时监控、智能调度、远程诊断和应急响应。是7x24小时的指挥中心。</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                            <h5 class="font-bold text-lg mb-3">📋 标准化作业流程 (SOP)：从出车到归队</h5>
+                            <ul class="space-y-2 text-sm text-gray-600 list-disc list-inside">
+                                <li><strong>出车前:</strong> 任务下发、车辆自检、驾驶员确认的“数字握手”。</li>
+                                <li><strong>行驶中:</strong> 标准化的组队、巡航、解散流程，以及应对切入等突发事件的预案。</li>
+                                <li><strong>任务后:</strong> 数据自动上传、分析优化、预防性维护的“数据闭环”。</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+                            <h5 class="font-bold text-lg mb-3">� 人员能力要求：新一代团队</h5>
+                            <ul class="space-y-2 text-sm text-gray-600 list-disc list-inside">
+                                <li><strong>驾驶员:</strong> 转型为系统操作员和安全监督员。</li>
+                                <li><strong>维保团队:</strong> 具备机电一体化和软件诊断的复合能力。</li>
+                                <li><strong>运营中心团队:</strong> 具备数据分析、软件操作和应急指挥能力。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section id="challenges" class="mb-20 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-4">规模化部署的障碍</h3>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">尽管前景广阔，但通往规模化部署的道路依然充满挑战，需要技术、法规、基础设施及社会层面协同突破。</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 text-center">
+                    <div class="text-4xl mb-4">🤝</div>
+                    <h4 class="font-bold text-lg mb-2">技术与互操作性</h4>
+                    <p class="text-sm text-gray-600">实现跨品牌卡车无缝协同是首要难题，同时需确保系统在恶劣天气和网络攻击下的稳健性。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 text-center">
+                    <div class="text-4xl mb-4">📜</div>
+                    <h4 class="font-bold text-lg mb-2">法规与法律困境</h4>
+                    <p class="text-sm text-gray-600">各国法规碎片化、事故责任界定模糊以及跟车距离限制是阻碍商业部署的主要法律障碍。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 text-center">
+                    <div class="text-4xl mb-4">🔌</div>
+                    <h4 class="font-bold text-lg mb-2">基础设施双重依赖</h4>
+                    <p class="text-sm text-gray-600">电动卡车编队同时依赖5G通信网络和兆瓦级大功率充电网络，引发“先有鸡还是先有蛋”的困境。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 text-center">
+                    <div class="text-4xl mb-4">👥</div>
+                    <h4 class="font-bold text-lg mb-2">运营与人为因素</h4>
+                    <p class="text-sm text-gray-600">公众对“卡车墙”的担忧、驾驶员的培训与信任，以及复杂的编队匹配调度都是现实运营中的挑战。</p>
+                </div>
+            </div>
+            
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-100">
+                <h4 class="text-xl font-bold text-center mb-4">特别聚焦：中国的法规环境</h4>
+                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">中国在推动自动驾驶方面展现出显著的制度优势和战略决心，但同时也面临着从“先行先试”到“全面铺开”的独特法规挑战。</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h5 class="font-semibold text-lg mb-3 text-green-700">🟢 战略支持与机遇</h5>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="mr-2 mt-1">✓</span>
+                                <div><strong class="font-medium">顶层设计：</strong>已将智能网联汽车提升至国家战略高度，为技术发展创造了极为有利的政策环境。</div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="mr-2 mt-1">✓</span>
+                                <div><strong class="font-medium">监管沙盒：</strong>通过在特定示范区“先行先试”（如洋山港项目），为L4级编队驾驶在特定场景的商业化落地扫清了政策障碍。</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 class="font-semibold text-lg mb-3 text-red-700">🔴 现实制约与挑战</h5>
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-start">
+                                <span class="mr-2 mt-1">✗</span>
+                                <div><strong class="font-medium">缺乏国家级上位法：</strong>在跨区域运营、事故责任划分等核心问题上，全国统一的根本性法律依据尚不充分。</div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="mr-2 mt-1">✗</span>
+                                <div><strong class="font-medium">事故责任界定模糊：</strong>一旦L3/L4级车辆发生事故，责任主体的法律界定依然是空白区，制约了保险产品开发和风险控制。</div>
+                            </li>
+                             <li class="flex items-start">
+                                <span class="mr-2 mt-1">✗</span>
+                                <div><strong class="font-medium">跨区域运营壁垒：</strong>各示范区管理办法和准入标准不同，导致“一张牌照无法全国通用”，构成了长途货运的现实壁垒。</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="blueprint" class="mb-20 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-4">商业化落地：千辆级车队实施蓝图</h3>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">对于拥有大规模车队、固定线路和自有充电设施的企业，编队驾驶是实现降本增效的理想选择。以下是一个从启动到全面整合的战略框架。</p>
+            
+            <h4 class="text-xl font-bold text-center mb-8">启动前提条件：四大基石</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 text-center">
+                    <div class="text-4xl mb-4">🚚</div>
+                    <h4 class="font-bold text-lg mb-2">车辆与技术</h4>
+                    <p class="text-sm text-gray-600">车辆需配备兼容的V2V/CACC硬件。初期最好采用单一品牌车型，以规避跨品牌互操作性难题。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 text-center">
+                    <div class="text-4xl mb-4">📡</div>
+                    <h4 class="font-bold text-lg mb-2">通信网络</h4>
+                    <p class="text-sm text-gray-600">运输线路沿线必须有稳定、低延迟的5G或DSRC网络覆盖，这是保障系统安全可靠的生命线。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 text-center">
+                    <div class="text-4xl mb-4">🛠️</div>
+                    <h4 class="font-bold text-lg mb-2">运营与人才</h4>
+                    <p class="text-sm text-gray-600">建立驾驶员培训体系、专业维保团队，并组建一个能实时监控调度的“编队运营中心”。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100 text-center">
+                    <div class="text-4xl mb-4">⚖️</div>
+                    <h4 class="font-bold text-lg mb-2">法规与保险</h4>
+                    <p class="text-sm text-gray-600">获得运营区域内关于最小跟车距离的法律豁免，并与保险公司合作，明确事故责任划分。</p>
+                </div>
+            </div>
+
+            <h4 class="text-xl font-bold text-center mb-8">分阶段实施路径</h4>
+            <div class="relative pl-12">
+                <div class="timeline-line"></div>
+                <div class="timeline-item relative pb-12">
+                    <h4 class="font-bold text-lg text-blue-700">第一阶段：试点验证 (10-20辆)</h4>
+                    <p class="text-gray-700">在最理想路段，以L1/L2级编队起步。核心目标是验证技术、收集能耗与安全数据、培训首批核心驾驶员，并完善操作流程(SOP)。</p>
+                </div>
+                <div class="timeline-item relative pb-12">
+                    <h4 class="font-bold text-lg text-blue-700">第二阶段：规模扩张 (100-200辆)</h4>
+                    <p class="text-gray-700">基于试点经验扩大车队规模，正式建立“编队运营中心”，开发调度与监控软件平台，并形成标准化的培训与维保体系。</p>
+                </div>
+                <div class="timeline-item relative">
+                    <h4 class="font-bold text-lg text-blue-700">第三阶段：全面整合 (1000辆)</h4>
+                    <p class="text-gray-700">将编队驾驶能力全面融入车队。运营中心利用大数据进行智能调度，最大化编队行驶里程占比。在法规允许时，探索L4级“主驾无人”模式以降低人力成本。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center mb-4">未来之路：行业发展轨迹</h3>
+            <p class="text-center text-gray-600 mb-12 max-w-3xl mx-auto">技术正从驾驶员辅助向完全自主渐进，商业模式也随之从硬件销售转向“编队即服务”(PaaS)，市场正迎来高速增长期。</p>
+            <div class="relative pl-12">
+                <div class="timeline-line"></div>
+                <div class="timeline-item relative pb-12">
+                    <h4 class="font-bold text-lg text-blue-700">近期 (1-3年)</h4>
+                    <p class="text-gray-700">市场以L1/L2级驾驶员辅助系统为主，商业重点是利用CACC技术实现显著的能源节省，积累运营数据和公众信任。</p>
+                </div>
+                <div class="timeline-item relative pb-12">
+                    <h4 class="font-bold text-lg text-blue-700">中期 (3-7年)</h4>
+                    <p class="text-gray-700">L3/L4级系统开始在“枢纽到枢纽”等特定场景部署，首次释放人力成本节约的巨大潜力，缓解驾驶员短缺。</p>
+                </div>
+                <div class="timeline-item relative">
+                    <h4 class="font-bold text-lg text-blue-700">远期 (7年以上)</h4>
+                    <p class="text-gray-700">L4级系统应用范围扩展，最终向L5级完全自动化迈进。卡车将成为自主移动货运平台，催生“运力即服务”(TaaS)等新模式。</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-20">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>基于《电动重型卡车编队驾驶技术：迈向可持续货运的战略路径》报告生成。</p>
+            <p class="text-sm text-gray-400 mt-2">此为交互式数据可视化应用，旨在提升报告内容的可读性与探索性。</p>
+        </div>
+    </footer>
+
+    <script>
+        const techDetailsData = {
+            v2v: {
+                title: '📡 车对车 (V2V) 通信',
+                text: '这是编队驾驶的“中枢神经系统”，负责在车辆间实时交换速度、位置、加速度和制动指令等关键数据。低延迟、高可靠性的通信对于系统的安全与稳定至关重要。专用短程通信（DSRC）和蜂窝车联网（C-V2X）是实现这一功能的关键技术。'
+            },
+            sensors: {
+                title: '👁️ 感知与传感套件',
+                text: '多模式传感器阵列为车辆提供了必要的环境感知能力。雷达用于精确测量距离和相对速度；激光雷达（LiDAR）创建高精度的三维环境地图；摄像头则提供视觉数据，用于车道保持和物体识别。'
+            },
+            adas: {
+                title: '🧠 先进驾驶辅助系统 (ADAS)',
+                text: '编队驾驶是构建在现有ADAS功能之上的高级应用。其核心是协同自适应巡航控制（CACC），它通过V2V通信使跟随车辆能直接响应头车指令，实现更短、更稳定的车距。车道保持（LKA）、自动紧急制动（AEB）等功能则为系统安全提供保障。'
+            }
+        };
+
+        function showTechDetail(techKey) {
+            const detailContainer = document.getElementById('techDetail');
+            const titleEl = document.getElementById('techDetailTitle');
+            const textEl = document.getElementById('techDetailText');
+            
+            const data = techDetailsData[techKey];
+            titleEl.textContent = data.title;
+            textEl.textContent = data.text;
+
+            detailContainer.classList.remove('hidden');
+        }
+        
+        const efficiencyData = {
+            electric: {
+                labels: ['平均节能', '最优节能潜力'],
+                data: [33.4, 49.3],
+                backgroundColor: 'rgba(37, 99, 235, 0.6)',
+                borderColor: 'rgba(37, 99, 235, 1)',
+                label: '电动卡车能量节省 (%)'
+            },
+            diesel: {
+                labels: ['平均燃油节省 (低)', '平均燃油节省 (高)'],
+                data: [4.7, 14.2],
+                backgroundColor: 'rgba(249, 115, 22, 0.6)',
+                borderColor: 'rgba(249, 115, 22, 1)',
+                label: '柴油卡车燃油节省 (%)'
+            }
+        };
+
+        let efficiencyChart;
+        
+        function createOrUpdateChart(type) {
+            const ctx = document.getElementById('efficiencyChart').getContext('2d');
+            const data = efficiencyData[type];
+
+            if (efficiencyChart) {
+                efficiencyChart.data.labels = data.labels;
+                efficiencyChart.data.datasets[0].data = data.data;
+                efficiencyChart.data.datasets[0].backgroundColor = data.backgroundColor;
+                efficiencyChart.data.datasets[0].borderColor = data.borderColor;
+                efficiencyChart.data.datasets[0].label = data.label;
+                efficiencyChart.update();
+            } else {
+                efficiencyChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: data.label,
+                            data: data.data,
+                            backgroundColor: data.backgroundColor,
+                            borderColor: data.borderColor,
+                            borderWidth: 1,
+                            borderRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '节省百分比 (%)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.parsed.y + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            createOrUpdateChart('electric');
+
+            const electricBtn = document.getElementById('showElectricBtn');
+            const dieselBtn = document.getElementById('showDieselBtn');
+
+            electricBtn.addEventListener('click', () => {
+                createOrUpdateChart('electric');
+                electricBtn.classList.add('active');
+                dieselBtn.classList.remove('active');
+            });
+
+            dieselBtn.addEventListener('click', () => {
+                createOrUpdateChart('diesel');
+                dieselBtn.classList.add('active');
+                electricBtn.classList.remove('active');
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            const linkHref = link.getAttribute('href');
+                            if (linkHref === `#${entry.target.id}`) {
+                                link.classList.add('active');
+                            } else {
+                                link.classList.remove('active');
+                            }
+                        });
+                    }
+                });
+            }, { rootMargin: "-50% 0px -50% 0px" });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            navLinks.forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if(targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+�
