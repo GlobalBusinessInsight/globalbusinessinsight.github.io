@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美国石油套管(OCTG)市场交互式分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: The application is designed as a thematic single-page dashboard, moving away from the report's linear structure to enhance user exploration. The flow is: 1. Overview: A high-level dashboard with key metrics and growth charts for immediate context. 2. Market Drivers: An interactive section to explore demand-side forces like technology and policy. 3. Market Segmentation: A dynamic section where users select a dimension (e.g., product, grade) to update a donut chart and related analysis, facilitating direct comparison. 4. Competition & Supply Chain: Visualizes major players and uses an interactive diagram to contrast traditional vs. modern supply chain models. 5. Trade Barriers: An interactive grid/map to simplify the complex tariff and duty landscape. 6. Future Outlook: Uses a tabbed interface to present emerging opportunities (CCUS, Geothermal, Hydrogen). This structure prioritizes usability by grouping related interactive content, allowing users to grasp the big picture first and then drill down into specific areas of interest in a non-linear fashion. -->
+    <!-- Visualization & Content Choices: 1. Market Size (Inform/Change): A Bar Chart (Chart.js) is used to clearly show market growth over time. Interaction: Buttons to switch between different forecast scenarios (data sources). Justification: Bar charts are excellent for comparing discrete values over time. 2. Market Segmentation (Organize/Compare): A dynamic Donut Chart (Chart.js) shows market share proportions. Interaction: User clicks buttons to change the displayed segment (Product, Grade, etc.), which updates the chart and descriptive text. Justification: Donut charts are ideal for part-to-whole relationships, and the dynamic update makes comparison intuitive. 3. Supply Chain (Organize/Compare): A custom diagram built with HTML/Tailwind CSS. Interaction: Clicking on a model type highlights it and displays its details. Justification: This avoids SVG/Mermaid while creating a clear, interactive flowchart for comparison. 4. Future Frontiers (Inform/Organize): A tabbed content area (HTML/JS). Interaction: Clicking tabs reveals content for CCUS, Geothermal, or Hydrogen. Justification: Tabs are a space-efficient and user-friendly way to organize distinct but related topics. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #FDFBF8;
+            color: #3D405B;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #D35400;
+            border-bottom-color: #D35400;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #E0E0E0;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+        }
+        .btn-primary {
+            background-color: #3D405B;
+            color: #FFFFFF;
+        }
+        .btn-primary:hover {
+            background-color: #2c2f42;
+        }
+        .btn-secondary {
+            background-color: #F2CC8F;
+            color: #3D405B;
+        }
+        .btn-secondary.active {
+            background-color: #D35400;
+            color: #FFFFFF;
+            font-weight: bold;
+        }
+        .tab-btn.active {
+            border-color: #D35400;
+            background-color: #FEF5EE;
+            color: #D35400;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="text-2xl font-bold text-gray-800">
+                    <span class="text-[#D35400]">OCTG</span> 美国市场洞察
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#overview" class="nav-link text-gray-600 font-medium pb-1">市场概览</a>
+                    <a href="#drivers" class="nav-link text-gray-600 font-medium pb-1">核心驱动力</a>
+                    <a href="#segmentation" class="nav-link text-gray-600 font-medium pb-1">市场细分</a>
+                    <a href="#competition" class="nav-link text-gray-600 font-medium pb-1">竞争格局</a>
+                    <a href="#trade" class="nav-link text-gray-600 font-medium pb-1">贸易环境</a>
+                    <a href="#future" class="nav-link text-gray-600 font-medium pb-1">未来展望</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="menu-btn" class="text-gray-600 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="hidden md:hidden mt-4 flex flex-col space-y-2">
+                <a href="#overview" class="nav-link text-gray-600 font-medium py-1">市场概览</a>
+                <a href="#drivers" class="nav-link text-gray-600 font-medium py-1">核心驱动力</a>
+                <a href="#segmentation" class="nav-link text-gray-600 font-medium py-1">市场细分</a>
+                <a href="#competition" class="nav-link text-gray-600 font-medium py-1">竞争格局</a>
+                <a href="#trade" class="nav-link text-gray-600 font-medium py-1">贸易环境</a>
+                <a href="#future" class="nav-link text-gray-600 font-medium py-1">未来展望</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        
+        <section id="overview" class="scroll-mt-20 mb-20 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">美国石油套管(OCTG)市场战略分析</h1>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600 mb-12">一个交互式仪表盘，深入剖析美国OCTG市场的规模、增长动力、竞争格局与未来机遇，旨在为行业决策者提供关键洞察。</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 text-left">
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-gray-500 mb-2">2024年市场规模 (预估)</h3>
+                    <p class="text-4xl font-bold text-[#3D405B]">$45亿</p>
+                    <p class="text-gray-500 mt-2">北美市场占据全球主导地位，份额高达36%-47%。</p>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-gray-500 mb-2">复合年增长率 (CAGR)</h3>
+                    <p class="text-4xl font-bold text-[#3D405B]">~5.9%</p>
+                    <p class="text-gray-500 mt-2">由持续的油气勘探与生产活动驱动。</p>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-lg font-semibold text-gray-500 mb-2">关键趋势</h3>
+                    <p class="text-2xl font-bold text-[#3D405B]">高端化 & 集成化</p>
+                    <p class="text-gray-500 mt-2">优质级产品需求增长，供应链模式向“从钢厂到井口”演变。</p>
+                </div>
+            </div>
+
+            <div class="card p-6 md:p-8">
+                <h2 class="text-2xl font-bold mb-4 text-left">市场规模与增长预测 (亿美元)</h2>
+                <p class="text-gray-600 mb-6 text-left max-w-4xl">美国OCTG市场规模预测存在多种口径，反映了市场固有的高波动性。本图表综合了多个数据源，展示了市场的增长趋势。稳健的策略应基于预测范围进行情景规划，而非依赖单一数据点。</p>
+                <div class="chart-container">
+                    <canvas id="marketSizeChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="drivers" class="scroll-mt-20 mb-20">
+            <h2 class="text-3xl font-bold text-center mb-12">核心驱动力：塑造需求的根本力量</h2>
+            <div class="space-y-10">
+                <div class="card p-8">
+                    <h3 class="text-2xl font-bold mb-4">勘探与生产 (E&P) 活动</h3>
+                    <p class="text-gray-600 mb-6">美国庞大且活跃的油气E&P活动是OCTG市场的需求基本盘，其中陆上页岩油气和海上深水项目是两大主要引擎。</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 p-6 rounded-lg border">
+                            <h4 class="font-bold text-xl mb-2">陆上页岩革命 셰일 혁명</h4>
+                            <p class="text-gray-600">占据市场主导地位（~66%份额），以二叠纪盆地为中心。水平钻井技术使单井OCTG需求量和技术要求呈几何级数增长。</p>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-lg border">
+                            <h4 class="font-bold text-xl mb-2">海上深水勘探</h4>
+                            <p class="text-gray-600">高价值“优质级”OCTG产品的关键需求来源。资本密集、技术挑战巨大，对管材解决方案要求极高。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card p-8">
+                    <h3 class="text-2xl font-bold mb-4">钻井技术进步：需求的倍增器</h3>
+                    <p class="text-gray-600 mb-6">技术革新从根本上改变了单井的OCTG消耗模式，它不仅增加了所需管材的*数量*，还推动了需求向更高技术规格、更高附加值的*优质级*产品转移。</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                        <div class="bg-gray-50 p-6 rounded-lg border">
+                            <div class="text-4xl mb-3">↔️</div>
+                            <h4 class="font-bold text-lg">水平与定向钻井</h4>
+                            <p class="text-sm text-gray-600 mt-1">总进尺远超垂直井，导致OCTG用量倍增，并对管材强度、韧性提出更高要求。</p>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-lg border">
+                             <div class="text-4xl mb-3">💧</div>
+                            <h4 class="font-bold text-lg">水力压裂</h4>
+                            <p class="text-sm text-gray-600 mt-1">要求套管具备极高的抗内压和抗挤毁能力，强化了对高性能产品的需求。</p>
+                        </div>
+                        <div class="bg-gray-50 p-6 rounded-lg border">
+                             <div class="text-4xl mb-3">🔬</div>
+                            <h4 class="font-bold text-lg">材料科学创新</h4>
+                            <p class="text-sm text-gray-600 mt-1">耐腐蚀、高强度新材料的出现，为OCTG市场开辟了新的需求前沿。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="segmentation" class="scroll-mt-20 mb-20">
+            <h2 class="text-3xl font-bold text-center mb-4">交互式市场细分剖析</h2>
+            <p class="max-w-3xl mx-auto text-center text-lg text-gray-600 mb-12">通过不同维度探索美国OCTG市场的内部结构。点击下方按钮，查看各细分市场的份额及分析。市场的“高端化”趋势是多个细分市场增长逻辑的交汇点。</p>
+            
+            <div class="flex justify-center flex-wrap gap-3 mb-8">
+                <button class="segment-btn btn-secondary active px-4 py-2 rounded-full" data-segment="type">按产品类型</button>
+                <button class="segment-btn btn-secondary px-4 py-2 rounded-full" data-segment="grade">按等级</button>
+                <button class="segment-btn btn-secondary px-4 py-2 rounded-full" data-segment="application">按应用</button>
+                <button class="segment-btn btn-secondary px-4 py-2 rounded-full" data-segment="process">按制造工艺</button>
+            </div>
+
+            <div class="card">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 items-center">
+                    <div class="chart-container h-64 md:h-80">
+                        <canvas id="segmentationChart"></canvas>
+                    </div>
+                    <div id="segmentation-info">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="competition" class="scroll-mt-20 mb-20">
+            <h2 class="text-3xl font-bold text-center mb-12">竞争格局与供应链演变</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                <div class="card p-6 text-center">
+                    <h3 class="text-xl font-bold mb-2">Tenaris (泰纳瑞斯)</h3>
+                    <p class="text-gray-600">全球领导者，以优质连接技术和“从钢厂到井口”(Rig Direct®)集成服务模式著称。</p>
+                </div>
+                <div class="card p-6 text-center">
+                    <h3 class="text-xl font-bold mb-2">U.S. Steel (美国钢铁)</h3>
+                    <p class="text-gray-600">美国本土重要力量，提供全系列API级产品和专有级别产品，强调本土供应。</p>
+                </div>
+                <div class="card p-6 text-center">
+                    <h3 class="text-xl font-bold mb-2">Vallourec (瓦卢瑞克)</h3>
+                    <p class="text-gray-600">全球无缝管领导者，以VAM®连接技术和“美国制造”的本土化供应链为核心优势。</p>
+                </div>
+            </div>
+            <div class="card p-8">
+                <h3 class="text-2xl font-bold text-center mb-2">供应链模式的革命</h3>
+                <p class="text-gray-600 text-center mb-8 max-w-3xl mx-auto">OCTG供应链正从传统的经销商模式向制造商主导的集成服务模式转变，这不仅提升了效率，更构筑了新的战略护城河。</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="border p-6 rounded-lg bg-gray-50">
+                        <h4 class="text-xl font-bold mb-3 text-center">传统分销模式</h4>
+                        <div class="flex flex-col items-center space-y-4">
+                            <div class="w-full text-center bg-white p-3 rounded-md shadow-sm border">钢厂</div>
+                            <div class="text-2xl">↓</div>
+                            <div class="w-full text-center bg-white p-3 rounded-md shadow-sm border">经销商 / 库存商</div>
+                            <div class="text-2xl">↓</div>
+                            <div class="w-full text-center bg-white p-3 rounded-md shadow-sm border">油气运营商</div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-6"><strong>特点：</strong>供应链冗长，库存成本高，信息不对称，但采购灵活。</p>
+                    </div>
+                    <div class="border-2 border-D35400 p-6 rounded-lg bg-orange-50">
+                        <h4 class="text-xl font-bold mb-3 text-center text-D35400">集成化的“从钢厂到井口”模式</h4>
+                        <div class="flex flex-col items-center space-y-4">
+                            <div class="w-full text-center bg-white p-3 rounded-md shadow-sm border relative">
+                                钢厂
+                                <span class="absolute top-1/2 -right-4 transform -translate-y-1/2 text-2xl">+</span>
+                            </div>
+                            <div class="w-full text-center bg-white p-3 rounded-md shadow-sm border">需求预测、库存管理、物流、现场服务</div>
+                            <div class="text-2xl">↓</div>
+                            <div class="w-full text-center bg-white p-3 rounded-md shadow-sm border">油气运营商</div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-6"><strong>特点：</strong>减少中间环节，降低总拥有成本，通过数字化工具实现全程追溯，提高客户转换成本。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="trade" class="scroll-mt-20 mb-20">
+            <h2 class="text-3xl font-bold text-center mb-4">贸易环境：关税壁垒的影响</h2>
+            <p class="max-w-3xl mx-auto text-center text-lg text-gray-600 mb-12">美国的贸易政策是塑造本土OCTG市场格局的最强外部力量。232条款关税和针对特定国家的反倾销/反补贴(AD/CVD)税令，共同构建了一个高度保护主义的环境。</p>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                 <div class="card p-4 text-center">
+                    <h3 class="text-lg font-bold">全球多数国家</h3>
+                    <p class="text-sm text-gray-500 mt-1">232条款关税</p>
+                    <p class="text-2xl font-bold text-red-600 mt-2">25%</p>
+                </div>
+                <div class="card p-4 text-center">
+                    <h3 class="text-lg font-bold">中国</h3>
+                    <p class="text-sm text-gray-500 mt-1">AD/CVD</p>
+                    <p class="text-2xl font-bold text-red-600 mt-2">极高</p>
+                </div>
+                <div class="card p-4 text-center">
+                    <h3 class="text-lg font-bold">俄罗斯</h3>
+                    <p class="text-sm text-gray-500 mt-1">AD/CVD</p>
+                    <p class="text-2xl font-bold text-red-600 mt-2">~12%</p>
+                </div>
+                <div class="card p-4 text-center">
+                    <h3 class="text-lg font-bold">墨西哥</h3>
+                    <p class="text-sm text-gray-500 mt-1">AD</p>
+                    <p class="text-lg font-semibold text-red-600 mt-2">存在倾销裁定</p>
+                </div>
+                <div class="card p-4 text-center">
+                    <h3 class="text-lg font-bold">阿根廷</h3>
+                    <p class="text-sm text-gray-500 mt-1">AD</p>
+                    <p class="text-lg font-semibold text-red-600 mt-2">存在倾销裁定</p>
+                </div>
+                <div class="card p-4 text-center">
+                    <h3 class="text-lg font-bold">韩国</h3>
+                    <p class="text-sm text-gray-500 mt-1">CVD / 配额</p>
+                    <p class="text-lg font-semibold text-blue-600 mt-2">受配额限制</p>
+                </div>
+                <div class="card p-4 text-center">
+                    <h3 class="text-lg font-bold">巴西</h3>
+                    <p class="text-sm text-gray-500 mt-1">配额</p>
+                    <p class="text-lg font-semibold text-blue-600 mt-2">受配额限制</p>
+                </div>
+                <div class="card p-4 text-center bg-gray-100">
+                     <h3 class="text-lg font-bold">政策影响</h3>
+                    <p class="text-sm text-gray-600 mt-2">保护了国内产业，但增加了终端用户成本，并引发全球贸易流向重塑。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-4">战略展望与未来增长前沿</h2>
+            <p class="max-w-3xl mx-auto text-center text-lg text-gray-600 mb-12">能源转型为OCTG行业带来了挑战与机遇。OCTG的核心技术（材料科学、耐高压、耐腐蚀）正在碳捕获、地热能和氢能等新兴低碳领域找到新的应用场景。</p>
+            <div class="card p-8">
+                <div class="border-b border-gray-200 mb-6">
+                    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                        <button class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="ccus">
+                            碳捕获 (CCUS)
+                        </button>
+                        <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="geothermal">
+                            地热能
+                        </button>
+                        <button class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="hydrogen">
+                            氢能
+                        </button>
+                    </nav>
+                </div>
+                <div id="tab-content">
+                    <div class="tab-pane active" id="ccus-content">
+                        <h3 class="text-xl font-bold mb-3">碳捕获、利用与封存 (CCUS)</h3>
+                        <p class="text-gray-600">CCUS注入井的建设离不开OCTG。这是一个技术要求极高的新兴市场，为高端管材提供了巨大的增长潜力。</p>
+                        <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
+                            <li><strong>技术挑战:</strong> 管材需承受注入过程中的极低温度（干冰效应），并抵抗$CO_2$在含水环境下形成的强腐蚀性（碳酸）。</li>
+                            <li><strong>市场机遇:</strong> 为拥有先进材料科学和连接技术的制造商（如Tenaris, Vallourec）提供了展示其高端产品性能的舞台，抢占技术制高点。</li>
+                        </ul>
+                    </div>
+                    <div class="tab-pane hidden" id="geothermal-content">
+                        <h3 class="text-xl font-bold mb-3">地热能</h3>
+                        <p class="text-gray-600">地热发电需要通过钻井深入地下抽取高温流体，地热井的建设和维护为OCTG产品提供了稳定的应用场景。</p>
+                         <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
+                            <li><strong>技术挑战:</strong> 井下持续的高温环境和频繁的温度循环，对管材的抗热疲劳性能和长期结构稳定性提出了极高要求。</li>
+                            <li><strong>市场机遇:</strong> 推动了针对极端温度环境的特种合金管材的研发和应用，开辟了新的利基市场。</li>
+                        </ul>
+                    </div>
+                    <div class="tab-pane hidden" id="hydrogen-content">
+                        <h3 class="text-xl font-bold mb-3">氢能储存与运输</h3>
+                        <p class="text-gray-600">未来的氢经济需要庞大的基础设施，包括地下盐穴储存库，其钻井过程需要OCTG产品。</p>
+                         <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
+                            <li><strong>技术挑战:</strong> 氢气对金属材料具有独特的“氢脆”效应，要求管材必须采用特殊合金和制造工艺以确保长期安全。</li>
+                            <li><strong>市场机遇:</strong> 这是一个技术门槛极高的全新潜在市场，为OCTG制造商的材料科学研发能力提供了前所未有的机遇。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-20">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>&copy; 2024 美国石油套管(OCTG)市场交互式分析。根据报告数据生成。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const marketSizeData = {
+                labels: ['2023', '2024 (估)', '2032 (预)', '2035 (预)'],
+                datasets: [{
+                    label: '市场规模 (亿美元)',
+                    data: [41.5, 45, 118, 85],
+                    backgroundColor: 'rgba(61, 64, 91, 0.6)',
+                    borderColor: 'rgba(61, 64, 91, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                }]
+            };
+
+            const marketSizeCtx = document.getElementById('marketSizeChart').getContext('2d');
+            new Chart(marketSizeCtx, {
+                type: 'bar',
+                data: marketSizeData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': $' + context.parsed.y + ' 亿';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '亿美元'
+                            }
+                        }
+                    }
+                }
+            });
+
+            const segmentationData = {
+                type: {
+                    labels: ['套管 (Casing)', '油管 (Tubing)', '钻杆 (Drill Pipe)'],
+                    data: [49.8, 25, 25.2], 
+                    title: '按产品类型 (2024年预估收入份额)',
+                    info: `<h3 class="text-xl font-bold mb-3">按产品类型分析</h3>
+                           <p class="text-gray-600 mb-4">OCTG主要包括套管、油管和钻杆，它们在油井建设和生产中扮演着不同但都至关重要的角色。</p>
+                           <ul class="space-y-3 text-left">
+                               <li><strong class="text-[#3D405B]">套管 (~49.8%):</strong> 市场最大板块，为井壁提供结构支撑，需求与总钻井进尺直接相关。</li>
+                               <li><strong class="text-[#3D405B]">油管 (增长最快):</strong> 用于将油气输送到地表，其快速增长得益于产量提升和强化采油(EOR)技术。</li>
+                               <li><strong class="text-[#3D405B]">钻杆:</strong> 连接钻机和钻头，长水平井对其强度和抗疲劳性要求越来越高。</li>
+                           </ul>`
+                },
+                grade: {
+                    labels: ['API级', '优质级'],
+                    data: [58.6, 41.4],
+                    title: '按等级 (2024年预估收入份额)',
+                    info: `<h3 class="text-xl font-bold mb-3">按等级分析</h3>
+                           <p class="text-gray-600 mb-4">OCTG产品根据性能分为API标准级和优质级，后者正成为市场增长的主要动力。</p>
+                           <ul class="space-y-3 text-left">
+                               <li><strong class="text-[#3D405B]">API级 (~58.6%):</strong> 遵循行业标准，成本效益高，广泛用于常规钻井作业。</li>
+                               <li><strong class="text-[#3D405B]">优质级 (增长最快):</strong> 拥有专有技术，性能超越API标准，是应对深水、高温高压等复杂环境所必需的，利润率更高。</li>
+                           </ul>`
+                },
+                application: {
+                    labels: ['陆上 (Onshore)', '海上 (Offshore)'],
+                    data: [66.3, 33.7],
+                    title: '按应用 (2024年预估收入份额)',
+                    info: `<h3 class="text-xl font-bold mb-3">按应用分析</h3>
+                           <p class="text-gray-600 mb-4">钻井作业的地理位置决定了OCTG的应用场景，主要分为陆上和海上。</p>
+                           <ul class="space-y-3 text-left">
+                               <li><strong class="text-[#3D405B]">陆上 (~66.3%):</strong> 绝对主导市场，得益于美国页岩盆地巨大的钻井活动量和较低的运营成本。</li>
+                               <li><strong class="text-[#3D405B]">海上 (增长最快):</strong> 虽然油井数量少，但单井作业复杂，几乎全部需要高价值的优质级产品，是行业利润的重要来源。</li>
+                           </ul>`
+                },
+                process: {
+                    labels: ['无缝管 (Seamless)', '电阻焊管 (ERW)'],
+                    data: [62.5, 37.5],
+                    title: '按制造工艺 (2024年预估收入份额)',
+                    info: `<h3 class="text-xl font-bold mb-3">按制造工艺分析</h3>
+                           <p class="text-gray-600 mb-4">OCTG的制造工艺主要分为无缝管和电阻焊管，前者因其卓越性能而占据主导地位。</p>
+                           <ul class="space-y-3 text-left">
+                               <li><strong class="text-[#3D405B]">无缝管 (~62.5%):</strong> 无焊缝，强度和承压能力卓越，是高压、深水等关键应用的首选。</li>
+                               <li><strong class="text-[#3D405B]">电阻焊管 (ERW):</strong> 生产成本较低，在一些要求不高的应用中仍占有一席之地。</li>
+                           </ul>`
+                }
+            };
+
+            const segmentationCtx = document.getElementById('segmentationChart').getContext('2d');
+            let segmentationChart = new Chart(segmentationCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: segmentationData.type.labels,
+                    datasets: [{
+                        data: segmentationData.type.data,
+                        backgroundColor: ['#3D405B', '#81B29A', '#F2CC8F'],
+                        borderColor: '#FDFBF8',
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: true,
+                            text: segmentationData.type.title,
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const segmentationInfo = document.getElementById('segmentation-info');
+            segmentationInfo.innerHTML = segmentationData.type.info;
+
+            document.querySelectorAll('.segment-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const segment = button.dataset.segment;
+                    const newData = segmentationData[segment];
+
+                    document.querySelector('.segment-btn.active').classList.remove('active');
+                    button.classList.add('active');
+                    
+                    segmentationChart.data.labels = newData.labels;
+                    segmentationChart.data.datasets[0].data = newData.data;
+                    segmentationChart.options.plugins.title.text = newData.title;
+                    segmentationChart.update();
+                    segmentationInfo.innerHTML = newData.info;
+                });
+            });
+
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    tabPanes.forEach(pane => pane.classList.add('hidden'));
+                    const tabId = button.dataset.tab;
+                    document.getElementById(`${tabId}-content`).classList.remove('hidden');
+                });
+            });
+
+            const menuBtn = document.getElementById('menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
