@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INOSSEM ProcessGo Plus™ Global Channel Solution</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Professional Blue, Slate, and White with interactive effects -->
+    <!-- Application Structure Plan: A single-page, multi-language application. The key innovation is the sentence-chunking TTS with synchronized "spotlight" highlighting. Text content is broken into spans. JS makes sequential TTS calls for each span, caches the audio, and then plays them back in order, applying CSS classes to highlight the active text span and dim all others. The intro is a new "kaleidoscope" effect. -->
+    <!-- Visualization & Content Choices: 
+        1. Intro -> Goal: Create a high-impact, global-first opening -> Viz/Method: Full-screen overlay with a "kaleidoscope" of 6 languages animating simultaneously. -> Justification: A visually complex and impressive opening that immediately communicates the global nature of the product.
+        2. Synchronized Highlighting -> Goal: Create an innovative, synchronized audio-visual experience -> Viz/Method: JS-driven "spotlight" effect. The current text chunk is highlighted (full opacity, slight scale), while all other text on the page is dimmed. -> Justification: This guides user focus perfectly with the audio track and provides a premium, immersive experience.
+        3. Celebrity-Inspired TTS -> Goal: Enhance audio engagement -> Method: Use prompt engineering in the TTS API call to mimic celebrity voice styles and increase speech rate. -> Justification: Adds a novel and highly engaging "personality" to the presentation, making it more memorable.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        @keyframes background-pan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes shimmer-in {
+            0% { opacity: 0; text-shadow: 0 0 20px rgba(255,255,255,0); }
+            50% { opacity: 0.7; text-shadow: 0 0 20px rgba(96, 165, 250, 0.8); }
+            100% { opacity: 1; text-shadow: 0 0 5px rgba(255,255,255,0); }
+        }
+        
+        body { font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif; background-color: #e2e8f0; }
+        .a4-poster { width: 100%; max-width: 800px; margin: 1rem auto; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 3rem 2.5rem; position: relative; display: flex; flex-direction: column; }
+        @media screen and (min-width: 768px) { .a4-poster { margin: 2rem auto; padding: 4rem 3.5rem; } }
+        
+        .poster-main-content { flex-grow: 1; }
+
+        /* Intro Animation */
+        #intro-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; display: flex; justify-content: center; align-items: center; z-index: 100; transition: opacity 1s ease-out; }
+        #intro-overlay.hidden { opacity: 0; pointer-events: none; }
+        .intro-slogans { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+        .intro-slogan {
+            color: #e2e8f0;
+            opacity: 0;
+            font-weight: 700;
+            animation: shimmer-in 2s forwards;
+            font-size: clamp(1rem, 4vw, 1.75rem);
+            line-height: 1.2;
+        }
+        .intro-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(60deg, #1e3a8a, #0f172a, #1e3a8a, #3730a3); background-size: 400% 400%; animation: background-pan 15s ease infinite; opacity: 0.2; }
+
+        .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        .lang-switcher button.active { background-color: #1e3a8a; color: white; }
+
+        /* Spotlight Highlighting */
+        .tts-text-chunk { transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; }
+        .tts-reading .tts-text-chunk { opacity: 0.4; }
+        .tts-reading .tts-text-chunk.highlight { opacity: 1; transform: scale(1.02); }
+
+        /* Interactive Diagram */
+        .poster-diagram-module { position: relative; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 0.75rem; border-radius: 0.375rem; text-align: center; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .poster-diagram-module:hover { transform: translateY(-4px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .module-tooltip { visibility: hidden; opacity: 0; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-10px); background-color: #1e293b; color: white; padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; white-space: nowrap; transition: opacity 0.2s ease, transform 0.2s ease; z-index: 10; width: max-content; }
+        .poster-diagram-module:hover .module-tooltip { visibility: visible; opacity: 1; transform: translateX(-50%) translateY(-5px); }
+        .poster-module-title { font-weight: 500; color: #0f172a; font-size: 0.875rem; }
+
+        .poster-flow-diagram { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; margin-top: 1rem; }
+        .poster-flow-box { border: 1px solid #94a3b8; border-radius: 0.25rem; padding: 0.5rem 0.75rem; text-align: center; width: 100%; font-size: 0.875rem; }
+        .poster-flow-hub { background-color: #1e3a8a; color: white; font-weight: 500; border: 2px solid #60a5fa; animation: pulse-hub 2s infinite; }
+        @keyframes pulse-hub { 0% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(96, 165, 250, 0); } 100% { box-shadow: 0 0 0 0 rgba(96, 165, 250, 0); } }
+        .poster-flow-connector { width: 2px; height: 1.25rem; background-color: #94a3b8; position: relative; }
+        .poster-flow-connector::after { content: ''; position: absolute; bottom: -1px; left: 50%; transform: translateX(-50%); border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid #94a3b8; }
+        
+        .page-transition { transition: opacity 0.4s ease-in-out; }
+
+        /* Voice-over Button */
+        .play-button { position: absolute; bottom: 2rem; right: 2rem; width: 50px; height: 50px; background-color: #1e3a8a; color: white; border-radius: 50%; border: none; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: background-color 0.3s, transform 0.3s; z-index: 20; }
+        .play-button:hover { background-color: #2563eb; transform: scale(1.1); }
+        .play-icon, .pause-icon { font-size: 24px; }
+        .loader { width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div id="intro-overlay">
+        <div class="intro-bg"></div>
+        <div id="intro-slogans" class="intro-slogans"></div>
+    </div>
+
+    <div class="max-w-800px mx-auto mb-4">
+        <div class="lang-switcher flex flex-wrap justify-center gap-2 p-2 bg-white rounded-md shadow-md">
+            <button data-lang="en" class="px-3 py-1 text-sm font-semibold text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors active">English</button>
+            <button data-lang="fr" class="px-3 py-1 text-sm font-semibold text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors">Français</button>
+            <button data-lang="zh" class="px-3 py-1 text-sm font-semibold text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors">中文</button>
+            <button data-lang="es" class="px-3 py-1 text-sm font-semibold text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors">Español</button>
+            <button data-lang="pt" class="px-3 py-1 text-sm font-semibold text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors">Português</button>
+            <button data-lang="ja" class="px-3 py-1 text-sm font-semibold text-slate-700 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors">日本語</button>
+        </div>
+    </div>
+    
+    <!-- Pages Container -->
+    <div id="pages-container">
+    
+    <!-- English Page -->
+    <div id="page-en" class="page a4-poster page-transition">
+        <header class="flex items-center justify-between pb-6 border-b-2 border-slate-800 reveal">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tts-text-chunk">ProcessGo Plus™</h1>
+                <p class="text-base md:text-lg font-medium text-blue-800 tts-text-chunk">Global Channel Digitalization Solution</p>
+            </div>
+            <img src="https://globalbusinessinsight.github.io/picture/inossemlogobluewithdi.png" alt="INOSSEM Logo" class="h-7 md:h-8 w-auto">
+        </header>
+        <section class="mt-6 reveal">
+            <h2 class="text-lg md:text-xl font-bold text-center text-slate-800 tts-text-chunk">Empowering Global Distributors · Connecting the End-to-End Supply Chain</h2>
+            <p class="text-sm md:text-base text-slate-600 mt-2"><span class="tts-text-chunk">Designed for Chinese manufacturers with global distributor networks.</span> <span class="tts-text-chunk">We understand that in various overseas markets, numerous small and medium-sized distributors play a crucial role with their local networks.</span> <span class="tts-text-chunk">Therefore, our approach is not exploitation, but symbiosis: through a unified digital platform, we provide these key partners with powerful operational tools, empowering them to operate efficiently and compliantly.</span> <span class="tts-text-chunk">By collaborating closely with them, we extend the data chain to the end customers, achieving a win-win situation that not only elevates the distributors but also provides the manufacturer with invaluable market insights and growth opportunities.</span></p>
+        </section>
+        <main class="mt-8 grid grid-cols-1 md:grid-cols-2 md:gap-x-12 gap-y-8 reveal poster-main-content">
+            <div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mb-4 tts-text-chunk">The Challenges</h3>
+                <ul class="space-y-2 text-sm text-slate-700">
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Manual Order Coordination:</strong> Inefficient and error-prone manual processing at headquarters.</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Lack of Data Transparency:</strong> No real-time visibility into overseas sales and inventory data.</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Inconsistent Capabilities:</strong> Distributors lack digital tools, resulting in poor operational compliance.</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Complex Cross-Border Settlement:</strong> Multi-currency transactions and difficult invoice reconciliation.</div></li>
+                </ul>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">Core Value 1: Empowering Distributors</h3>
+                <p class="text-sm text-slate-600 mb-4 tts-text-chunk">Provide a standardized digital workbench to enhance distributors' operational efficiency, compliance, and customer service.</p>
+                <div class="poster-flow-diagram tts-text-chunk">
+                    <div class="poster-flow-box font-semibold bg-blue-100 border-blue-600">Distributor Operations Portal</div>
+                    <div class="poster-flow-connector rotate-180"></div>
+                    <div class="poster-diagram-grid w-full">
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">Order & Operations</h4><div class="module-tooltip">Online Ordering, Tracking, RMA</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">Inventory & Sales</h4><div class="module-tooltip">Local Stock, Real-time ATP, CRM</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">Finance & Compliance</h4><div class="module-tooltip">Online Reconciliation, Multi-currency Payment</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">HR & Expense Control</h4><div class="module-tooltip">Payroll Calculation, Expense Reporting</div></div>
+                    </div>
+                </div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">Success Cases</h3>
+                <img src="https://globalbusinessinsight.github.io/picture/case.png" alt="Success Cases" class="w-full h-auto object-contain mt-2" style="max-height: 125px;">
+            </div>
+            <div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mb-4 tts-text-chunk">Core Value 2: Full Supply Chain Connectivity</h3>
+                <p class="text-sm text-slate-600 mb-4 tts-text-chunk">Automate the entire business process from end customers to the manufacturer, breaking down data silos for seamless collaboration.</p>
+                <div class="poster-flow-diagram tts-text-chunk">
+                    <div class="poster-flow-box">End Customer (Online/Offline Purchase)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box poster-flow-hub">PGo+ (OMNI X)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box">Distributor (Portal/POS/eCommerce)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box poster-flow-hub">PGo+ Integration</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box">Manufacturer (HQ ERP/WMS/3PL)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box font-semibold bg-green-100 border-green-600">End-to-End Automation</div>
+                </div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">The Benefits</h3>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-blue-800" data-target="45">+0%</p><p class="text-xs md:text-sm text-slate-600">Order Processing Efficiency</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-blue-800" data-target="60">+0%</p><p class="text-xs md:text-sm text-slate-600">Channel Inventory Accuracy</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-green-700" data-target="30">-0%</p><p class="text-xs md:text-sm text-slate-600">Distributor Operational Costs</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-green-700" data-target="25">-0%</p><p class="text-xs md:text-sm text-slate-600">Distributor Management Costs</p></div>
+                </div>
+            </div>
+        </main>
+        <footer class="mt-8 pt-6 border-t border-slate-300 reveal">
+            <div class="tts-text-chunk">
+                <p class="text-sm font-bold text-slate-800">Contact us to start your global channel's digital transformation</p>
+                <p class="text-sm text-slate-600">Email: marketing@inossem.com</p>
+                <p class="text-sm text-slate-600">Website: www.inossem.com</p>
+            </div>
+        </footer>
+        <button class="play-button" data-lang="en"><span class="play-icon">▶</span></button>
+    </div>
+
+    <!-- French Page -->
+    <div id="page-fr" class="page a4-poster page-transition hidden">
+         <header class="flex items-center justify-between pb-6 border-b-2 border-slate-800 reveal">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tts-text-chunk">ProcessGo Plus™</h1>
+                <p class="text-base md:text-lg font-medium text-blue-800 tts-text-chunk">Solution de Numérisation des Canaux Mondiaux</p>
+            </div>
+            <img src="https://globalbusinessinsight.github.io/picture/inossemlogobluewithdi.png" alt="Logo INOSSEM" class="h-7 md:h-8 w-auto">
+        </header>
+        <section class="mt-6 reveal">
+            <h2 class="text-lg md:text-xl font-bold text-center text-slate-800 tts-text-chunk">Autonomiser les Distributeurs Mondiaux · Connecter la Chaîne d'Approvisionnement de Bout en Bout</h2>
+            <p class="text-sm md:text-base text-slate-600 mt-2"><span class="tts-text-chunk">Conçue pour les fabricants chinois avec des réseaux de distributeurs mondiaux.</span> <span class="tts-text-chunk">Nous comprenons que sur divers marchés étrangers, de nombreux petits et moyens distributeurs jouent un rôle crucial grâce à leurs réseaux locaux.</span> <span class="tts-text-chunk">Par conséquent, notre approche n'est pas l'exploitation, mais la symbiose : via une plateforme numérique unifiée, nous fournissons à ces partenaires clés de puissants outils opérationnels, leur permettant de fonctionner de manière efficace et conforme.</span> <span class="tts-text-chunk">En collaborant étroitement avec eux, nous étendons la chaîne de données jusqu'aux clients finaux, créant une situation gagnant-gagnant qui non seulement élève les distributeurs, mais fournit également au fabricant des informations précieuses sur le marché et des opportunités de croissance.</span></p>
+        </section>
+        <main class="mt-8 grid grid-cols-1 md:grid-cols-2 md:gap-x-12 gap-y-8 reveal poster-main-content">
+            <div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mb-4 tts-text-chunk">Les Défis</h3>
+                <ul class="space-y-2 text-sm text-slate-700">
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Coordination Manuelle des Commandes:</strong> Traitement inefficace et sujet aux erreurs.</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Manque de Transparence des Données:</strong> Visibilité limitée sur les ventes et les stocks.</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Capacités Inégales:</strong> Manque d'outils numériques pour les distributeurs.</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Règlement Transfrontalier Complexe:</strong> Rapprochement de factures difficile.</div></li>
+                </ul>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">Valeur Clé 1: Autonomiser les Distributeurs</h3>
+                <p class="text-sm text-slate-600 mb-4 tts-text-chunk">Fournir un plan de travail numérique standardisé pour améliorer l'efficacité, la conformité et le service client des distributeurs.</p>
+                <div class="poster-flow-diagram tts-text-chunk">
+                    <div class="poster-flow-box font-semibold bg-blue-100 border-blue-600">Portail Opérationnel du Distributeur</div>
+                    <div class="poster-flow-connector rotate-180"></div>
+                    <div class="poster-diagram-grid w-full">
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">Commande & Opérations</h4><div class="module-tooltip">Commande en ligne, suivi, RMA</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">Inventaire & Ventes</h4><div class="module-tooltip">Stock local, ATP en temps réel, CRM</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">Finance & Conformité</h4><div class="module-tooltip">Rapprochement en ligne, paiement multidevise</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">RH & Notes de Frais</h4><div class="module-tooltip">Calcul de la paie, rapports de frais</div></div>
+                    </div>
+                </div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">Cas de Succès</h3>
+                <img src="https://globalbusinessinsight.github.io/picture/case.png" alt="Cas de Succès" class="w-full h-auto object-contain mt-2" style="max-height: 125px;">
+            </div>
+            <div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mb-4 tts-text-chunk">Valeur Clé 2: Connectivité Complète de la Chaîne d'Approvisionnement</h3>
+                <p class="text-sm text-slate-600 mb-4 tts-text-chunk">Automatiser l'ensemble du processus métier, des clients finaux au fabricant, en éliminant les silos de données pour une collaboration transparente.</p>
+                <div class="poster-flow-diagram tts-text-chunk">
+                    <div class="poster-flow-box">Client Final (Achat en ligne/hors ligne)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box poster-flow-hub">PGo+ (OMNI X)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box">Distributeur (Portail/PDV/eCommerce)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box poster-flow-hub">PGo+ Integration</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box">Fabricant (ERP/WMS/3PL)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box font-semibold bg-green-100 border-green-600">Automatisation de Bout en Bout</div>
+                </div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">Les Avantages</h3>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-blue-800" data-target="45">+0%</p><p class="text-xs md:text-sm text-slate-600">Efficacité du Traitement des Commandes</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-blue-800" data-target="60">+0%</p><p class="text-xs md:text-sm text-slate-600">Précision de l'Inventaire du Canal</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-green-700" data-target="30">-0%</p><p class="text-xs md:text-sm text-slate-600">Coûts Opérationnels du Distributeur</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-green-700" data-target="25">-0%</p><p class="text-xs md:text-sm text-slate-600">Coûts de Gestion du Distributeur</p></div>
+                </div>
+            </div>
+        </main>
+        <footer class="mt-8 pt-6 border-t border-slate-300 reveal">
+            <div class="tts-text-chunk">
+                <p class="text-sm font-bold text-slate-800">Contactez-nous pour commencer la transformation numérique de votre canal mondial</p>
+                <p class="text-sm text-slate-600">Email: marketing@inossem.com</p>
+                <p class="text-sm text-slate-600">Site web: www.inossem.com</p>
+            </div>
+        </footer>
+        <button class="play-button" data-lang="fr"><span class="play-icon">▶</span></button>
+    </div>
+
+    <!-- Spanish Page -->
+    <div id="page-es" class="page a4-poster page-transition hidden">
+        <header class="flex items-center justify-between pb-6 border-b-2 border-slate-800 reveal">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tts-text-chunk">ProcessGo Plus™</h1>
+                <p class="text-base md:text-lg font-medium text-blue-800 tts-text-chunk">Solución de Digitalización de Canales Globales</p>
+            </div>
+            <img src="https://globalbusinessinsight.github.io/picture/inossemlogobluewithdi.png" alt="Logo de INOSSEM" class="h-7 md:h-8 w-auto">
+        </header>
+        <section class="mt-6 reveal">
+            <h2 class="text-lg md:text-xl font-bold text-center text-slate-800 tts-text-chunk">Empoderando a Distribuidores Globales · Conectando la Cadena de Suministro de Extremo a Extremo</h2>
+            <p class="text-sm md:text-base text-slate-600 mt-2"><span class="tts-text-chunk">Diseñado para empresas manufactureras chinas con redes de distribuidores globales.</span> <span class="tts-text-chunk">Entendemos que en diversos mercados extranjeros, numerosos distribuidores pequeños y medianos desempeñan un papel crucial con sus redes locales.</span> <span class="tts-text-chunk">Por lo tanto, nuestro enfoque no es la explotación, sino la simbiosis: a través de una plataforma digital unificada, proporcionamos a estos socios clave potentes herramientas operativas, empoderándolos para operar de manera eficiente y conforme a las normativas.</span> <span class="tts-text-chunk">Al colaborar estrechamente con ellos, extendemos la cadena de datos hasta los clientes finales, logrando una situación en la que todos ganan, que no solo eleva a los distribuidores, sino que también proporciona al fabricante información valiosa del mercado y oportunidades de crecimiento.</span></p>
+        </section>
+        <main class="mt-8 grid grid-cols-1 md:grid-cols-2 md:gap-x-12 gap-y-8 reveal poster-main-content">
+            <div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mb-4 tts-text-chunk">Los Desafíos</h3>
+                <ul class="space-y-2 text-sm text-slate-700">
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Coordinación Manual de Pedidos:</strong> Procesamiento ineficiente y propenso a errores.</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Falta de Transparencia de Datos:</strong> Visibilidad limitada de ventas e inventario.</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Capacidades Inconsistentes:</strong> Carencia de herramientas digitales para distribuidores.</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Liquidación Transfronteriza Compleja:</strong> Conciliación de facturas difícil.</div></li>
+                </ul>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">Valor Principal 1: Empoderando a los Distribuidores</h3>
+                <p class="text-sm text-slate-600 mb-4 tts-text-chunk">Proporcionar un banco de trabajo digital estandarizado para mejorar la eficiencia operativa, el cumplimiento y el servicio al cliente de los distribuidores.</p>
+                <div class="poster-flow-diagram tts-text-chunk">
+                    <div class="poster-flow-box font-semibold bg-blue-100 border-blue-600">Portal de Operaciones del Distribuidor</div>
+                    <div class="poster-flow-connector rotate-180"></div>
+                    <div class="poster-diagram-grid w-full">
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">Pedidos y Operaciones</h4><div class="module-tooltip">Pedidos en línea, seguimiento, RMA</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">Inventario y Ventas</h4><div class="module-tooltip">Stock local, ATP en tiempo real, CRM</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">Finanzas y Cumplimiento</h4><div class="module-tooltip">Conciliación en línea, pago multidivisa</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">RR.HH. y Gastos</h4><div class="module-tooltip">Cálculo de nómina, informe de gastos</div></div>
+                    </div>
+                </div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">Casos de Éxito</h3>
+                <img src="https://globalbusinessinsight.github.io/picture/case.png" alt="Casos de Éxito" class="w-full h-auto object-contain mt-2" style="max-height: 125px;">
+            </div>
+            <div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mb-4 tts-text-chunk">Valor Principal 2: Conectividad Total de la Cadena de Suministro</h3>
+                <p class="text-sm text-slate-600 mb-4 tts-text-chunk">Automatizar todo el proceso empresarial desde los clientes finales hasta el fabricante, rompiendo los silos de datos para una colaboración fluida.</p>
+                <div class="poster-flow-diagram tts-text-chunk">
+                    <div class="poster-flow-box">Cliente Final (Compra en línea/física)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box poster-flow-hub">PGo+ (OMNI X)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box">Distribuidor (Portal/POS/eCommerce)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box poster-flow-hub">PGo+ Integration</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box">Fabricante (ERP/WMS/3PL)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box font-semibold bg-green-100 border-green-600">Automatización de Extremo a Extremo</div>
+                </div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">Los Beneficios</h3>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-blue-800" data-target="45">+0%</p><p class="text-xs md:text-sm text-slate-600">Eficiencia en el Procesamiento de Pedidos</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-blue-800" data-target="60">+0%</p><p class="text-xs md:text-sm text-slate-600">Precisión del Inventario del Canal</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-green-700" data-target="30">-0%</p><p class="text-xs md:text-sm text-slate-600">Costos Operativos del Distribuidor</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-green-700" data-target="25">-0%</p><p class="text-xs md:text-sm text-slate-600">Costos de Gestión del Distribuidor</p></div>
+                </div>
+            </div>
+        </main>
+        <footer class="mt-8 pt-6 border-t border-slate-300 reveal">
+            <div class="tts-text-chunk">
+                <p class="text-sm font-bold text-slate-800">Contáctenos para iniciar la transformación digital de su canal global</p>
+                <p class="text-sm text-slate-600">Correo: marketing@inossem.com</p>
+                <p class="text-sm text-slate-600">Sitio web: www.inossem.com</p>
+            </div>
+        </footer>
+        <button class="play-button" data-lang="es"><span class="play-icon">▶</span></button>
+    </div>
+
+    <!-- Portuguese Page -->
+    <div id="page-pt" class="page a4-poster page-transition hidden">
+        <header class="flex items-center justify-between pb-6 border-b-2 border-slate-800 reveal">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tts-text-chunk">ProcessGo Plus™</h1>
+                <p class="text-base md:text-lg font-medium text-blue-800 tts-text-chunk">Solução de Digitalização de Canais Globais</p>
+            </div>
+            <img src="https://globalbusinessinsight.github.io/picture/inossemlogobluewithdi.png" alt="Logotipo da INOSSEM" class="h-7 md:h-8 w-auto">
+        </header>
+        <section class="mt-6 reveal">
+            <h2 class="text-lg md:text-xl font-bold text-center text-slate-800 tts-text-chunk">Capacitando Distribuidores Globais · Conectando a Cadeia de Suprimentos de Ponta a Ponta</h2>
+            <p class="text-sm md:text-base text-slate-600 mt-2"><span class="tts-text-chunk">Projetado para empresas de manufatura chinesas com redes de distribuidores globais.</span> <span class="tts-text-chunk">Entendemos que em vários mercados estrangeiros, inúmeros distribuidores de pequeno e médio porte desempenham um papel crucial com suas redes locais.</span> <span class="tts-text-chunk">Portanto, nossa abordagem não é de exploração, mas de simbiose: através de uma plataforma digital unificada, fornecemos a esses parceiros-chave ferramentas operacionais poderosas, capacitando-os a operar de forma eficiente e em conformidade.</span> <span class="tts-text-chunk">Ao colaborar de perto com eles, estendemos a cadeia de dados até os clientes finais, alcançando uma situação vantajosa para todos que não apenas eleva os distribuidores, mas também fornece ao fabricante insights de mercado inestimáveis e oportunidades de crescimento.</span></p>
+        </section>
+        <main class="mt-8 grid grid-cols-1 md:grid-cols-2 md:gap-x-12 gap-y-8 reveal poster-main-content">
+            <div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mb-4 tts-text-chunk">Os Desafios</h3>
+                <ul class="space-y-2 text-sm text-slate-700">
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Coordenação Manual de Pedidos:</strong> Processamento ineficiente e propenso a erros.</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Falta de Transparência de Dados:</strong> Visibilidade limitada sobre vendas e estoque.</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Capacidades Inconsistentes:</strong> Falta de ferramentas digitais para distribuidores.</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">Liquidação Transfronteiriça Complexa:</strong> Reconciliação de faturas difícil.</div></li>
+                </ul>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">Valor Principal 1: Capacitando Distribuidores</h3>
+                <p class="text-sm text-slate-600 mb-4 tts-text-chunk">Fornecer uma bancada de trabalho digital padronizada para aprimorar a eficiência operacional, conformidade e atendimento ao cliente dos distribuidores.</p>
+                <div class="poster-flow-diagram tts-text-chunk">
+                    <div class="poster-flow-box font-semibold bg-blue-100 border-blue-600">Portal de Operações do Distribuidor</div>
+                    <div class="poster-flow-connector rotate-180"></div>
+                    <div class="poster-diagram-grid w-full">
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">Pedidos e Operações</h4><div class="module-tooltip">Pedidos online, Rastreamento, RMA</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">Estoque e Vendas</h4><div class="module-tooltip">Estoque local, ATP em tempo real, CRM</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">Finanças e Conformidade</h4><div class="module-tooltip">Reconciliação online, Pagamento multimoeda</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">RH e Despesas</h4><div class="module-tooltip">Cálculo de folha de pagamento, Relatório de despesas</div></div>
+                    </div>
+                </div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">Casos de Sucesso</h3>
+                <img src="https://globalbusinessinsight.github.io/picture/case.png" alt="Casos de Sucesso" class="w-full h-auto object-contain mt-2" style="max-height: 125px;">
+            </div>
+            <div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mb-4 tts-text-chunk">Valor Principal 2: Conectividade Total da Cadeia de Suprimentos</h3>
+                <p class="text-sm text-slate-600 mb-4 tts-text-chunk">Automatizar todo o processo de negócios, desde os clientes finais até o fabricante, quebrando os silos de dados para uma colaboração perfeita.</p>
+                <div class="poster-flow-diagram tts-text-chunk">
+                    <div class="poster-flow-box">Cliente Final (Compra Online/Offline)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box poster-flow-hub">PGo+ (OMNI X)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box">Distribuidor (Portal/POS/eCommerce)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box poster-flow-hub">PGo+ Integration</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box">Fabricante (ERP/WMS/3PL da Sede)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box font-semibold bg-green-100 border-green-600">Automação de Ponta a Ponta</div>
+                </div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">Os Benefícios</h3>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-blue-800" data-target="45">+0%</p><p class="text-xs md:text-sm text-slate-600">Eficiência no Processamento de Pedidos</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-blue-800" data-target="60">+0%</p><p class="text-xs md:text-sm text-slate-600">Precisão do Estoque do Canal</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-green-700" data-target="30">-0%</p><p class="text-xs md:text-sm text-slate-600">Custos Operacionais do Distribuidor</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-green-700" data-target="25">-0%</p><p class="text-xs md:text-sm text-slate-600">Custos de Gestão do Distribuidor</p></div>
+                </div>
+            </div>
+        </main>
+        <footer class="mt-8 pt-6 border-t border-slate-300 reveal">
+            <div class="tts-text-chunk">
+                <p class="text-sm font-bold text-slate-800">Contate-nos para iniciar a transformação digital do seu canal global</p>
+                <p class="text-sm text-slate-600">E-mail: marketing@inossem.com</p>
+                <p class="text-sm text-slate-600">Site: www.inossem.com</p>
+            </div>
+        </footer>
+        <button class="play-button" data-lang="pt"><span class="play-icon">▶</span></button>
+    </div>
+
+    <!-- Japanese Page -->
+    <div id="page-ja" class="page a4-poster page-transition hidden">
+        <header class="flex items-center justify-between pb-6 border-b-2 border-slate-800 reveal">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tts-text-chunk">ProcessGo Plus™</h1>
+                <p class="text-base md:text-lg font-medium text-blue-800 tts-text-chunk">グローバルチャネルデジタルソリューション</p>
+            </div>
+            <img src="https://globalbusinessinsight.github.io/picture/inossemlogobluewithdi.png" alt="INOSSEM ロゴ" class="h-7 md:h-8 w-auto">
+        </header>
+        <section class="mt-6 reveal">
+            <h2 class="text-lg md:text-xl font-bold text-center text-slate-800 tts-text-chunk">グローバル販売代理店の強化・エンドツーエンドのサプライチェーン連携</h2>
+            <p class="text-sm md:text-base text-slate-600 mt-2"><span class="tts-text-chunk">グローバルな販売代理店ネットワークを持つ中国の製造企業向けに設計されています。</span><span class="tts-text-chunk">多くの海外市場では、数多くの中小規模の販売代理店が地域ネットワークで重要な役割を果たしていることを理解しています。</span><span class="tts-text-chunk">そのため、私たちのアプローチは搾取ではなく共生です。</span><span class="tts-text-chunk">統一されたデジタルプラットフォームを通じて、これらの主要パートナーに強力な業務ツールを提供し、効率的かつコンプライアンスに準拠した運営を可能にします。</span><span class="tts-text-chunk">彼らと緊密に連携することで、データチェーンをエンドカスタマーまで拡張し、販売代理店の成功を支援すると同時に、製造業者が貴重な市場インサイトと成長機会を得るというウィンウィンの状況を実現します。</span></p>
+        </section>
+        <main class="mt-8 grid grid-cols-1 md:grid-cols-2 md:gap-x-12 gap-y-8 reveal poster-main-content">
+            <div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mb-4 tts-text-chunk">課題</h3>
+                <ul class="space-y-2 text-sm text-slate-700">
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">手動での注文調整:</strong> 非効率でエラーが発生しやすい処理。</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">データ透明性の欠如:</strong> 販売と在庫の可視性が低い。</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">能力のばらつき:</strong> 販売代理店向けのデジタルツールが不足。</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">複雑な越境決済:</strong> 請求書の照合が困難。</div></li>
+                </ul>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">コアバリュー1：販売代理店の強化</h3>
+                <p class="text-sm text-slate-600 mb-4 tts-text-chunk">標準化されたデジタルワークベンチを提供し、販売代理店の業務効率、コンプライアンス、顧客サービスを向上させます。</p>
+                <div class="poster-flow-diagram tts-text-chunk">
+                    <div class="poster-flow-box font-semibold bg-blue-100 border-blue-600">販売代理店オペレーションポータル</div>
+                    <div class="poster-flow-connector rotate-180"></div>
+                    <div class="poster-diagram-grid w-full">
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">注文と運営</h4><div class="module-tooltip">オンライン発注、追跡、RMA</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">在庫と販売</h4><div class="module-tooltip">ローカル在庫、リアルタイムATP、CRM</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">財務とコンプライアンス</h4><div class="module-tooltip">オンライン照合、多通貨決済</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">人事と経費管理</h4><div class="module-tooltip">給与計算、経費報告</div></div>
+                    </div>
+                </div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">成功事例</h3>
+                <img src="https://globalbusinessinsight.github.io/picture/case.png" alt="成功事例" class="w-full h-auto object-contain mt-2" style="max-height: 125px;">
+            </div>
+            <div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mb-4 tts-text-chunk">コアバリュー2：完全なサプライチェーン連携</h3>
+                <p class="text-sm text-slate-600 mb-4 tts-text-chunk">エンドカスタマーから製造業者までの全ビジネスプロセスを自動化し、データのサイロ化を解消してシームレスな連携を実現します。</p>
+                <div class="poster-flow-diagram tts-text-chunk">
+                    <div class="poster-flow-box">エンドカスタマー（オンライン/オフライン購入）</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box poster-flow-hub">PGo+ (OMNI X)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box">販売代理店（ポータル/POS/eコマース）</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box poster-flow-hub">PGo+ Integration</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box">製造業者（本社ERP/WMS/3PL）</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box font-semibold bg-green-100 border-green-600">エンドツーエンドの自動化</div>
+                </div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">導入効果</h3>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-blue-800" data-target="45">+0%</p><p class="text-xs md:text-sm text-slate-600">注文処理効率</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-blue-800" data-target="60">+0%</p><p class="text-xs md:text-sm text-slate-600">チャネル在庫精度</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-green-700" data-target="30">-0%</p><p class="text-xs md:text-sm text-slate-600">販売代理店運営コスト</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-green-700" data-target="25">-0%</p><p class="text-xs md:text-sm text-slate-600">販売代理店管理コスト</p></div>
+                </div>
+            </div>
+        </main>
+        <footer class="mt-8 pt-6 border-t border-slate-300 reveal">
+            <div class="tts-text-chunk">
+                <p class="text-sm font-bold text-slate-800">グローバルチャネルのDXを開始するために、お問い合わせください</p>
+                <p class="text-sm text-slate-600">メール: marketing@inossem.com</p>
+                <p class="text-sm text-slate-600">ウェブサイト: www.inossem.com</p>
+            </div>
+        </footer>
+        <button class="play-button" data-lang="ja"><span class="play-icon">▶</span></button>
+    </div>
+    
+    <!-- Chinese Page (template for structure) -->
+    <div id="page-zh" class="page a4-poster page-transition hidden">
+        <header class="flex items-center justify-between pb-6 border-b-2 border-slate-800 reveal">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-900 tts-text-chunk">ProcessGo Plus™</h1>
+                <p class="text-base md:text-lg font-medium text-blue-800 tts-text-chunk">全球渠道数字化解决方案</p>
+            </div>
+            <img src="https://globalbusinessinsight.github.io/picture/inossemlogobluewithdi.png" alt="INOSSEM Logo" class="h-7 md:h-8 w-auto">
+        </header>
+        <section class="mt-6 reveal">
+            <h2 class="text-lg md:text-xl font-bold text-center text-slate-800 tts-text-chunk">赋能全球经销商 · 连接端到端供应链</h2>
+            <p class="text-sm md:text-base text-slate-600 mt-2"><span class="tts-text-chunk">专为拥有全球经销商网络的中国制造企业设计。</span><span class="tts-text-chunk">我们深知，在各个海外市场中，大量的中小型经销商凭借其本地化网络发挥着至关重要的作用。</span><span class="tts-text-chunk">因此，我们的思路并非压榨，而是共生：通过统一的数字化平台，为这些关键伙伴提供强大的经营工具，赋能他们高效、合规地运营。</span><span class="tts-text-chunk">通过与他们紧密协同，将数据链延伸至终端客户，在成就经销商的同时，也为厂商自身赢得市场洞察与增长先机。</span></p>
+        </section>
+        <main class="mt-8 grid grid-cols-1 md:grid-cols-2 md:gap-x-12 gap-y-8 reveal poster-main-content">
+            <div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mb-4 tts-text-chunk">面临的挑战</h3>
+                <ul class="space-y-2 text-sm text-slate-700">
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">订单协同靠人工：</strong>经销商通过邮件、电话下单，总部手动处理，效率低且易错。</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">渠道数据不透明：</strong>无法实时掌握海外销售和库存数据，市场反应滞后。</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">经销商能力参差不齐：</strong>缺乏数字化工具，运营合规性差、效率低。</div></li>
+                    <li class="flex items-start tts-text-chunk"><span class="mr-2 text-blue-800 font-bold">●</span><div><strong class="font-semibold">跨境结算与对账复杂：</strong>多币种交易、发票核对、资金周转慢。</div></li>
+                </ul>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">核心价值 1: 赋能经销商</h3>
+                <p class="text-sm text-slate-600 mb-4 tts-text-chunk">为经销商提供标准化的数字化工作台，提升其运营效率、合规性与客户服务能力。</p>
+                <div class="poster-flow-diagram tts-text-chunk">
+                    <div class="poster-flow-box font-semibold bg-blue-100 border-blue-600">经销商运营门户</div>
+                    <div class="poster-flow-connector rotate-180"></div>
+                    <div class="poster-diagram-grid w-full">
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">订单与运营</h4><div class="module-tooltip">在线下单、追踪、退货</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">库存与销售</h4><div class="module-tooltip">本地库存、实时ATP、CRM</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">财务与合规</h4><div class="module-tooltip">在线对账、多币种结算</div></div>
+                        <div class="poster-diagram-module"><h4 class="poster-module-title">人事与费控</h4><div class="module-tooltip">薪酬计算、费用报销</div></div>
+                    </div>
+                </div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">成功案例</h3>
+                <img src="https://globalbusinessinsight.github.io/picture/case.png" alt="成功案例" class="w-full h-auto object-contain mt-2" style="max-height: 125px;">
+            </div>
+            <div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mb-4 tts-text-chunk">核心价值 2: 供应链全连接</h3>
+                <p class="text-sm text-slate-600 mb-4 tts-text-chunk">自动化连接从终端客户到厂商的全业务流程，打通数据孤岛，实现端到端协同。</p>
+                <div class="poster-flow-diagram tts-text-chunk">
+                    <div class="poster-flow-box">终端客户 (线上/线下购买)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box poster-flow-hub">PGo+ (OMNI X)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box">经销商 (门户/POS/电商)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box poster-flow-hub">PGo+ Integration</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box">厂商 (总部ERP/WMS/3PL)</div>
+                    <div class="poster-flow-connector"></div>
+                    <div class="poster-flow-box font-semibold bg-green-100 border-green-600">全流程自动化</div>
+                </div>
+                <h3 class="text-base md:text-lg font-bold text-slate-800 border-l-4 border-blue-800 pl-3 mt-8 mb-4 tts-text-chunk">带来的效益</h3>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-blue-800" data-target="45">+0%</p><p class="text-xs md:text-sm text-slate-600">订单处理效率</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-blue-800" data-target="60">+0%</p><p class="text-xs md:text-sm text-slate-600">渠道库存准确率</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-green-700" data-target="30">-0%</p><p class="text-xs md:text-sm text-slate-600">经销商运营成本</p></div>
+                    <div class="bg-slate-100 p-3 rounded tts-text-chunk"><p class="benefit-value text-xl md:text-2xl font-bold text-green-700" data-target="25">-0%</p><p class="text-xs md:text-sm text-slate-600">经销商管理成本</p></div>
+                </div>
+            </div>
+        </main>
+        <footer class="mt-8 pt-6 border-t border-slate-300 reveal">
+            <div class="tts-text-chunk">
+                <p class="text-sm font-bold text-slate-800">联系我们，开启您的全球渠道数字化转型</p>
+                <p class="text-sm text-slate-600">邮箱: marketing@inossem.com</p>
+                <p class="text-sm text-slate-600">官网: www.inossem.com</p>
+            </div>
+        </footer>
+        <button class="play-button" data-lang="zh"><span class="play-icon">▶</span></button>
+    </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const langButtons = document.querySelectorAll('.lang-switcher button');
+            const pages = document.querySelectorAll('.page');
+            const introOverlay = document.getElementById('intro-overlay');
+            const introSlogansContainer = document.getElementById('intro-slogans');
+            const playButtons = document.querySelectorAll('.play-button');
+
+            const audioCache = {};
+            let currentAudio = null;
+            let currentLang = 'en';
+            let currentPlaybackSequence = [];
+            let currentChunkIndex = 0;
+
+            const titles = {
+                en: 'Empowering Global Distributors · Connecting the End-to-End Supply Chain',
+                fr: 'Autonomiser les Distributeurs · Connecter la Chaîne d\'Approvisionnement',
+                zh: '赋能全球经销商 · 连接端到端供应链',
+                es: 'Empoderando a Distribuidores · Conectando la Cadena de Suministro',
+                pt: 'Capacitando Distribuidores · Conectando a Cadeia de Suprimentos',
+                ja: 'グローバル販売代理店の強化・サプライチェーン連携'
+            };
+            const langOrder = ['en', 'fr', 'zh', 'es', 'pt', 'ja'];
+            const voicePersonas = {
+                 en: { prompt: "Speak clearly and confidently, with an energetic and charismatic tone, like a Hollywood action star explaining a high-tech mission.", voice: "Charon" },
+                 fr: { prompt: "Speak with a sophisticated, breathy, and alluring French accent. The tone should be elegant and slightly mysterious, like a famous European actress.", voice: "Callirrhoe" },
+                 zh: { prompt: "Speak with a gentle, elegant, and slightly sweet tone, using a soft and clear voice with a polished, professional delivery, like a well-known actress and model.", voice: "Leda" },
+                 es: { prompt: "Speak with a lively, rhythmic, and passionate tone. The voice should be clear and energetic, with a hint of a Latin pop star's charisma.", voice: "Laomedeia" },
+                 pt: { prompt: "Speak with a confident, powerful, and determined tone. The delivery should be sharp, precise, and have the commanding presence of a world-class athlete.", voice: "Fenrir" },
+                 ja: { prompt: "Speak with a clear, polite, and professional tone, like a news announcer or business presenter.", voice: "Aoede" }
+            };
+            
+            // --- Audio & Highlighting Functions ---
+            function base64ToArrayBuffer(base64) {
+                const binaryString = window.atob(base64);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
+                return bytes.buffer;
+            }
+
+            function pcmToWav(pcmData, sampleRate) {
+                const numChannels = 1, bytesPerSample = 2, blockAlign = numChannels * bytesPerSample, byteRate = sampleRate * blockAlign, dataSize = pcmData.length * bytesPerSample;
+                const buffer = new ArrayBuffer(44 + dataSize);
+                const view = new DataView(buffer);
+                function writeString(v, o, s) { for (let i = 0; i < s.length; i++) { v.setUint8(o + i, s.charCodeAt(i)); } }
+                writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); writeString(view, 8, 'WAVE');
+                writeString(view, 12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+                view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true); view.setUint32(28, byteRate, true);
+                view.setUint16(32, blockAlign, true); view.setUint16(34, 16, true); writeString(view, 36, 'data');
+                view.setUint32(40, dataSize, true);
+                for (let i = 0; i < pcmData.length; i++) { view.setInt16(44 + i * 2, pcmData[i], true); }
+                return new Blob([view], { type: 'audio/wav' });
+            }
+            
+            async function generateAndCacheAudio(lang, button, textChunks) {
+                button.innerHTML = '<div class="loader"></div>';
+                audioCache[lang] = [];
+                for (const chunk of textChunks) {
+                    try {
+                        const apiKey = "";
+                        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+                        const persona = voicePersonas[lang];
+                        const textToSpeak = `${persona.prompt} TTS the following: ${chunk.textContent}`;
+                        const payload = {
+                            contents: [{ parts: [{ text: textToSpeak }] }],
+                            generationConfig: {
+                                responseModalities: ["AUDIO"],
+                                speechConfig: {
+                                    voiceConfig: { prebuiltVoiceConfig: { voiceName: persona.voice } },
+                                    speakingRate: 1.15
+                                }
+                            },
+                            model: "gemini-2.5-flash-preview-tts"
+                        };
+                        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                        const result = await response.json();
+                        const part = result?.candidates?.[0]?.content?.parts?.[0];
+                        const audioData = part?.inlineData?.data;
+                        const mimeType = part?.inlineData?.mimeType;
+                        if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                             const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
+                             const pcmData = base64ToArrayBuffer(audioData);
+                             const pcm16 = new Int16Array(pcmData);
+                             const wavBlob = pcmToWav(pcm16, sampleRate);
+                             audioCache[lang].push(wavBlob);
+                        } else { audioCache[lang].push(null); }
+                    } catch (error) {
+                        console.error("TTS Generation Failed for chunk:", chunk.textContent, error);
+                        audioCache[lang].push(null);
+                    }
+                }
+                return audioCache[lang];
+            }
+            
+            function stopCurrentAudio() {
+                if (currentAudio) { currentAudio.pause(); currentAudio.onended = null; currentAudio = null; }
+                currentPlaybackSequence = []; currentChunkIndex = 0;
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('tts-reading'));
+                document.querySelectorAll('.tts-text-chunk').forEach(c => c.classList.remove('highlight'));
+                document.querySelectorAll('.play-button').forEach(btn => { btn.innerHTML = '<span class="play-icon">▶</span>'; });
+            }
+
+            function playNextChunk(lang, button, textChunks) {
+                if (currentChunkIndex >= currentPlaybackSequence.length) { stopCurrentAudio(); return; }
+                if (currentChunkIndex > 0) { textChunks[currentChunkIndex - 1].classList.remove('highlight'); }
+                const currentChunkElement = textChunks[currentChunkIndex];
+                currentChunkElement.classList.add('highlight');
+                const audioBlob = currentPlaybackSequence[currentChunkIndex];
+                if (audioBlob) {
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    currentAudio = new Audio(audioUrl);
+                    currentAudio.play();
+                    currentAudio.onended = () => { currentChunkIndex++; playNextChunk(lang, button, textChunks); };
+                } else {
+                    setTimeout(() => { currentChunkIndex++; playNextChunk(lang, button, textChunks); }, 500);
+                }
+            }
+            
+            playButtons.forEach(button => {
+                button.addEventListener('click', async function() {
+                    const lang = this.dataset.lang;
+                    const pageElement = document.getElementById(`page-${lang}`);
+                    const textChunks = Array.from(pageElement.querySelectorAll('.tts-text-chunk'));
+                    if (currentAudio && !currentAudio.paused) { currentAudio.pause(); this.innerHTML = '<span class="play-icon">▶</span>'; }
+                    else if (currentAudio && currentAudio.paused) { currentAudio.play(); this.innerHTML = '<span class="pause-icon">❚❚</span>'; }
+                    else {
+                        stopCurrentAudio();
+                        currentLang = lang;
+                        if (!audioCache[lang] || audioCache[lang].length !== textChunks.length) {
+                            await generateAndCacheAudio(lang, this, textChunks);
+                        }
+                        currentPlaybackSequence = audioCache[lang];
+                        if (!currentPlaybackSequence || currentPlaybackSequence.length === 0) { this.innerHTML = '<span class="play-icon">!</span>'; return; }
+                        this.innerHTML = '<span class="pause-icon">❚❚</span>';
+                        pageElement.classList.add('tts-reading');
+                        playNextChunk(lang, this, textChunks);
+                    }
+                });
+            });
+
+            // --- Main Logic ---
+            function switchLang(lang) {
+                stopCurrentAudio();
+                const currentPage = document.querySelector('.page:not(.hidden)');
+                if (currentPage) currentPage.style.opacity = '0';
+                setTimeout(() => {
+                    pages.forEach(page => {
+                        page.classList.add('hidden');
+                        page.style.opacity = '0';
+                    });
+                    const newPage = document.getElementById('page-' + lang);
+                    if (newPage) {
+                        newPage.classList.remove('hidden');
+                        setTimeout(() => newPage.style.opacity = '1', 50);
+                    }
+                    langButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+                    document.documentElement.lang = lang.startsWith('zh') ? 'zh-CN' : lang;
+                }, 400);
+            }
+
+            langButtons.forEach(button => { button.addEventListener('click', function() { switchLang(this.dataset.lang); }); });
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        if (entry.target.classList.contains('benefit-value')) { animateValue(entry.target); }
+                        if (!entry.target.classList.contains('benefit-value')) { observer.unobserve(entry.target); }
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            function animateValue(element) {
+                const target = parseInt(element.dataset.target, 10);
+                const prefix = element.innerText.startsWith('+') ? '+' : '-';
+                const duration = 1500; let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    const currentValue = Math.floor(progress * target);
+                    element.innerText = `${prefix}${currentValue}%`;
+                    if (progress < 1) window.requestAnimationFrame(step);
+                };
+                window.requestAnimationFrame(step);
+                observer.unobserve(element);
+            }
+
+            function initializePageContent() {
+                document.querySelectorAll('.reveal, .benefit-value').forEach(el => {
+                    el.classList.remove('visible');
+                    if (el.classList.contains('benefit-value')) { el.innerText = el.innerText.startsWith('+') ? '+0%' : '-0%'; }
+                    observer.observe(el);
+                });
+            }
+            
+            function runIntroSequence() {
+                langOrder.forEach((lang, index) => {
+                    const sloganEl = document.createElement('h1');
+                    sloganEl.className = 'intro-slogan';
+                    sloganEl.textContent = titles[lang];
+                    sloganEl.style.animationDelay = `${index * 0.2}s`;
+                    introSlogansContainer.appendChild(sloganEl);
+                });
+
+                setTimeout(() => {
+                    introOverlay.classList.add('hidden');
+                    switchLang('en');
+                    initializePageContent();
+                }, 4000);
+            }
+
+            runIntroSequence();
+        });
+    </script>
+</body>
+</html>
+
