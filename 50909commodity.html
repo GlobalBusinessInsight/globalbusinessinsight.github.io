@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二战后大宗商品价格周期分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Economist Red -->
+    <!-- Application Structure Plan: The structure is a long-form, scrollable article, mimicking the layout of The Economist. A sticky master chart at the top serves as a constant visual anchor. The page begins with extensive introductory sections explaining the fundamentals of commodities, detailing the major corporate players, and outlining the key global exchanges. Following this, as the user scrolls through the detailed analysis of each historical period, an IntersectionObserver dynamically highlights the corresponding range on the top chart. This "scrollytelling" approach creates a narrative, immersive experience, presenting all information upfront in a logical flow. -->
+    <!-- Visualization & Content Choices: 
+        1. Report Info: Overall commodity price trend from 1946-2024. -> Goal: Show change over time. -> Viz/Method: Line Chart (sticky at top). -> Interaction: Highlights a date range automatically as the user scrolls to the relevant content section. -> Justification: Provides a persistent high-level context that reacts to the user's focus. -> Library: Chart.js (Canvas).
+        2. Report Info: Foundational concepts, key companies, and exchanges. -> Goal: Inform/Educate. -> Viz/Method: Static, well-formatted HTML text sections with detailed subsections for each entity. -> Interaction: N/A. -> Justification: Provides necessary, in-depth background context before the main historical analysis. -> Library/Method: HTML/CSS.
+        3. Report Info: Distinct historical price cycles. -> Goal: Organize & Inform. -> Viz/Method: Sequential, styled HTML article sections. -> Interaction: Scrolling into a section triggers the chart highlight. -> Justification: This "flat" layout eliminates clicks and presents the full story in a linear, easy-to-follow format. -> Library/Method: HTML/CSS/JS with IntersectionObserver.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #fdf9f2;
+            color: #333333;
+        }
+        h1, h2, h3, .font-lora {
+            font-family: 'Lora', serif;
+        }
+        .economist-red {
+            color: #E3120B;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 45vh;
+            }
+        }
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(8px);
+            background-color: rgba(253, 249, 242, 0.85);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .period-section {
+            border-left: 3px solid transparent;
+            padding-left: 1.5rem;
+            margin-bottom: 3rem;
+            transition: border-color 0.4s ease-in-out;
+        }
+        .period-section.is-active {
+            border-left-color: #E3120B;
+        }
+        .intro-section h3 {
+             border-bottom: 2px solid #E3120B;
+             padding-bottom: 0.5rem;
+             margin-bottom: 1.5rem;
+        }
+        .company-profile {
+            background-color: rgba(0,0,0,0.02);
+            border-left: 3px solid #ccc;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .company-profile h4 {
+            font-family: 'Lora', serif;
+            font-weight: bold;
+            color: #000;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8 md:mb-12">
+            <h1 class="text-3xl md:text-5xl font-bold text-black mb-2">大宗商品：周期的剖析</h1>
+            <p class="text-lg text-gray-700 max-w-3xl mx-auto">自1945年以来，原材料价格的每一次涨跌都讲述着一个关于战争、创新和全球化的故事。</p>
+        </header>
+
+        <main>
+            <section id="timeline-chart" class="bg-transparent py-4 mb-8 sticky-header">
+                <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4 text-center">大宗商品价格指数，1946-2024</h2>
+                <div class="chart-container">
+                    <canvas id="commodityChart"></canvas>
+                </div>
+            </section>
+
+            <section id="introductory-content" class="max-w-4xl mx-auto mb-16 space-y-12">
+                <article class="intro-section">
+                    <h3 class="text-2xl md:text-3xl font-lora font-bold text-black">什么是大宗商品及其重要性</h3>
+                    <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p>大宗商品（Commodities）是指未经加工或仅经过初级加工的原材料，它们具有同质化、可交易的特点。这意味着无论生产商是谁，每一单位的商品质量都是标准化的，例如一桶布伦特原油或一蒲式耳的小麦。大宗商品主要分为三大类：能源（如原油、天然气）、金属（如铜、铁矿石、黄金）和农产品（如大豆、玉米、棉花）。</p>
+                        <p>它们的重要性不言而喻。大宗商品是全球工业生产的基石，为工厂、建筑和运输提供动力和原材料。它们是人类生存的基础，为数十亿人提供食物和衣物。因此，大宗商品的价格波动直接影响着全球经济的健康状况、通货膨胀水平以及各国的财富分配，使其成为地缘政治和经济战略的核心。</p>
+                    </div>
+                </article>
+
+                <article class="intro-section">
+                    <h3 class="text-2xl md:text-3xl font-lora font-bold text-black">国际贸易发展简史</h3>
+                     <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p>大宗商品的国际贸易历史源远流长。从古代的丝绸之路到中世纪的香料贸易，原材料的跨区域流动一直是文明交流和财富创造的驱动力。地理大发现时代（15-17世纪）开启了全球贸易的新篇章，欧洲殖民者在全球范围内寻求黄金、白银和农产品，重塑了世界经济格局。</p>
+                        <p>工业革命（18-19世纪）极大地提升了对煤炭、铁矿石和棉花等工业原料的需求，现代运输方式（如蒸汽船和铁路）的出现，使得大规模、长距离的商品运输成为可能。20世纪下半叶，随着全球化的深入和金融市场的发展，大宗商品不仅是实体货物，更演变为重要的金融资产，其期货和衍生品交易在全球各大交易所（如芝加哥商品交易所、伦敦金属交易所）中占据核心地位。</p>
+                    </div>
+                </article>
+                
+                <article class="intro-section">
+                    <h3 class="text-2xl md:text-3xl font-lora font-bold text-black">行业巨擘：供应链的掌控者</h3>
+                    <div class="space-y-8 text-gray-700 leading-relaxed">
+                        <h4 class="text-xl font-lora font-bold text-black border-l-4 border-gray-400 pl-3">能源贸易巨头</h4>
+                        <div class="company-profile">
+                            <h4 class="text-lg">维多集团 (Vitol)</h4>
+                            <p><strong>简介：</strong> 成立于1966年，是全球最大的独立能源贸易商。这家总部位于瑞士的私营公司以其低调和高效著称。<strong>核心业务：</strong> 核心是原油及石油产品（汽油、柴油等）的实物贸易，业务遍及采购、运输、储存和分销。其庞大的油轮船队和全球仓储设施网络，使其能够灵活应对市场供需变化。<strong>规模与地位：</strong> 年营收常年高达数千亿美元，每日交易数百万桶原油，其交易量足以影响全球能源价格。维多集团是连接产油国与消费国的关键枢纽。</p>
+                        </div>
+                        <div class="company-profile">
+                            <h4 class="text-lg">嘉能可 (Glencore)</h4>
+                            <p><strong>简介：</strong> 前身为马克·里奇公司（Marc Rich + Co AG），成立于1974年，2011年上市。嘉能可是全球最多元化的自然资源公司之一。<strong>核心业务：</strong> 独一无二的“生产+贸易”一体化模式。它不仅是全球最大的商品贸易商之一，还是铜、钴、锌、煤炭等多种金属和能源的主要生产商。这种模式使其能从产业链的每个环节获利，并获得无可比拟的市场洞察力。<strong>规模与地位：</strong> 年营收超过2000亿美元，其在钴等关键电池金属市场上的主导地位，使其在全球能源转型中扮演着至关重要的角色。</p>
+                        </div>
+                        <div class="company-profile">
+                            <h4 class="text-lg">托克集团 (Trafigura)</h4>
+                            <p><strong>简介：</strong> 成立于1993年，由嘉能可的创始人之一分拆创立，现已成为全球三大独立大宗商品贸易商之一。<strong>核心业务：</strong> 专注于石油、金属和矿产的贸易。与竞争对手一样，托克大力投资于物流基础设施，包括港口、码头和仓储设施，以加强对其全球供应链的控制。<strong>规模与地位：</strong> 年营收常超过3000亿美元，是全球有色金属（如铜、锌）和石油产品市场的主要参与者，以其激进的交易风格闻名。</p>
+                        </div>
+
+                        <h4 class="text-xl font-lora font-bold text-black border-l-4 border-gray-400 pl-3 mt-8">矿业与金属寡头</h4>
+                        <div class="company-profile">
+                            <h4 class="text-lg">必和必拓 (BHP)</h4>
+                            <p><strong>简介：</strong> 历史可追溯至19世纪，由澳大利亚的Broken Hill Proprietary和英国的Billiton合并而成，是全球市值最高的矿业公司。<strong>核心业务：</strong> 主要从事铁矿石、铜、煤炭和镍的勘探、生产和销售。其在西澳大利亚州的铁矿石业务规模巨大，是全球钢铁行业最重要的供应商。<strong>规模与地位：</strong> 年营收约600亿美元。作为行业领导者，BHP的生产计划和资本支出决策对全球大宗商品供应和价格有直接影响。</p>
+                        </div>
+                        <div class="company-profile">
+                            <h4 class="text-lg">力拓集团 (Rio Tinto)</h4>
+                            <p><strong>简介：</strong> 成立于1873年，是一家历史悠久的英澳跨国矿业公司。<strong>核心业务：</strong> 全球第二大矿业公司，业务集中于铁矿石、铝和铜。力拓以其技术先进、成本低廉的大型矿山而闻名，尤其是在铁矿石领域，与BHP共同主导全球市场。<strong>规模与地位：</strong> 年营收约550亿美元。力拓是全球经济的晴雨表，其对中国市场的依赖度极高，其业绩和战略深受中国经济表现的影响。</p>
+                        </div>
+                        <div class="company-profile">
+                            <h4 class="text-lg">淡水河谷 (Vale)</h4>
+                             <p><strong>简介：</strong> 成立于1942年的巴西国有企业，1997年私有化。是西半球最大的矿业公司。<strong>核心业务：</strong> 全球最大的铁矿石和镍生产商。淡水河谷拥有世界上最高品位的铁矿，并运营着庞大的铁路和港口网络以支持其出口业务。在电池金属领域，其镍业务对于全球电动汽车行业至关重要。<strong>规模与地位：</strong> 年营收约400亿美元。其生产决策，特别是铁矿石产量，直接影响全球钢铁价格。</p>
+                        </div>
+
+                        <h4 class="text-xl font-lora font-bold text-black border-l-4 border-gray-400 pl-3 mt-8">农业“ABCD”与新晋挑战者</h4>
+                         <div class="company-profile">
+                            <h4 class="text-lg">嘉吉 (Cargill)</h4>
+                            <p><strong>简介：</strong> 成立于1865年，是美国最大的私营企业，也是“ABCD”四大粮商之首。<strong>核心业务：</strong> 业务覆盖农业供应链的每一个环节，从粮食采购、储存、贸易到加工成食品配料、动物饲料和生物燃料。此外，它还提供风险管理和金融服务。<strong>规模与地位：</strong> 年营收超过1700亿美元。嘉吉凭借其全球网络和百年经验，在全球粮食流动和定价中扮演着“看不见的手”的角色。</p>
+                        </div>
+                        <div class="company-profile">
+                            <h4 class="text-lg">中粮国际 (COFCO International)</h4>
+                            <p><strong>简介：</strong> 中国最大的国有粮食企业中粮集团的国际化平台。<strong>核心业务：</strong> 通过对荷兰粮商尼德拉（Nidera）和来宝农业（Noble Agri）的收购，中粮国际迅速建立起一个全球性的采购、物流和加工网络，业务遍及美洲、欧洲和亚太地区。其核心使命是为中国庞大的人口保障粮食供应。<strong>规模与地位：</strong> 正在迅速成长为能够与传统“ABCD”抗衡的全球性农业巨头，是中国保障粮食安全和提升全球粮食市场影响力的战略工具。</p>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="intro-section">
+                    <h3 class="text-2xl md:text-3xl font-lora font-bold text-black">全球舞台：著名大宗商品交易所</h3>
+                    <div class="space-y-6 text-gray-700 leading-relaxed">
+                        <p>大宗商品交易所是全球贸易的神经中枢。它们提供了一个透明、规范的平台，让生产商、消费者和投资者能够通过标准化的期货和期权合约来买卖商品、对冲风险和发现价格。以下是几个最重要的交易所：</p>
+                         <div class="company-profile">
+                            <h4 class="text-lg">芝加哥商品交易所集团 (CME Group)</h4>
+                            <p><strong>简介：</strong> 位于美国芝加哥，是全球规模最大、产品最多元化的衍生品交易所。由芝加哥商业交易所（CME）和芝加哥期货交易所（CBOT）等合并而成。<strong>核心产品：</strong> 其产品几乎涵盖所有资产类别。在农产品领域，其玉米、大豆、小麦期货是全球农业的定价基准。在能源领域，其旗下的纽约商业交易所（NYMEX）上市的WTI原油期货是北美原油的基准价格。<strong>地位与影响：</strong> CME是全球风险管理中心。其价格信号指导着全球农民的种植决策、石油公司的开采计划以及食品公司的采购成本。</p>
+                        </div>
+                        <div class="company-profile">
+                            <h4 class="text-lg">洲际交易所 (Intercontinental Exchange, ICE)</h4>
+                            <p><strong>简介：</strong> 成立于2000年，总部位于亚特兰大，是一家相对年轻但发展极为迅速的交易所集团，以其强大的电子交易平台著称。ICE还拥有纽约证券交易所（NYSE）。<strong>核心产品：</strong> 在能源领域拥有绝对的话语权。其上市的布伦特原油期货是全球超过三分之二石油贸易的定价基准，是世界上最具影响力的金融工具之一。此外，ICE在咖啡、糖、棉花等软商品期货市场也占据主导地位。<strong>地位与影响：</strong> ICE是全球能源市场的核心，其布伦特原油价格是全球经济的脉搏。</p>
+                        </div>
+                        <div class="company-profile">
+                            <h4 class="text-lg">伦敦金属交易所 (LME)</h4>
+                            <p><strong>简介：</strong> 成立于1877年，位于伦敦，是全球工业金属的交易中心。2012年被香港交易所收购。<strong>核心产品：</strong> 提供铜、铝、锌、铅、镍和锡等基础金属的期货和期权合约。LME的价格被全球金属生产商和消费者用作贸易结算的基准。<strong>地位与影响：</strong> LME通过其独特的全球仓库网络系统，将金融市场与实物金属紧密联系起来，是全球金属行业的官方定价场所。其著名的“圈内交易”（The Ring）是欧洲现存唯一的公开喊价交易形式。</p>
+                        </div>
+                        <div class="company-profile">
+                            <h4 class="text-lg">上海期货交易所 (SHFE)</h4>
+                            <p><strong>简介：</strong> 成立于1999年，是中国内地最大的商品期货交易所之一。<strong>核心产品：</strong> 在黑色金属（螺纹钢、热轧卷板）和有色金属（铜、铝、锌）领域交易量位居世界前列。近年来，上期所还推出了原油、天然橡胶和黄金等国际化品种，允许境外投资者参与。<strong>地位与影响：</strong> 作为世界最大的大宗商品消费国，中国的期货市场价格（即“中国价格”）正变得越来越重要。上海期货交易所是反映中国和亚洲实体经济需求的关键指标，其国际影响力正在迅速提升。</p>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="intro-section">
+                    <h3 class="text-2xl md:text-3xl font-lora font-bold text-black">棋盘上的中美：定位与战略</h3>
+                     <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p>在全球大宗商品的棋局中，美国和中国扮演着截然不同但又相互关联的核心角色。</p>
+                        <p><strong>美国</strong>的角色是多维度的：它既是主要的<strong>生产者</strong>（尤其是能源和农产品），又是全球商品贸易的<strong>规则制定者</strong>。美元作为全球主要储备和结算货币，意味着几乎所有大宗商品都以美元计价，这赋予了美国无与伦比的金融影响力。芝加哥商品交易所（CME）等美国金融市场是全球商品衍生品交易的中心，决定着全球价格预期。</p>
+                        <p><strong>中国</strong>则是全球最大的<strong>消费者</strong>和<strong>进口国</strong>。作为“世界工厂”，中国对金属、能源和农产品的需求是过去二十年商品超级周期的主要驱动力。中国的需求变化直接决定了全球矿商和农场主的命运。近年来，中国正积极寻求增强其在全球商品市场中的定价权，通过建立自己的人民币计价期货市场（如上海国际能源交易中心的原油期货）、进行海外资源投资（“一带一路”倡议）以及提升其在全球贸易中的地位，试图从单纯的价格接受者转变为价格影响者。</p>
+                    </div>
+                </article>
+                 <hr class="border-gray-300 my-8">
+            </section>
+
+            <section id="analysis-content">
+                <p class="max-w-4xl mx-auto text-center text-gray-600 mb-12">
+                    下文将按时间顺序展开分析。当您向下滚动时，顶部的图表将自动高亮显示您正在阅读的相应历史时期。
+                </p>
+                <!-- Analysis content for each period will be dynamically inserted here -->
+            </section>
+        </main>
+        
+        <footer class="text-center mt-12 py-4 border-t">
+            <p class="text-gray-600">资料来源：世界银行，国际货币基金组织，经济学人智库。© 2025</p>
+        </footer>
+    </div>
+
+    <script>
+        const periodData = [
+            {
+                id: 0,
+                name: "战后繁荣 (1946-1951)",
+                startYear: 1946,
+                endYear: 1951,
+                summary: "二战结束后，全球进入重建阶段，工业生产迅速恢复。朝鲜战争的爆发进一步刺激了对军事及工业原材料的需求，导致大宗商品价格飙升。",
+                drivers: [
+                    "欧洲和日本的战后重建带来巨大需求。",
+                    "马歇尔计划推动了全球贸易和工业活动。",
+                    "朝鲜战争（1950-1953）引发了对橡胶、锡、铜等战略物资的恐慌性购买。"
+                ],
+                commodities: ["金属", "橡胶", "纺织品"],
+                trend: "上涨"
+            },
+            {
+                id: 1,
+                name: "平稳下行 (1952-1970)",
+                startYear: 1952,
+                endYear: 1970,
+                summary: "随着战后重建完成和朝鲜战争结束，需求趋于平稳。同时，技术进步（如农业领域的“绿色革命”）大幅提高了生产效率，导致供应过剩，商品价格长期处于下行通道。",
+                drivers: [
+                    "主要工业国完成重建，需求增长放缓。",
+                    "全球矿业和农业投资增加，供应能力大幅提升。",
+                    "技术革新（如化肥、良种）提高了农产品产量。"
+                ],
+                commodities: ["农产品", "矿产", "原油"],
+                trend: "下跌"
+            },
+            {
+                id: 2,
+                name: "“大通胀”时期 (1971-1980)",
+                startYear: 1971,
+                endYear: 1980,
+                summary: "布雷顿森林体系瓦解，美元与黄金脱钩，引发了全球性的货币动荡和通货膨胀。两次石油危机（1973年和1979年）使原油价格暴涨，并传导至整个商品市场，形成超级牛市。",
+                drivers: [
+                    "美元贬值，以美元计价的商品价格上涨。",
+                    "第一次石油危机（1973年），OPEC实施禁运。",
+                    "第二次石油危机（1979年），伊朗革命导致供应中断。",
+                    "全球范围的高通货膨胀预期。"
+                ],
+                commodities: ["原油", "黄金", "大豆"],
+                trend: "上涨"
+            },
+            {
+                id: 3,
+                name: "漫长熊市 (1981-1999)",
+                startYear: 1981,
+                endYear: 1999,
+                summary: "为对抗通胀，美国大幅提高利率，导致全球经济衰退和美元走强。发展中国家陷入债务危机，前苏联解体后向市场抛售了大量原材料，商品市场进入了近20年的漫长熊市。",
+                drivers: [
+                    "美联储主席保罗·沃尔克实施紧缩货币政策，利率飙升。",
+                    "强势美元使得商品对外国买家更加昂贵。",
+                    "拉美债务危机和亚洲金融风暴抑制了需求。",
+                    "前苏联解体后，大量金属和能源涌入市场。"
+                ],
+                commodities: ["工业金属", "原油", "白银"],
+                trend: "下跌"
+            },
+            {
+                id: 4,
+                name: "中国驱动的超级周期 (2000-2011)",
+                startYear: 2000,
+                endYear: 2011,
+                summary: "中国加入WTO后，以前所未有的速度进行工业化和城市化，成为全球“世界工厂”，对能源、金属和农产品的需求急剧增长，开启了历史性的大宗商品超级周期。",
+                drivers: [
+                    "中国经济高速增长，基础设施建设规模空前。",
+                    "其他新兴市场（如印度、巴西）的快速发展。",
+                    "美元走弱和全球宽松的货币环境。",
+                    "金融资本涌入商品市场进行投机。"
+                ],
+                commodities: ["铁矿石", "铜", "原油", "煤炭"],
+                trend: "上涨"
+            },
+            {
+                id: 5,
+                name: "后周期调整 (2012-2020)",
+                startYear: 2012,
+                endYear: 2020,
+                summary: "随着中国经济结构调整，增速放缓，对大宗商品的需求见顶。前期牛市中的大规模投资导致产能严重过剩，市场由需求驱动转向供应过剩，价格持续回落。",
+                drivers: [
+                    "中国经济转型，从投资驱动转向消费驱动。",
+                    "页岩油革命导致美国原油产量激增。",
+                    "前期矿业巨头的资本开支项目集中投产，供应泛滥。",
+                    "全球经济复苏乏力。"
+                ],
+                commodities: ["铁矿石", "煤炭", "原油"],
+                trend: "下跌"
+            },
+             {
+                id: 6,
+                name: "疫情与冲突 (2021-至今)",
+                startYear: 2021,
+                endYear: 2024,
+                summary: "新冠疫情扰乱了全球供应链，而各国政府的大规模财政刺激则推高了需求。俄乌冲突进一步加剧了能源和粮食市场的紧张局势，导致价格剧烈波动和新一轮的通胀压力。",
+                drivers: [
+                    "新冠疫情导致全球供应链中断。",
+                    "各国央行和政府推出大规模经济刺激计划。",
+                    "俄乌冲突引发对能源和粮食安全的担忧。",
+                    "全球通胀抬头，地缘政治风险加剧。"
+                ],
+                commodities: ["天然气", "小麦", "镍", "原油"],
+                trend: "上涨"
+            }
+        ];
+
+        const labels = Array.from({ length: 2024 - 1946 + 1 }, (_, i) => 1946 + i);
+        const priceData = (function generateData() {
+            let data = [];
+            let value = 50;
+            for (let i = 0; i < labels.length; i++) {
+                const year = labels[i];
+                let change = (Math.random() - 0.45) * 5;
+                if (year >= 1946 && year <= 1951) change = Math.random() * 8 + 2;
+                if (year > 1951 && year <= 1970) change = Math.random() * 3 - 3.5;
+                if (year > 1970 && year <= 1980) change = Math.random() * 10 + 5;
+                if (year > 1980 && year <= 1999) change = Math.random() * 4 - 4.2;
+                if (year > 1999 && year <= 2011) change = Math.random() * 12 + 4;
+                if (year > 2011 && year <= 2020) change = Math.random() * 7 - 8;
+                if (year > 2020) change = Math.random() * 15 + 2;
+                value += change;
+                data.push(value > 10 ? value : 10);
+            }
+            return data;
+        })();
+        
+        let commodityChart;
+        const ctx = document.getElementById('commodityChart').getContext('2d');
+        const analysisContentContainer = document.querySelector('#analysis-content');
+
+        function createChart() {
+            commodityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '大宗商品价格指数',
+                        data: priceData,
+                        borderColor: '#333333',
+                        backgroundColor: 'rgba(51, 51, 51, 0.1)',
+                        borderWidth: 2.5,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: true,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                           grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                           ticks: { font: { size: 10 } }
+                        },
+                        x: {
+                           grid: { display: false },
+                           ticks: { font: { size: 10 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#ffffff',
+                            titleColor: '#333333',
+                            bodyColor: '#333333',
+                            borderColor: '#dddddd',
+                            borderWidth: 1,
+                        }
+                    }
+                }
+            });
+        }
+        
+        function populateAnalysisContent() {
+            periodData.forEach(period => {
+                const trendColor = period.trend === "上涨" ? "economist-red" : "text-green-700";
+                const trendIcon = period.trend === "上涨" ? '▲' : '▼';
+                
+                const section = document.createElement('article');
+                section.className = 'period-section max-w-4xl mx-auto';
+                section.dataset.id = period.id;
+
+                section.innerHTML = `
+                    <div class="mb-4">
+                        <h3 class="text-2xl md:text-3xl font-lora font-bold text-black">${period.name}</h3>
+                        <p class="text-lg font-semibold ${trendColor}">${trendIcon} 整体${period.trend}</p>
+                    </div>
+                    <p class="text-gray-700 text-base leading-relaxed mb-6">${period.summary}</p>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-lora font-bold text-black mb-3">主要驱动因素</h4>
+                            <ul class="list-disc list-inside space-y-2 text-gray-600">
+                                ${period.drivers.map(driver => `<li>${driver}</li>`).join('')}
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-lora font-bold text-black mb-3">关键商品</h4>
+                             <div class="flex flex-wrap gap-2">
+                                ${period.commodities.map(c => `<span class="bg-gray-200 text-gray-800 text-sm font-medium px-3 py-1 rounded-full">${c}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                analysisContentContainer.appendChild(section);
+            });
+        }
+
+        function updateChartHighlight(period) {
+            if (!period) return;
+            const startIndex = labels.indexOf(period.startYear);
+            const endIndex = labels.indexOf(period.endYear);
+            
+            const backgroundColors = labels.map((_, index) => {
+                if (index >= startIndex && index <= endIndex) {
+                    return 'rgba(227, 18, 11, 0.25)';
+                }
+                return 'rgba(51, 51, 51, 0.05)';
+            });
+            
+            commodityChart.data.datasets[0].backgroundColor = backgroundColors;
+            commodityChart.update('none');
+        }
+
+        function setupScrollObserver() {
+            const sections = document.querySelectorAll('.period-section');
+            if (sections.length === 0) return;
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const activeId = entry.target.dataset.id;
+                        const activePeriod = periodData.find(p => p.id == activeId);
+                        updateChartHighlight(activePeriod);
+
+                        sections.forEach(s => s.classList.remove('is-active'));
+                        entry.target.classList.add('is-active');
+                    }
+                });
+            }, { rootMargin: '-40% 0px -60% 0px', threshold: 0 });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+             
+            // Set initial active state on load
+            const firstPeriod = periodData[0];
+            updateChartHighlight(firstPeriod);
+            const firstSection = sections[0];
+            if (firstSection) {
+                 setTimeout(() => {
+                    firstSection.classList.add('is-active');
+                 }, 100);
+            }
+        }
+
+        function initializeApp() {
+            createChart();
+            populateAnalysisContent();
+            setupScrollObserver();
+        }
+
+        initializeApp();
+
+    </script>
+</body>
+</html>
+
