@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProcessGo Plus™ 全球供应链流程图</title>
+<style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+        background-color: #f8f9fa;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .container {
+        width: 100%;
+        max-width: 1600px;
+        position: relative;
+        padding: 40px 20px;
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+    }
+    .title {
+        text-align: center;
+        font-size: 28px;
+        font-weight: 600;
+        color: #0056b3;
+        margin-bottom: 10px;
+    }
+    .subtitle {
+        text-align: center;
+        font-size: 16px;
+        color: #6c757d;
+        margin-bottom: 50px;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 80px 40px;
+        position: relative;
+    }
+    .actor {
+        background-color: #ffffff;
+        border: 2px solid #007bff;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100px;
+    }
+    .actor h3 {
+        margin: 0 0 5px 0;
+        font-size: 16px;
+        color: #0056b3;
+    }
+    .actor p {
+        margin: 0;
+        font-size: 12px;
+        color: #495057;
+    }
+    /* Specific Actor Placements */
+    #distributor { grid-column: 1; grid-row: 2; }
+    #retail { grid-column: 1; grid-row: 3; }
+    #na-sales { grid-column: 2; grid-row: 2; background-color: #e6f7ff; border-color: #1890ff; }
+    #scoc { grid-column: 3; grid-row: 3; background-color: #fffbe6; border-color: #faad14; }
+    #factories { grid-column: 4; grid-row: 1; }
+    #settlement { grid-column: 5; grid-row: 2; background-color: #f6ffed; border-color: #52c41a;}
+    #carrier { grid-column: 4; grid-row: 3; }
+
+    #processgo {
+        grid-column: 2 / span 3;
+        grid-row: 2;
+        background: linear-gradient(135deg, #0d6efd, #0056b3);
+        color: white;
+        border: none;
+        z-index: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+    }
+    #processgo p { color: #fff; font-size: 18px; }
+
+
+    /* Arrows and Labels */
+    .arrow {
+        position: absolute;
+        z-index: 3;
+    }
+    .arrow .line {
+        background-color: #555;
+        position: absolute;
+    }
+    .arrow .head {
+        width: 0;
+        height: 0;
+        border-style: solid;
+        position: absolute;
+    }
+    .arrow .label {
+        position: absolute;
+        background-color: rgba(255, 255, 255, 0.85);
+        padding: 4px 8px;
+        border-radius: 5px;
+        font-size: 12px;
+        text-align: center;
+        white-space: nowrap;
+        border: 1px solid #ccc;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        z-index: 4;
+    }
+    .arrow .label .step {
+        font-weight: bold;
+        color: #d9534f;
+        display: block;
+        font-size: 14px;
+    }
+    .arrow .label .edi {
+        font-weight: 600;
+        color: #0275d8;
+    }
+
+    /* Arrow Definitions */
+    /* 1: Distributor -> NA Sales */
+    #arrow1 { top: 215px; left: 180px; width: 100px; height: 2px; }
+    #arrow1 .line { width: 100%; height: 100%; top: 0; left: 0; }
+    #arrow1 .head { border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #555; top: -5px; left: 100%; }
+    #arrow1 .label { top: -45px; left: -10px; }
+    /* 2: NA Sales -> Factories */
+    #arrow2 { top: 125px; left: 450px; width: 2px; height: 90px; }
+    #arrow2 .line { width: 100%; height: 100%; }
+    #arrow2 .head { border-width: 10px 6px 0 6px; border-color: #555 transparent transparent transparent; top: -10px; left: -5px; }
+    #arrow2 .label { top: 20px; left: -140px; }
+    /* 3: Factories -> Distributor */
+    #arrow3 { top: 180px; left: 280px; width: 440px; height: 2px; transform: rotate(18deg); transform-origin: top left;}
+    #arrow3 .line { width: 100%; height: 100%;}
+    #arrow3 .head { border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #555; top: -5px; left: -10px;}
+    #arrow3 .label { top: 10px; left: 180px; transform: rotate(-18deg); }
+    /* 4: Carrier -> SCOC */
+    #arrow4 { top: 380px; left: 860px; width: 2px; height: 90px; }
+    #arrow4 .line { width: 100%; height: 100%;}
+    #arrow4 .head { border-width: 10px 6px 0 6px; border-color: #555 transparent transparent transparent; top: -10px; left: -5px;}
+    #arrow4 .label { top: 20px; left: 15px;}
+    /* 5: Factories -> Settlement */
+    #arrow5 { top: 125px; left: 1030px; width: 2px; height: 90px; }
+    #arrow5 .line { width: 100%; height: 100%;}
+    #arrow5 .head { border-width: 0 6px 10px 6px; border-color: transparent transparent #555 transparent; top: 100%; left: -5px;}
+    #arrow5 .label { top: 25px; left: -130px;}
+    /* 6: Settlement -> Distributor */
+    #arrow6 { top: 215px; left: 280px; width: 750px; height: 2px; }
+    #arrow6 .line { width: 100%; height: 100%;}
+    #arrow6 .head { border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #555; top: -5px; left: -10px;}
+    #arrow6 .label { top: 10px; left: 300px;}
+    /* 7: NA Sales -> Distributor */
+    #arrow7 { top: 270px; left: 180px; width: 100px; height: 2px; }
+    #arrow7 .line { width: 100%; height: 100%;}
+    #arrow7 .head { border-width: 6px 10px 6px 0; border-color: transparent #555 transparent transparent; top: -5px; left: -10px;}
+    #arrow7 .label { top: 10px; left: -10px;}
+    /* 8: Distributor/Retail -> NA Sales */
+    #arrow8 { top: 325px; left: 280px; width: 2px; height: 90px; }
+    #arrow8 .line { width: 100%; height: 100%;}
+    #arrow8 .head { border-width: 10px 6px 0 6px; border-color: #555 transparent transparent transparent; top: -10px; left: -5px;}
+    #arrow8 .label { top: 25px; left: 15px;}
+    /* 9: NA Sales -> Distributor */
+    #arrow9 { top: 215px; left: 280px; width: 100px; height: 2px; }
+    #arrow9 .line { width: 100%; height: 100%; background-color:#c9302c;}
+    #arrow9 .head { border-width: 6px 10px 6px 0; border-color: transparent #c9302c transparent transparent; top: -5px; left: 100%;}
+    #arrow9 .label { top: 10px; left: -10px; border-color: #c9302c;}
+
+
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="title">ProcessGo Plus™ 业务流程与EDI框架</h1>
+    <p class="subtitle">一个由数据驱动的全球供应链协同生态系统</p>
+
+    <div class="grid">
+        <div id="distributor" class="actor">
+            <h3>分销商 (Distributor)</h3>
+            <p>需求发起方，持有寄售库存</p>
+        </div>
+        <div id="retail" class="actor">
+            <h3>终端/零售 (End-user/Retail)</h3>
+            <p>触发实际销售，消耗库存</p>
+        </div>
+        <div id="na-sales" class="actor">
+            <h3>北美销售公司</h3>
+            <p>商业核心，订单与寻源指挥节点</p>
+        </div>
+        <div id="processgo" class="actor">
+            <div>
+                <h3>ProcessGo Plus™</h3>
+                <p>智能供应链编排引擎</p>
+            </div>
+        </div>
+        <div id="scoc" class="actor">
+            <h3>供应链运营中心</h3>
+            <p>监控全球物流，确保在途可见性</p>
+        </div>
+        <div id="factories" class="actor">
+            <h3>多地工厂</h3>
+            <p>全球化、灵活的生产供应网络</p>
+        </div>
+        <div id="settlement" class="actor">
+            <h3>香港/新加坡结算中心</h3>
+            <p>处理公司间及外部财务结算</p>
+        </div>
+        <div id="carrier" class="actor">
+            <h3>承运商 (Carrier)</h3>
+            <p>提供实体货物运输服务</p>
+        </div>
+
+        <div id="arrow1" class="arrow">
+            <div class="line"></div>
+            <div class="head"></div>
+            <div class="label">
+                <span class="step">1</span>
+                <span class="edi">EDI 850</span>
+                <span>寄售采购订单</span>
+            </div>
+        </div>
+        <div id="arrow2" class="arrow">
+            <div class="line"></div>
+            <div class="head"></div>
+            <div class="label">
+                <span class="step">2</span>
+                <span class="edi">EDI 850-1</span>
+                <span>按订单生产 (寻源后)</span>
+            </div>
+        </div>
+        <div id="arrow3" class="arrow">
+            <div class="line"></div>
+            <div class="head"></div>
+            <div class="label">
+                <span class="step">3</span>
+                <span class="edi">EDI 856</span>
+                <span>预先发货通知 (ASN)</span>
+            </div>
+        </div>
+        <div id="arrow4" class="arrow">
+            <div class="line"></div>
+            <div class="head"></div>
+            <div class="label">
+                <span class="step">4</span>
+                <span class="edi">EDI 315</span>
+                <span>海运状态详情 (物流可见性)</span>
+            </div>
+        </div>
+        <div id="arrow5" class="arrow">
+            <div class="line"></div>
+            <div class="head"></div>
+            <div class="label">
+                <span class="step">5</span>
+                <span class="edi">EDI 810</span>
+                <span>内部发票结算</span>
+            </div>
+        </div>
+        <div id="arrow6" class="arrow">
+            <div class="line"></div>
+            <div class="head"></div>
+            <div class="label">
+                <span class="step">6</span>
+                <span class="edi">EDI 810</span>
+                <span>外部发票 (预通知)</span>
+            </div>
+        </div>
+        <div id="arrow7" class="arrow">
+            <div class="line"></div>
+            <div class="head"></div>
+            <div class="label">
+                <span class="step">7</span>
+                <span class="edi">EDI 866</span>
+                <span>收货后库存同步</span>
+            </div>
+        </div>
+        <div id="arrow8" class="arrow">
+             <div class="line"></div>
+             <div class="head"></div>
+            <div class="label">
+                <span class="step">8</span>
+                <span class="edi">EDI 852</span>
+                <span>产品活动数据 (出库)</span>
+            </div>
+        </div>
+         <div id="arrow9" class="arrow">
+            <div class="line"></div>
+            <div class="head"></div>
+            <div class="label">
+                <span class="step">9</span>
+                <span class="edi">EDI 810</span>
+                <span>按消耗结算发票</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
