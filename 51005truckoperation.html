@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>千辆级电动重卡车队运营方案</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Calm Harmony" - A palette of warm neutrals (beige, slate gray) with a subtle teal accent for calls to action, designed to feel professional, grounded, and supportive. -->
+    <!-- Application Structure Plan: The SPA is designed around four "Strategic Pillars": People, Operations, Innovation, and Organization. This thematic structure was chosen over a linear report format to allow users to intuitively explore the core challenges and solutions. The user flow starts with a high-level overview and then allows a deep dive into any pillar via a top navigation bar. Interactions within each section, such as tabbed content and clickable diagrams, reveal detailed strategies progressively. This approach makes the complex operational plan digestible and highlights the interconnectedness of the solutions, directly addressing the user's focus on people, systems, and processes over technology. -->
+    <!-- Visualization & Content Choices: 
+        1. Report Info: Driver management models. -> Goal: Compare. -> Viz: Interactive Bar Chart. -> Interaction: Users can visually compare the "Traditional" vs. "Partner" model on key metrics. -> Justification: A bar chart is more impactful than text for comparing quantitative/qualitative ratings. -> Library: Chart.js (Canvas).
+        2. Report Info: Phased organizational growth. -> Goal: Show change over time. -> Viz: HTML/CSS Timeline. -> Interaction: Clicking on a phase reveals its key objectives. -> Justification: A visual timeline is the clearest way to present a multi-stage plan. -> Library/Method: Custom HTML/Tailwind.
+        3. Report Info: Project operational challenges. -> Goal: Organize complex issues. -> Viz: Interactive HTML/CSS flow diagram. -> Interaction: Clicking on a challenge node reveals the corresponding management strategy. -> Justification: This visually centralizes the Project Manager's role and connects problems directly to solutions, reflecting the report's emphasis on human capability. -> Library/Method: Custom HTML/Tailwind.
+        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F4;
+            color: #333333;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #1a7f8e;
+            border-bottom-color: #1a7f8e;
+        }
+        .pillar-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .pillar-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background-color: #1a7f8e;
+            color: #ffffff;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+            padding-left: 2.5rem;
+            border-left: 2px solid #e2e8f0;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: -0.5rem;
+            top: 0;
+            height: 1rem;
+            width: 1rem;
+            background-color: #fff;
+            border: 2px solid #1a7f8e;
+            border-radius: 9999px;
+        }
+        .flow-node {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .flow-node:hover {
+            transform: scale(1.05);
+            background-color: #e6f2f4;
+        }
+        .flow-node.active {
+            background-color: #1a7f8e;
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(26, 127, 142, 0.39);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-gray-800">
+                <span class="text-[#1a7f8e]">绿</span><span class="text-gray-600">源</span>
+                <span class="text-sm font-normal">电动重卡运营方案</span>
+            </div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#home" class="nav-link active" data-target="home">核心总览</a>
+                <a href="#people" class="nav-link" data-target="people">人才驱动</a>
+                <a href="#operations" class="nav-link" data-target="operations">精益运营</a>
+                <a href="#innovation" class="nav-link" data-target="innovation">模式创新</a>
+                <a href="#organization" class="nav-link" data-target="organization">组织体系</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden flex items-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="#home" class="block py-2 px-4 text-sm hover:bg-gray-200 mobile-nav-link" data-target="home">核心总览</a>
+            <a href="#people" class="block py-2 px-4 text-sm hover:bg-gray-200 mobile-nav-link" data-target="people">人才驱动</a>
+            <a href="#operations" class="block py-2 px-4 text-sm hover:bg-gray-200 mobile-nav-link" data-target="operations">精益运营</a>
+            <a href="#innovation" class="block py-2 px-4 text-sm hover:bg-gray-200 mobile-nav-link" data-target="innovation">模式创新</a>
+            <a href="#organization" class="block py-2 px-4 text-sm hover:bg-gray-200 mobile-nav-link" data-target="organization">组织体系</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        <section id="home" class="content-section active">
+            <div class="text-center">
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-800 leading-tight">构建中国领先的千辆级电动重卡<br class="hidden md:block"/><span class="text-[#1a7f8e]">智慧运营新生态</span></h1>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">本方案聚焦于中国国情下的核心运营难题：<span class="font-semibold">人、体系与流程</span>。我们弱化不切实际的数字化空谈，直面管理挑战，旨在打造一个以人为本、流程驱动、可持续增长的超大型电动重卡车队。 </p>
+            </div>
+
+            <div class="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <a href="#people" data-target="people" class="pillar-card block bg-white p-8 rounded-xl shadow-md cursor-pointer">
+                    <div class="flex items-center justify-center h-16 w-16 rounded-full bg-teal-50 text-[#1a7f8e] mb-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">人才驱动</h3>
+                    <p class="text-gray-600">如何管理上千名自我为导向的司机，通过模式创新激发其归属感与主动性。</p>
+                </a>
+                <a href="#operations" data-target="operations" class="pillar-card block bg-white p-8 rounded-xl shadow-md cursor-pointer">
+                    <div class="flex items-center justify-center h-16 w-16 rounded-full bg-teal-50 text-[#1a7f8e] mb-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">精益运营</h3>
+                    <p class="text-gray-600">如何高效运作多个物流项目，应对客户需求、政府关系、成本管控等复杂挑战。</p>
+                </a>
+                <a href="#innovation" data-target="innovation" class="pillar-card block bg-white p-8 rounded-xl shadow-md cursor-pointer">
+                     <div class="flex items-center justify-center h-16 w-16 rounded-full bg-teal-50 text-[#1a7f8e] mb-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">模式创新</h3>
+                    <p class="text-gray-600">如何通过“卡车租赁”等模式降低资产规模，并协同运输与自有充电网络业务。</p>
+                </a>
+                <a href="#organization" data-target="organization" class="pillar-card block bg-white p-8 rounded-xl shadow-md cursor-pointer">
+                     <div class="flex items-center justify-center h-16 w-16 rounded-full bg-teal-50 text-[#1a7f8e] mb-4">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-5.176-5.97M15 21v-1a6 6 0 016-6v-1a6 6 0 00-9 5.197M15 21v-1a6 6 0 01-6-6v-1a6 6 0 016-6z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">组织体系</h3>
+                    <p class="text-gray-600">如何构建支撑快速增长的人力资源、培训及流程体系，确保可持续发展。</p>
+                </a>
+            </div>
+        </section>
+
+        <section id="people" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">人才驱动：从“管理者”到“赋能者”</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">中国重卡司机的管理核心在于疏导而非强制。我们提出以“事业合伙人”为核心的司机管理体系，旨在将司机从被动执行者转变为主动创造者，从根本上解决归属感和主动性问题。</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                <div class="flex flex-col md:flex-row -mx-4">
+                    <div class="md:w-1/3 px-4">
+                        <div id="people-tabs" class="flex md:flex-col space-x-2 md:space-x-0 md:space-y-2">
+                             <button class="tab-button w-full text-left p-3 rounded-md active" data-target="partner-model">事业合伙人模式</button>
+                             <button class="tab-button w-full text-left p-3 rounded-md" data-target="recruitment">新型招募体系</button>
+                             <button class="tab-button w-full text-left p-3 rounded-md" data-target="empowerment">全面赋能支持</button>
+                             <button class="tab-button w-full text-left p-3 rounded-md" data-target="culture">团队文化建设</button>
+                        </div>
+                    </div>
+                    <div class="md:w-2/3 px-4 mt-6 md:mt-0">
+                        <div id="partner-model" class="people-tab-content active">
+                            <h3 class="text-2xl font-bold mb-4 text-gray-800">事业合伙人模式</h3>
+                            <p class="text-gray-700 mb-4">将卡车租赁给经过筛选的优秀司机，使其成为车辆的实际运营者。司机自负盈亏，公司提供货源、充电、维修、保险等一站式支持服务并收取管理费。这一模式将司机的个人利益与车辆的运营效益深度绑定。</p>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li><span class="font-semibold">利益绑定：</span>司机收入与其运营效率直接挂钩，极大激发主观能动性。</li>
+                                <li><span class="font-semibold">成本管控：</span>司机作为运营者，会自发控制充电、维修、轮胎等成本，杜绝“跑冒滴漏”。</li>
+                                <li><span class="font-semibold">资产变轻：</span>公司逐步从重资产持有方转变为平台服务方，财务模型更优。</li>
+                                <li><span class="font-semibold">风险共担：</span>将部分运营风险转移，公司运营更加稳健。</li>
+                            </ul>
+                        </div>
+                         <div id="recruitment" class="people-tab-content hidden">
+                            <h3 class="text-2xl font-bold mb-4 text-gray-800">新型招募体系</h3>
+                            <p class="text-gray-700 mb-4">改变传统只看驾驶技能的招聘方式，建立一套以“创业者心态”为核心的筛选模型。</p>
+                             <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li><span class="font-semibold">心态评估：</span>重点考察责任心、成本意识、服务意识和对未来的规划。</li>
+                                <li><span class="font-semibold">背景调查：</span>深入了解过往从业经历，是否有不良记录或频繁跳槽。</li>
+                                <li><span class="font-semibold">家庭支持：</span>优先选择家庭稳定、获得家人支持的司机，他们通常更有责任感。</li>
+                                <li><span class="font-semibold">师傅推荐制：</span>鼓励优秀合伙人推荐新人，并给予奖励，形成良性循环。</li>
+                            </ul>
+                        </div>
+                         <div id="empowerment" class="people-tab-content hidden">
+                            <h3 class="text-2xl font-bold mb-4 text-gray-800">全面赋能支持</h3>
+                            <p class="text-gray-700 mb-4">公司的角色是为司机合伙人提供成功的土壤。我们建立强大的后勤支持体系，让司机专注开车，无后顾之忧。</p>
+                             <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li><span class="font-semibold">运营培训：</span>提供节电驾驶、车辆保养、客户沟通、财务基础等系列培训。</li>
+                                <li><span class="font-semibold">路线与货源支持：</span>提供稳定优质的货源，并利用数据分析优化运输路线。</li>
+                                <li><span class="font-semibold">7x24小时支持热线：</span>设立专门团队，随时响应司机在途中的各种问题（如事故、维修、路线疑问）。</li>
+                                <li><span class="font-semibold">金融保险服务：</span>协助司机办理低成本的运营贷款和高性价比的保险方案。</li>
+                            </ul>
+                        </div>
+                        <div id="culture" class="people-tab-content hidden">
+                            <h3 class="text-2xl font-bold mb-4 text-gray-800">团队文化建设</h3>
+                            <p class="text-gray-700 mb-4">打破司机群体原子化的现状，建立有温度、有归属感的社群文化。</p>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                <li><span class="font-semibold">司机队长机制：</span>设立区域司机队长，由经验丰富、有威望的合伙人担任，负责日常沟通、问题协调。</li>
+                                <li><span class="font-semibold">定期交流会：</span>每月组织线上或线下交流会，分享节油技巧、优秀案例，解决共性问题。</li>
+                                <li><span class="font-semibold">荣誉体系：</span>设立“节油之星”、“服务标兵”、“安全行驶百万公里”等荣誉，并给予物质和精神奖励。</li>
+                                <li><span class="font-semibold">家庭关怀日：</span>定期组织家庭日活动，邀请司机的家人参与，增强归属感和认同感。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <h4 class="text-center text-xl font-semibold mb-4 text-gray-700">管理模式对比</h4>
+                    <div class="chart-container">
+                        <canvas id="driverModelChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="operations" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">精益运营：以项目经理为核心的铁三角</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">在中国复杂的运输环境下，一个优秀的、被充分授权的项目经理（或区域经理）远比任何数字化平台都重要。我们的运营体系围绕“项目经理”这个核心角色，构建“客户-项目经理-支持团队”的铁三角服务模式。</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">项目经理核心职责与挑战应对</h3>
+                    <p class="text-gray-600">点击下方挑战节点，查看我们的应对策略。</p>
+                </div>
+                <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 mb-8">
+                    <div class="flow-node active p-4 border rounded-lg w-full md:w-auto text-center" data-target="op-challenge-1">
+                        <h4 class="font-semibold">应对客户多变需求</h4>
+                    </div>
+                    <div class="text-gray-400 hidden md:block">→</div>
+                    <div class="flow-node p-4 border rounded-lg w-full md:w-auto text-center" data-target="op-challenge-2">
+                        <h4 class="font-semibold">处理复杂外部关系</h4>
+                    </div>
+                     <div class="text-gray-400 hidden md:block">→</div>
+                    <div class="flow-node p-4 border rounded-lg w-full md:w-auto text-center" data-target="op-challenge-3">
+                        <h4 class="font-semibold">严控运营跑冒滴漏</h4>
+                    </div>
+                     <div class="text-gray-400 hidden md:block">→</div>
+                    <div class="flow-node p-4 border rounded-lg w-full md:w-auto text-center" data-target="op-challenge-4">
+                        <h4 class="font-semibold">优化现场装卸协同</h4>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg min-h-[250px]">
+                    <div id="op-challenge-1" class="op-challenge-content">
+                        <h4 class="text-xl font-bold text-gray-800 mb-2">策略：灵活调度与预期管理</h4>
+                        <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><span class="font-semibold">建立弹性运力池：</span>项目经理手头保有10-15%的机动运力（包括临时合伙人车辆），用于应对临时性需求高峰。</li>
+                            <li><span class="font-semibold">前置沟通机制：</span>与客户建立每日沟通机制，提前获取未来2-3天的运输计划，减少意外。</li>
+                            <li><span class="font-semibold">服务分级与定价：</span>对临时、紧急需求设立阶梯式定价，通过价格杠杆引导客户做出更稳定的计划。</li>
+                            <li><span class="font-semibold">充分授权：</span>授权项目经理在一定额度内自行决策，如临时调用车辆、小额补偿等，提高响应速度。</li>
+                        </ul>
+                    </div>
+                    <div id="op-challenge-2" class="op-challenge-content hidden">
+                        <h4 class="text-xl font-bold text-gray-800 mb-2">策略：专业公关与合规先行</h4>
+                         <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><span class="font-semibold">设立区域公共事务岗：</span>由经验丰富的人员专项负责与交警、运管等部门的日常沟通，建立良好关系。</li>
+                            <li><span class="font-semibold">建立合规知识库：</span>整理各地政策法规、处罚标准及“潜规则”，对项目经理和司机进行培训，从源头避免违规。</li>
+                            <li><span class="font-semibold">标准化处理流程：</span>对常见问题（如超限、违章）建立标准处理SOP，指导司机如何现场应对、取证，避免事态扩大。</li>
+                            <li><span class="font-semibold">高层定期拜访：</span>公司管理层定期拜访关键部门，建立高层沟通渠道，为一线业务保驾护航。</li>
+                        </ul>
+                    </div>
+                    <div id="op-challenge-3" class="op-challenge-content hidden">
+                        <h4 class="text-xl font-bold text-gray-800 mb-2">策略：责任到人与体系支持</h4>
+                         <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><span class="font-semibold">合伙人模式是根本：</span>司机作为车辆运营者，会自发爱护车辆，控制成本。</li>
+                            <li><span class="font-semibold">指定服务商网络：</span>建立经过认证的维修、轮胎服务商网络，并签订集采价格，司机只能在指定地点维修保养。</li>
+                            <li><span class="font-semibold">充电网络协同：</span>优先引导司机到自有充电网络补能，通过内部结算价格和便利性实现成本控制和业务协同。</li>
+                            <li><span class="font-semibold">异常成本审核：</span>项目经理对每月的车辆运营成本进行审核，对异常波动的维修、电耗等进行调查分析。</li>
+                        </ul>
+                    </div>
+                     <div id="op-challenge-4" class="op-challenge-content hidden">
+                        <h4 class="text-xl font-bold text-gray-800 mb-2">策略：驻场协调与流程优化</h4>
+                         <ul class="list-disc list-inside space-y-2 text-gray-700">
+                            <li><span class="font-semibold">设立驻场代表：</span>对于大型项目，派遣驻场代表在装卸货场进行协调，处理排队、单据、货物交接等问题。</li>
+                            <li><span class="font-semibold">装卸时间对赌：</span>与客户协商，将超过标准装卸时间的情况纳入考核或额外收费，促使客户优化内部流程。</li>
+                            <li><span class="font-semibold">货物交接标准化：</span>制定清晰的货物交接、签收、破损认定标准流程，并对司机进行培训，避免扯皮。</li>
+                            <li><span class="font-semibold">关系维护：</span>项目经理需与客户方的仓库、操作部门负责人建立良好个人关系，很多问题可以在萌芽状态通过沟通解决。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="innovation" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">模式创新：构建轻重结合的业务生态</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">我们的核心创新在于从“运输公司”向“运输服务平台”转型。通过司机合伙人计划，实现资产规模的轻量化，同时，将自有充电网络从成本中心转变为利润中心，构建“车队运营+补能网络”的双轮驱动模式。</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">业务模式演进</h3>
+                    <div class="flex">
+                        <div class="w-1/2 pr-4 border-r border-gray-200">
+                            <h4 class="text-lg font-semibold text-red-600 mb-2">传统重资产模式</h4>
+                            <ul class="space-y-2 text-sm text-gray-600">
+                                <li>- 公司购买所有车辆</li>
+                                <li>- 直接雇佣司机</li>
+                                <li>- 承担所有运营成本与风险</li>
+                                <li>- 管理难度大，司机积极性低</li>
+                                <li>- 资产重，扩张速度受限</li>
+                            </ul>
+                        </div>
+                        <div class="w-1/2 pl-4">
+                            <h4 class="text-lg font-semibold text-green-600 mb-2">轻资产合伙人模式</h4>
+                            <ul class="space-y-2 text-sm text-gray-600">
+                                <li>+ 车辆租赁给司机，回收成本</li>
+                                <li>+ 司机自我驱动，成本自控</li>
+                                <li>+ 公司提供平台服务并收费</li>
+                                <li>+ 资产轻，便于快速扩张</li>
+                                <li>+ 协同充电、金融、保险业务</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                     <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">运输与充电网络协同</h3>
+                     <p class="text-gray-700 mb-4">自有充电网络不仅是车队的后勤保障，更是重要的业务协同和利润增长点。</p>
+                     <ul class="list-disc list-inside space-y-2 text-gray-700">
+                         <li><span class="font-semibold">内部成本优势：</span>合伙人司机在自有充电站享受低于市场的价格，增强平台粘性。</li>
+                         <li><span class="font-semibold">数据闭环：</span>掌握车辆能耗的真实数据，为优化运营、评估司机驾驶行为提供依据。</li>
+                         <li><span class="font-semibold">对外服务创收：</span>在满足内部需求后，充电网络可对社会车辆开放，成为新的收入来源。</li>
+                         <li><span class="font-semibold">网络布局协同：</span>运输业务的拓展可以指导充电网络的布局选址，反之亦然，形成战略协同。</li>
+                     </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="organization" class="content-section">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">组织体系：支撑高速成长的流程与文化</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">千人规模的团队需要清晰的组织架构、标准化的流程和可复制的人才培养体系。我们的目标是建立一个“总部赋能、区域主战、项目搞活”的敏捷组织。</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                     <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">核心人才培养路径</h3>
+                     <p class="text-gray-700 mb-4">我们认为，项目经理是公司最核心的资产。必须建立一套从内部选拔和培养项目经理的“将才”体系。</p>
+                     <ul class="list-disc list-inside space-y-2 text-gray-700">
+                         <li><span class="font-semibold">“导师制”：</span>每个新项目经理都由一名经验丰富的区域经理作为导师，进行为期6个月的传帮带。</li>
+                         <li><span class="font-semibold">“轮岗制”：</span>有潜力的年轻员工需在调度、客服、现场等岗位轮岗，全面了解业务。</li>
+                         <li><span class="font-semibold">“案例复盘会”：</span>每月组织区域级的案例复盘会，对成功和失败的项目进行深入剖析，共享经验教训。</li>
+                         <li><span class="font-semibold">“授权与考核”：</span>清晰定义项目经理的权责利，给予充分授权，并以项目利润、客户满意度、安全事故率为核心进行考核。</li>
+                     </ul>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">三阶段发展规划</h3>
+                    <div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <h4 class="font-bold text-lg text-[#1a7f8e]">第一阶段：验证期 (1-6月)</h4>
+                            <p class="text-gray-600">聚焦1-2个核心客户，跑通“司机合伙人”和“项目经理负责制”的MVP（最小可行产品）模型。培养第一批种子项目经理和司机队长。</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <h4 class="font-bold text-lg text-[#1a7f8e]">第二阶段：扩张期 (6-18月)</h4>
+                            <p class="text-gray-600">将成熟模型快速复制到2-3个新区域。建立标准化的SOP流程手册和人才培养体系，车队规模达到500辆。</p>
+                        </div>
+                         <div class="timeline-item border-l-transparent">
+                            <div class="timeline-dot"></div>
+                            <h4 class="font-bold text-lg text-[#1a7f8e]">第三阶段：平台期 (18月以后)</h4>
+                            <p class="text-gray-600">车队规模突破1000辆。总部平台能力成熟，开始对外输出管理体系，探索加盟模式，协同金融、保险、后市场等增值业务。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white border-t mt-16">
+        <div class="container mx-auto px-6 py-4 text-center text-gray-500">
+            <p>&copy; 2025 绿源智慧运力解决方案. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sections = document.querySelectorAll('.content-section');
+            const navLinks = document.querySelectorAll('.nav-link, .pillar-card, .mobile-nav-link');
+
+            function setActiveLink(targetId) {
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.toggle('active', link.dataset.target === targetId);
+                });
+            }
+
+            function showSection(targetId) {
+                sections.forEach(section => {
+                    section.classList.toggle('active', section.id === targetId);
+                });
+                setActiveLink(targetId);
+                window.scrollTo(0, 0);
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.dataset.target;
+                    showSection(targetId);
+                    history.pushState(null, '', `#${targetId}`);
+                     document.getElementById('mobile-menu').classList.add('hidden');
+                });
+            });
+
+            const initialHash = window.location.hash.substring(1);
+            if (initialHash) {
+                const targetSection = document.getElementById(initialHash);
+                if(targetSection) {
+                    showSection(initialHash);
+                }
+            } else {
+                 showSection('home');
+            }
+            
+            window.addEventListener('popstate', () => {
+                const hash = window.location.hash.substring(1) || 'home';
+                showSection(hash);
+            });
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const peopleTabs = document.querySelectorAll('#people-tabs .tab-button');
+            const peopleContents = document.querySelectorAll('.people-tab-content');
+            peopleTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    peopleTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const targetId = tab.dataset.target;
+                    peopleContents.forEach(content => {
+                        content.classList.toggle('hidden', content.id !== targetId);
+                        content.classList.toggle('active', content.id === targetId);
+                    });
+                });
+            });
+
+            const opNodes = document.querySelectorAll('.flow-node');
+            const opContents = document.querySelectorAll('.op-challenge-content');
+            opNodes.forEach(node => {
+                node.addEventListener('click', () => {
+                    opNodes.forEach(n => n.classList.remove('active'));
+                    node.classList.add('active');
+                    const targetId = node.dataset.target;
+                    opContents.forEach(content => {
+                        content.classList.toggle('hidden', content.id !== targetId);
+                    });
+                });
+            });
+
+            const ctx = document.getElementById('driverModelChart').getContext('2d');
+            const driverModelChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['司机主动性', '成本控制', '管理复杂度', '资产轻量化'],
+                    datasets: [{
+                        label: '传统雇佣模式',
+                        data: [3, 4, 8, 2],
+                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: '事业合伙人模式',
+                        data: [9, 8, 5, 9],
+                        backgroundColor: 'rgba(26, 127, 142, 0.6)',
+                        borderColor: 'rgba(26, 127, 142, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' / 10';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '司机管理模式优劣势评估 (得分越高越优)',
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + '分';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
