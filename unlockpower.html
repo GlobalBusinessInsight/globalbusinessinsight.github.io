@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INOSSEM - The Power of Operation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&family=Orbitron:wght@900&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Trinity Engine Core -->
+    <!-- Application Structure Plan: The layout is a sleek, immersive "video player" interface. The narrative is now a more concise and powerful three-act structure (Chaos -> Assembly -> Unlocked Power). The final scene's visual effect has been dramatically upgraded to be the climax of the video. This streamlined approach delivers a more impactful and memorable brand story. -->
+    <!-- Visualization & Content Choices: Report Info: Remove Scene 3, optimize Scene 4 layout, and implement a "Data Loom" particle effect for the slogan. -> Goal: To create a shorter, more powerful video with a stunning visual climax. -> Viz/Presentation: 1. Scene 3 is completely removed from the scenes array. 2. Final Slogan Scene (formerly Scene 4): The slogan's font size is now dynamically calculated based on canvas width to ensure it always fits perfectly. The reveal animation is replaced with a high-performance particle system that forms a "light shuttle" or "data loom," weaving the text into existence with a trail of sparkling, fading particles. This provides a much more sophisticated and high-tech feel. -> Interaction: User clicks a single button to progress through the cinematic scenes. -> Justification: A three-act structure is a classic, powerful narrative tool. The dynamic font sizing fixes a critical UI bug. The "Data Loom" particle effect is the most visually complex and impressive animation yet, perfectly embodying the concept of AI constructing ideas from data, and requires the full power of the Canvas API to render smoothly. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        :root {
+            --inossem-blue: #3a57a8;
+            --inossem-purple: #4e4599;
+            --accent-cyan: #00ddff;
+            --bg-dark: #02040a;
+            --bg-panel: #0a0f21;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .btn-primary {
+            background: linear-gradient(90deg, var(--inossem-blue), var(--inossem-purple));
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(78, 69, 153, 0.7);
+            transform: scale(1.05);
+        }
+        .scene-text-enter { animation: fadeIn 1s ease forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="h-screen w-screen flex flex-col">
+        <!-- The "Screen" -->
+        <div class="flex-grow relative bg-black">
+            <canvas id="video-canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+        </div>
+
+        <!-- The "Control Panel" -->
+        <div id="control-panel" class="flex-shrink-0 w-full bg-panel p-4 md:p-6 border-t border-slate-800">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-4 md:gap-8">
+                <div id="scene-content" class="flex-grow text-center md:text-left">
+                    <!-- Scene content will be injected here -->
+                </div>
+                <div class="flex-shrink-0">
+                    <button id="next-scene-btn" class="btn-primary text-white font-bold py-3 px-10 rounded-full w-full md:w-auto">
+                        PLAY
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+class StoryboardPlayer {
+    constructor(canvasId, contentId, buttonId, scenes) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.contentContainer = document.getElementById(contentId);
+        this.nextButton = document.getElementById(buttonId);
+        this.scenes = scenes;
+        this.currentSceneIndex = -1;
+        this.animationFrameId = null;
+
+        window.addEventListener('resize', () => this.resizeAndRerender());
+        this.nextButton.addEventListener('click', () => this.nextScene());
+        
+        // Initial setup
+        this.resize();
+        this.showIntro();
+    }
+    
+    resize() {
+        const dpr = window.devicePixelRatio || 1;
+        this.canvas.width = this.canvas.parentElement.offsetWidth * dpr;
+        this.canvas.height = this.canvas.parentElement.offsetHeight * dpr;
+        this.ctx.scale(dpr, dpr);
+    }
+    
+    resizeAndRerender() {
+        this.resize();
+        if (this.currentSceneIndex > -1) {
+            const scene = this.scenes[this.currentSceneIndex];
+            scene.init(this.canvas, this.ctx);
+        }
+    }
+
+    showIntro() {
+         this.contentContainer.innerHTML = `
+            <div class="scene-text-enter">
+                <h3 class="text-xl md:text-2xl font-bold mb-1 text-white">INOSSEM ProcessGo Plus™</h3>
+                <p class="text-slate-400">The Power of Operation. Click PLAY to begin.</p>
+            </div>
+        `;
+        const introAnimation = () => {
+             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+        introAnimation();
+    }
+
+    nextScene() {
+        this.currentSceneIndex++;
+        if (this.currentSceneIndex >= this.scenes.length) {
+            this.currentSceneIndex = 0; // Loop back
+        }
+
+        if (this.currentSceneIndex === 0 && this.nextButton.textContent !== "REPLAY") {
+            this.nextButton.textContent = "NEXT";
+        }
+        if (this.currentSceneIndex === this.scenes.length - 1) {
+            this.nextButton.textContent = "REPLAY";
+        }
+        
+        this.renderScene();
+    }
+
+    renderScene() {
+        const scene = this.scenes[this.currentSceneIndex];
+        
+        this.contentContainer.innerHTML = `
+            <div class="scene-text-enter">
+                <h3 class="text-xl md:text-2xl font-bold text-white">${scene.title}</h3>
+                <p class="text-slate-400 hidden md:block">${scene.action}</p>
+                <p class="text-sm italic text-slate-500 mt-1"><strong>NARRATOR:</strong> ${scene.script}</p>
+            </div>
+        `;
+        
+        if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+        
+        scene.init(this.canvas, this.ctx);
+        const animate = (timestamp) => {
+            if (!scene.startTime) scene.startTime = timestamp;
+            const elapsed = timestamp - scene.startTime;
+            
+            this.ctx.save();
+            this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            this.ctx.fillStyle = '#02040a';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.restore();
+
+            scene.draw(this.ctx, this.canvas.parentElement.offsetWidth, this.canvas.parentElement.offsetHeight, elapsed);
+            this.animationFrameId = requestAnimationFrame(animate);
+        };
+        animate(performance.now());
+    }
+}
+
+const SCENES = [
+    {
+        title: "Scene 1: The Chaos",
+        action: "Fragmented lines and glitching nodes represent operational chaos.",
+        script: "In a growing business, your power is fragmented. Disconnected systems, broken workflows... a constant state of chaos.",
+        init: function() { this.startTime = null; this.lines = Array(15).fill().map(() => ({ x1: Math.random(), y1: Math.random(), x2: Math.random(), y2: Math.random(), speed: (Math.random()-0.5)*0.001 })); },
+        draw: function(ctx, w, h) {
+            this.lines.forEach(l => {
+                l.x1 += l.speed;
+                if(l.x1 > 1 || l.x1 < 0) l.speed *= -1;
+                ctx.strokeStyle = Math.random() > 0.95 ? '#FF3333' : 'rgba(78, 69, 153, 0.5)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(l.x1 * w, l.y1 * h);
+                ctx.lineTo(l.x2 * w, l.y2 * h);
+                ctx.stroke();
+            });
+        }
+    },
+    {
+        title: "Scene 2: The Assembly",
+        action: "A constructor beam reveals and connects three core components, forming the ProcessGo Plus™ engine.",
+        script: "Until now. Introducing ProcessGo Plus™. We don't just manage chaos, we assemble power. Your Essential Standards, a solid foundation. Your global Supply Chain, seamlessly connected. And the Integration Cloud, uniting all your tools.",
+        init: function(canvas, ctx) {
+            this.startTime = null;
+            this.phase = { DURATION_LOGO: 1500, DURATION_ASSEMBLY: 6000, DURATION_TEXT: 2000 };
+            this.components = [
+                { name: 'Essential Standards', pos: {x: 0.5, y: 0.25}, activated: false, iconUrl: 'https://globalbusinessinsight.github.io/picture/es.png', img: new Image(), loaded: false },
+                { name: 'Supply Chain', pos: {x: 0.2, y: 0.7}, activated: false, iconUrl: 'https://globalbusinessinsight.github.io/picture/sc.png', img: new Image(), loaded: false },
+                { name: 'Integration Cloud', pos: {x: 0.8, y: 0.7}, activated: false, iconUrl: 'https://globalbusinessinsight.github.io/picture/tc.png', img: new Image(), loaded: false }
+            ];
+            this.components.forEach(c => {
+                c.img.onload = () => { c.loaded = true; };
+                c.img.onerror = () => { console.error(`Failed to load image: ${c.iconUrl}`); };
+                c.img.src = c.iconUrl;
+            });
+            this.inossemLogo = { img: new Image(), loaded: false, url: 'https://globalbusinessinsight.github.io/picture/inossem_logo.svg' };
+            this.inossemLogo.img.onload = () => { this.inossemLogo.loaded = true; };
+            this.inossemLogo.img.src = this.inossemLogo.url;
+            
+            this.productText = 'ProcessGo Plus™';
+            this.productFont = `900 ${canvas.parentElement.offsetHeight * 0.06}px Orbitron`;
+        },
+        draw: function(ctx, w, h, elapsed) {
+            // PHASE 1: REVEAL INOSSEM LOGO
+            const logoProgress = Math.min(elapsed / this.phase.DURATION_LOGO, 1);
+            if (this.inossemLogo.loaded) {
+                const logoHeight = h * 0.025;
+                const logoWidth = this.inossemLogo.img.width * (logoHeight / this.inossemLogo.img.height);
+                const logoX = w - logoWidth - w*0.03;
+                const logoY = h*0.05;
+                
+                const beamX = (logoX - 20) + (logoWidth + 40) * logoProgress;
+                const beamWidth = w * 0.05;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(beamX, logoY, beamWidth, logoHeight);
+                ctx.clip();
+                ctx.drawImage(this.inossemLogo.img, logoX, logoY, logoWidth, logoHeight);
+                ctx.restore();
+                
+                if(logoProgress >= 1) {
+                     ctx.drawImage(this.inossemLogo.img, logoX, logoY, logoWidth, logoHeight);
+                }
+            }
+
+            // PHASE 2: ASSEMBLE COMPONENTS
+            const assemblyElapsed = elapsed - this.phase.DURATION_LOGO;
+            if (assemblyElapsed > 0) {
+                const assemblyProgress = Math.min(assemblyElapsed / this.phase.DURATION_ASSEMBLY, 1);
+                
+                this.components.forEach((c, i) => {
+                    const activationTime = (i + 1) * (this.phase.DURATION_ASSEMBLY / 4);
+                    if (assemblyElapsed > activationTime) c.activated = true;
+
+                    ctx.globalAlpha = c.activated ? 1 : 0.3;
+                    if (c.loaded) {
+                        const iconSize = h * 0.16;
+                        const iconX = c.pos.x * w - iconSize / 2;
+                        const iconY = c.pos.y * h - iconSize / 2;
+                        if (c.activated) { ctx.shadowColor = '#00ddff'; ctx.shadowBlur = 20; }
+                        ctx.drawImage(c.img, iconX, iconY, iconSize, iconSize);
+                        ctx.shadowBlur = 0;
+                    }
+                    ctx.fillStyle = c.activated ? '#fff' : '#aaa';
+                    ctx.font = `bold ${h*0.025}px Inter`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(c.name, c.pos.x * w, c.pos.y * h + h * 0.11);
+                    ctx.globalAlpha = 1;
+                });
+
+                const path = [ {x: 0.5, y: 0.5}, this.components[0].pos, this.components[1].pos, this.components[2].pos, this.components[0].pos ];
+                const totalPathLength = path.length - 1;
+                const currentSegment = Math.floor(assemblyProgress * totalPathLength);
+                const segmentProgress = (assemblyProgress * totalPathLength) - currentSegment;
+
+                if (currentSegment < totalPathLength) {
+                    const start = path[currentSegment];
+                    const end = path[currentSegment + 1];
+                    const beamX = start.x + (end.x - start.x) * segmentProgress;
+                    const beamY = start.y + (end.y - start.y) * segmentProgress;
+                    ctx.fillStyle = '#fff'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 10;
+                    ctx.beginPath(); ctx.arc(beamX * w, beamY * h, 5, 0, Math.PI * 2); ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+            
+            // PHASE 3: REVEAL PRODUCT TEXT
+            const textElapsed = elapsed - this.phase.DURATION_LOGO - this.phase.DURATION_ASSEMBLY;
+            if (textElapsed > 0) {
+                const textProgress = Math.min(textElapsed / this.phase.DURATION_TEXT, 1);
+                ctx.font = this.productFont;
+                ctx.textAlign = 'center';
+                const textMetrics = ctx.measureText(this.productText);
+                const textX = w / 2;
+                const textY = h / 2 + h * 0.05;
+
+                ctx.fillStyle = '#02040a';
+                ctx.fillText(this.productText, textX, textY);
+
+                const beamX = (textX - textMetrics.width/2 - 20) + (textMetrics.width + 40) * textProgress;
+                const beamWidth = w * 0.08;
+                
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(beamX, textY - h*0.1, beamWidth, h*0.2);
+                ctx.clip();
+                ctx.fillStyle = '#fff';
+                ctx.shadowColor = '#00ddff';
+                ctx.shadowBlur = 20;
+                ctx.fillText(this.productText, textX, textY);
+                ctx.restore();
+
+                if (textProgress >= 1) {
+                    ctx.fillStyle = '#fff'; ctx.shadowColor = '#00ddff'; ctx.shadowBlur = 20;
+                    ctx.fillText(this.productText, textX, textY);
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+    },
+    {
+        title: "Scene 3: The Power, Unlocked.",
+        action: "The final slogan materializes with a high-tech, data-weaving effect.",
+        script: "This is the power of operation. Unlocked.",
+        init: function(canvas, ctx) {
+            this.startTime = null;
+            this.text = "Unlock the power of global operation.";
+            this.particles = [];
+        },
+        draw: function(ctx, w, h, elapsed) {
+            const duration = 5000;
+            const progress = Math.min(elapsed / duration, 1);
+
+            let fontSize = w * 0.08;
+            ctx.font = `900 ${fontSize}px Orbitron`;
+            let textWidth = ctx.measureText(this.text).width;
+            if (textWidth > w * 0.9) {
+                fontSize = fontSize * (w * 0.9 / textWidth);
+                ctx.font = `900 ${fontSize}px Orbitron`;
+                textWidth = ctx.measureText(this.text).width;
+            }
+            const x = w / 2 - textWidth / 2;
+            const y = h / 2;
+            
+            const scanX = x + (textWidth * progress);
+
+            // Create particles at the head of the scan
+            if (progress < 1) {
+                for (let i = 0; i < 5; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 2 + 1;
+                    this.particles.push({
+                        x: scanX + (Math.random() - 0.5) * 10,
+                        y: y + (Math.random() - 0.5) * (fontSize * 0.8),
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: Math.random() * 30 + 20,
+                        maxLife: 50,
+                    });
+                }
+            }
+            
+            // Draw revealed text
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(x, 0, textWidth * progress, h);
+            ctx.clip();
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#00ddff';
+            ctx.shadowColor = '#00ddff';
+            ctx.shadowBlur = 15;
+            ctx.fillText(this.text, x, y);
+            ctx.restore();
+
+            // Update and draw particles
+            this.particles.forEach((p, i) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                if(p.life <= 0) this.particles.splice(i, 1);
+                
+                ctx.globalAlpha = p.life / p.maxLife;
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, Math.random() * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+             if (progress >= 1) {
+                ctx.textAlign = 'left';
+                ctx.fillStyle = '#00ddff';
+                ctx.shadowColor = '#00ddff';
+                ctx.shadowBlur = 15;
+                ctx.fillText(this.text, x, y);
+                ctx.shadowBlur = 0;
+            }
+        }
+    }
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+    new StoryboardPlayer('video-canvas', 'scene-content', 'next-scene-btn', SCENES);
+});
+</script>
+</body>
+</html>
