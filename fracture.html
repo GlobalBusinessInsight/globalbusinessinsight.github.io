@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>交互式影像分析报告</title>
+    <title>交互式影像分析报告 (含痛风分析)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -18,11 +20,6 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-        }
-        .view-btn.active {
-            background-color: #4f46e5;
-            color: white;
-            border-color: #4f46e5;
         }
         .finding-btn {
             transition: all 0.2s ease-in-out;
@@ -43,8 +40,8 @@
         }
     </style>
     <!-- Chosen Palette: Indigo Serenity -->
-    <!-- Application Structure Plan: The application uses a two-column layout on larger screens and stacks vertically on mobile. The left/top section contains the interactive image viewer, allowing users to switch views and highlight findings. The right/bottom section provides textual analysis and key takeaways. This structure was chosen to keep the visual evidence (X-ray) in close proximity to its interpretation, facilitating user understanding. A third section below provides detailed analysis and a fourth shows a healing timeline chart, offering a comprehensive overview from diagnosis to prognosis. The user flow is: View Image -> Understand Findings -> Read Summary -> Explore Details -> See Timeline. -->
-    <!-- Visualization & Content Choices: 1. X-Ray Viewer: Goal=Explore, Method=Image switcher with Canvas overlay, Interaction=Click buttons to toggle views and draw highlights. Justification=Directly connects textual findings to visual evidence. 2. Key Findings: Goal=Inform, Method=Color-coded buttons, Interaction=Click to highlight on image. Justification=Quick, scannable access to important points. 3. Healing Timeline: Goal=Change over time, Method=Bar Chart (Chart.js), Interaction=Tooltips on hover. Justification=Visually represents a complex biological process in an easy-to-digest format. 4. Detailed Analysis: Goal=Organize, Method=Side-by-side text blocks, Interaction=None. Justification=Separates complex topics (pathology, diet) for clarity. -->
+    <!-- Application Structure Plan: The layout now features a side-by-side (or stacked on mobile) image viewer for direct comparison. The primary interaction panel with finding buttons sits below the images. This is followed by a series of collapsible sections: Summary, Gout Analysis, Pathophysiology, and Healing Timeline. This structure allows the user to see the primary evidence first, then dive into different analytical layers based on their interest, preventing information overload. The addition of the Gout Analysis section directly addresses the user's new query within a logical, layered information architecture. -->
+    <!-- Visualization & Content Choices: 1. Dual X-Ray Viewer: Goal=Compare/Explore, Method=Two image/canvas pairs, Interaction=Highlighting synced across both views. Justification=Allows direct comparison of AP and LAT views, crucial for 3D understanding of the fracture. 2. Key Findings: Goal=Inform, Method=Buttons, Interaction=Click to highlight on both images. Justification=Maintains the quick-access feature for key points. 3. Gout Analysis: Goal=Organize/Inform, Method=Structured text with bolding and lists. Interaction=None. Justification=Presents a differential diagnosis clearly and logically, separating radiographic theory from specific findings and recommendations. 4. Healing Timeline: Unchanged, still uses a Chart.js bar chart for clarity. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -52,113 +49,127 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         
         <header class="text-center mb-6">
-            <h1 class="text-2xl sm:text-3xl font-bold text-indigo-800">交互式影像分析报告</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-indigo-800">交互式影像分析报告 (含痛风分析)</h1>
             <div class="mt-2 text-xs sm:text-sm text-red-600 bg-red-100 border border-red-300 rounded-md p-2 max-w-4xl mx-auto">
-                <strong>重要声明：</strong> 本报告由AI根据您提供的影像和信息生成，仅供参考和学习，<strong>绝不能替代执业医师的专业诊断</strong>。所有医疗决策，请务abide by a qualified doctor's professional advice.
+                <strong>重要声明：</strong> 本报告由AI根据您提供的影像和信息生成，仅供参考和学习，<strong>绝不能替代执业医师的专业诊断</strong>。所有医疗决策，请务必遵从执业医师的专业意见。
             </div>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-
-            <div class="lg:col-span-3 bg-white p-4 rounded-lg shadow-lg flex flex-col items-center">
-                <div id="image-container" class="relative w-full max-w-xl mx-auto mb-4">
-                    <img id="xray-image" src="https://globalbusinessinsight.github.io/picture/1.jpg" alt="踝关节X光片 正位" class="w-full h-auto rounded-md bg-gray-200">
-                    <canvas id="canvas-overlay" class="canvas-overlay"></canvas>
+        <main class="bg-white p-4 sm:p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl sm:text-2xl font-bold mb-4 text-center">双视图影像对比</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                <div class="text-center">
+                    <h3 class="font-semibold mb-2">正位视图 (前后位)</h3>
+                    <div id="image-container-ap" class="relative w-full mx-auto">
+                        <img id="xray-image-ap" src="https://globalbusinessinsight.github.io/picture/1.jpg" alt="踝关节X光片 正位" class="w-full h-auto rounded-md bg-gray-200">
+                        <canvas id="canvas-overlay-ap" class="canvas-overlay"></canvas>
+                    </div>
                 </div>
-                <div class="flex flex-wrap justify-center gap-2">
-                    <button id="view-ap-btn" class="view-btn active px-4 py-2 text-sm sm:text-base bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50" data-src="https://globalbusinessinsight.github.io/picture/1.jpg">正位视图 (前后位)</button>
-                    <button id="view-lat-btn" class="view-btn px-4 py-2 text-sm sm:text-base bg-white text-gray-700 border border-gray-300 rounded-md shadow hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50" data-src="https://globalbusinessinsight.github.io/picture/2.jpg">侧位视图 (内外位)</button>
+                <div class="text-center">
+                    <h3 class="font-semibold mb-2">侧位视图 (内外位)</h3>
+                    <div id="image-container-lat" class="relative w-full mx-auto">
+                        <img id="xray-image-lat" src="https://globalbusinessinsight.github.io/picture/2.jpg" alt="踝关节X光片 侧位" class="w-full h-auto rounded-md bg-gray-200">
+                        <canvas id="canvas-overlay-lat" class="canvas-overlay"></canvas>
+                    </div>
                 </div>
             </div>
-
-            <div class="lg:col-span-2 bg-white p-4 sm:p-6 rounded-lg shadow-lg">
-                <h2 class="text-xl sm:text-2xl font-bold mb-4 text-center">主要影像学发现</h2>
-                <div class="grid grid-cols-2 sm:grid-cols-2 gap-3">
-                    <button class="finding-btn p-3 bg-gray-100 rounded-lg text-center" data-coords='{"x": 0.25, "y": 0.55, "r": 0.1}'>
+            
+            <div class="mt-6">
+                 <h2 class="text-lg font-bold mb-3 text-center">点击查看主要影像学发现</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button class="finding-btn p-3 bg-gray-100 rounded-lg text-center" data-coords='{"ap": {"x": 0.25, "y": 0.55, "r": 0.1}, "lat": {"x": 0.3, "y": 0.5, "r": 0.15}}'>
                         <span class="text-2xl">🦴</span>
                         <p class="font-semibold text-sm mt-1">骨骼结构</p>
-                        <p class="text-xs text-gray-500">整体对线良好</p>
                     </button>
-                    <button class="finding-btn p-3 bg-red-100 text-red-800 rounded-lg text-center" data-coords='{"x": 0.3, "y": 0.45, "r": 0.08}'>
+                    <button class="finding-btn p-3 bg-red-100 text-red-800 rounded-lg text-center" data-coords='{"ap": {"x": 0.3, "y": 0.45, "r": 0.08}, "lat": {"x": 0.25, "y": 0.4, "r": 0.1}}'>
                          <span class="text-2xl">⚡️</span>
-                        <p class="font-semibold text-sm mt-1">腓骨远端</p>
-                        <p class="text-xs">可见骨折线</p>
+                        <p class="font-semibold text-sm mt-1">腓骨远端骨折</p>
                     </button>
-                    <button class="finding-btn p-3 bg-blue-100 text-blue-800 rounded-lg text-center" data-coords='{"x": 0.6, "y": 0.7, "r": 0.15}'>
+                    <button class="finding-btn p-3 bg-blue-100 text-blue-800 rounded-lg text-center" data-coords='{"ap": {"x": 0.6, "y": 0.7, "r": 0.15}, "lat": {"x": 0.5, "y": 0.65, "r": 0.2}}'>
                         <span class="text-2xl">📐</span>
                         <p class="font-semibold text-sm mt-1">关节间隙</p>
-                        <p class="text-xs">未见明显变窄</p>
                     </button>
-                    <button class="finding-btn p-3 bg-green-100 text-green-800 rounded-lg text-center" data-coords='{"x": 0.5, "y": 0.6, "r": 0.2}'>
+                    <button class="finding-btn p-3 bg-green-100 text-green-800 rounded-lg text-center" data-coords='{"ap": {"x": 0.5, "y": 0.6, "r": 0.2}, "lat": {"x": 0.6, "y": 0.6, "r": 0.25}}'>
                          <span class="text-2xl">🌿</span>
-                        <p class="font-semibold text-sm mt-1">软组织</p>
-                        <p class="text-xs">可见肿胀</p>
+                        <p class="font-semibold text-sm mt-1">软组织肿胀</p>
                     </button>
                 </div>
-                <div class="mt-4 p-3 bg-gray-50 rounded-md">
+                 <div class="mt-4 p-3 bg-gray-50 rounded-md">
                     <h3 class="font-semibold text-base mb-2">影像描述</h3>
-                    <p id="finding-description" class="text-sm text-gray-700">点击上方按钮，查看具体发现并在图像上高亮显示。目前影像显示，踝关节骨骼结构对线尚可，但在腓骨远端可见一透亮线，提示可能存在骨折。关节间隙正常，周围软组织有肿胀迹象。</p>
+                    <p id="finding-description" class="text-sm text-gray-700">点击上方按钮，在双视图上同步高亮显示具体发现。目前影像明确显示腓骨远端存在骨折，但无明显移位。关节对线良好，未见关节间隙变窄，但周围软组织有明显肿胀。</p>
                 </div>
             </div>
         </main>
 
         <section class="mt-6 bg-white p-4 sm:p-6 rounded-lg shadow-lg">
             <h2 class="text-xl sm:text-2xl font-bold text-center mb-2">总结与建议</h2>
-            <p class="text-center text-gray-600 mb-4 max-w-3xl mx-auto text-sm sm:text-base">本部分结合患者信息对影像发现进行总结，并提供更具针对性的后续步骤建议。</p>
             <div class="bg-indigo-50 border-l-4 border-indigo-500 text-indigo-800 p-4 rounded-md text-sm">
                 <p><strong>初步印象：</strong> 综合影像分析，表现支持 <strong>“腓骨远端无明显移位的骨折”</strong> 的初步印象。从50cm高处跳下所产生的轴向冲击力和扭转力，与此类损伤的发生机制相符。患者年龄（约55岁）和较高的体重（85公斤，BMI约30.1）是制定治疗和康复计划时需要重点考虑的因素。</p>
-                <p class="mt-3"><strong>重要建议 (已更新)：</strong></p>
+                <p class="mt-3"><strong>重要建议：</strong></p>
                 <ul class="list-disc list-inside mt-2 space-y-2">
-                    <li><strong>立即就医，明确诊断：</strong> 仍然是首要步骤。请务必由骨科医生结合临床检查，确定最终诊断，并判断关节韧带是否有损伤。</li>
-                    <li><strong>探讨治疗方案：</strong>
-                        <ul class="list-['-_'] list-inside ml-4 mt-1 text-xs">
-                            <li><strong>保守治疗：</strong> 对于这种无明显移位的稳定骨折，医生可能会选择石膏或助行靴进行固定。</li>
-                            <li><strong>手术治疗：</strong> 考虑到患者体重较大，为确保骨折的绝对稳定、允许早期活动并降低长期并发症风险，医生也可能会建议进行切开复位内固定手术（使用钢板和螺钉）。请与医生充分讨论两种方案的利弊。</li>
-                        </ul>
-                    </li>
-                    <li><strong>严格遵守医嘱（尤其是体重）：</strong> 无论采取何种治疗，在骨折愈合的初期阶段，<strong class="underline">严格遵守医生的“禁止负重”或“部分负重”的医嘱至关重要</strong>。较高的体重会给骨折断端或内固定物带来巨大压力，过早负重可能导致骨折移位、内固定失败或愈合延迟。</li>
-                    <li><strong>关注骨骼健康：</strong> 鉴于患者年龄，可以与医生探讨进行骨密度检查的可能性，以排除骨质疏松症，因为它会影响骨折愈合速度和质量。</li>
-                    <li><strong>积极康复与长期管理：</strong> 待医生允许后，应在物理治疗师指导下进行系统的康复训练，以恢复踝关节功能。从长远来看，适当的体重管理将极大地有益于减轻关节负荷，促进恢复并预防未来的关节问题。</li>
+                    <li><strong>立即就医，明确诊断：</strong> 首要步骤。请务必由骨科医生结合临床检查，确定最终诊断，并判断关节韧带是否有损伤。</li>
+                    <li><strong>探讨治疗方案：</strong> 考虑到患者体重较大，请与医生充分讨论保守治疗（石膏/助行靴）与手术治疗（内固定）的利弊，以选择最稳妥的方案。</li>
+                    <li><strong>严格遵守负重医嘱：</strong> 在骨折愈合初期，<strong class="underline">严格遵守医生的“禁止负重”医嘱至关重要</strong>，以防骨折移位。</li>
+                    <li><strong>进行“痛风”相关检查：</strong> 鉴于存在痛风可能性，建议向医生咨询并进行血尿酸检查，以明确诊断。</li>
                 </ul>
             </div>
         </section>
 
+        <section id="gout-analysis" class="mt-6 bg-white p-4 sm:p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl sm:text-2xl font-bold text-center mb-4">关于“痛风可能性”的专题分析</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 border-b-2 border-yellow-300 pb-2 text-yellow-800">痛风在X光上的表现</h3>
+                     <p class="mb-2">痛风是由尿酸盐结晶沉积在关节内引起的炎症。在X光片上，<strong>急性期或早期痛风通常没有特异性表现</strong>，可能仅显示非特异性的软组织肿胀。</p>
+                     <p>而<strong>慢性、长期的痛风</strong>可能出现以下典型特征：</p>
+                    <ul class="list-disc list-inside mt-2 space-y-1">
+                        <li><strong>骨侵蚀/骨缺损：</strong> 出现“穿凿样”或“鼠咬样”的骨质缺损，边缘清晰硬化，常位于关节边缘。</li>
+                        <li><strong>关节间隙：</strong> 在疾病晚期之前，关节间隙通常保持正常，这是与类风湿关节炎的一个重要区别。</li>
+                        <li><strong>痛风石 (Tophi)：</strong> 巨大的尿酸盐结晶沉积（痛风石）可能在骨骼周围形成不规则的软组织肿块阴影，有时会发生钙化。</li>
+                    </ul>
+                </div>
+                <div>
+                     <h3 class="text-lg font-semibold mb-3 border-b-2 border-teal-300 pb-2 text-teal-800">当前影像分析与建议</h3>
+                     <p class="mb-2"><strong>影像分析结论：</strong></p>
+                     <p class="p-3 bg-gray-100 rounded-md">仔细审阅当前这两张X光片，<strong>并未观察到上述慢性痛风的典型放射学标志</strong>。未见明确的“穿凿样”骨侵蚀，关节间隙也保持良好。主要的影像学发现仍然是急性创伤导致的骨折和软组织肿胀。</p>
+                     <p class="mt-3"><strong>重要说明：</strong></p>
+                     <ul class="list-disc list-inside mt-2 space-y-1">
+                         <li><strong class="text-red-600">X光正常不代表没有痛风。</strong> 许多痛风患者（尤其是早期）的X光片是完全正常的。</li>
+                         <li>急性创伤（如本次骨折）有时会诱发潜在的痛风急性发作。</li>
+                     </ul>
+                    <p class="mt-3 font-semibold">诊断建议：</p>
+                    <ol class="list-decimal list-inside mt-2 space-y-1">
+                        <li><strong>临床咨询：</strong> 告知医生您是否有过关节（尤其是大脚趾）“红、肿、热、痛”的突发病史。</li>
+                        <li><strong>血液检查：</strong> 进行<strong class="underline">血尿酸 (Serum Uric Acid)</strong> 检测，是诊断高尿酸血症（痛风的基础）的关键步骤。</li>
+                        <li><strong>关节液分析：</strong> (如果适用) 诊断痛风的“金标准”是在关节液中通过显微镜找到尿酸盐结晶，但这在急性骨折情况下通常不进行。</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
         <section id="detailed-analysis" class="mt-6 bg-white p-4 sm:p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl sm:text-2xl font-bold text-center mb-4">详细病理分析与综合康复方案</h2>
-            
+             <h2 class="text-xl sm:text-2xl font-bold text-center mb-4">详细病理分析与综合康复方案</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <h3 class="text-lg font-semibold mb-3 border-b-2 border-indigo-200 pb-2 text-indigo-800">深入病理生理分析</h3>
                     <div class="space-y-3 text-sm text-gray-700">
-                        <p>看似“不高”的50cm跳跃之所以能导致骨折，是多种因素共同作用的结果：</p>
-                        <p><strong>1. 损伤机制：</strong> 当从高处跳下时，足部着地的瞬间会产生巨大的轴向冲击力。如果落地不稳，踝关节发生轻微扭转（内翻或外翻），这股冲击力就会转化为强大的剪切力和旋转应力，直接作用于踝关节最薄弱的环节——通常是腓骨远端。</p>
-                        <p><strong>2. 体重因素 (关键)：</strong> 物理学公式 <span class="font-mono italic">力 = 质量 × 加速度</span> 在此体现得淋漓尽致。85公斤的体重意味着在落地瞬间，踝关节承受的冲击力远超体重本身，可达体重的数倍。这个巨大的能量是导致骨骼断裂的直接原因。</p>
-                        <p><strong>3. 年龄因素：</strong> 55岁左右，人体骨量开始自然流失，骨骼的韧性和强度不如年轻时期。即使没有达到骨质疏松的诊断标准，骨骼也可能处于骨量减少（骨质疏松前症）的状态，使其在面对同等冲击力时更容易发生骨折。</p>
-                        <p class="mt-2 p-2 bg-gray-100 rounded"><strong>结论：</strong> 本次损伤是 <strong class="text-red-600">“在骨骼强度相对下降的基础上，由超出生理承受范围的巨大能量冲击”</strong> 所导致的典型脆性骨折。因此，治疗不仅要关注骨折本身，更要管理好体重和骨骼健康这两个根本性风险因素。</p>
+                        <p>本次损伤是 <strong class="text-red-600">“在骨骼强度相对下降的基础上，由超出生理承受范围的巨大能量冲击”</strong> 所导致的典型脆性骨折。体重和年龄是关键的内在风险因素。</p>
                     </div>
                 </div>
-
                 <div>
                     <h3 class="text-lg font-semibold mb-3 border-b-2 border-indigo-200 pb-2 text-indigo-800">饮食营养建议</h3>
-                    <p class="text-xs text-gray-600 mb-3">科学的营养是骨骼愈合的物质基础。以下是一些核心建议：</p>
                     <div class="space-y-3">
                         <div>
                             <h4 class="font-bold text-green-700 text-sm">✅ 推荐摄入的食物 (促进愈合)</h4>
                             <ul class="list-disc list-inside mt-2 space-y-1 text-xs sm:text-sm">
-                                <li><strong>优质蛋白质：</strong> 瘦肉、鱼、鸡蛋、牛奶、豆制品。蛋白质是构成骨基质（骨胶原）的主要原料。</li>
-                                <li><strong>高钙食物：</strong> 牛奶、酸奶、奶酪、西兰花、羽衣甘蓝、豆腐。钙是骨骼的主要矿物成分。</li>
-                                <li><strong>富含维生素D的食物：</strong> 三文鱼等多脂鱼、蛋黄、强化牛奶。维生素D能促进钙的吸收。适度的日光照射同样重要。</li>
-                                <li><strong>富含维生素C的食物：</strong> 橙子、草莓、猕猴桃、灯笼椒。维生素C对胶原蛋白的合成至关重要。</li>
-                                <li><strong>锌和镁：</strong> 坚果、种子、全谷物、豆类。这些微量元素是骨骼代谢中多种酶的辅助因子。</li>
+                                <li><strong>基础营养：</strong> 保证优质蛋白、高钙、富含维生素D和C的食物摄入。</li>
+                                <li><strong>如果确诊痛风：</strong> 需在医生指导下采取低嘌呤饮食，多饮水，并严格限制海鲜、动物内脏、浓肉汤和酒精的摄入。</li>
                             </ul>
                         </div>
                         <div>
                             <h4 class="font-bold text-red-700 text-sm">❌ 需要注意和限制的食物</h4>
                              <ul class="list-disc list-inside mt-2 space-y-1 text-xs sm:text-sm">
-                                <li><strong>高盐食物：</strong> 过多的钠会增加尿钙的排出，导致钙流失。</li>
-                                <li><strong>咖啡因和酒精：</strong> 过量摄入会干扰钙的吸收和骨骼新陈代谢。</li>
-                                <li><strong>加工食品和高糖饮料：</strong> 营养价值低，可能引发身体炎症反应，不利于恢复。</li>
-                                <li><strong>草酸含量高的蔬菜：</strong> 如菠菜、苋菜。若要食用，建议先焯水以减少草酸，因为它会影响钙的吸收。</li>
+                                <li>高盐、高糖、过度加工的食品应避免，它们不利于炎症控制和整体恢复。</li>
                             </ul>
                         </div>
                     </div>
@@ -177,145 +188,72 @@
     </div>
 
     <script>
-        const xrayImage = document.getElementById('xray-image');
-        const canvas = document.getElementById('canvas-overlay');
-        const ctx = canvas.getContext('2d');
-        const description = document.getElementById('finding-description');
-        let currentCircle = null;
+        document.addEventListener('DOMContentLoaded', () => {
+            const images = [
+                { id: 'ap', el: document.getElementById('xray-image-ap'), canvas: document.getElementById('canvas-overlay-ap') },
+                { id: 'lat', el: document.getElementById('xray-image-lat'), canvas: document.getElementById('canvas-overlay-lat') }
+            ];
+            const description = document.getElementById('finding-description');
+            let currentHighlights = {};
 
-        const findings = {
-            '骨骼结构': '踝关节由胫骨、腓骨和距骨组成。从影像上看，这几块骨头的位置关系基本正常，没有出现明显的错位或脱位。',
-            '腓骨远端': '在腓骨靠近脚踝的部分，观察到一条清晰的、未完全断裂的线条，这在影像学上高度提示为无移位的骨折。',
-            '关节间隙': '胫骨和距骨之间的空间被称为踝关节间隙。此间隙清晰且宽度均匀，表明关节软骨和韧带可能没有严重损伤。',
-            '软组织': '骨骼周围的肌肉、脂肪等软组织在X光片上呈现为灰色阴影。在此区域可见密度增高和影调模糊，这是典型的肿胀和内部出血的表现。'
-        };
-
-        function drawHighlight(coords) {
-            if (currentCircle) {
-                clearCanvas();
-            }
-            if(coords) {
-                const rect = xrayImage.getBoundingClientRect();
+            const findings = {
+                '骨骼结构': '踝关节由胫骨、腓骨和距骨组成。从影像上看，这几块骨头的位置关系基本正常，没有出现明显的错位或脱位。',
+                '腓骨远端骨折': '在腓骨靠近脚踝的部分，观察到一条清晰的、未完全断裂的线条，这在影像学上高度提示为无移位的骨折。在两个视图中均可见。',
+                '关节间隙': '胫骨和距骨之间的空间被称为踝关节间隙。此间隙清晰且宽度均匀，表明关节软骨和韧带可能没有严重损伤。',
+                '软组织肿胀': '骨骼周围的肌肉、脂肪等软组织在X光片上呈现为灰色阴影。在此区域可见密度增高和影调模糊，这是典型的肿胀和内部出血的表现。'
+            };
+            
+            function drawHighlight(imageInfo, coords) {
+                const ctx = imageInfo.canvas.getContext('2d');
+                const rect = imageInfo.el.getBoundingClientRect();
                 const imageWidth = rect.width;
                 const imageHeight = rect.height;
 
-                canvas.width = imageWidth;
-                canvas.height = imageHeight;
-
-                const x = coords.x * imageWidth;
-                const y = coords.y * imageHeight;
-                const radius = coords.r * Math.min(imageWidth, imageHeight);
+                imageInfo.canvas.width = imageWidth;
+                imageInfo.canvas.height = imageHeight;
                 
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, 2 * Math.PI);
-                ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
-                ctx.lineWidth = 3;
-                ctx.stroke();
+                ctx.clearRect(0, 0, imageInfo.canvas.width, imageInfo.canvas.height);
 
-                ctx.beginPath();
-                ctx.moveTo(x + radius, y);
-                ctx.lineTo(x + radius + 20, y - 20);
-                ctx.lineTo(x + radius + 60, y - 20);
-                ctx.stroke();
-
-                currentCircle = coords;
-            }
-        }
-
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            currentCircle = null;
-        }
-
-        document.querySelectorAll('.view-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-                e.target.classList.add('active');
-                xrayImage.src = e.target.dataset.src;
-                clearCanvas();
-                description.textContent = '点击上方按钮，查看具体发现并在图像上高亮显示。';
-            });
-        });
-        
-        document.querySelectorAll('.finding-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                const coords = JSON.parse(button.dataset.coords);
-                const findingKey = button.querySelector('p.font-semibold').textContent;
-                drawHighlight(coords);
-                description.textContent = findings[findingKey];
-            });
-        });
-
-        xrayImage.onload = () => {
-             const rect = xrayImage.getBoundingClientRect();
-             canvas.width = rect.width;
-             canvas.height = rect.height;
-        };
-        window.onresize = () => {
-             const rect = xrayImage.getBoundingClientRect();
-             canvas.width = rect.width;
-             canvas.height = rect.height;
-             if (currentCircle) {
-                drawHighlight(currentCircle);
-             }
-        };
-
-        const chartCtx = document.getElementById('healingChart').getContext('2d');
-        const healingChart = new Chart(chartCtx, {
-            type: 'bar',
-            data: {
-                labels: ['炎症期', '软骨痂期', '硬骨痂期', '重塑期'],
-                datasets: [{
-                    label: '平均周数',
-                    data: [1, 4, 10, 24],
-                    backgroundColor: [
-                        'rgba(239, 68, 68, 0.6)',
-                        'rgba(251, 146, 60, 0.6)',
-                        'rgba(59, 130, 246, 0.6)',
-                        'rgba(16, 185, 129, 0.6)'
-                    ],
-                    borderColor: [
-                        'rgba(239, 68, 68, 1)',
-                        'rgba(251, 146, 60, 1)',
-                        'rgba(59, 130, 246, 1)',
-                        'rgba(16, 185, 129, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: '愈合所需时间 (周)'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.x !== null) {
-                                    label += `约 ${context.parsed.x} 周`;
-                                }
-                                return label;
-                            }
-                        }
-                    }
+                if (coords) {
+                    const x = coords.x * imageWidth;
+                    const y = coords.y * imageHeight;
+                    const radius = coords.r * Math.min(imageWidth, imageHeight);
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                    ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
                 }
             }
+            
+            function redrawAllHighlights() {
+                images.forEach(imgInfo => {
+                    drawHighlight(imgInfo, currentHighlights[imgInfo.id]);
+                });
+            }
+
+            document.querySelectorAll('.finding-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const coordsData = JSON.parse(button.dataset.coords);
+                    currentHighlights = coordsData;
+                    redrawAllHighlights();
+                    
+                    const findingKey = button.querySelector('p.font-semibold').textContent;
+                    description.textContent = findings[findingKey];
+                });
+            });
+
+            images.forEach(imgInfo => {
+                imgInfo.el.onload = redrawAllHighlights;
+            });
+            window.onresize = redrawAllHighlights;
+
+            const chartCtx = document.getElementById('healingChart').getContext('2d');
+            const healingChart = new Chart(chartCtx, {
+                type: 'bar', data: { labels: ['炎症期', '软骨痂期', '硬骨痂期', '重塑期'], datasets: [{ label: '平均周数', data: [1, 4, 10, 24], backgroundColor: ['rgba(239, 68, 68, 0.6)', 'rgba(251, 146, 60, 0.6)', 'rgba(59, 130, 246, 0.6)', 'rgba(16, 185, 129, 0.6)'], borderColor: ['rgba(239, 68, 68, 1)', 'rgba(251, 146, 60, 1)', 'rgba(59, 130, 246, 1)', 'rgba(16, 185, 129, 1)'], borderWidth: 1 }] },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { beginAtZero: true, title: { display: true, text: '愈合所需时间 (周)' } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += `约 ${context.parsed.x} 周`; } return label; } } } } }
+            });
         });
     </script>
 </body>
