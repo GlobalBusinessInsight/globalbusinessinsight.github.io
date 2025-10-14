@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>甘泉堡物流园电动重卡及充电设施规划</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application is designed as a multi-stage interactive dashboard. It flows from Operational Parameters -> Demand -> Fleet Resources -> Charging Infrastructure -> Energy Analysis -> Financial Parameters -> Profitability. This separation creates distinct modules for different audiences. The new Energy Analysis section provides granular detail on power consumption. -->
+    <!-- Visualization & Content Choices: 
+        1. Operational Parameters -> Goal: Interact -> Presentation: Sliders -> Justification: Core operational drivers, including the new "Working Days" parameter.
+        2. Fleet Composition -> Goal: Compare -> Viz: Bar Chart -> Justification: Clearly visualizes the four distinct fleet types.
+        3. Charging Plan -> Goal: Inform -> Presentation: KPI Cards & Sliders -> Justification: Charger count is fixed, but power/simultaneity are adjustable.
+        4. Energy Analysis -> Goal: Inform -> Presentation: KPI Cards -> Justification: Breaks down total energy use into per-station and per-fleet metrics for detailed operational planning.
+        5. Financial Parameters -> Goal: Interact -> Presentation: Sliders -> Justification: Isolates financial variables for focused analysis.
+        6. Cost Breakdown -> Goal: Compare -> Viz: Doughnut Chart -> Justification: Shows the part-to-whole relationship of operating costs. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #FDFBF8;
+            color: #333;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 9999px;
+            background: #4A90E2;
+            cursor: pointer;
+        }
+        input[type='range']::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 9999px;
+            background: #4A90E2;
+            cursor: pointer;
+            margin-top: -0.375rem;
+        }
+        input[type='range']::-moz-range-thumb {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 9999px;
+            background: #4A90E2;
+            cursor: pointer;
+        }
+        .kpi-value {
+            color: #4A90E2;
+            font-weight: 700;
+        }
+        .section-title {
+            color: #2c5282;
+            border-bottom: 2px solid #a3bffa;
+            padding-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-8">
+        
+        <header class="text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">新疆甘泉堡物流园</h1>
+            <h2 class="text-xl md:text-2xl font-semibold text-blue-700">电运业务及盈利能力综合测算模型</h2>
+            <p class="mt-2 text-gray-600 max-w-3xl mx-auto">本应用根据核心运营及财务参数，动态测算车队规模、充电设施及业务盈利能力，为项目决策提供数据支持。</p>
+        </header>
+
+        <main class="space-y-12">
+            <!-- Section 1: Core Parameters & Assumptions -->
+            <section id="parameters" class="card p-6">
+                <h3 class="text-2xl font-bold mb-6 section-title">核心参数与假设 (可调节)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                        <label for="annualTonnage" class="font-medium text-gray-700">铁路年总运量 (万吨)</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="annualTonnage" min="1000" max="5000" value="3000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="annualTonnageValue" class="font-bold text-blue-600 w-20 text-right">3000 万吨</span>
+                        </div>
+                    </div>
+                     <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                        <label for="workingDays" class="font-medium text-gray-700">年有效工作日 (天)</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="workingDays" min="300" max="365" value="365" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="workingDaysValue" class="font-bold text-blue-600 w-16 text-right">365 天</span>
+                        </div>
+                    </div>
+                    <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                        <label for="containerPercentage" class="font-medium text-gray-700">集装箱运输比例 (%)</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="containerPercentage" min="50" max="100" value="85" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="containerPercentageValue" class="font-bold text-blue-600 w-16 text-right">85 %</span>
+                        </div>
+                    </div>
+                    <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                        <label for="dist5km" class="font-medium text-gray-700">5公里运距占比 (%)</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="dist5km" min="0" max="100" value="30" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="dist5kmValue" class="font-bold text-blue-600 w-16 text-right">30 %</span>
+                        </div>
+                    </div>
+                    <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                        <label for="dist10km" class="font-medium text-gray-700">10公里运距占比 (%)</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="dist10km" min="0" max="100" value="30" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="dist10kmValue" class="font-bold text-blue-600 w-16 text-right">30 %</span>
+                        </div>
+                    </div>
+                     <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                        <label for="dist20km" class="font-medium text-gray-700">20公里运距占比 (%)</label>
+                         <div class="flex items-center space-x-4">
+                            <input type="range" id="dist20km" min="0" max="100" value="40" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                           <span id="dist20kmValue" class="font-bold text-blue-600 w-16 text-right">40 %</span>
+                        </div>
+                    </div>
+                     <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                        <label for="trips5km" class="font-medium text-gray-700">5公里运距日趟数</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="trips5km" min="10" max="30" value="20" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="trips5kmValue" class="font-bold text-blue-600 w-16 text-right">20 趟</span>
+                        </div>
+                    </div>
+                    <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                        <label for="trips10km" class="font-medium text-gray-700">10公里运距日趟数</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="trips10km" min="5" max="25" value="15" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="trips10kmValue" class="font-bold text-blue-600 w-16 text-right">15 趟</span>
+                        </div>
+                    </div>
+                    <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                        <label for="trips20km" class="font-medium text-gray-700">20公里运距日趟数</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="trips20km" min="5" max="20" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="trips20kmValue" class="font-bold text-blue-600 w-16 text-right">10 趟</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Demand Analysis -->
+            <section id="demand" class="card p-6">
+                <h3 class="text-2xl font-bold mb-6 section-title">运输需求分析</h3>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h4 class="text-xl font-semibold text-center mb-4">每日货运量构成</h4>
+                        <div class="chart-container">
+                            <canvas id="tonnageChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <h4 class="text-xl font-semibold text-center mb-4">核心需求指标</h4>
+                        <div class="p-4 bg-blue-50 rounded-lg text-center">
+                            <p class="text-gray-600">日均总运输量</p>
+                            <p id="dailyTotalTonnage" class="text-3xl kpi-value">82,192 吨</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-4 bg-green-50 rounded-lg text-center">
+                                <p class="text-gray-600">日均集装箱运量</p>
+                                <p id="dailyContainerTonnage" class="text-2xl kpi-value">69,863</p>
+                            </div>
+                            <div class="p-4 bg-yellow-50 rounded-lg text-center">
+                                <p class="text-gray-600">日均散货运量</p>
+                                <p id="dailyBulkTonnage" class="text-2xl kpi-value">12,329</p>
+                            </div>
+                        </div>
+                         <div class="p-4 bg-indigo-50 rounded-lg text-center">
+                            <p class="text-gray-600">日均总运输车次</p>
+                            <p id="dailyTotalTrips" class="text-3xl kpi-value">2,651 车次</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Resource Calculation -->
+            <section id="resources" class="card p-6">
+                <h3 class="text-2xl font-bold mb-6 section-title">车队规模匡算</h3>
+                <p class="mb-6 text-gray-600 text-center">车队已细分为四类独立资源：下站集装箱、上站集装箱、下站散货、上站散货。</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                     <div class="space-y-4">
+                        <h4 class="text-xl font-semibold text-center mb-4">匡算结果</h4>
+                        <div class="p-6 bg-blue-50 rounded-lg text-center">
+                            <p class="text-gray-600">所需电动重卡总数</p>
+                            <p id="totalTrucks" class="text-5xl kpi-value">197 辆</p>
+                        </div>
+                         <div class="grid grid-cols-2 gap-4">
+                           <div class="p-4 bg-green-50 rounded-lg text-center">
+                                <p class="text-gray-600">下站集装箱车</p>
+                                <p id="totalInboundContainerTrucks" class="text-2xl kpi-value">111 辆</p>
+                            </div>
+                            <div class="p-4 bg-yellow-50 rounded-lg text-center">
+                                <p class="text-gray-600">上站集装箱车</p>
+                                <p id="totalOutboundContainerTrucks" class="text-2xl kpi-value">56 辆</p>
+                            </div>
+                            <div class="p-4 bg-purple-50 rounded-lg text-center">
+                                <p class="text-gray-600">下站散货车</p>
+                                <p id="totalInboundBulkTrucks" class="text-2xl kpi-value">20 辆</p>
+                            </div>
+                             <div class="p-4 bg-pink-50 rounded-lg text-center">
+                                <p class="text-gray-600">上站散货车</p>
+                                <p id="totalOutboundBulkTrucks" class="text-2xl kpi-value">10 辆</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-center mb-4">车队构成按业务分布</h4>
+                        <div class="chart-container">
+                            <canvas id="trucksChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: Charging Station Plan -->
+            <section id="charging-plan" class="card p-6">
+                <h3 class="text-2xl font-bold mb-6 section-title">充电站建设方案</h3>
+                <p class="mb-6 text-gray-600 text-center">规划建设三个充电站，共计60个充电桩，以保障车队高效补能。</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 p-4 border rounded-lg">
+                    <div class="space-y-4 p-4 bg-gray-50 rounded-lg">
+                        <label for="chargerPower" class="font-medium text-gray-700">充电桩单桩功率 (kW)</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="chargerPower" min="120" max="480" value="400" step="20" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="chargerPowerValue" class="font-bold text-blue-600 w-16 text-right">400 kW</span>
+                        </div>
+                    </div>
+                    <div class="space-y-4 p-4 bg-gray-50 rounded-lg">
+                        <label for="simultaneityFactor" class="font-medium text-gray-700">充电站同时率 (%)</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="simultaneityFactor" min="50" max="100" value="70" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="simultaneityFactorValue" class="font-bold text-blue-600 w-16 text-right">70 %</span>
+                        </div>
+                    </div>
+                </div>
+                 <div class="p-4 bg-red-50 rounded-lg text-center mb-6">
+                    <p class="text-gray-600">规划充电桩总数 (固定)</p>
+                    <p id="totalChargers" class="text-3xl kpi-value">60 个</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="p-4 border rounded-lg bg-gray-50 text-center">
+                        <h4 class="text-lg font-bold text-gray-800 mb-2">充电站 1</h4>
+                        <p class="text-gray-600">规划充电桩</p>
+                        <p id="chargersStation1" class="text-2xl kpi-value mb-2">20 个</p>
+                        <p class="text-gray-600">建议变压器容量</p>
+                        <p id="transformerStation1" class="text-2xl kpi-value">10000 kVA</p>
+                    </div>
+                    <div class="p-4 border rounded-lg bg-gray-50 text-center">
+                        <h4 class="text-lg font-bold text-gray-800 mb-2">充电站 2</h4>
+                        <p class="text-gray-600">规划充电桩</p>
+                        <p id="chargersStation2" class="text-2xl kpi-value mb-2">20 个</p>
+                        <p class="text-gray-600">建议变压器容量</p>
+                        <p id="transformerStation2" class="text-2xl kpi-value">10000 kVA</p>
+                    </div>
+                    <div class="p-4 border rounded-lg bg-gray-50 text-center">
+                        <h4 class="text-lg font-bold text-gray-800 mb-2">充电站 3</h4>
+                        <p class="text-gray-600">规划充电桩</p>
+                        <p id="chargersStation3" class="text-2xl kpi-value mb-2">20 个</p>
+                        <p class="text-gray-600">建议变压器容量</p>
+                        <p id="transformerStation3" class="text-2xl kpi-value">10000 kVA</p>
+                    </div>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-4 bg-blue-50 rounded-lg text-center">
+                        <p class="text-gray-600">单桩日均有效充电时长</p>
+                        <p id="avgHoursPerCharger" class="text-3xl kpi-value">5.4 小时</p>
+                    </div>
+                     <div class="p-4 bg-teal-50 rounded-lg text-center">
+                        <p class="text-gray-600">单站日均预估能耗</p>
+                        <p id="stationDailyEnergy" class="text-3xl kpi-value">43,296 kWh</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 5: Energy Analysis -->
+            <section id="energy-analysis" class="card p-6">
+                <h3 class="text-2xl font-bold mb-6 section-title">能耗详细分析</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="p-6 bg-indigo-50 rounded-lg text-center">
+                        <p class="text-gray-700 font-semibold">车队日均总能耗</p>
+                        <p id="totalDailyEnergy" class="text-4xl kpi-value">129,888 kWh</p>
+                    </div>
+                    <div class="p-6 bg-indigo-100 rounded-lg text-center">
+                        <p class="text-gray-700 font-semibold">车队年预估总能耗</p>
+                        <p id="totalAnnualEnergy" class="text-4xl kpi-value">4,741 万 kWh</p>
+                    </div>
+                </div>
+                <h4 class="text-xl font-semibold text-center mb-4 text-gray-700">各类型车队能耗</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                     <div class="p-4 bg-green-50 rounded-lg text-center">
+                        <p class="font-semibold text-green-800">下站集装箱车</p>
+                        <p id="inboundContainerEnergy" class="text-2xl text-green-600 font-bold">73,260 kWh/日</p>
+                        <p id="inboundContainerAnnualEnergy" class="text-gray-600">2,674 万 kWh/年</p>
+                    </div>
+                     <div class="p-4 bg-yellow-50 rounded-lg text-center">
+                        <p class="font-semibold text-yellow-800">上站集装箱车</p>
+                        <p id="outboundContainerEnergy" class="text-2xl text-yellow-600 font-bold">36,960 kWh/日</p>
+                        <p id="outboundContainerAnnualEnergy" class="text-gray-600">1,349 万 kWh/年</p>
+                    </div>
+                     <div class="p-4 bg-purple-50 rounded-lg text-center">
+                        <p class="font-semibold text-purple-800">下站散货车</p>
+                        <p id="inboundBulkEnergy" class="text-2xl text-purple-600 font-bold">13,200 kWh/日</p>
+                        <p id="inboundBulkAnnualEnergy" class="text-gray-600">482 万 kWh/年</p>
+                    </div>
+                    <div class="p-4 bg-pink-50 rounded-lg text-center">
+                        <p class="font-semibold text-pink-800">上站散货车</p>
+                        <p id="outboundBulkEnergy" class="text-2xl text-pink-600 font-bold">6,600 kWh/日</p>
+                        <p id="outboundBulkAnnualEnergy" class="text-gray-600">241 万 kWh/年</p>
+                    </div>
+                </div>
+            </section>
+
+             <!-- Section 6: Financial Parameters -->
+            <section id="financial-parameters" class="card p-6">
+                <h3 class="text-2xl font-bold mb-6 section-title">财务参数与成本假设 (可调节)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                     <div class="space-y-4 p-4 border rounded-lg bg-green-50">
+                        <label for="revenueRate" class="font-medium text-gray-700">运价 (元/吨·公里)</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="revenueRate" min="0.1" max="0.5" value="0.3" step="0.01" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="revenueRateValue" class="font-bold text-green-600 w-16 text-right">0.30 元</span>
+                        </div>
+                    </div>
+                     <div class="space-y-4 p-4 border rounded-lg bg-green-50">
+                        <label for="energyCost" class="font-medium text-gray-700">综合电价 (元/kWh)</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="energyCost" min="0.3" max="1.0" value="0.45" step="0.01" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="energyCostValue" class="font-bold text-green-600 w-16 text-right">0.45 元</span>
+                        </div>
+                    </div>
+                     <div class="space-y-4 p-4 border rounded-lg bg-green-50">
+                        <label for="driverSalary" class="font-medium text-gray-700">司机日薪 (元/人)</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="driverSalary" min="400" max="800" value="600" step="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="driverSalaryValue" class="font-bold text-green-600 w-16 text-right">600 元</span>
+                        </div>
+                    </div>
+                    <div class="space-y-4 p-4 border rounded-lg bg-green-50">
+                        <label for="maintCost" class="font-medium text-gray-700">管理维修日费 (元/车)</label>
+                        <div class="flex items-center space-x-4">
+                            <input type="range" id="maintCost" min="50" max="200" value="100" step="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb">
+                            <span id="maintCostValue" class="font-bold text-green-600 w-16 text-right">100 元</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section 7: Profitability Analysis -->
+            <section id="profitability" class="card p-6">
+                <h3 class="text-2xl font-bold mb-6 section-title">盈利能力分析</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="p-4 bg-green-100 rounded-lg text-center">
+                        <p class="text-lg font-semibold text-green-800">日均营业收入</p>
+                        <p id="dailyRevenue" class="text-3xl font-bold text-green-600">295,890 元</p>
+                    </div>
+                    <div class="p-4 bg-red-100 rounded-lg text-center">
+                        <p class="text-lg font-semibold text-red-800">日均总成本</p>
+                        <p id="dailyCost" class="text-3xl font-bold text-red-600">217,522 元</p>
+                    </div>
+                    <div class="p-4 bg-blue-100 rounded-lg text-center">
+                        <p class="text-lg font-semibold text-blue-800">日均净利润</p>
+                        <p id="dailyProfit" class="text-3xl font-bold text-blue-600">78,368 元</p>
+                    </div>
+                </div>
+                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                     <div class="space-y-4">
+                        <h4 class="text-xl font-semibold text-center mb-4">每日成本构成</h4>
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                           <ul class="space-y-3">
+                               <li class="flex justify-between items-center text-lg"><span>车辆与挂车折旧</span><strong id="costDepreciation" class="text-gray-800">22,458 元</strong></li>
+                               <li class="flex justify-between items-center text-lg"><span>能源成本</span><strong id="costEnergy" class="text-gray-800">58,450 元</strong></li>
+                               <li class="flex justify-between items-center text-lg"><span>司机薪酬</span><strong id="costDrivers" class="text-gray-800">118,200 元</strong></li>
+                               <li class="flex justify-between items-center text-lg"><span>管理与维修</span><strong id="costMaint" class="text-gray-800">19,700 元</strong></li>
+                           </ul>
+                        </div>
+                     </div>
+                     <div>
+                        <h4 class="text-xl font-semibold text-center mb-4">成本占比</h4>
+                        <div class="chart-container">
+                            <canvas id="costChart"></canvas>
+                        </div>
+                    </div>
+                 </div>
+                 <div class="mt-8 p-6 bg-indigo-100 rounded-lg text-center">
+                    <p class="text-xl font-semibold text-indigo-800">预计年净利润</p>
+                    <p id="annualProfit" class="text-4xl font-bold text-indigo-600">28,604,520 元</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="text-center text-sm text-gray-500 pt-4 border-t">
+            <p>&copy; 2025 甘泉堡智慧物流规划模型. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const config = {
+                annualTonnage: 3000,
+                inboundRatio: 2/3,
+                containerPercentage: 85,
+                workingDays: 365,
+                truckPayload: 31,
+                dist: {
+                    '5km': { percent: 30, tripsPerDay: 20 },
+                    '10km': { percent: 30, tripsPerDay: 15 },
+                    '20km': { percent: 40, tripsPerDay: 10 }
+                },
+                vehicleAvailability: 95,
+                truckBatteryKWh: 440,
+                dailyChargesPerTruck: 1.5,
+                chargerPowerKW: 400,
+                simultaneityFactor: 70,
+                powerFactor: 0.95,
+                // Financials
+                revenueRate: 0.3, // per ton-km
+                energyCost: 0.45, // per kWh
+                tractorCost: 400000,
+                trailerCost: 80000,
+                depreciationYears: 5,
+                residualValuePercent: 5,
+                driverSalary: 600, // per day
+                maintCost: 100, // per truck per day
+            };
+
+            const elements = {
+                // Parameters
+                annualTonnage: document.getElementById('annualTonnage'),
+                annualTonnageValue: document.getElementById('annualTonnageValue'),
+                workingDays: document.getElementById('workingDays'),
+                workingDaysValue: document.getElementById('workingDaysValue'),
+                containerPercentage: document.getElementById('containerPercentage'),
+                containerPercentageValue: document.getElementById('containerPercentageValue'),
+                dist5km: document.getElementById('dist5km'),
+                dist5kmValue: document.getElementById('dist5kmValue'),
+                dist10km: document.getElementById('dist10km'),
+                dist10kmValue: document.getElementById('dist10kmValue'),
+                dist20km: document.getElementById('dist20km'),
+                dist20kmValue: document.getElementById('dist20kmValue'),
+                trips5km: document.getElementById('trips5km'),
+                trips5kmValue: document.getElementById('trips5kmValue'),
+                trips10km: document.getElementById('trips10km'),
+                trips10kmValue: document.getElementById('trips10kmValue'),
+                trips20km: document.getElementById('trips20km'),
+                trips20kmValue: document.getElementById('trips20kmValue'),
+                // Demand
+                dailyTotalTonnage: document.getElementById('dailyTotalTonnage'),
+                dailyContainerTonnage: document.getElementById('dailyContainerTonnage'),
+                dailyBulkTonnage: document.getElementById('dailyBulkTonnage'),
+                dailyTotalTrips: document.getElementById('dailyTotalTrips'),
+                // Resources
+                totalTrucks: document.getElementById('totalTrucks'),
+                totalInboundContainerTrucks: document.getElementById('totalInboundContainerTrucks'),
+                totalOutboundContainerTrucks: document.getElementById('totalOutboundContainerTrucks'),
+                totalInboundBulkTrucks: document.getElementById('totalInboundBulkTrucks'),
+                totalOutboundBulkTrucks: document.getElementById('totalOutboundBulkTrucks'),
+                // Charging
+                chargerPower: document.getElementById('chargerPower'),
+                chargerPowerValue: document.getElementById('chargerPowerValue'),
+                simultaneityFactor: document.getElementById('simultaneityFactor'),
+                simultaneityFactorValue: document.getElementById('simultaneityFactorValue'),
+                totalChargers: document.getElementById('totalChargers'),
+                chargersStation1: document.getElementById('chargersStation1'),
+                transformerStation1: document.getElementById('transformerStation1'),
+                chargersStation2: document.getElementById('chargersStation2'),
+                transformerStation2: document.getElementById('transformerStation2'),
+                chargersStation3: document.getElementById('chargersStation3'),
+                transformerStation3: document.getElementById('transformerStation3'),
+                avgHoursPerCharger: document.getElementById('avgHoursPerCharger'),
+                stationDailyEnergy: document.getElementById('stationDailyEnergy'),
+                // Energy Analysis
+                totalDailyEnergy: document.getElementById('totalDailyEnergy'),
+                totalAnnualEnergy: document.getElementById('totalAnnualEnergy'),
+                inboundContainerEnergy: document.getElementById('inboundContainerEnergy'),
+                inboundContainerAnnualEnergy: document.getElementById('inboundContainerAnnualEnergy'),
+                outboundContainerEnergy: document.getElementById('outboundContainerEnergy'),
+                outboundContainerAnnualEnergy: document.getElementById('outboundContainerAnnualEnergy'),
+                inboundBulkEnergy: document.getElementById('inboundBulkEnergy'),
+                inboundBulkAnnualEnergy: document.getElementById('inboundBulkAnnualEnergy'),
+                outboundBulkEnergy: document.getElementById('outboundBulkEnergy'),
+                outboundBulkAnnualEnergy: document.getElementById('outboundBulkAnnualEnergy'),
+                // Financial Params
+                revenueRate: document.getElementById('revenueRate'),
+                revenueRateValue: document.getElementById('revenueRateValue'),
+                energyCost: document.getElementById('energyCost'),
+                energyCostValue: document.getElementById('energyCostValue'),
+                driverSalary: document.getElementById('driverSalary'),
+                driverSalaryValue: document.getElementById('driverSalaryValue'),
+                maintCost: document.getElementById('maintCost'),
+                maintCostValue: document.getElementById('maintCostValue'),
+                // Profitability
+                dailyRevenue: document.getElementById('dailyRevenue'),
+                dailyCost: document.getElementById('dailyCost'),
+                dailyProfit: document.getElementById('dailyProfit'),
+                annualProfit: document.getElementById('annualProfit'),
+                costDepreciation: document.getElementById('costDepreciation'),
+                costEnergy: document.getElementById('costEnergy'),
+                costDrivers: document.getElementById('costDrivers'),
+                costMaint: document.getElementById('costMaint'),
+            };
+
+            let tonnageChart, trucksChart, costChart;
+
+            function formatNumber(num, precision = 0) {
+                return num.toLocaleString('zh-CN', { maximumFractionDigits: precision, minimumFractionDigits: precision });
+            }
+            
+            function calculateRoundedTransformerCapacity(capacity) {
+                 if (capacity <= 0) return 0;
+                return Math.ceil(capacity / 5000) * 5000;
+            }
+
+            function createTonnageChart() {
+                const ctx = document.getElementById('tonnageChart').getContext('2d');
+                tonnageChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { labels: ['集装箱', '散货'], datasets: [{ label: '每日吨数', data: [0, 0], backgroundColor: ['#4A90E2', '#F5A623'], borderColor: '#FFFFFF', borderWidth: 3 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+            
+            function createCostChart() {
+                const ctx = document.getElementById('costChart').getContext('2d');
+                costChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { labels: ['折旧', '能源', '薪酬', '管理维修'], datasets: [{ label: '成本构成', data: [0, 0, 0, 0], backgroundColor: ['#4A90E2', '#50E3C2', '#F5A623', '#BD10E0'], borderColor: '#FFFFFF', borderWidth: 2 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (c) => `${c.label}: ${formatNumber(c.raw)} 元 (${(c.raw / c.chart.getDatasetMeta(0).total * 100).toFixed(1)}%)` } } } }
+                });
+            }
+
+            function createTrucksChart() {
+                const ctx = document.getElementById('trucksChart').getContext('2d');
+                trucksChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: ['下站集装箱', '上站集装箱', '下站散货', '上站散货'], datasets: [{ label: '车队规模', data: [0, 0, 0, 0], backgroundColor: ['#4A90E2', '#50E3C2', '#F5A623', '#BD10E0'], borderRadius: 5 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, title: { display: true, text: '车辆数' } } } }
+                });
+            }
+
+            function calculateFleet(tonnage) {
+                const trips = Math.ceil(tonnage / config.truckPayload);
+                const trips5km = Math.ceil(trips * (config.dist['5km'].percent / 100));
+                const trucks5km = Math.ceil(trips5km / (config.dist['5km'].tripsPerDay || 1));
+                const trips10km = Math.ceil(trips * (config.dist['10km'].percent / 100));
+                const trucks10km = Math.ceil(trips10km / (config.dist['10km'].tripsPerDay || 1));
+                const trips20km = Math.ceil(trips * (config.dist['20km'].percent / 100));
+                const trucks20km = Math.ceil(trips20km / (config.dist['20km'].tripsPerDay || 1));
+                const calculatedTrucks = trucks5km + trucks10km + trucks20km;
+                return Math.ceil(calculatedTrucks / (config.vehicleAvailability / 100));
+            }
+
+            function calculateAndRender() {
+                const dailyTotalTonnage = (config.annualTonnage * 10000) / config.workingDays;
+                const dailyContainerTonnage = dailyTotalTonnage * (config.containerPercentage / 100);
+                const dailyBulkTonnage = dailyTotalTonnage * (1 - (config.containerPercentage / 100));
+                const dailyInboundContainerTonnage = dailyContainerTonnage * config.inboundRatio;
+                const dailyOutboundContainerTonnage = dailyContainerTonnage * (1 - config.inboundRatio);
+                const dailyInboundBulkTonnage = dailyBulkTonnage * config.inboundRatio;
+                const dailyOutboundBulkTonnage = dailyBulkTonnage * (1 - config.inboundRatio);
+
+                const totalInboundContainerTrucks = calculateFleet(dailyInboundContainerTonnage);
+                const totalOutboundContainerTrucks = calculateFleet(dailyOutboundContainerTonnage);
+                const totalInboundBulkTrucks = calculateFleet(dailyInboundBulkTonnage);
+                const totalOutboundBulkTrucks = calculateFleet(dailyOutboundBulkTonnage);
+                const totalTrucks = totalInboundContainerTrucks + totalOutboundContainerTrucks + totalInboundBulkTrucks + totalOutboundBulkTrucks;
+                
+                const totalDailyTrips = Math.ceil(dailyTotalTonnage / config.truckPayload);
+                
+                // Energy
+                const totalDailyEnergy = totalTrucks * config.truckBatteryKWh * config.dailyChargesPerTruck;
+                const totalAnnualEnergy = totalDailyEnergy * config.workingDays;
+                const stationDailyEnergy = totalDailyEnergy / 3;
+                const inboundContainerEnergy = totalInboundContainerTrucks * config.truckBatteryKWh * config.dailyChargesPerTruck;
+                const outboundContainerEnergy = totalOutboundContainerTrucks * config.truckBatteryKWh * config.dailyChargesPerTruck;
+                const inboundBulkEnergy = totalInboundBulkTrucks * config.truckBatteryKWh * config.dailyChargesPerTruck;
+                const outboundBulkEnergy = totalOutboundBulkTrucks * config.truckBatteryKWh * config.dailyChargesPerTruck;
+
+                // Profitability
+                const tonnage5km = dailyTotalTonnage * (config.dist['5km'].percent / 100);
+                const tonnage10km = dailyTotalTonnage * (config.dist['10km'].percent / 100);
+                const tonnage20km = dailyTotalTonnage * (config.dist['20km'].percent / 100);
+                const totalTonKm = tonnage5km * 5 + tonnage10km * 10 + tonnage20km * 20;
+                const dailyRevenue = totalTonKm * config.revenueRate;
+                const dailyTractorDepreciation = (config.tractorCost * (1 - config.residualValuePercent / 100)) / (config.depreciationYears * config.workingDays);
+                const dailyTrailerDepreciation = (config.trailerCost * (1 - config.residualValuePercent / 100)) / (config.depreciationYears * config.workingDays);
+                const costDepreciation = totalTrucks * (dailyTractorDepreciation + dailyTrailerDepreciation);
+                const costEnergy = totalDailyEnergy * config.energyCost;
+                const costDrivers = totalTrucks * config.driverSalary;
+                const costMaint = totalTrucks * config.maintCost;
+                const dailyCost = costDepreciation + costEnergy + costDrivers + costMaint;
+                const dailyProfit = dailyRevenue - dailyCost;
+                const annualProfit = dailyProfit * config.workingDays;
+
+                // --- RENDER ---
+                elements.dailyTotalTonnage.textContent = `${formatNumber(dailyTotalTonnage)} 吨`;
+                elements.dailyContainerTonnage.textContent = `${formatNumber(dailyContainerTonnage)}`;
+                elements.dailyBulkTonnage.textContent = `${formatNumber(dailyBulkTonnage)}`;
+                elements.dailyTotalTrips.textContent = `${formatNumber(totalDailyTrips)} 车次`;
+                elements.totalTrucks.textContent = `${formatNumber(totalTrucks)} 辆`;
+                elements.totalInboundContainerTrucks.textContent = `${formatNumber(totalInboundContainerTrucks)} 辆`;
+                elements.totalOutboundContainerTrucks.textContent = `${formatNumber(totalOutboundContainerTrucks)} 辆`;
+                elements.totalInboundBulkTrucks.textContent = `${formatNumber(totalInboundBulkTrucks)} 辆`;
+                elements.totalOutboundBulkTrucks.textContent = `${formatNumber(totalOutboundBulkTrucks)} 辆`;
+                
+                // Charging Station Render
+                const totalChargers = 60;
+                elements.totalChargers.textContent = `${formatNumber(totalChargers)} 个`;
+                const chargersPerStation = 20;
+                elements.chargersStation1.textContent = `${formatNumber(chargersPerStation)} 个`;
+                elements.chargersStation2.textContent = `${formatNumber(chargersPerStation)} 个`;
+                elements.chargersStation3.textContent = `${formatNumber(chargersPerStation)} 个`;
+                const rawCapacity = (chargersPerStation * config.chargerPowerKW * (config.simultaneityFactor / 100)) / config.powerFactor;
+                const roundedCapacity = calculateRoundedTransformerCapacity(rawCapacity);
+                elements.transformerStation1.textContent = `${formatNumber(roundedCapacity)} kVA`;
+                elements.transformerStation2.textContent = `${formatNumber(roundedCapacity)} kVA`;
+                elements.transformerStation3.textContent = `${formatNumber(roundedCapacity)} kVA`;
+                const avgHoursPerCharger = (totalChargers > 0 && config.chargerPowerKW > 0) ? totalDailyEnergy / (totalChargers * config.chargerPowerKW) : 0;
+                elements.avgHoursPerCharger.textContent = `${formatNumber(avgHoursPerCharger, 1)} 小时`;
+                elements.stationDailyEnergy.textContent = `${formatNumber(stationDailyEnergy)} kWh`;
+
+                // Energy Analysis Render
+                elements.totalDailyEnergy.textContent = `${formatNumber(totalDailyEnergy)} kWh`;
+                elements.totalAnnualEnergy.textContent = `${formatNumber(totalAnnualEnergy / 10000, 2)} 万 kWh`;
+                elements.inboundContainerEnergy.textContent = `${formatNumber(inboundContainerEnergy)} kWh/日`;
+                elements.inboundContainerAnnualEnergy.textContent = `${formatNumber(inboundContainerEnergy * config.workingDays / 10000, 2)} 万 kWh/年`;
+                elements.outboundContainerEnergy.textContent = `${formatNumber(outboundContainerEnergy)} kWh/日`;
+                elements.outboundContainerAnnualEnergy.textContent = `${formatNumber(outboundContainerEnergy * config.workingDays / 10000, 2)} 万 kWh/年`;
+                elements.inboundBulkEnergy.textContent = `${formatNumber(inboundBulkEnergy)} kWh/日`;
+                elements.inboundBulkAnnualEnergy.textContent = `${formatNumber(inboundBulkEnergy * config.workingDays / 10000, 2)} 万 kWh/年`;
+                elements.outboundBulkEnergy.textContent = `${formatNumber(outboundBulkEnergy)} kWh/日`;
+                elements.outboundBulkAnnualEnergy.textContent = `${formatNumber(outboundBulkEnergy * config.workingDays / 10000, 2)} 万 kWh/年`;
+
+                // Profitability Render
+                elements.dailyRevenue.textContent = `${formatNumber(dailyRevenue)} 元`;
+                elements.dailyCost.textContent = `${formatNumber(dailyCost)} 元`;
+                elements.dailyProfit.textContent = `${formatNumber(dailyProfit)} 元`;
+                elements.annualProfit.textContent = `${formatNumber(annualProfit)} 元`;
+                elements.costDepreciation.textContent = `${formatNumber(costDepreciation)} 元`;
+                elements.costEnergy.textContent = `${formatNumber(costEnergy)} 元`;
+                elements.costDrivers.textContent = `${formatNumber(costDrivers)} 元`;
+                elements.costMaint.textContent = `${formatNumber(costMaint)} 元`;
+
+                // Charts Update
+                tonnageChart.data.datasets[0].data = [dailyContainerTonnage, dailyBulkTonnage];
+                tonnageChart.update();
+                trucksChart.data.datasets[0].data = [totalInboundContainerTrucks, totalOutboundContainerTrucks, totalInboundBulkTrucks, totalOutboundBulkTrucks];
+                trucksChart.update();
+                costChart.data.datasets[0].data = [costDepreciation, costEnergy, costDrivers, costMaint];
+                costChart.update();
+            }
+            
+            function handleDistSliders(changedSliderId) {
+                let sliders = {
+                    dist5km: { el: elements.dist5km, value: 0 },
+                    dist10km: { el: elements.dist10km, value: 0 },
+                    dist20km: { el: elements.dist20km, value: 0 }
+                };
+
+                // Read current values
+                for (let key in sliders) {
+                    sliders[key].value = parseInt(sliders[key].el.value);
+                }
+
+                let total = sliders.dist5km.value + sliders.dist10km.value + sliders.dist20km.value;
+                let diff = total - 100;
+
+                if (diff !== 0) {
+                    let otherSliders = Object.keys(sliders).filter(id => id !== changedSliderId);
+                    let valueOfOthers = sliders[otherSliders[0]].value + sliders[otherSliders[1]].value;
+                   
+                    if (valueOfOthers > 0) {
+                        let adjustment0 = diff * (sliders[otherSliders[0]].value / valueOfOthers);
+                        let adjustment1 = diff * (sliders[otherSliders[1]].value / valueOfOthers);
+                        sliders[otherSliders[0]].value -= adjustment0;
+                        sliders[otherSliders[1]].value -= adjustment1;
+                    } else { // Handle case where other two sliders are zero
+                        sliders[otherSliders[0]].value -= diff / 2;
+                        sliders[otherSliders[1]].value -= diff / 2;
+                    }
+                }
+                
+                // Clamp and round values
+                for (let key in sliders) {
+                    sliders[key].value = Math.round(Math.max(0, Math.min(100, sliders[key].value)));
+                }
+
+                // Final check to ensure sum is exactly 100
+                let finalTotal = sliders.dist5km.value + sliders.dist10km.value + sliders.dist20km.value;
+                if (finalTotal !== 100) {
+                    sliders[changedSliderId].value += (100 - finalTotal);
+                }
+
+                // Update UI and config
+                for (let key in sliders) {
+                    sliders[key].el.value = sliders[key].value;
+                    config.dist[key.replace('dist', '')].percent = sliders[key].value;
+                    elements[key + 'Value'].textContent = `${sliders[key].value} %`;
+                }
+
+                calculateAndRender();
+            }
+
+            function setupEventListeners() {
+                const sliders = [
+                    {el: elements.annualTonnage, target: 'annualTonnage', valueEl: elements.annualTonnageValue, suffix: ' 万吨'},
+                    {el: elements.workingDays, target: 'workingDays', valueEl: elements.workingDaysValue, suffix: ' 天'},
+                    {el: elements.containerPercentage, target: 'containerPercentage', valueEl: elements.containerPercentageValue, suffix: ' %'},
+                    {el: elements.revenueRate, target: 'revenueRate', valueEl: elements.revenueRateValue, suffix: ' 元', isFloat: true, precision: 2},
+                    {el: elements.energyCost, target: 'energyCost', valueEl: elements.energyCostValue, suffix: ' 元', isFloat: true, precision: 2},
+                    {el: elements.driverSalary, target: 'driverSalary', valueEl: elements.driverSalaryValue, suffix: ' 元'},
+                    {el: elements.maintCost, target: 'maintCost', valueEl: elements.maintCostValue, suffix: ' 元'},
+                    {el: elements.chargerPower, target: 'chargerPowerKW', valueEl: elements.chargerPowerValue, suffix: ' kW'},
+                    {el: elements.simultaneityFactor, target: 'simultaneityFactor', valueEl: elements.simultaneityFactorValue, suffix: ' %'},
+                ];
+
+                sliders.forEach(s => {
+                    s.el.addEventListener('input', (e) => {
+                        const value = s.isFloat ? parseFloat(e.target.value) : parseInt(e.target.value);
+                        config[s.target] = value;
+                        s.valueEl.textContent = `${s.isFloat ? value.toFixed(s.precision) : value}${s.suffix}`;
+                        calculateAndRender();
+                    });
+                });
+                
+                ['dist5km', 'dist10km', 'dist20km'].forEach(id => {
+                    elements[id].addEventListener('input', () => handleDistSliders(id));
+                });
+
+                elements.trips5km.addEventListener('input', (e) => {
+                    const value = parseInt(e.target.value);
+                    config.dist['5km'].tripsPerDay = value;
+                    elements.trips5kmValue.textContent = `${value} 趟`;
+                    calculateAndRender();
+                });
+
+                elements.trips10km.addEventListener('input', (e) => {
+                    const value = parseInt(e.target.value);
+                    config.dist['10km'].tripsPerDay = value;
+                    elements.trips10kmValue.textContent = `${value} 趟`;
+                    calculateAndRender();
+                });
+
+                elements.trips20km.addEventListener('input', (e) => {
+                    const value = parseInt(e.target.value);
+                    config.dist['20km'].tripsPerDay = value;
+                    elements.trips20kmValue.textContent = `${value} 趟`;
+                    calculateAndRender();
+                });
+            }
+
+            function init() {
+                createTonnageChart();
+                createTrucksChart();
+                createCostChart();
+                setupEventListeners();
+                handleDistSliders('dist5km'); // Initial call to sync and calculate
+            }
+
+            init();
+        });
+    </script>
+
+</body>
+</html>
+
