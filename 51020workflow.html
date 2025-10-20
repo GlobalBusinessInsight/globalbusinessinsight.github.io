@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作流自动化平台深度分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with a Slate Blue Accent -->
+    <!-- Application Structure Plan: The application is designed as an interactive, single-page dashboard for non-linear exploration. It begins with a high-level market overview (market share chart, key takeaways), allowing users to grasp the landscape quickly. It then flows into a detailed, filterable comparison section with both a table and a radar chart for multi-dimensional analysis. This is followed by two interactive tools: a 'Use Case Recommender' and a 'Cost Estimator', which provide personalized, practical insights. This structure was chosen to empower the user to move from general understanding to specific, tailored information, making a complex topic digestible and engaging, far superior to a static, linear report. -->
+    <!-- Visualization & Content Choices: 1. Market Share (Donut Chart, Chart.js): Goal is to inform on market dominance at a glance. Interaction: hover tooltips. 2. Feature Comparison (Radar Chart, Chart.js): Goal is to compare multiple platforms across multiple criteria simultaneously. Interaction: checkboxes to add/remove platforms, providing a clutter-free visual comparison. 3. Use Case Recommender (Dynamic Text, JS): Goal is to provide tailored advice. Interaction: dropdown selection dynamically displays the best-fit platform and justification. 4. Cost Estimator (Input Fields, JS Logic): Goal is to provide tangible cost insights. Interaction: user inputs numbers to get immediate cost feedback. This combination of static visuals and interactive tools addresses all facets of the source report's analytical goals. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F4;
+            color: #333;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #3B82F6;
+            border-bottom-color: #3B82F6;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .tab-button {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .tab-button.active {
+            background-color: #3B82F6;
+            color: white;
+        }
+        .table th {
+            background-color: #F3F4F6;
+        }
+        .table td, .table th {
+            border: 1px solid #E5E7EB;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-2xl font-bold text-gray-800">工作流自动化平台深度分析</h1>
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#overview" class="nav-link text-gray-600 font-medium pb-1">市场概览</a>
+                    <a href="#comparison" class="nav-link text-gray-600 font-medium pb-1">深度比较</a>
+                    <a href="#use-cases" class="nav-link text-gray-600 font-medium pb-1">场景推荐</a>
+                    <a href="#pricing" class="nav-link text-gray-600 font-medium pb-1">成本估算</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="overview" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center text-gray-900 mb-4">市场概览：谁主沉浮？</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+                在大型语言模型（LLM）驱动的AI时代，工作流自动化平台已成为企业提升效率的核心工具。它们连接不同的应用程序，实现数据和任务的无缝流转。本部分将宏观展示当前市场的竞争格局和主要参与者的核心定位。
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold text-center mb-4">市场份额占比 (估算)</h3>
+                    <div class="chart-container">
+                        <canvas id="marketShareChart"></canvas>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold text-blue-600">Zapier</h3>
+                        <p class="text-gray-700 mt-2"><strong>行业标杆，简单易用。</strong> 拥有最广泛的应用集成，适合非技术人员快速构建简单、线性的自动化流程。</p>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold text-purple-600">Make</h3>
+                        <p class="text-gray-700 mt-2"><strong>视觉流大师，功能强大。</strong> 提供强大的可视化编辑器，支持复杂的分支和逻辑，性价比高，适合有一定技术背景的用户。</p>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold text-green-600">n8n</h3>
+                        <p class="text-gray-700 mt-2"><strong>开源核心，灵活可控。</strong> 提供自托管选项，对开发者友好，可通过代码扩展功能，是追求数据隐私和定制化的首选。</p>
+                    </div>
+                     <div class="card p-6">
+                        <h3 class="text-xl font-bold text-gray-600">AgentKit</h3>
+                        <p class="text-gray-700 mt-2"><strong>AI Agent 编排，面向未来。</strong> 专注于构建和管理自主AI代理，更偏向开发者，适合创建复杂的、由AI驱动的自治系统。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="comparison" class="scroll-mt-20 mt-16 md:mt-24">
+            <h2 class="text-3xl font-bold text-center text-gray-900 mb-4">多维度深度比较</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+                每个平台都有其独特的优势和适用范围。本节将从技术、性能、易用性等多个维度进行详细对比，并通过交互式图表直观展示它们的差异，帮助您根据自身需求做出最佳选择。
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold text-center mb-4">综合能力雷达图</h3>
+                    <div class="chart-container h-96 max-h-[500px]">
+                        <canvas id="comparisonRadarChart"></canvas>
+                    </div>
+                    <div class="mt-4 flex flex-wrap justify-center gap-4">
+                        <label class="flex items-center space-x-2"><input type="checkbox" class="radar-checkbox" value="0" checked> <span class="text-blue-600 font-medium">Zapier</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" class="radar-checkbox" value="1" checked> <span class="text-purple-600 font-medium">Make</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" class="radar-checkbox" value="2" checked> <span class="text-green-600 font-medium">n8n</span></label>
+                        <label class="flex items-center space-x-2"><input type="checkbox" class="radar-checkbox" value="3" checked> <span class="text-gray-600 font-medium">AgentKit</span></label>
+                    </div>
+                </div>
+                <div class="card p-6 flex flex-col">
+                     <h3 class="text-xl font-semibold text-center mb-4">核心特性对比表</h3>
+                     <div class="overflow-x-auto flex-grow">
+                        <table class="w-full text-sm text-left text-gray-500 table">
+                            <thead class="text-xs text-gray-700 uppercase">
+                                <tr>
+                                    <th scope="col" class="py-3 px-4">特性</th>
+                                    <th scope="col" class="py-3 px-4 text-center">Zapier</th>
+                                    <th scope="col" class="py-3 px-4 text-center">Make</th>
+                                    <th scope="col" class="py-3 px-4 text-center">n8n</th>
+                                    <th scope="col" class="py-3 px-4 text-center">AgentKit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white border-b">
+                                    <th scope="row" class="py-4 px-4 font-medium text-gray-900 whitespace-nowrap">目标用户</th>
+                                    <td class="py-4 px-4 text-center">非技术人员</td>
+                                    <td class="py-4 px-4 text-center">市场/运营</td>
+                                    <td class="py-4 px-4 text-center">开发者/技术人员</td>
+                                    <td class="py-4 px-4 text-center">AI开发者</td>
+                                </tr>
+                                <tr class="bg-gray-50 border-b">
+                                    <th scope="row" class="py-4 px-4 font-medium text-gray-900 whitespace-nowrap">核心优势</th>
+                                    <td class="py-4 px-4 text-center">集成数量多</td>
+                                    <td class="py-4 px-4 text-center">复杂逻辑可视化</td>
+                                    <td class="py-4 px-4 text-center">开源、可自托管</td>
+                                    <td class="py-4 px-4 text-center">AI Agent编排</td>
+                                </tr>
+                                 <tr class="bg-white border-b">
+                                    <th scope="row" class="py-4 px-4 font-medium text-gray-900 whitespace-nowrap">易用性</th>
+                                    <td class="py-4 px-4 text-center">极高</td>
+                                    <td class="py-4 px-4 text-center">中等</td>
+                                    <td class="py-4 px-4 text-center">中等偏低</td>
+                                    <td class="py-4 px-4 text-center">低 (代码为主)</td>
+                                </tr>
+                                <tr class="bg-gray-50 border-b">
+                                    <th scope="row" class="py-4 px-4 font-medium text-gray-900 whitespace-nowrap">集成应用数</th>
+                                    <td class="py-4 px-4 text-center">6000+</td>
+                                    <td class="py-4 px-4 text-center">1500+</td>
+                                    <td class="py-4 px-4 text-center">400+ (可自建)</td>
+                                    <td class="py-4 px-4 text-center">N/A (API/SDK)</td>
+                                </tr>
+                                <tr class="bg-white border-b">
+                                    <th scope="row" class="py-4 px-4 font-medium text-gray-900 whitespace-nowrap">托管方式</th>
+                                    <td class="py-4 px-4 text-center">云服务</td>
+                                    <td class="py-4 px-4 text-center">云服务</td>
+                                    <td class="py-4 px-4 text-center">云服务 / 自托管</td>
+                                    <td class="py-4 px-4 text-center">自托管 / PaaS</td>
+                                </tr>
+                                <tr class="bg-gray-50">
+                                    <th scope="row" class="py-4 px-4 font-medium text-gray-900 whitespace-nowrap">可靠性</th>
+                                    <td class="py-4 px-4 text-center">非常高</td>
+                                    <td class="py-4 px-4 text-center">高</td>
+                                    <td class="py-4 px-4 text-center">取决于部署</td>
+                                    <td class="py-4 px-4 text-center">取决于部署</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                     </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="use-cases" class="scroll-mt-20 mt-16 md:mt-24">
+            <h2 class="text-3xl font-bold text-center text-gray-900 mb-4">智能场景推荐</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+                不确定哪个工具最适合您？选择您的主要应用场景，我们将为您智能推荐最匹配的平台，并解释其原因。这能帮助您快速找到解决问题的最佳路径。
+            </p>
+            <div class="card max-w-4xl mx-auto p-8">
+                <div class="flex flex-col md:flex-row gap-6 items-center">
+                    <label for="useCaseSelector" class="font-semibold text-lg text-gray-800 shrink-0">选择您的使用场景：</label>
+                    <select id="useCaseSelector" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="marketing">市场营销自动化 (如：同步CRM与邮件列表)</option>
+                        <option value="social">社交媒体内容分发 (如：博客发布后自动同步到多平台)</option>
+                        <option value="devops">开发运维通知 (如：代码提交后通知到Slack)</option>
+                        <option value="etl">复杂数据处理与同步 (如：多步骤数据清洗与导入)</option>
+                        <option value="internal">内部工具集成 (如：连接内部API，处理敏感数据)</option>
+                        <option value="ai_agent">构建自主AI代理 (如：创建能自主完成任务的AI客服)</option>
+                    </select>
+                </div>
+                <div id="useCaseResult" class="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200 min-h-[150px]">
+                </div>
+            </div>
+        </section>
+
+        <section id="pricing" class="scroll-mt-20 mt-16 md:mt-24">
+             <h2 class="text-3xl font-bold text-center text-gray-900 mb-4">成本与定价估算</h2>
+            <p class="max-w-3xl mx-auto text-center text-gray-600 mb-12">
+                成本是选择平台的重要考量因素。不同平台的计费模型差异很大。使用下面的计算器，输入您预估的月度任务量，快速了解三大主流平台的费用情况。
+            </p>
+            <div class="card max-w-4xl mx-auto p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <label for="tasks" class="block text-sm font-medium text-gray-700">每月任务 (Tasks) / 执行 (Executions) 数</label>
+                        <input type="number" id="tasks" value="5000" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="operations" class="block text-sm font-medium text-gray-700">每个任务平均操作 (Operations) 数</label>
+                        <input type="number" id="operations" value="3" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                 <div class="text-center mb-8">
+                    <button id="calculateBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300">计算预估成本</button>
+                </div>
+                <div id="pricingResult" class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="p-6 bg-gray-50 rounded-lg border-2 border-blue-200">
+                        <h4 class="text-lg font-bold text-blue-600">Zapier</h4>
+                        <p id="zapierCost" class="text-3xl font-bold text-gray-800 mt-2">--</p>
+                        <p class="text-sm text-gray-500">基于任务数计费</p>
+                    </div>
+                    <div class="p-6 bg-gray-50 rounded-lg border-2 border-purple-200">
+                        <h4 class="text-lg font-bold text-purple-600">Make</h4>
+                        <p id="makeCost" class="text-3xl font-bold text-gray-800 mt-2">--</p>
+                        <p class="text-sm text-gray-500">基于操作数计费</p>
+                    </div>
+                    <div class="p-6 bg-gray-50 rounded-lg border-2 border-green-200">
+                        <h4 class="text-lg font-bold text-green-600">n8n (Cloud)</h4>
+                        <p id="n8nCost" class="text-3xl font-bold text-gray-800 mt-2">--</p>
+                        <p class="text-sm text-gray-500">基于执行次数计费</p>
+                    </div>
+                </div>
+                <p class="text-xs text-center text-gray-400 mt-6">*估算结果仅供参考，基于公开的入门级付费计划，实际价格请以官网为准。AgentKit为自托管，成本主要为服务器费用。n8n自托管成本也主要为服务器费用。</p>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-white mt-16 md:mt-24 border-t">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
+            <p>&copy; 2025 自动化平台分析报告. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const platformData = {
+                labels: ['易用性', '集成广度', '流程复杂度', '性价比', '定制与扩展', 'AI能力'],
+                datasets: [
+                    {
+                        label: 'Zapier',
+                        data: [9, 10, 5, 6, 4, 6],
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(59, 130, 246, 1)',
+                        hidden: false,
+                    },
+                    {
+                        label: 'Make',
+                        data: [7, 8, 9, 8, 7, 7],
+                        backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(139, 92, 246, 1)',
+                        hidden: false,
+                    },
+                    {
+                        label: 'n8n',
+                        data: [6, 6, 8, 9, 10, 8],
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(16, 185, 129, 1)',
+                        hidden: false,
+                    },
+                    {
+                        label: 'AgentKit',
+                        data: [3, 4, 10, 7, 9, 10],
+                        backgroundColor: 'rgba(107, 114, 128, 0.2)',
+                        borderColor: 'rgba(107, 114, 128, 1)',
+                        pointBackgroundColor: 'rgba(107, 114, 128, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(107, 114, 128, 1)',
+                        hidden: false,
+                    }
+                ]
+            };
+            
+            const useCaseData = {
+                marketing: {
+                    title: "🏆 首选: Zapier 或 Make",
+                    reason: "<strong>Zapier</strong> 拥有最广泛的营销工具集成，设置简单快捷，适合快速上线活动。<strong>Make</strong> 在需要处理更复杂的客户分群、A/B测试逻辑时，其可视化流程编辑器更具优势，性价比也更高。"
+                },
+                social: {
+                    title: "🏆 首选: Zapier",
+                    reason: "对于简单的、一次性的内容分发，<strong>Zapier</strong> 的“设置即忘”体验是无与伦比的。其庞大的社交媒体应用库几乎涵盖了所有主流平台，无需任何技术背景即可完成配置。"
+                },
+                devops: {
+                    title: "🏆 首选: n8n",
+                    reason: "<strong>n8n</strong> 对开发者极为友好，可以轻松与Git、CI/CD工具、监控系统等通过API或代码节点集成。自托管选项保证了内部系统的安全性和灵活性，是技术团队的最佳选择。"
+                },
+                etl: {
+                    title: "🏆 首选: Make 或 n8n",
+                    reason: "<strong>Make</strong> 强大的数据处理能力和路由功能，使其能够胜任中等复杂度的数据清洗和转换任务。对于更大数据量、需要自定义代码进行处理的场景，<strong>n8n</strong> 的灵活性和性能更胜一筹。"
+                },
+                internal: {
+                    title: "🏆 首选: n8n",
+                    reason: "处理内部敏感数据时，数据隐私至关重要。<strong>n8n</strong> 的自托管能力让所有数据都保留在自己的服务器上，避免了数据外泄风险。其强大的HTTP请求节点和代码节点可以轻松连接任何内部API。"
+                },
+                ai_agent: {
+                    title: "🏆 首选: AgentKit 或 n8n",
+                    reason: "<strong>AgentKit</strong> 是专为此类场景设计的，它提供了构建、测试和部署自主AI代理所需的核心框架。如果您的需求是在现有工作流中加入AI能力（如调用GPT），<strong>n8n</strong> 的灵活性和可扩展性也使其成为一个强大的选择。"
+                }
+            };
+            
+            const marketShareCtx = document.getElementById('marketShareChart').getContext('2d');
+            new Chart(marketShareCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Zapier', 'Make', 'n8n', '其他'],
+                    datasets: [{
+                        label: '市场份额',
+                        data: [50, 25, 15, 10],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(139, 92, 246, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(156, 163, 175, 0.8)'
+                        ],
+                        borderColor: '#F8F7F4',
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.raw + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const radarCtx = document.getElementById('comparisonRadarChart').getContext('2d');
+            const radarChart = new Chart(radarCtx, {
+                type: 'radar',
+                data: platformData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                },
+                                color: '#333'
+                            },
+                            ticks: {
+                                beginAtZero: true,
+                                max: 10,
+                                stepSize: 2,
+                                backdropColor: 'transparent'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            const checkboxes = document.querySelectorAll('.radar-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    platformData.datasets.forEach((dataset, index) => {
+                        const cb = document.querySelector(`.radar-checkbox[value="${index}"]`);
+                        dataset.hidden = !cb.checked;
+                    });
+                    radarChart.update();
+                });
+            });
+
+            const useCaseSelector = document.getElementById('useCaseSelector');
+            const useCaseResult = document.getElementById('useCaseResult');
+            const updateUseCase = () => {
+                const selectedCase = useCaseSelector.value;
+                const data = useCaseData[selectedCase];
+                useCaseResult.innerHTML = `
+                    <h4 class="text-lg font-bold text-gray-800">${data.title}</h4>
+                    <p class="mt-2 text-gray-600">${data.reason}</p>
+                `;
+            };
+            useCaseSelector.addEventListener('change', updateUseCase);
+            updateUseCase();
+
+            const calculateBtn = document.getElementById('calculateBtn');
+            const calculateCosts = () => {
+                const tasks = parseInt(document.getElementById('tasks').value) || 0;
+                const operationsPerTask = parseInt(document.getElementById('operations').value) || 1;
+                const totalOperations = tasks * operationsPerTask;
+
+                let zapierCost = 0;
+                if (tasks > 750) {
+                    zapierCost = Math.ceil(tasks / 2000) * 49;
+                } else if (tasks > 0) {
+                     zapierCost = 29.99;
+                }
+                 if(tasks > 2000) zapierCost = 73.50;
+
+
+                let makeCost = 0;
+                if (totalOperations > 10000) {
+                    makeCost = Math.ceil(totalOperations / 10000) * 9;
+                }
+                if (totalOperations > 40000) makeCost = 29;
+                if (totalOperations > 150000) makeCost = 159;
+
+                let n8nCost = 0;
+                if (tasks > 2500) {
+                    n8nCost = Math.ceil(tasks/2500) * 20;
+                } 
+                if (tasks > 8000) n8nCost = 50;
+                if (tasks > 30000) n8nCost = 120;
+
+
+                document.getElementById('zapierCost').textContent = `$${zapierCost.toFixed(2)}`;
+                document.getElementById('makeCost').textContent = `$${makeCost.toFixed(2)}`;
+                document.getElementById('n8nCost').textContent = `$${n8nCost.toFixed(2)}`;
+            };
+
+            calculateBtn.addEventListener('click', calculateCosts);
+            calculateCosts();
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${current}`) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
