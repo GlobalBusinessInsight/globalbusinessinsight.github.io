@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度观察：湖北“三资战略”</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Analytical Calm (Beige, Deep Blue, Slate Gray, Soft Olive) -->
+    <!-- Application Structure Plan: A single-page, top-down narrative SPA. A sticky header navigates to thematic sections: 1. Introduction (Definitions), 2. Context (Interactive flow diagram of old vs. new fiscal models), 3. Deep Dive (Tabs for each of the 3 'izations'), 4. National Outlook (Comparative chart of provincial fiscal pressures), 5. Impact Analysis (Dynamic doughnut chart for private sector risks/opportunities), 6. Conclusion. This structure guides the user from 'What' and 'Why' (Context) to 'How' (Deep Dive) and 'So What' (Outlook/Impact), which is more intuitive for an analytical piece than a flat report. -->
+    <!-- Visualization & Content Choices: 1. Report Info: Shift from land finance. Goal: Compare. Viz: HTML/JS interactive diagram (Old vs. New Model). Interaction: Click buttons to toggle text/visuals. Justification: Clears the 'Why' immediately. Method: Vanilla JS + Tailwind. 2. Report Info: The 3 'izations'. Goal: Organize/Inform. Viz: Tabbed content block. Interaction: Click tabs. Justification: Breaks down the core concept cleanly. Method: Vanilla JS. 3. Report Info: National rollout potential. Goal: Compare. Viz: Bar Chart (Fiscal Pressure by Province). Interaction: Hover tooltips. Justification: Shows *motive* for other provinces. Library: Chart.js (Canvas). 4. Report Info: Private sector impact. Goal: Analyze/Compare. Viz: Doughnut Chart (Risks vs. Opportunities). Interaction: Buttons ('Optimistic'/'Pessimistic' scenarios) update chart data. Justification: Dynamically shows the dual nature of the impact. Library: Chart.js (Canvas). -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F3;
+            color: #1f2937;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            border-color: #1E3A8A;
+            background-color: #E0E7FF;
+            color: #1E3A8A;
+            font-weight: 600;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .diagram-box {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .diagram-box.active {
+            border-color: #1E3A8A;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+        }
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #1E3A8A;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="sticky top-0 z-50 w-full bg-white/90 shadow-sm backdrop-blur-md">
+        <nav class="container mx-auto max-w-6xl px-4 py-3 flex justify-between items-center">
+            <div class="text-2xl font-bold text-gray-800">
+                <span class="text-blue-800">深度</span>观察
+            </div>
+            <div class="hidden md:flex space-x-6 text-gray-600">
+                <a href="#intro" class="nav-link font-medium">策略概览</a>
+                <a href="#context" class="nav-link font-medium">时代背景</a>
+                <a href="#deepdive" class="nav-link font-medium">三化解析</a>
+                <a href="#horizon" class="nav-link font-medium">全国展望</a>
+                <a href="#impact" class="nav-link font-medium">影响分析</a>
+                <a href="#conclusion" class="nav-link font-medium">记者观察</a>
+            </div>
+            <div class="md:hidden">
+                <button id="menu-btn" class="text-gray-700 focus:outline-none">
+                    <span class="text-2xl">☰</span>
+                </button>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-4 pt-2 pb-4 space-y-2 bg-white shadow-lg">
+            <a href="#intro" class="block nav-link">策略概览</a>
+            <a href="#context" class="block nav-link">时代背景</a>
+            <a href="#deepdive" class="block nav-link">三化解析</a>
+            <a href="#horizon" class="block nav-link">全国展望</a>
+            <a href="#impact" class="block nav-link">影响分析</a>
+            <a href="#conclusion" class="block nav-link">记者观察</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto max-w-6xl p-4 md:p-8 space-y-16">
+
+        <section id="intro" class="pt-16">
+            <h1 class="text-4xl md:text-5xl font-bold text-center text-gray-800 mb-6">
+                湖北“三资战略”：<br class="md:hidden"> 地方财政的新棋局？
+            </h1>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto text-center mb-12">
+                近期，湖北省提出的“三资战略”引发了市场和政策研究界的广泛关注。这一战略旨在系统性地盘活地方政府持有的庞大国有资源、资产和资金。本文将从一个记者的视角，深入探究其背后的逻辑、潜在的运作模式，及其可能对未来中国宏观政策和民营经济带来的深远影响。
+            </p>
+            <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-700">
+                    <h3 class="text-2xl font-bold text-blue-800 mb-3">资源资产化</h3>
+                    <p class="text-gray-700">核心在于将尚未明确定价的国有“资源”，如自然风光、数据、特许经营权等，通过评估、确权等手段，转化为可计量、可交易的“资产”。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-600">
+                    <h3 class="text-2xl font-bold text-blue-700 mb-3">资产证券化</h3>
+                    <p class="text-gray-700">将已经形成的“资产”，特别是那些能产生稳定现金流的（如高速公路、污水处理厂），打包设计成金融产品（如ABS、REITs），向社会资本发售，实现快速融资。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-500">
+                    <h3 class="text-2xl font-bold text-blue-600 mb-3">资金杠杆化</h3>
+                    <p class="text-gray-700">将前两步筹集到的“资金”作为基础或引导基金，吸引更多银行贷款、产业投资等社会资本参与，实现“小钱撬大钱”，放大投资效应。</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-gray-200">
+
+        <section id="context" class="pt-16">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4">来龙去脉：为何在此时提出？</h2>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto text-center mb-12">
+                “三资战略”的出现并非偶然，它深刻地植根于当前中国宏观经济，特别是地方财政转型的迫切需求中。传统的“土地财政”模式正面临瓶颈，寻找新的、可持续的财政收入来源已成为地方政府的当务之急。
+            </p>
+            
+            <div class="flex justify-center space-x-4 mb-8">
+                <button id="btn-old-model" class="diagram-button px-6 py-2 rounded-lg font-medium text-gray-700 border-2 border-gray-300 transition" onclick="showDiagram('old')">
+                    旧模式：土地财政
+                </button>
+                <button id="btn-new-model" class="diagram-button px-6 py-2 rounded-lg font-medium text-gray-700 border-2 border-gray-300 transition" onclick="showDiagram('new')">
+                    新探索：三资战略
+                </button>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <div id="diagram-old" class="diagram-content">
+                    <h3 class="text-2xl font-semibold text-center text-gray-700 mb-6">传统路径：土地财政模式</h3>
+                    <div class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4 text-center">
+                        <div class="diagram-box bg-white p-6 rounded-lg shadow w-full md:w-1/3">
+                            <div class="text-5xl mb-3">🏙️</div>
+                            <h4 class="text-xl font-bold">城市土地</h4>
+                            <p class="text-gray-600">政府征收和储备土地</p>
+                        </div>
+                        <div class="text-4xl text-blue-600 transform md:rotate-0">→</div>
+                        <div class="diagram-box bg-white p-6 rounded-lg shadow w-full md:w-1/3">
+                            <div class="text-5xl mb-3">💰</div>
+                            <h4 class="text-xl font-bold">土地出让金</h4>
+                            <p class="text-gray-600">通过“招拍挂”获取收入</p>
+                        </div>
+                        <div class="text-4xl text-blue-600 transform md:rotate-0">→</div>
+                        <div class="diagram-box bg-white p-6 rounded-lg shadow w-full md:w-1/3">
+                            <div class="text-5xl mb-3">🏗️</div>
+                            <h4 class="text-xl font-bold">城市建设</h4>
+                            <p class="text-gray-600">投入基础设施和公共服务</p>
+                        </div>
+                    </div>
+                    <p id="desc-old" class="text-gray-600 mt-8 text-center max-w-2xl mx-auto">
+                        该模式在过去几十年推动了快速的城市化，但随着房地产市场调整和土地资源减少，其可持续性面临严峻挑战，地方财政压力剧增。
+                    </p>
+                </div>
+
+                <div id="diagram-new" class="diagram-content hidden">
+                    <h3 class="text-2xl font-semibold text-center text-gray-700 mb-6">探索路径：三资战略模式</h3>
+                    <div class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4 text-center">
+                        <div class="diagram-box bg-white p-6 rounded-lg shadow w-full md:w-1/3">
+                            <div class="text-5xl mb-3">🏞️🛣️</div>
+                            <h4 class="text-xl font-bold">存量资源/资产</h4>
+                            <p class="text-gray-600">盘活基建、数据、景区等</p>
+                        </div>
+                        <div class="text-4xl text-blue-600 transform md:rotate-0">→</div>
+                        <div class="diagram-box bg-white p-6 rounded-lg shadow w-full md:w-1/3">
+                            <div class="text-5xl mb-3">📄</div>
+                            <h4 class="text-xl font-bold">金融产品</h4>
+                            <p class="text-gray-600">资产化与证券化</p>
+                        </div>
+                        <div class="text-4xl text-blue-600 transform md:rotate-0">→</div>
+                        <div class="diagram-box bg-white p-6 rounded-lg shadow w-full md:w-1/3">
+                            <div class="text-5xl mb-3">💸</div>
+                            <h4 class="text-xl font-bold">社会资本</h4>
+                            <p class="text-gray-600">杠杆化撬动市场资金</p>
+                        </div>
+                    </div>
+                    <p id="desc-new" class_name="text-gray-600 mt-8 text-center max-w-2xl mx-auto">
+                        该模式试图从“流量”（土地销售）转向“存量”（资产运营），通过金融工程手段，为地方发展开辟新的资金渠道，但对风险控制和资产质量要求极高。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-gray-200">
+
+        <section id="deepdive" class="pt-16">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4">深度解析：“三化”的逻辑与挑战</h2>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto text-center mb-12">
+                “三化”是一个环环相扣的链条，每一步都是前一步的延伸，也都面临着独特的挑战。点击下方标签页，查看每一步的具体解析。
+            </p>
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8">
+                <button class="tab-button active px-5 py-3 rounded-lg border-2 font-medium" onclick="showTab('asset')">
+                    1. 资源资产化
+                </button>
+                <button class="tab-button px-5 py-3 rounded-lg border-2 border-gray-300 font-medium" onclick="showTab('security')">
+                    2. 资产证券化
+                </button>
+                <button class="tab-button px-5 py-3 rounded-lg border-2 border-gray-300 font-medium" onclick="showTab('leverage')">
+                    3. 资金杠杆化
+                </button>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-xl p-6 md:p-10 max-w-4xl mx-auto min-h-[300px]">
+                <div id="tab-asset" class="tab-content active">
+                    <h3 class="text-2xl font-bold text-blue-800 mb-4">资源资产化：点石成金的第一步</h3>
+                    <p class="text-gray-700 mb-4">这是整个战略的基石。关键在于“发现价值”和“确认价值”。</p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li><strong>盘活对象：</strong>不仅是传统的经营性资产（如高速公路、水务），更包括公益性资产（如公园、博物馆）和无形资源（如数据、碳排放权、特许经营权）。</li>
+                        <li><strong>核心操作：</strong>进行专业的资产评估、所有权界定和会计入账。这是一个复杂且可能存在争议的过程。</li>
+                        <li><strong>主要挑战：</strong>
+                            <ul class="list-inside list-circle ml-6 mt-2 text-gray-600">
+                                <li><strong>定价难：</strong>公益性资产和数据等资源如何公允定价？</li>
+                                <li><strong>确权难：</strong>许多历史形成的资产权属不清。</li>
+                                <li><strong>观念难：</strong>突破“家底不可动”的传统观念。</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div id="tab-security" class="tab-content">
+                    <h3 class="text-2xl font-bold text-blue-800 mb-4">资产证券化：从“死资产”到“活现金”</h3>
+                    <p class="text-gray-700 mb-4">如果说“资产化”是把资源变成“账面富贵”，“证券化”就是把“账面”变成“现金”。</p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li><strong>主要工具：</strong>资产支持证券（ABS）、不动产投资信托基金（REITs）、收益权转让等。</li>
+                        <li><strong>核心逻辑：</strong>必须依赖资产未来能够产生的“稳定现金流”。没有稳定回报预期的资产，难以在市场上获得投资者认可。</li>
+                        <li><strong>主要挑战：</strong>
+                            <ul class="list-inside list-circle ml-6 mt-2 text-gray-600">
+                                <li><strong>现金流：</strong>大量存量资产（特别是公益性）自身盈利能力弱。</li>
+                                <li><strong>市场接受度：</strong>投资者是否愿意购买这些新类型的金融产品？</li>
+                                <li><strong>金融风险：</strong>过度证券化可能导致资产泡沫和金融风险。</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div id="tab-leverage" class="tab-content">
+                    <h3 class="text-2xl font-bold text-blue-800 mb-4">资金杠杆化：放大事半功倍的“乘数”</h3>
+                    <p class="text-gray-700 mb-4">筹集到的资金不是终点，而是起点。目标是利用这笔“启动资金”吸引更多资本。 </p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li><strong>运作模式：</strong>成立政府引导基金、提供项目资本金、为优质项目增信等。</li>
+                        <li><strong>吸引对象：</strong>银行信贷、保险资金、产业基金以及其他社会资本。</li>
+                        <li><strong>主要挑战：</strong>
+                            <ul class="list-inside list-circle ml-6 mt-2 text-gray-600">
+                                <li><strong>项目质量：</strong>能否提供足够多、回报率可观的优质项目？</li>
+                                <li><strong>杠杆风险：</strong>杠杆过高可能导致债务风险失控。</li>
+                                <li><strong>市场信心：</strong>社会资本（特别是民营资本）的投资意愿和信心。</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-gray-200">
+
+        <section id="horizon" class="pt-16">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4">全国展望：会否成为“湖北模式”？</h2>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto text-center mb-12">
+                湖北的探索具有强烈的示范效应。在“土地财政”普遍面临压力的背景下，其他省份也在密切关注。下图展示了部分省份（数据为假设，仅为说明逻辑）的财政压力与国有资产存量对比，高压力和高存量的地区，最有动力效仿。
+            </p>
+            
+            <div class="bg-white rounded-lg shadow-xl p-6 md:p-8">
+                <h3 class="text-xl font-semibold text-center text-gray-700 mb-6">部分省份财政压力与资产存量（示意图）</h3>
+                <div class="chart-container">
+                    <canvas id="provinceChart"></canvas>
+                </div>
+                <p class="text-center text-gray-500 text-sm mt-4">
+                    *数据为假设，仅用于说明分析逻辑。*
+                </p>
+                <div class="text-gray-700 mt-6 max-w-3xl mx-auto">
+                    <p class="mb-3"><strong>分析：</strong></p>
+                    <p>图表显示，像A省（如贵州、云南等地）可能面临“高压力、低存量”的困境，可供盘活的优质资产相对较少；而像C省（如江苏、广东等地）则“低压力、高存量”，财政相对健康，盘活动力不那么迫切。湖北（B省）正处于“高压力、高存量”的区间，这使其成为推行“三资战略”最理想的试验田。若试点成功，其经验很可能被财政压力同样较大且握有相当规模国有资产的省份所借鉴。</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-gray-200">
+
+        <section id="impact" class="pt-16">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4">影响分析：民营企业的新机遇还是新挑战？</h2>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto text-center mb-12">
+                “三资战略”的推行，无疑将重塑地方经济格局。对于民营企业（民企）而言，这既是“蛋糕”，也可能是“挤压”。我们通过一个动态模型来分析其双重影响。
+            </p>
+
+            <div class="flex justify-center space-x-4 mb-8">
+                <button id="btn-optimistic" class="impact-button px-6 py-2 rounded-lg font-medium text-gray-700 border-2 border-green-500 bg-green-50" onclick="updateImpactChart('optimistic')">
+                    乐观情景
+                </button>
+                <button id="btn-pessimistic" class="impact-button px-6 py-2 rounded-lg font-medium text-gray-700 border-2 border-red-500 bg-red-50" onclick="updateImpactChart('pessimistic')">
+                    悲观情景
+                </button>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="bg-white rounded-lg shadow-xl p-6 md:p-8">
+                    <h3 class="text-xl font-semibold text-center text-gray-700 mb-6" id="impact-chart-title">对民营企业潜在影响（均衡视图）</h3>
+                    <div class="chart-container" style="height: 300px; max-height: 300px;">
+                        <canvas id="impactChart"></canvas>
+                    </div>
+                </div>
+                <div class="text-gray-700 space-y-4">
+                    <div>
+                        <h4 class="text-xl font-bold text-green-700">潜在机遇 (Opportunities)</h4>
+                        <ul class="list-disc list-inside ml-4 text-gray-700">
+                            <li><strong>新的投资渠道：</strong>民企可以通过购买证券化产品，参与到以往难以进入的基建、公用事业等领域，获取稳定回报。</li>
+                            <li><strong>新的项目合同：</strong>杠杆化资金带来的新一轮投资建设，将释放大量工程、服务和供应链合同，为民企提供新订单。</li>
+                            <li><strong>改善营商环境：</strong>政府财政好转，可能减少对市场的不当干预，并有能力支付拖欠款项。</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-bold text-red-700">潜在挑战 (Risks)</h4>
+                        <ul class="list-disc list-inside ml-4 text-gray-700">
+                            <li><strong>市场挤出效应：</strong>（即“国进民退”）国企通过资产盘活获得大量资金后，可能大举扩张，在更多领域与民企形成直接竞争。</li>
+                            <li><strong>融资成本差异：</strong>国企信用背书更强，其金融产品可能“虹吸”市场资金，导致民企融资难度和成本进一步上升。</li>
+                            <li><strong>系统性风险：</strong>若资产定价虚高、杠杆过猛，一旦市场逆转，可能引发局部金融风险，波及整个经济生态。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-gray-200">
+
+        <section id="conclusion" class="pt-16 pb-16">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">记者观察：一场高难度的“平衡术”</h2>
+            <div class="max-w-3xl mx-auto bg-blue-50 p-8 rounded-lg shadow-lg border-l-4 border-blue-700 space-y-6 text-gray-800">
+                <p>湖北的“三资战略”，本质上是一场以“时间换空间”的金融创新实践。它试图在“土地财政”落幕和新税源尚未建立的空窗期，通过激活庞大的国有存量资产，为地方经济转型和化解债务赢得宝贵的时间和资本。</p>
+                <p>从记者的视角看，这一战略的雄心值得肯定，但其执行过程充满挑战。这是一场高难度的“平衡术”：</p>
+                <ul class="list-disc list-inside space-y-2">
+                    <li>它需要在<strong>“大胆创新”</strong>与<strong>“风险可控”</strong>之间找到平衡。步子迈得太大，金融风险难以把控；步子太小，又无法解决眼前的财政渴求。</li>
+                    <li>它需要在<strong>“盘活存量”</strong>与<strong>“保护家底”</strong>之间找到平衡。如何防止国有资产在证券化过程中被低估或流失，是必须严守的底线。</li>
+                    <li>它需要在<strong>“强化国资”</strong>与<strong>“激活民企”</strong>之间找到平衡。这场资本运作最终应是引导社会资本共同发展，而非演变为新一轮的“国进民退”，这考验着政策制定者的智慧和定力。</li>
+                </ul>
+                <p class="font-semibold">未来的关键，不在于“三化”的口号有多响亮，而在于能否真正筛选出优质资产，能否建立透明公允的定价机制，以及能否构建起一道坚实的金融“防火墙”。湖北的这盘棋局，全国都在看。</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-gray-300 py-8">
+        <div class="container mx-auto max-w-6xl px-4 text-center">
+            <p>&copy; 2025 深度观察。内容仅供分析研究，不构成任何投资建议。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            initCharts();
+            showDiagram('old');
+
+            const menuBtn = document.getElementById('menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        function showDiagram(type) {
+            const diagramOld = document.getElementById('diagram-old');
+            const diagramNew = document.getElementById('diagram-new');
+            const btnOld = document.getElementById('btn-old-model');
+            const btnNew = document.getElementById('btn-new-model');
+
+            if (type === 'old') {
+                diagramOld.classList.remove('hidden');
+                diagramNew.classList.add('hidden');
+                btnOld.classList.add('active', 'border-blue-700', 'bg-blue-50', 'text-blue-800');
+                btnOld.classList.remove('border-gray-300', 'text-gray-700');
+                btnNew.classList.remove('active', 'border-blue-700', 'bg-blue-50', 'text-blue-800');
+                btnNew.classList.add('border-gray-300', 'text-gray-700');
+                document.querySelectorAll('#diagram-old .diagram-box').forEach(b => b.classList.add('active'));
+                document.querySelectorAll('#diagram-new .diagram-box').forEach(b => b.classList.remove('active'));
+            } else {
+                diagramOld.classList.add('hidden');
+                diagramNew.classList.remove('hidden');
+                btnNew.classList.add('active', 'border-blue-700', 'bg-blue-50', 'text-blue-800');
+                btnNew.classList.remove('border-gray-300', 'text-gray-700');
+                btnOld.classList.remove('active', 'border-blue-700', 'bg-blue-50', 'text-blue-800');
+                btnOld.classList.add('border-gray-300', 'text-gray-700');
+                document.querySelectorAll('#diagram-new .diagram-box').forEach(b => b.classList.add('active'));
+                document.querySelectorAll('#diagram-old .diagram-box').forEach(b => b.classList.remove('active'));
+            }
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById('tab-' + tabName).classList.add('active');
+
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+                button.classList.add('border-gray-300');
+            });
+            document.querySelector(`.tab-button[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.querySelector(`.tab-button[onclick="showTab('${tabName}')"]`).classList.remove('border-gray-300');
+        }
+
+        let provinceChartInstance;
+        let impactChartInstance;
+
+        const provinceData = {
+            labels: ['A省 (高压)', 'B省 (湖北)', 'C省 (稳健)', 'D省 (均衡)'],
+            datasets: [
+                {
+                    label: '财政压力指数 (假设)',
+                    data: [85, 75, 30, 50],
+                    backgroundColor: 'rgba(219, 39, 119, 0.6)',
+                    borderColor: 'rgba(219, 39, 119, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: '国有资产存量 (万亿/假设)',
+                    data: [40, 90, 100, 60],
+                    backgroundColor: 'rgba(29, 78, 216, 0.6)',
+                    borderColor: 'rgba(29, 78, 216, 1)',
+                    borderWidth: 1
+                }
+            ]
+        };
+
+        const impactData = {
+            base: {
+                labels: ['新投资渠道', '新项目合同', '市场挤出效应', '融资成本上升', '系统性风险'],
+                datasets: [{
+                    data: [25, 25, 20, 20, 10],
+                    backgroundColor: [
+                        '#10B981', 
+                        '#34D399', 
+                        '#EF4444', 
+                        '#F87171', 
+                        '#FCD34D'  
+                    ],
+                }]
+            },
+            optimistic: {
+                data: [35, 30, 10, 15, 10],
+            },
+            pessimistic: {
+                data: [15, 15, 35, 25, 10],
+            }
+        };
+
+        function initCharts() {
+            const ctxProvince = document.getElementById('provinceChart').getContext('2d');
+            provinceChartInstance = new Chart(ctxProvince, {
+                type: 'bar',
+                data: provinceData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '指数 / 估值'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    }
+                }
+            });
+
+            const ctxImpact = document.getElementById('impactChart').getContext('2d');
+            impactChartInstance = new Chart(ctxImpact, {
+                type: 'doughnut',
+                data: impactData.base,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15
+                            }
+                        },
+                        title: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateImpactChart(scenario) {
+            const titleEl = document.getElementById('impact-chart-title');
+            if (scenario === 'optimistic') {
+                impactChartInstance.data.datasets[0].data = impactData.optimistic.data;
+                titleEl.textContent = '对民营企业潜在影响（乐观情景）';
+                document.getElementById('btn-optimistic').classList.add('ring-2', 'ring-green-700');
+                document.getElementById('btn-pessimistic').classList.remove('ring-2', 'ring-red-700');
+            } else {
+                impactChartInstance.data.datasets[0].data = impactData.pessimistic.data;
+                titleEl.textContent = '对民营企业潜在影响（悲观情景）';
+                document.getElementById('btn-pessimistic').classList.add('ring-2', 'ring-red-700');
+                document.getElementById('btn-optimistic').classList.remove('ring-2', 'ring-green-700');
+            }
+            impactChartInstance.update();
+        }
+
+    </script>
+</body>
+</html>
