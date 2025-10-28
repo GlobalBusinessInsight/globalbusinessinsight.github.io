@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度分析：亚马逊大规模裁员,并非完全因为AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 350px;
+            }
+        }
+        .nav-link {
+            @apply px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200;
+        }
+        .nav-link.active {
+            @apply bg-blue-100 text-blue-700;
+        }
+        .section-title {
+            @apply text-3xl font-bold text-gray-800 mb-4 border-l-4 border-blue-600 pl-3;
+        }
+        .intro-paragraph {
+            @apply text-lg text-gray-700 leading-relaxed mb-8;
+        }
+        .card {
+            @apply bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg;
+        }
+        .card-title {
+            @apply text-xl font-semibold text-blue-800 mb-2;
+        }
+        .ai-toggle-btn {
+            @apply px-6 py-3 text-lg font-medium rounded-t-lg border-b-2 transition-all duration-300;
+        }
+        .ai-toggle-btn.active {
+            @apply border-blue-600 text-blue-600;
+        }
+        .ai-toggle-btn.inactive {
+            @apply border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 leading-relaxed">
+    <!-- Chosen Palette: Calm Neutrals (bg-gray-50, text-gray-800, accent-blue-700) -->
+    <!-- Application Structure Plan: 本应用设计为一个单页“滚动叙事”(scrollytelling)报告。顶部采用粘性导航栏，允许用户按主题（核心原因、战略考量、市场影响、连锁反应、未来展望）平滑跳转。这种结构将用户的问题逻辑地组织成一个连贯的分析流程，从“为什么”到“如何影响”再到“未来趋势”，比简单的问答列表更具引导性和易读性。每个部分都包含介绍性文字、支持性卡片以及动态图表（Chart.js）或HTML/CSS构建的示意图，以最清晰的方式呈现数据和概念。 -->
+    <!-- Visualization & Content Choices: 
+        1.  [员工人数变化]: [目标: 展示疫情期间的过度招聘与后续修正] -> [形式: Chart.js 线图] -> [交互: 悬停提示] -> [理由: 直观展示趋势变化，支持“过度扩张”论点] -> [库: Chart.js]
+        2.  [战略资源转移]: [目标: 说明裁员不仅是削减成本，更是资源重配] -> [形式: Chart.js 甜甜圈图] -> [交互: 悬停提示] -> [理由: 清晰展示资源（概念性）的分配去向，特别是流向AI] -> [库: Chart.js]
+        3.  [科技公司裁员对比]: [目标: 将亚马逊的裁员置于行业大背景下] -> [形式: Chart.js 柱状图] -> [交互: 悬停提示] -> [理由: 直观比较裁员规模，证明这是行业趋势而非个例] -> [库: Chart.js]
+        4.  [连锁反应示意图]: [目标: 展示裁员趋势的扩散] -> [形式: HTML/Tailwind Flex布局] -> [交互: 静态展示] -> [理由: 简单明了地传达概念，无需复杂图表] -> [库: HTML/Tailwind]
+        5.  [AI角色切换器]: [目标: 探讨AI在裁员中的双重角色] -> [形式: JS 按钮切换内容] -> [交互: 点击切换] -> [理由: 引导用户主动探索“资源重配”和“效率提升”两个复杂概念] -> [库: Vanilla JS]
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm">
+        <nav class="container mx-auto px-4 md:px-6 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl md:text-2xl font-bold text-blue-800">深度分析：亚马逊大规模裁员</h1>
+                <div class="hidden md:flex space-x-1">
+                    <a href="#section-reasons" class="nav-link" data-target="section-reasons">核心原因</a>
+                    <a href="#section-strategy" class="nav-link" data-target="section-strategy">战略考量</a>
+                    <a href="#section-impact" class="nav-link" data-target="section-impact">市场影响</a>
+                    <a href="#section-reaction" class="nav-link" data-target="section-reaction">连锁反应</a>
+                    <a href="#section-future" class="nav-link" data-target="section-future">未来展望</a>
+                </div>
+                <button id="mobile-menu-btn" class="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+                    <span class="sr-only">打开菜单</span>
+                    <svg class="w-6 h-6" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                        <path d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="mobile-menu" class="hidden md:hidden mt-2 pb-2 border-t border-gray-200">
+                <a href="#section-reasons" class="block nav-link mobile-nav-link" data-target="section-reasons">核心原因</a>
+                <a href="#section-strategy" class="block nav-link mobile-nav-link" data-target="section-strategy">战略考量</a>
+                <a href="#section-impact" class="block nav-link mobile-nav-link" data-target="section-impact">市场影响</a>
+                <a href="#section-reaction" class="block nav-link mobile-nav-link" data-target="section-reaction">连锁反应</a>
+                <a href="#section-future" class="block nav-link mobile-nav-link" data-target="section-future">未来展望</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <section id="section-reasons" class="mb-16 pt-16 -mt-16">
+            <h2 class="section-title">1. 核心原因：为何裁员3万？</h2>
+            <p class="intro-paragraph">
+                亚马逊史无前例的3万（及以上）规模裁员并非单一事件，而是多重压力共同作用的结果。这标志着公司高速扩张时代的结束，转向更注重效率和盈利能力的新阶段。本部分将探讨导致这一决策的几个关键因素。
+            </p>
+            
+            <div class="chart-container my-8">
+                <canvas id="headcountChart"></canvas>
+            </div>
+            <p class="text-center text-sm text-gray-500 mb-8">图1: 亚马逊员工人数变化示意图 (2019-2024)</p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="card">
+                    <h3 class="card-title">疫情期间过度招聘</h3>
+                    <p class="text-gray-600">
+                        2020-2022年，全球疫情推动电商需求空前高涨，亚马逊为应对业务激增而疯狂招聘。当世界恢复常态，电商增长放缓，公司发现自己的人员规模远超实际需求，导致了严重的人员冗余。
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">宏观经济不确定性</h3>
+                    <p class="text-gray-600">
+                        面对全球通胀、利率上升和潜在的经济衰退，企业和消费者都收紧了开支。这导致亚马逊的核心电商业务增长放缓，同时其主要利润来源AWS（云服务）的企业客户也在削减预算，增长未达预期。
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">成本削减与效率提升</h3>
+                    <p class="text-gray-600">
+                        在经历了多年的“不计成本”增长后，华尔街和投资者开始向亚马逊施压，要求其证明盈利能力。CEO安迪·贾西将2023年定为“效率年”，裁员是精简运营、削减成本、提高利润率最直接的手段。
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">战略重心转移</h3>
+                    <p class="text-gray-600">
+                        公司决定削减或关闭那些增长缓慢、不盈利或偏离核心战略的部门（如部分硬件设备、Alexa部门、实体店）。此举旨在将宝贵的资源（人力和资本）集中到更高回报的领域，如AWS和人工智能。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-strategy" class="mb-16 pt-16 -mt-16">
+            <h2 class="section-title">2. 战略考量：不只是削减</h2>
+            <p class="intro-paragraph">
+                将亚马逊的裁员仅仅视为“削减成本”是片面的。从更深层次看，这是一次主动的战略调整，核心在于“资源重配”。公司正在为下一场技术革命——人工智能——做准备，不惜砍掉非核心业务，以集中火力投入未来。
+            </p>
+
+            <div class="chart-container my-8">
+                <canvas id="strategyChart"></canvas>
+            </div>
+            <p class="text-center text-sm text-gray-500 mb-8">图2: 战略资源转移示意图（概念性）</p>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="card">
+                    <h3 class="card-title">保护核心盈利能力</h3>
+                    <p class="text-gray-600">
+                        裁员首先是为了保护公司的利润核心——AWS和北美电商。通过降低运营成本，即使在收入增长放缓的情况下，也能维持健康的利润率，这对于稳定股价和投资者信心至关重要。
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">豪赌人工智能 (AI)</h3>
+                    <p class="text-gray-600">
+                        裁员节省下来的数十亿美元运营支出，正被转向生成式AI的研发和基础设施建设。亚马逊深知如果在这场AI竞赛中落后于微软 (OpenAI) 和谷歌，其AWS的霸主地位将受到严重威胁。这是一场“非赢不可”的赌局。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-impact" class="mb-16 pt-16 -mt-16">
+            <h2 class="section-title">3. 市场影响：震动科技界</h2>
+            <p class="intro-paragraph">
+                作为行业风向标，亚马逊的巨额裁员给整个科技市场带来了巨大震动。它不仅改变了就业市场的供需关系，也向其他公司传递了明确的“过冬”信号，引发了一系列连锁反应。
+            </p>
+
+            <div class="chart-container my-8">
+                <canvas id="layoffChart"></canvas>
+            </div>
+            <p class="text-center text-sm text-gray-500 mb-8">图3: 主要科技公司裁员规模对比 (2022-2024累计, 示意数据)</p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="card">
+                    <h3 class="card-title">人才市场逆转</h3>
+                    <p class="text-gray-600">
+                        过去十年由科技员工主导的“卖方市场”宣告结束。大量经验丰富的工程师和产品经理涌入市场，企业（包括初创公司）在招聘时拥有了更多选择权和议价权，员工的薪酬预期和跳槽频率均有所下降。
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">“裁员合理化”</h3>
+                    <p class="text-gray-600">
+                        亚马逊、谷歌、Meta等巨头的行动，为其他中小企业提供了“裁员许可”。原本还在犹豫的公司，现在更倾向于采取裁员措施来应对经济不确定性，而不用过度担心对公司声誉造成严重负面影响。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-reaction" class="mb-16 pt-16 -mt-16">
+            <h2 class="section-title">4. 连锁反应：新常态的开始</h2>
+            <p class="intro-paragraph">
+                亚马逊的裁员不是孤立的，而是整个科技行业转向的缩影。它揭示了一个“新常态”：高速增长时代已经过去，精细化运营和可持续盈利成为企业追求的新目标。
+            </p>
+
+            <div class="my-8 p-6 bg-white rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold text-center text-gray-700 mb-6">裁员趋势的连锁反应</h3>
+                <div class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="p-4 bg-blue-100 text-blue-800 rounded-lg text-center shadow">
+                        <h4 class="font-bold text-lg">科技巨头 (亚马逊, 谷歌)</h4>
+                        <p class="text-sm">率先裁员, 释放信号</p>
+                    </div>
+                    <div class="text-2xl text-blue-500 transform md:rotate-0 rotate-90">&rarr;</div>
+                    <div class="p-4 bg-indigo-100 text-indigo-800 rounded-lg text-center shadow">
+                        <h4 class="font-bold text-lg">SaaS & 软件公司</h4>
+                        <p class="text-sm">客户预算收紧, 跟进裁员</p>
+                    </div>
+                    <div class="text-2xl text-indigo-500 transform md:rotate-0 rotate-90">&rarr;</div>
+                    <div class="p-4 bg-purple-100 text-purple-800 rounded-lg text-center shadow">
+                        <h4 class="font-bold text-lg">高估值初创公司</h4>
+                        <p class="text-sm">融资困难, 聚焦盈利, 裁员求生</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-10">
+                <h3 class="card-title">告别“增长不惜一切”</h3>
+                <p class="text-gray-600">
+                    这股裁员潮标志着一个时代的结束。在过去，低利率环境鼓励企业不计成本地追求市场份额和用户增长。而现在，投资者更看重实实在在的利润和现金流。那些无法证明其盈利模式的业务将被无情抛弃，运营效率成为衡量公司价值的核心标准。
+                </p>
+            </div>
+        </section>
+
+        <section id="section-future" class="mb-16 pt-16 -mt-16">
+            <h2 class="section-title">5. 未来展望：AI革命的角色</h2>
+            <p class="intro-paragraph">
+                AI技术革命是理解这轮裁员潮的深层暗线。它既是裁员的（间接）原因，也是裁员后的（主要）去向。AI正在重塑科技行业的未来，而亚马逊的行动正是为了在这场变革中抢占先机。
+            </p>
+
+            <div class="bg-white rounded-lg shadow-md">
+                <div class="border-b border-gray-200">
+                    <nav class="flex -mb-px px-6" aria-label="Tabs">
+                        <button id="btn-ai-reallocation" class="ai-toggle-btn active" data-content="ai-reallocation-content">
+                            AI作为“资源重配”的目标
+                        </button>
+                        <button id="btn-ai-efficiency" class="ai-toggle-btn inactive" data-content="ai-efficiency-content">
+                            AI作为“效率提升”的工具
+                        </button>
+                    </nav>
+                </div>
+                <div class="p-6">
+                    <div id="ai-reallocation-content">
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-3">为AI“腾挪”资源</h3>
+                        <p class="text-gray-700 leading-relaxed">
+                            目前这批裁员（如设备、零售部门）<strong class="text-blue-700">并非</strong>因为员工被AI直接取代。相反，这是公司管理层的主动决策：通过削减“旧”业务的巨额开支，来为“新”的AI军备竞赛（如研发大型模型、购买昂贵的H100芯片、建设数据中心）腾出数十亿美金的资本和运营预算。这是一场面向未来的战略性赌博，裁员是为了给AI“输血”。
+                        </p>
+                    </div>
+                    <div id="ai-efficiency-content" class="hidden">
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-3">AI驱动的未来效率</h3>
+                        <p class="text-gray-700 leading-relaxed">
+                            虽然这3万人不是被AI直接取代，但这<strong class="text-blue-700">并不意味着</strong>未来的裁员不会。随着AI（尤其是生成式AI）在编码、客服、营销、内容创作等领域日益成熟，它必将极大提升个人生产力。从长远看，企业实现同样产出所需的员工数量可能会减少。AI技术革命的真正影响，是长期的、结构性的，它将彻底改变未来几年的岗位需求和工作方式。
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-10">
+                <h3 class="card-title">结论：调整与变革</h3>
+                <p class="text-gray-600">
+                    亚马逊的裁员是多因素叠加的结果：既有对过去过度扩张的“周期性修正”，也有对宏观经济压力的“被动防御”，但其核心是面向AI革命的“主动变革”。这标志着科技行业正从粗放式增长转向高质量发展，效率和创新（特别是AI创新）将成为未来竞争的决胜关键。
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-6 border-t border-gray-200 bg-white">
+        <p class="text-sm text-gray-500">© 2025 深度分析报告。内容仅供参考，基于公开信息和市场分析。</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const formatLabel = (label) => {
+                const maxLength = 16;
+                if (label.length > maxLength) {
+                    return label.substring(0, maxLength) + '...';
+                }
+                return label;
+            };
+
+            const commonTooltipOptions = {
+                backgroundColor: '#FFF',
+                titleColor: '#333',
+                bodyColor: '#666',
+                borderColor: '#DDD',
+                borderWidth: 1,
+                padding: 10,
+                displayColors: true,
+                callbacks: {
+                    title: (tooltipItems) => {
+                        const originalLabel = tooltipItems[0].chart.data.fullLabels[tooltipItems[0].dataIndex];
+                        return formatLabel(originalLabel);
+                    }
+                }
+            };
+            
+            const commonChartOptions = (fullLabels) => ({
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { size: 12 },
+                            padding: 20,
+                            boxWidth: 15
+                        }
+                    },
+                    tooltip: { ...commonTooltipOptions, chart: { data: { fullLabels } } }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            font: { size: 12 },
+                            callback: function(value, index) {
+                                const label = this.getLabelForValue(value);
+                                return formatLabel(label);
+                            }
+                        },
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: { font: { size: 12 } },
+                        grid: {
+                            color: '#EEE',
+                            borderDash: [5, 5]
+                        }
+                    }
+                }
+            });
+
+            const renderHeadcountChart = () => {
+                const ctx = document.getElementById('headcountChart')?.getContext('2d');
+                if (!ctx) return;
+                
+                const labels = ['2019', '2020 (疫情初)', '2021', '2022', '2023 (裁员)', '2024'];
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        fullLabels: labels,
+                        datasets: [{
+                            label: '全球员工总数 (示意)',
+                            data: [798, 1298, 1608, 1544, 1461, 1470],
+                            fill: true,
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            tension: 0.3,
+                            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                            pointRadius: 4
+                        }]
+                    },
+                    options: { ...commonChartOptions(labels), plugins: { ...commonChartOptions(labels).plugins, legend: { display: false } } }
+                });
+            };
+
+            const renderStrategyChart = () => {
+                const ctx = document.getElementById('strategyChart')?.getContext('2d');
+                if (!ctx) return;
+                
+                const labels = ['削减-冗余岗位', '削减-实验项目', '重投-核心业务 (AWS)', '重投-生成式 AI'];
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        fullLabels: labels,
+                        datasets: [{
+                            label: '资源分配',
+                            data: [30, 20, 25, 25],
+                            backgroundColor: [
+                                'rgba(239, 68, 68, 0.7)',
+                                'rgba(249, 115, 22, 0.7)',
+                                'rgba(59, 130, 246, 0.7)',
+                                'rgba(22, 163, 74, 0.7)'
+                            ],
+                            borderColor: '#FFF',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 12 },
+                                    padding: 20,
+                                    boxWidth: 15,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: { ...commonTooltipOptions, chart: { data: { fullLabels: labels } } }
+                        }
+                    }
+                });
+            };
+
+            const renderLayoffChart = () => {
+                const ctx = document.getElementById('layoffChart')?.getContext('2d');
+                if (!ctx) return;
+                
+                const labels = ['亚马逊', '谷歌 (Alphabet)', 'Meta', '微软'];
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        fullLabels: labels,
+                        datasets: [{
+                            label: '累计裁员人数 (示意数)',
+                            data: [27000, 12000, 21000, 11000],
+                            backgroundColor: [
+                                'rgba(255, 159, 64, 0.7)',
+                                'rgba(234, 67, 53, 0.7)',
+                                'rgba(24, 119, 242, 0.7)',
+                                'rgba(0, 161, 241, 0.7)'
+                            ],
+                            borderRadius: 4
+                        }]
+                    },
+                    options: { ...commonChartOptions(labels), plugins: { ...commonChartOptions(labels).plugins, legend: { display: false } }, indexAxis: 'y' }
+                });
+            };
+            
+            renderHeadcountChart();
+            renderStrategyChart();
+            renderLayoffChart();
+
+            const aiBtnRealloc = document.getElementById('btn-ai-reallocation');
+            const aiBtnEffic = document.getElementById('btn-ai-efficiency');
+            const aiContentRealloc = document.getElementById('ai-reallocation-content');
+            const aiContentEffic = document.getElementById('ai-efficiency-content');
+
+            const toggleAiContent = (show) => {
+                if (show === 'reallocation') {
+                    aiContentRealloc.classList.remove('hidden');
+                    aiContentEffic.classList.add('hidden');
+                    aiBtnRealloc.classList.add('active');
+                    aiBtnRealloc.classList.remove('inactive');
+                    aiBtnEffic.classList.add('inactive');
+                    aiBtnEffic.classList.remove('active');
+                } else {
+                    aiContentRealloc.classList.add('hidden');
+                    aiContentEffic.classList.remove('hidden');
+                    aiBtnRealloc.classList.add('inactive');
+                    aiBtnRealloc.classList.remove('active');
+                    aiBtnEffic.classList.add('active');
+                    aiBtnEffic.classList.remove('inactive');
+                }
+            };
+
+            aiBtnRealloc.addEventListener('click', () => toggleAiContent('reallocation'));
+            aiBtnEffic.addEventListener('click', () => toggleAiContent('efficiency'));
+
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            mobileNavLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            const onScroll = () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (window.scrollY >= sectionTop - 100) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.dataset.target === current) {
+                        link.classList.add('active');
+                    }
+                });
+            };
+            
+            window.addEventListener('scroll', onScroll);
+            onScroll();
+
+            navLinks.forEach(link => {
+                if (link.href.includes('#')) {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const targetId = e.currentTarget.dataset.target;
+                        const targetElement = document.getElementById(targetId);
+                        if (targetElement) {
+                            targetElement.scrollIntoView();
+                        }
+                    });
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>
