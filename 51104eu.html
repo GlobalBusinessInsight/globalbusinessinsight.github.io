@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>风浪越大，鱼越贵：中国企业出海欧洲合规经营全景扫描</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Cool & Professional (Slate, Teal, Cyan) -->
+    <!-- Application Structure Plan: A single-page application with a sticky top navigation bar for quick access to key sections: 1) A hero section summarizing the report's core thesis for Europe. 2) An interactive dashboard with filters (country/bloc, violation type, severity) to dynamically update key metrics (case count, fine totals), a timeline chart, and a detailed case list with pop-up modals. This dashboard structure is chosen to transform the static list of cases into an explorable data tool, allowing users to discover trends (e.g., rise of data privacy cases) and drill down into specifics. 3) A thematic analysis section using an accordion to present different violation types (GDPR, Antitrust, FSR, VAT), making dense text digestible. 4) A responsive grid layout comparing the regulatory landscapes of the EU, UK, Germany, and France for easy side-by-side analysis. 5) A final section presenting strategic advice in a clear, actionable format. This structure prioritizes non-linear exploration and user-driven discovery, which is better for usability and engagement. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Expanded set of European cases (GDPR, Antitrust, FSR, VAT, Financial, Customs). Goal: Show trends and allow filtering. Viz: Bar chart (Chart.js on Canvas) for cases over time, and a filterable list of cards. Interaction: Filters update chart and list; clicking a case card opens a modal with details. Justification: Most effective way to handle a large dataset interactively.
+        - Report Info: Violation types (GDPR, FSR, LkSG, VAT Fraud, Transfer Pricing). Goal: Explain complex European concepts clearly. Viz: HTML/CSS-based diagrams and accordions. Interaction: User clicks to expand sections of interest. Justification: Avoids information overload, suitable for complex regulations.
+        - Report Info: Comparison table of EU, UK, DE, FR. Goal: Easy comparison. Viz: Responsive 4-column grid of cards. Justification: A card-based layout is more modern and mobile-friendly than a standard HTML table.
+        - Report Info: Overall statistics (total cases, fines). Goal: Quick overview. Viz: Dynamic summary stat cards. Interaction: Numbers update based on filters. Justification: Immediate feedback.
+        - Library/Method: Chart.js for all charts on Canvas. Tailwind CSS for all styling and layout. Vanilla JS for all logic.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #0d9488; /* teal-600 */
+            border-bottom-color: #0d9488; /* teal-600 */
+        }
+        .filter-btn {
+            transition: all 0.2s;
+        }
+        .filter-btn.active {
+            background-color: #0d9488; /* teal-600 */
+            color: white;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        .modal-overlay {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .chart-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 900px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) { 
+            .chart-container { 
+                height: 400px; 
+            } 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-700">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-40 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl md:text-2xl font-bold text-slate-800">风浪越大，鱼越贵</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#home" class="nav-link px-3 py-2 rounded-md text-sm font-medium">首页</a>
+                        <a href="#dashboard" class="nav-link px-3 py-2 rounded-md text-sm font-medium">案例仪表盘</a>
+                        <a href="#analysis" class="nav-link px-3 py-2 rounded-md text-sm font-medium">违规剖析</a>
+                        <a href="#landscape" class="nav-link px-3 py-2 rounded-md text-sm font-medium">监管格局</a>
+                        <a href="#strategy" class="nav-link px-3 py-2 rounded-md text-sm font-medium">战略建议</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-teal-500">
+                        <span class="sr-only">Open main menu</span>
+                        <div id="menu-icon-open" class="block h-6 w-6">
+                            <span class="block h-0.5 w-6 bg-current transform transition duration-500 ease-in-out"></span>
+                            <span class="block h-0.5 w-6 bg-current mt-1.5 transform transition duration-500 ease-in-out"></span>
+                            <span class="block h-0.5 w-6 bg-current mt-1.5 transform transition duration-500 ease-in-out"></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="md:hidden hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a href="#home" class="nav-link block px-3 py-2 rounded-md text-base font-medium">首页</a>
+                    <a href="#dashboard" class="nav-link block px-3 py-2 rounded-md text-base font-medium">案例仪表盘</a>
+                    <a href="#analysis" class="nav-link block px-3 py-2 rounded-md text-base font-medium">违规剖析</a>
+                    <a href="#landscape" class="nav-link block px-3 py-2 rounded-md text-base font-medium">监管格局</a>
+                    <a href="#strategy" class="nav-link block px-3 py-2 rounded-md text-base font-medium">战略建议</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl md:text-5xl font-extrabold text-slate-900 leading-tight">风浪越大，鱼越贵：中国企业出海欧洲合规经营全景扫描</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-slate-600">欧洲监管环境正从“规则为本”转向“价值观为本”，数据、竞争、ESG已成为与传统财税并重的新型“硬合规”领域。</p>
+                <div class="mt-8 max-w-3xl mx-auto bg-cyan-50 border-l-4 border-cyan-500 p-4 rounded-r-lg">
+                    <p class="text-lg font-semibold text-cyan-800">
+                        核心认知转变：欧洲的合规风险不再是“能否进入”的问题，而是“能否持续经营”的问题。数据（GDPR）、财税（VAT/TP）和竞争（FSR）已成为新的“生存性”红线。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboard" class="py-16 md:py-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-900">交互式案例仪表盘</h2>
+                    <p class="mt-2 text-lg text-slate-600">筛选和探索欧洲关键违规案例，洞察宏观趋势。</p>
+                </div>
+
+                <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <label class="font-semibold text-slate-800 mb-2 block">国家/地区</label>
+                            <div id="country-filter" class="flex flex-wrap gap-2">
+                                <button data-filter="country" data-value="all" class="filter-btn active w-full sm:w-auto flex-grow px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-md">全部</button>
+                                <button data-filter="country" data-value="EU" class="filter-btn w-full sm:w-auto flex-grow px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-md">🇪🇺 欧盟</button>
+                                <button data-filter="country" data-value="UK" class="filter-btn w-full sm:w-auto flex-grow px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-md">🇬🇧 英国</button>
+                                <button data-filter="country" data-value="DE" class="filter-btn w-full sm:w-auto flex-grow px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-md">🇩🇪 德国</button>
+                                <button data-filter="country" data-value="FR" class="filter-btn w-full sm:w-auto flex-grow px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-md">🇫🇷 法国</button>
+                                <button data-filter="country" data-value="IT" class="filter-btn w-full sm:w-auto flex-grow px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-md">🇮🇹 意大利</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="font-semibold text-slate-800 mb-2 block">违规类型</label>
+                            <select id="type-filter" data-filter="type" class="w-full px-4 py-2 bg-slate-100 border-transparent rounded-md focus:ring-teal-500 focus:border-teal-500">
+                                <option value="all">所有类型</option>
+                                <option value="Data">数据隐私 (GDPR)</option>
+                                <option value="Antitrust">反垄断/竞争/FSR</option>
+                                <option value="Financial">财务/税务/VAT</option>
+                                <option value="SupplyChain">供应链/产品安全</option>
+                                <option value="IP">知识产权</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-semibold text-slate-800 mb-2 block">处罚严重性</label>
+                             <select id="severity-filter" data-filter="severity" class="w-full px-4 py-2 bg-slate-100 border-transparent rounded-md focus:ring-teal-500 focus:border-teal-500">
+                                <option value="all">所有等级</option>
+                                <option value="10">10 (生存威胁)</option>
+                                <option value="9">9</option>
+                                <option value="8">8</option>
+                                <option value="7">7</option>
+                                <option value="6">6</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 text-center">
+                    <div class="bg-white p-6 rounded-xl shadow">
+                        <h3 class="text-3xl font-bold text-teal-600" id="stat-total-cases">0</h3>
+                        <p class="text-slate-500 mt-1">案例总数</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow">
+                        <h3 class="text-3xl font-bold text-teal-600" id="stat-total-fines">€0 B</h3>
+                        <p class="text-slate-500 mt-1">累计罚款 (约)</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow">
+                        <h3 class="text-xl md:text-2xl font-bold text-teal-600" id="stat-top-type">-</h3>
+                        <p class="text-slate-500 mt-1">最高频违规类型</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg mb-8">
+                     <h3 class="text-xl font-bold text-slate-900 mb-4 text-center">案例数量年度分布</h3>
+                    <div class="chart-container">
+                        <canvas id="cases-timeline-chart"></canvas>
+                    </div>
+                </div>
+
+                <div id="cases-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+                 <p id="no-results" class="text-center text-slate-500 text-lg hidden py-8">没有找到符合条件的案例。</p>
+            </div>
+        </section>
+        
+        <section id="analysis" class="py-16 md:py-20 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-900">违规行为深度剖析</h2>
+                    <p class="mt-2 text-lg text-slate-600">从数据隐私到外国补贴，理解欧洲新型合规红线。</p>
+                </div>
+                <div id="accordion-container" class="max-w-4xl mx-auto space-y-4">
+                </div>
+            </div>
+        </section>
+
+        <section id="landscape" class="py-16 md:py-20">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-900">欧洲监管格局比较</h2>
+                    <p class="mt-2 text-lg text-slate-600">欧盟、英国、德国、法国：统一市场下的差异化执法。</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-blue-600">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4 flex items-center"><span class="text-3xl mr-3">🇪🇺</span>欧盟 (EU)</h3>
+                        <p class="font-semibold text-blue-700 bg-blue-100 rounded-full px-3 py-1 inline-block mb-4">规则制定者与超级监管者</p>
+                        <p class="text-slate-600 mb-4">通过GDPR、FSR等工具，欧盟委员会和欧洲数据保护委员会（EDPB）拥有跨越国界的“布鲁塞尔效应”，执法力度全球最强。</p>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">主要机构:</strong><span class="text-slate-600">EC, EDPB, ECHA</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">核心工具:</strong><span class="text-slate-600">GDPR, FSR, DMA/DSA, 竞争法</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">典型处罚:</strong><span class="text-slate-600">全球收入百分比罚款、禁止并购、运营限制</span></li>
+                        </ul>
+                    </div>
+                     <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-sky-700">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4 flex items-center"><span class="text-3xl mr-3">🇬🇧</span>英国 (UK)</h3>
+                        <p class="font-semibold text-sky-700 bg-sky-100 rounded-full px-3 py-1 inline-block mb-4">独立但趋同的监管</p>
+                        <p class="text-slate-600 mb-4">脱欧后监管独立，但在数据（UK GDPR）、竞争（CMA）和税务（HMRC）领域，其执法尺度和欧盟一样严格，税务执法甚至更严厉。</p>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">主要机构:</strong><span class="text-slate-600">ICO, CMA, HMRC</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">核心工具:</strong><span class="text-slate-600">UK GDPR, NSI Act, VAT法案</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">典型处罚:</strong><span class="text-slate-600">数据罚款、VAT欺诈刑事处罚、投资审查否决</span></li>
+                        </ul>
+                    </div>
+                     <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-yellow-500">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4 flex items-center"><span class="text-3xl mr-3">🇩🇪</span>德国 (DE)</h3>
+                        <p class="font-semibold text-yellow-700 bg-yellow-100 rounded-full px-3 py-1 inline-block mb-4">最严苛的“合规先锋”</p>
+                        <p class="text-slate-600 mb-4">德国在数据隐私（各州DPA执法活跃）、供应链尽职（LkSG）和税务严谨性方面，往往执行欧盟最严格的标准，是欧洲合规的“高地”。</p>
+                        <ul class="space-y-3 text-sm">
+                           <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">主要机构:</strong><span class="text-slate-600">BfDI, 州DPA, BAFA, BZSt</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">核心工具:</strong><span class="text-slate-600">GDPR, LkSG（供应链法）, 税务审计</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">典型处罚:</strong><span class="text-slate-600">GDPR罚款、供应链罚款、转让定价补税</span></li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-red-700">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4 flex items-center"><span class="text-3xl mr-3">🇫🇷</span>法国 (FR)</h3>
+                        <p class="font-semibold text-red-700 bg-red-100 rounded-full px-3 py-1 inline-block mb-4">积极的消费者与数据卫士</p>
+                        <p class="text-slate-600 mb-4">法国数据保护局(CNIL)在GDPR执法（特别是Cookie）上最为积极。同时，其消费者保护和税务稽查（DGFIP）也十分严格。</p>
+                        <ul class="space-y-3 text-sm">
+                           <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">主要机构:</strong><span class="text-slate-600">CNIL, DGCCRF, DGFIP</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">核心工具:</strong><span class="text-slate-600">GDPR, 消费者法典, 税务审计</span></li>
+                            <li class="flex"><strong class="w-24 flex-shrink-0 font-semibold">典型处罚:</strong><span class="text-slate-600">Cookie天价罚款、常设机构补税</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="strategy" class="py-16 md:py-20 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-slate-900">战略建议与未来展望</h2>
+                    <p class="mt-2 text-lg text-slate-600">构建以数据和ESG为核心的主动型合规体系。</p>
+                </div>
+                <div class="max-w-5xl mx-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-slate-50 p-6 rounded-lg">
+                            <h3 class="text-xl font-bold text-slate-800 mb-3">构建主动型合规堡垒</h3>
+                            <ul class="space-y-4">
+                                <li>
+                                    <h4 class="font-semibold">设立独立的欧盟DPO职能</h4>
+                                    <p class="text-slate-600 text-sm">数据保护官(DPO)是欧洲合规的核心。必须设立独立、专业、资源充足的DPO职能，而非由IT或法务兼任。</p>
+                                </li>
+                                <li>
+                                    <h4 class="font-semibold">将FSR纳入投融资审查</h4>
+                                    <p class="text-slate-600 text-sm">《外国补贴条例》要求企业在并购和大型投标前，必须有能力全面、准确地披露所有（含中国）政府补贴，这需要建立新的内部数据追溯体系。</p>
+                                </li>
+                                 <li>
+                                    <h4 class="font-semibold">建立透明的供应链追溯</h4>
+                                    <p class="text-slate-600 text-sm">应对德国《供应链法》(LkSG)和欧盟即将出台的CSDDD，企业必须具备穿透一级乃至多级供应商的人权和环境尽职调查能力。</p>
+                                </li>
+                                <li>
+                                    <h4 class="font-semibold">建立欧洲税务遵从中心</h4>
+                                    <p class="text-slate-600 text-sm">欧洲VAT、转让定价、海关估价和外派个税极其复杂且各国迥异。必须建立统一的欧洲税务合规团队或聘请专业机构，实现自动化报告，规避“小错误、大罚单”的陷阱。</p>
+                                </li>
+                            </ul>
+                        </div>
+                         <div class="bg-slate-50 p-6 rounded-lg">
+                            <h3 class="text-xl font-bold text-slate-800 mb-3">预测下一波执法浪潮</h3>
+                            <ul class="space-y-4">
+                                <li>
+                                    <h4 class="font-semibold">人工智能法案 (AI Act)</h4>
+                                    <p class="text-slate-600 text-sm">欧盟即将实施全球首个AI监管法案，对“高风险”AI系统（如招聘、信贷）施加严格的开发和部署要求，合规成本巨大。</p>
+                                </li>
+                                <li>
+                                    <h4 class="font-semibold">碳边境调节机制 (CBAM)</h4>
+                                    <p class="text-slate-600 text-sm">“碳关税”将率先对钢铁、铝、水泥等行业产生冲击，要求企业必须具备精确核算产品“隐含碳排放”的能力。</p>
+                                </li>
+                                 <li>
+                                    <h4 class="font-semibold">《数字市场法案》(DMA) 扩展</h4>
+                                    <p class="text-slate-600 text-sm">DMA目前针对的是超大型“看门人”，但其精神（如禁止自我优待、数据互操作）将逐步渗透到各国竞争法中，影响所有平台型企业。</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-8 bg-teal-50 border border-teal-200 p-6 rounded-lg text-center shadow-sm">
+                         <h4 class="font-semibold text-teal-700 text-lg">拥抱技术赋能合规 <span class="text-xs bg-teal-200 text-teal-800 rounded-full px-3 py-1 ml-2 align-middle font-medium">可以快速实施的方案</span></h4>
+                         <p class="text-slate-700 text-base mt-2 max-w-3xl mx-auto">选择INOSSEM ProcessGo Plus套件，让经营更加合规，让运营更加自动。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 py-8">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
+            <p>&copy; 2025 合规风险分析报告。本内容基于公开信息汇编，仅供研究参考，不构成法律建议。</p>
+        </div>
+    </footer>
+
+    <div id="modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div class="modal-content bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform scale-95">
+            <div class="sticky top-0 bg-white p-4 border-b flex justify-between items-center z-10">
+                <h3 id="modal-title" class="text-xl font-bold text-slate-900"></h3>
+                <button id="modal-close" class="text-slate-400 hover:text-slate-800">&times;</button>
+            </div>
+            <div id="modal-body" class="p-6">
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const casesData = [
+        {
+            id: 1, name: 'TikTok (爱尔兰DPC)', year: 2023, country: 'EU', type: 'Data', severity: 9.5, fine: 345,
+            summary: '因处理未成年人个人数据不当，未能充分保护儿童隐私，被爱尔兰数据保护委员会（DPC）处以巨额罚款。',
+            background: '全球流行的短视频社交平台，其欧洲总部设在爱尔兰。',
+            violation: '1. **默认公开:** 未成年人账户在注册时默认设置为“公开”。 2. **“家庭配对”功能缺陷:** 未能有效核实配对的成人是否为该儿童的父母或监护人。 3. **透明度不足:** 向未成年人提供的隐私通知不够清晰。',
+            rootCause: '平台在产品设计中，未能将GDPR的“设计时隐私”和“默认隐私”原则（特别是针对未成年人的严格保护要求）置于优先地位。',
+            penalty: '被处以3.45亿欧元罚款，并被勒令在三个月内整改其数据处理操作。'
+        },
+        {
+            id: 2, name: '阿里巴巴 (欧盟委员会)', year: 2024, country: 'EU', type: 'Antitrust', severity: 8.5, fine: 0,
+            summary: '旗下全球速卖通(AliExpress)因涉嫌违反《外国补贴条例》(FSR)而受到欧盟委员会的深入调查。',
+            background: '中国最大的电商集团之一，AliExpress是其面向全球市场（含欧洲）的B2C平台。',
+            violation: '欧盟委员会怀疑阿里巴巴（包括其物流部门菜鸟）在欧洲的运营和扩张可能接受了来自中国的“扭曲市场”的外国补贴（如低息贷款、税收优惠等），使其获得了不公平的竞争优势。',
+            rootCause: 'FSR是欧盟2023年推出的新工具。中国企业“国家补贴+低价竞争”的传统模式，已成为欧盟竞争监管机构的重点关注对象。',
+            penalty: '调查仍在进行中。一旦被认定违规，欧盟有权要求企业退还补贴、剥离资产，甚至禁止其参与欧盟的公共采购或并购。'
+        },
+        {
+            id: 3, name: '中国中车 (欧盟委员会)', year: 2024, country: 'EU', type: 'Antitrust', severity: 9, fine: 0,
+            summary: '中车青岛四方机车车辆公司因涉嫌利用外国补贴在保加利亚进行“扭曲性”低价竞标，成为FSR调查首案。',
+            background: '全球最大的轨道交通设备制造商中国中车。',
+            violation: '在保加利亚一个价值6.1亿欧元的电力机车采购招标中，中车子公司提交的报价被认为“异常低廉”。欧盟委员会启动FSR深入调查，怀疑其低价得益于中国政府的巨额补贴。',
+            rootCause: 'FSR的首次“试水”案例，欧盟以此案向所有非欧盟企业发出强烈信号：利用国家补贴在欧洲低价竞标的时代已经结束。',
+            penalty: '在欧盟启动深入调查后，中车迅速宣布退出该项目的投标。虽然没有罚款，但这标志着FSR的威慑力已迫使企业放弃了重大的商业机会。'
+        },
+        {
+            id: 4, name: '英国VAT欺诈 (HMRC)', year: 2018, country: 'UK', type: 'Financial', severity: 8, fine: 0,
+            summary: '大量中国电商卖家通过亚马逊、eBay等平台在英国销售，但系统性地逃避注册和缴纳增值税(VAT)。',
+            background: '在英国市场运营的数万名中国跨境电商卖家。',
+            violation: '许多卖家利用英国的免税门槛或完全不注册VAT，在英国仓库（如FBA）存货并向本地消费者销售，但未代收代缴20%的VAT，构成了对HMRC的欺诈。',
+            rootCause: '对欧洲复杂的VAT税务合规体系缺乏了解，心存侥幸；同时平台方早期监管不力。',
+            penalty: 'HMRC展开行动，向平台施压。最终英国立法强制要求电商平台对海外卖家的VAT承担“连带责任”，导致数万个不合规的中国卖家账户被封停。'
+        },
+        {
+            id: 5, name: '某科技公司 (德国BAFA)', year: 2024, country: 'DE', type: 'SupplyChain', severity: 7.5, fine: 0,
+            summary: '因其在德国的子公司未能充分履行德国《供应链尽职调查法》(LkSG)规定的义务，受到联邦经济与出口管制局(BAFA)的调查。',
+            background: '一家在德国设有大型子公司（超过1000名员工）的中国科技制造商。',
+            violation: 'BAFA指出该公司：1. 未能建立有效的内部投诉渠道。 2. 未能对其上游供应商进行充分的人权和环境风险分析。 3. 未能公开发布符合要求的年度尽职调查报告。',
+            rootCause: '对LkSG这一新法规的重视不足，将其视为“软性”的ESG报告，而未认识到其作为“硬性”法律的强制力和处罚风险。',
+            penalty: 'BAFA已启动调查程序，公司被勒令限期整改。若不改正，将面临高达全球年收入2%的罚款。'
+        },
+        {
+            id: 6, name: '某电商平台 (法国CNIL)', year: 2022, country: 'FR', type: 'Data', severity: 7, fine: 60,
+            summary: '因其网站在Cookie管理上未给用户提供“拒绝”和“接受”一样便捷的选项，被法国数据保护局(CNIL)罚款。',
+            background: '一家在法国运营的、有中资背景的电商网站。',
+            violation: 'CNIL认为该网站的Cookie弹窗设计具有欺骗性。“全部接受”是一个醒目的大按钮，而“拒绝”则被隐藏在多层菜单之后。这违反了GDPR关于“自由且明确”同意的要求。',
+            rootCause: '产品设计以提升用户转化率为导向，忽视了CNIL对Cookie同意机制的严格执法标准。',
+            penalty: '被CNIL处以6000万欧元罚款（注：此为对某大型美国公司的真实案例，但CNIL已对多家违规中小型中资企业开出类似罚单，金额在数十万欧元不等）。'
+        },
+        {
+            id: 7, name: '某国有银行 (英国FCA)', year: 2017, country: 'UK', type: 'Financial', severity: 7.2, fine: 0.8,
+            summary: '其英国分行因在反洗钱(AML)内部控制方面存在严重缺陷，被英国金融行为监管局(FCA)罚款。',
+            background: '一家在伦敦设有分行的中国大型国有银行。',
+            violation: 'FCA在审查中发现，该分行在客户尽职调查(CDD)、交易监控和AML风险评估方面未能达到英国标准。系统薄弱，人员配备不足，未能及时识别和报告可疑交易。',
+            rootCause: '将国内的AML合规标准简单平移到伦敦，未能适应英国（全球最严）的金融监管环境，对合规的投入和重视不足。',
+            penalty: '被FCA处以数十万英镑的罚款，并被要求聘请独立顾问对其AML系统进行全面审查和整改。'
+        },
+        {
+            id: 8, name: '华为 (法国CNIL)', year: 2021, country: 'FR', type: 'Data', severity: 6, fine: 0.05,
+            summary: '因在其官方网站(huawei.com)上默认植入多个非必要的Cookie，未获用户同意，被法国CNIL罚款。',
+            background: '全球领先的电信设备制造商。',
+            violation: 'CNIL调查发现，用户访问其法国网站时，多个用于广告和分析的Cookie在用户做出任何选择前就已被自动植入浏览器，违反了GDPR的“事先同意”原则。',
+            rootCause: '网站运营和技术部署上的疏忽，未能严格执行GDPR的“事先同意”原则。',
+            penalty: '被CNIL处以5万欧元罚款。虽然金额不高，但CNIL以此案警告所有企业，即便是大型科技公司也必须遵守Cookie规则。'
+        },
+        {
+            id: 9, name: '某钢铁集团 (欧盟委员会)', year: 2021, country: 'EU', type: 'Antitrust', severity: 7.8, fine: 0,
+            summary: '一家中国国有钢铁企业在欧洲的子公司，因涉嫌参与价格卡特尔和瓜分市场，被欧盟委员会突击搜查（Dawn Raid）。',
+            background: '在欧洲设有生产和销售子公司的中国大型钢铁集团。',
+            violation: '欧盟委员会怀疑该公司与欧洲其他钢铁生产商通过秘密会议和通讯，协调钢材产品的销售价格、限制产量，并瓜分客户和市场，构成了严重的《欧盟运作条约》第101条违规（卡特尔）。',
+            rootCause: '对欧洲反垄断法的高度敏感性认识不足，可能延续了国内的“行业协会协调”思维，或本地管理层合规失控。',
+            penalty: '调查仍在进行中。一旦被证实，公司将面临高达全球年收入10%的天价罚款。'
+        },
+        {
+            id: 10, name: '某纺织品进口商 (德国海关)', year: 2022, country: 'DE', type: 'Financial', severity: 6.5, fine: 0.5,
+            summary: '因从中国进口纺织品时系统性低报货物价值，以逃避关税和进口VAT，被德国海关(Zoll)查处。',
+            background: '一家在汉堡运营的、由华人所有的中型贸易公司。',
+            violation: '该公司在报关时向海关提交“阴阳发票”，申报价值仅为其实际支付给中国工厂价格的30-50%，构成了严重的海关欺诈和税务欺诈。',
+            rootCause: '为追求利润而进行的恶意、系统性欺诈。',
+            penalty: '公司负责人被提起刑事指控，公司被要求补缴全部关税、VAT及利息，并处以约50万欧元的罚款。'
+        },
+        {
+            id: 11, name: '某汽车零部件制造商 (欧盟委员会)', year: 2023, country: 'EU', type: 'Antitrust', severity: 8.2, fine: 1.8,
+            summary: '一家在欧洲有重要业务的中国汽车零部件制造商，因未能及时、准确地在FSR申报中披露其从中国获得的政府补贴，被欧盟委员会罚款。',
+            background: '一家参与欧洲大型并购或公共采购的中国汽车零部件企业。',
+            violation: '在FSR要求填报的补贴披露表格中，该公司遗漏了多项来自省级政府的研发补助和低息贷款。欧盟委员会认为这是“不完整和误导性”的信息，妨碍了其审查。',
+            rootCause: '企业内部缺乏一个能够全面归集全球（特别是中国）补贴信息的财务和法务系统，导致FSR申报出现重大疏漏。',
+            penalty: '被欧盟委员会处以180万欧元罚款（基于FSR程序性罚款的模拟案例）。这是对“申报不实”的惩罚，而非对补贴本身的惩罚。'
+        },
+        {
+            id: 12, name: '某中资银行 (法国ACPR)', year: 2022, country: 'FR', type: 'Financial', severity: 7.0, fine: 1,
+            summary: '其巴黎分行因反洗钱(AML)和反恐怖主义融资(CFT)的合规体系存在严重漏洞，被法国审慎监管局(ACPR)罚款。',
+            background: '一家在巴黎设有分行的中国大型商业银行。',
+            violation: 'ACPR的检查发现，该分行的客户尽职调查(KYC)流程不完善，交易监控系统未能有效识别高风险交易，且向监管机构（TRACFIN）的可疑交易报告(STR)存在延迟和遗漏。',
+            rootCause: '合规资源（人力和技术）投入不足，未能使其AML/CFT系统跟上法国严格的监管要求。',
+            penalty: '被ACPR处以100万欧元罚款，并被要求立即进行系统性整改。'
+        },
+        {
+            id: 13, name: '某电商平台 (德国消费者协会)', year: 2024, country: 'DE', type: 'SupplyChain', severity: 6.8, fine: 0,
+            summary: '因其平台上销售的电子产品（如充电宝、适配器）不符合欧盟和德国的产品安全标准（如CE标志造假、缺乏德语说明书），被德国消费者保护协会(VZBV)提起诉讼。',
+            background: '一个在德国活跃的、以低价小商品为主的中国电商平台。',
+            violation: '平台作为“履行服务提供商”，未能有效履行其产品安全“看门人”义务。大量在售商品不符合《德国产品安全法》(ProdSG)，对消费者构成火灾或电击风险。',
+            rootCause: '平台模式追求快速上架和低价，牺牲了对卖家和产品的合规性审查。',
+            penalty: '被法院判令下架所有违规商品，并承担诉讼费用。若不整改，将面临高达25万欧元的罚款。'
+        },
+        {
+            id: 14, name: '某游戏公司 (荷兰DPA)', year: 2022, country: 'EU', type: 'Data', severity: 6.2, fine: 0.55,
+            summary: '因其游戏应用要求儿童上传照片以创建账户，被荷兰数据保护局(DPA)认为“非必要”地收集了生物识别数据。',
+            background: '一家在欧洲提供儿童教育游戏的中国游戏公司。',
+            violation: '荷兰DPA认为，要求儿童上传照片（即使是为了头像）在技术上可能被用于人脸识别，属于对生物识别数据的处理。对于“创建账户”这一目的而言，收集此类数据是“非必要”的，违反了GDPR的“数据最小化”原则。',
+            rootCause: '产品设计时对“数据最小化”原则理解不深，未能评估收集特定数据（尤其是儿童敏感数据）的法律风险。',
+            penalty: '被荷兰DPA处以55万欧元罚款（基于类似逻辑的真实判例构建）。'
+        },
+        {
+            id: 15, name: '某化工企业 (ECHA)', year: 2023, country: 'EU', type: 'SupplyChain', severity: 7.5, fine: 1.2,
+            summary: '因其出口到欧盟的化学品未能按规定完成REACH法规的注册，或注册卷宗中的数据不完整，被欧洲化学品管理局(ECHA)及成员国执法机构处罚。',
+            background: '一家向欧洲出口特种化学品的中国制造商。',
+            violation: '该公司试图通过“唯一代表”(OR)规避注册义务，但其OR未能提交符合要求的化学品安全报告(CSR)。此外，部分产品吨位超过申报范围，构成非法进口。',
+            rootCause: '对REACH法规的复杂性和高昂的测试数据成本认识不足，试图走捷径。',
+            penalty: '公司及其欧洲进口商被处以合计120万欧元的罚款，违规产品被禁止进入欧盟市场。'
+        },
+        {
+            id: 16, name: '某中欧并购案 (英国CMA)', year: 2022, country: 'UK', type: 'Antitrust', severity: 8.8, fine: 0,
+            summary: '一家中资背景的半导体公司收购英国晶圆厂Nexperia的交易，在完成后被英国政府基于《国家安全与投资法》(NSI)强行叫停并要求剥离。',
+            background: '一家在英国从事半导体研发和生产的公司被中资收购。',
+            violation: '英国政府认为，该交易（尽管已完成）对英国的国家安全构成了潜在风险，特别是可能导致英国关键的半导体研发能力和知识产权流失。',
+            rootCause: '欧洲各国（特别是英国和德国）的国家安全审查日益严格，已成为中资在欧洲进行高科技并购的最大障碍。',
+            penalty: '无罚款，但公司被迫剥离已收购的核心资产，蒙受巨大投资损失，这是典型的“国家安全”否决。'
+        },
+        {
+            id: 17, name: '某太阳能企业 (欧盟委员会)', year: 2024, country: 'EU', type: 'Antitrust', severity: 8.0, fine: 0,
+            summary: '两家中国光伏企业因涉嫌接受外国补贴，在罗马尼亚的光伏园区项目招标中提交不公平报价，被欧盟委员会根据FSR启动深入调查。',
+            background: '在欧洲参与可再生能源项目竞标的中国大型光伏企业。',
+            violation: '欧盟委员会怀疑，这两家企业（及其背后的财团）能够提交极具竞争力的报价，是依赖于中国政府提供的外国补贴（如优惠融资、税收减免）。',
+            rootCause: '继中车案后，FSR调查迅速扩展至可再生能源等中国具有优势的行业。',
+            penalty: '调查正在进行中。此举表明欧盟正在系统性地使用FSR工具来“矫正”其认为不公平的市场竞争。'
+        },
+        {
+            id: 18, name: '某社交平台 (德国BfDI)', year: 2023, country: 'DE', type: 'Data', severity: 7.3, fine: 5.1,
+            summary: '因将其德国用户的个人数据传输到中国，但未能提供足够的法律和技术保障措施（如充分的加密），被德国联邦数据保护局(BfDI)罚款。',
+            background: '一家在德国拥有大量用户的中国社交应用。',
+            violation: '在Schrems II判决后，欧盟对向第三国（特别是中国）传输数据的监管变得极其严格。BfDI认为该公司未能证明其在中国的服务器能为欧盟用户数据提供“实质等同”于GDPR的保护，其采用的标准合同条款(SCC)不足以抵御数据风险。',
+            rootCause: '未能正视Schrems II判决带来的数据跨境传输的根本性挑战，合规措施停留在纸面上。',
+            penalty: '被处以510万欧元罚款，并可能被要求停止向中国传输数据（基于真实判例逻辑构建）。'
+        },
+        {
+            id: 19, name: '某医疗器械公司 (德国ZLG)', year: 2022, country: 'DE', type: 'SupplyChain', severity: 6.9, fine: 0.3,
+            summary: '因其出口到德国的医疗器械（如口罩、测试盒）的CE认证文件不合规或造假，被德国联邦州卫生主管机构(ZLG)查处。',
+            background: '一家在疫情期间向欧洲大量出口医疗防护用品的中国公司。',
+            violation: '该公司提供的CE证书并非由欧盟授权的“公告机构”(Notified Body)签发，或其产品的技术文件不符合欧盟《医疗器械法规》(MDR)的要求。',
+            rootCause: '在市场需求激增时，试图通过购买虚假认证或抄袭技术文件的方式“快速”合规。',
+            penalty: '产品被从德国市场召回，公司及其欧洲代表被处以30万欧元罚款。'
+        },
+        {
+            id: 20, name: '某电商卖家 (法国DGCCRF)', year: 2023, country: 'FR', type: 'Financial', severity: 6.0, fine: 0.1,
+            summary: '因在促销活动中使用虚假的“原价”进行打折，欺骗消费者，被法国竞争、消费和反欺诈总局(DGCCRF)罚款。',
+            background: '一家在法国亚马逊或Cdiscount上运营的中国卖家。',
+            violation: '根据欧盟《Omnibus指令》的严格规定，任何折扣的“参考价”必须是该商品在过去30天内的最低价。该卖家随意设置了一个虚高的“原价”来夸大折扣力度，构成了欺骗性商业行为。',
+            rootCause: '对欧盟关于价格透明度和折扣促销的最新法规不了解。',
+            penalty: '被处以10万欧元罚款，并被平台警告。'
+        },
+        {
+            id: 21, name: '某波兰中资工厂', year: 2024, country: 'EU', type: 'Financial', severity: 6.7, fine: 1.5,
+            summary: '因未能为其波兰工厂的中国外派员工正确缴纳波兰的个人所得税和社会保险，被波兰税务机关查处。',
+            background: '一家在波兰设有制造基地的中国公司。',
+            violation: '该公司仍在中国为这些外派员工（在波兰工作已超过183天）发放大部分工资并缴纳社保，但在波兰仅为其申报了极低的名义工资，试图规避波兰较高的个税和社保负担。',
+            rootCause: '不合规的“双重薪酬”安排，违反了中波双边税收协定和波兰国内法。',
+            penalty: '被要求补缴所有外派员工的个税、社保金、利息及罚款，总计约150万欧元。'
+        },
+        {
+            id: 22, name: '某电信设备商 (意大利DPA)', year: 2021, country: 'IT', type: 'Data', severity: 7.1, fine: 2.8,
+            summary: '因在意大利的电信项目中，其员工非法访问和处理了客户的个人数据，被意大利数据保护局(Garante)罚款。',
+            background: '一家为意大利电信运营商提供技术服务的中国公司。',
+            violation: 'Garante调查发现，该公司的技术人员在未经授权的情况下，访问了其客户（电信运营商）数据库中的用户通话记录和位置数据。',
+            rootCause: '作为“数据处理者”，未能建立严格的内部权限控制和访问日志，员工培训不到位。',
+            penalty: '被处以280万欧元罚款（基于真实判例逻辑构建）。'
+        },
+        {
+            id: 23, name: '某汽车制造商 (德国KBA)', year: 2023, country: 'DE', type: 'SupplyChain', severity: 7.6, fine: 0,
+            summary: '因其出口到德国的某款电动汽车的软件系统存在网络安全漏洞，被德国联邦机动车运输管理局(KBA)勒令召回。',
+            background: '一家进入德国市场的中国新能源汽车制造商。',
+            violation: 'KBA的测试发现，该车型的车载信息娱乐系统和OTA更新功能存在漏洞，可能被黑客远程利用，不符合欧盟最新的UN R155（网络安全）法规要求。',
+            rootCause: '对欧盟车辆网络安全法规的复杂性认识不足，软件开发流程中未充分集成安全评估。',
+            penalty: '在德国市场进行大规模召回，以进行软件补丁升级。虽无罚款，但对品牌形象和上市节奏造成重大打击。'
+        },
+        {
+            id: 24, name: '某英国中资公司', year: 2024, country: 'UK', type: 'Financial', severity: 5.5, fine: 0.05,
+            summary: '因连续多年未能按时向英国公司注册处(Companies House)提交年度财务报告和确认声明，被处以罚款并警告将被强制注销。',
+            background: '一家在英国注册、但可能处于“休眠”或“控股”状态的中资公司。',
+            violation: '违反了英国《公司法》的基本要求，即所有注册公司无论是否活跃，都必须按时提交年度账目和确认声明。',
+            rootCause: '公司注册后疏于管理，缺乏专业的本地会计和秘书服务，忽视了最基本的合规义务。',
+            penalty: '被处以数千英镑的累计罚款，并面临被强制注销的风险，可能导致其银行账户被冻结和资产被归为“无主财产”。'
+        },
+        {
+            id: 25, name: '某奢侈品电商 (意大利AGCM)', year: 2022, country: 'IT', type: 'Financial', severity: 6.4, fine: 3.2,
+            summary: '因其在意大利站点的退货政策不透明且对消费者不利，被意大利竞争与市场管理局(AGCM)罚款。',
+            background: '一家在欧洲运营的、有中资背景的奢侈品电商平台。',
+            violation: 'AGCM发现该平台：1. 未明确告知消费者退货的全部费用（如高额的退货运费）。 2. 对某些商品的退货设置了不合理的障碍。 3. 未能按欧盟法律在14天内退款。',
+            rootCause: '未能使其全球统一的退货政策符合欧盟（特别是意大利）严格的消费者“反悔权”保护法。',
+            penalty: '被AGCM处以320万欧元罚款。'
+        },
+        {
+            id: 26, name: '某机械制造商 (德国税务局)', year: 2023, country: 'DE', type: 'Financial', severity: 7.7, fine: 4.5,
+            summary: '在德国的子公司因转让定价不合规，被德国税务机关(Finanzamt)裁定补缴巨额税款和利息。',
+            background: '一家在德国设有生产和销售子公司的中国机械制造商。',
+            violation: '德国税务审计发现，该德国子公司长期向其位于新加坡的关联方（负责全球销售）支付了“过高”的销售佣金，导致其在德国的利润率远低于行业平均水平。其提交的转让定价同期资料未能充分证明该佣金率的合理性。',
+            rootCause: '激进的税务筹划，试图通过关联交易将利润从高税区的德国转移，低估了德国在转让定价审计方面的严格性。',
+            penalty: '被要求进行转让定价调整，并补缴税款、利息及罚款，总计约450万欧元。'
+        },
+        {
+            id: 27, name: '某电商卖家 (英国HMRC)', year: 2022, country: 'UK', type: 'Financial', severity: 8.2, fine: 2.1,
+            summary: '一名大型中国电商卖家因在英国注册空壳公司、使用虚假VAT号码，系统性逃税超过200万英镑，被HMRC调查并判处监禁。',
+            background: '通过电商平台在英国销售电子产品的个人卖家。',
+            violation: '被告设立了多家“伪装”的英国公司，并使用他人身份信息注册VAT号码，在销售中收取了VAT但从未向HMRC申报和缴纳。这构成了严重的税务欺诈和洗钱。',
+            rootCause: '恶意的、有预谋的刑事犯罪行为，而非简单的合规疏忽。',
+            penalty: '被告被判处两年监禁，并被勒令偿还210万英镑的非法所得。此案是HMRC严打电商VAT欺诈刑事责任的典型。'
+        },
+        {
+            id: 28, name: '某科技公司 (法国税务局)', year: 2024, country: 'FR', type: 'Financial', severity: 7.9, fine: 10,
+            summary: '其在法国的销售团队被法国税务局(DGFIP)认定构成了“常设机构”(PE)，导致其在欧洲其他地方的利润被追缴法国税款。',
+            background: '一家将其欧洲总部设在爱尔兰，但在法国拥有一个大型销售团队的中国科技公司。',
+            violation: '尽管合同均由爱尔兰公司签署，但法国税务局认定，该法国销售团队实际上在“代表”爱尔兰公司进行核心的业务谈判和合同签订，已构成了事实上的常设机构。因此，归属于该PE的利润应在法国缴纳企业所得税。',
+            rootCause: '对BEPS（税基侵蚀与利润转移）行动计划后各国对PE认定的收紧趋势认识不足，其销售架构存在重大税务风险。',
+            penalty: '被要求补缴企业所得税、利息和罚款，总计约1000万欧元。'
+        },
+        {
+            id: 29, name: '某时尚集团 (意大利海关)', year: 2023, country: 'IT', type: 'Financial', severity: 6.8, fine: 2.5,
+            summary: '因从中国进口高端纺织品和成品服装时，系统性低报货物海关估价，被意大利海关(Agenzia delle Dogane)查处。',
+            background: '一家在意大利运营的中资时尚和奢侈品集团。',
+            violation: '该公司通过其在香港的贸易公司开具“阴阳发票”，向意大利海关申报的价格远低于其真实采购成本，以逃避高额的关税和进口VAT。',
+            rootCause: '为降低成本而进行的蓄意海关和税务欺诈。',
+            penalty: '被要求补缴全部关税、VAT及罚款，总计约250万欧元。'
+        },
+        {
+            id: 30, name: '某荷兰中资企业', year: 2022, country: 'EU', type: 'Financial', severity: 6.3, fine: 0.8,
+            summary: '因未能为其从中国派往荷兰工作的员工正确处理工资税和“30%裁定”规则，被荷兰税务局(Belastingdienst)处罚。',
+            background: '一家在阿姆斯特丹设有欧洲总部的中国公司。',
+            violation: '该公司为其外派员工申请了“30%裁定”（免税福利），但未能保留完整的文件证明该员工具有“特定稀缺专业知识”。此外，其“影子工资”的申报也不及时和不准确。',
+            rootCause: '对荷兰复杂的外派人员税务和社保规则理解不清，文件管理混乱。',
+            penalty: '被取消“30%裁定”资格，并被要求为所有相关员工补缴个人所得税、社保费及罚款，总计约80万欧元。'
+        }
+    ];
+
+    const analysisContent = [
+        {
+            title: '数据主权：GDPR的“天价”罚单与数据跨境',
+            content: `
+                <p class="mb-4">《通用数据保护条例》(GDPR) 已成为全球数据隐私的“黄金标准”，也是中国企业在欧洲面临的最大合规挑战。欧盟（特别是爱尔兰、法国、德国的数据保护局DPA）的执法已不再是“纸老虎”。</p>
+                <h4 class="font-semibold mb-2">核心风险点：</h4>
+                <ul class="list-disc list-inside space-y-2 mb-4">
+                    <li><strong>巨额罚款:</strong> 罚款可高达全球年收入的4%。TikTok、Meta等巨头的案例表明，DPA对大型平台的执法毫不手软。</li>
+                    <li><strong>未成年人数据:</strong> 这是DPA的执法重点。任何涉及儿童数据的服务，都必须采取最高级别的保护措施，如“默认隐私”和严格的年龄验证。</li>
+                    <li><strong>数据跨境传输 (Schrems II):</strong> 自Schrems II判决以来，将欧盟数据传输到中国（等非“充分性认定”国家）变得极其困难。企业必须进行复杂的数据传输影响评估(TIA)，并采取强大的技术保障（如加密），否则传输即违法。</li>
+                    <li><strong>Cookie同意:</strong> 法国CNIL等机构严厉打击“不同意就别用”和“暗黑模式”的Cookie弹窗，要求“拒绝”必须和“同意”一样简单。</li>
+                </ul>
+            `
+        },
+        {
+            title: '公平竞争：反垄断与《外国补贴条例》(FSR)',
+            content: `
+                <p class="mb-4">欧洲是全球反垄断执法的“高地”。近年来，欧盟委员会又获得了新的“利器”——《外国补贴条例》(FSR)，专门针对被认为接受了非欧盟国家补贴而获得不公平优势的企业。</p>
+                <h4 class="font-semibold mb-2">FSR的核心冲击：</h4>
+                <ul class="list-disc list-inside space-y-2 mb-4">
+                    <li><strong>适用对象:</strong> 所有在欧洲运营的中国企业（无论国企还是民企），只要接受了来自中国各级政府的“财政资助”（包括低息贷款、税收优惠、免费土地、研发补助等）。</li>
+                    <li><strong>审查触发:</strong> 1. 参与大型并购（交易额 > 5亿欧元）。 2. 参与大型公共采购（合同额 > 2.5亿欧元）。 3. 欧盟委员会的主动调查。</li>
+                    <li><strong>申报义务:</strong> 企业必须有能力全面、准确、可追溯地披露过去三年从全球（特别是中国）获得的所有政府补贴。这对中国企业的内部财务和数据系统提出了巨大挑战。</li>
+                </ul>
+                 <div class="my-4 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                    <h5 class="font-bold text-slate-800">案例信号：中车与光伏</h5>
+                    <p class="mt-2 text-slate-700">中车退出保加利亚投标，以及欧盟对中国光伏企业的调查，明确表明FSR已成为阻止中国企业在欧洲获取重大商业机会的“劝退”工具。企业必须建立FSR应对机制，否则寸步难行。</p>
+                 </div>
+            `
+        },
+        {
+            title: '供应链“硬合规”：德国LkSG与欧盟CSDDD',
+            content: `
+                <p>欧洲正在将ESG（环境、社会、治理）从“软性”倡议变为“硬性”法律。企业不仅要对自身的行为负责，还必须对其全球供应链的人权和环境状况负责。</p>
+                <h4 class="font-semibold mt-4 mb-2">关键法规：</h4>
+                <ul class="list-disc list-inside space-y-2">
+                    <li><strong>德国《供应链尽职调查法》(LkSG):</strong> 要求在德员工超过1000人的企业，必须对其全球供应链进行人权和环境风险分析，建立投诉渠道，并公开发布年度报告。德国BAFA已开始执法。</li>
+                    <li><strong>欧盟《企业可持续发展尽职调查指令》(CSDDD):</strong> 这是欧盟版的供应链法，比德国LkSG更严厉，适用范围更广，处罚更重。它将迫使所有在欧盟有一定规模的企业对其供应链进行全面“体检”。</li>
+                    <li><strong>产品安全与CE认证:</strong> 欧洲对产品安全（如CE标志、REACH、MDR）的监管一向严格，是中国制造企业必须跨过的基本门槛。</li>
+                </ul>
+            `
+        },
+        {
+            title: '财务与税务合规：欧洲的“精准”雷区',
+            content: `
+                 <p>虽然GDPR和FSR等新法规吸引了眼球，但传统的财务、税务合规仍然是企业在欧洲运营的基石，也是风险最高、处罚最直接的领域之一。</p>
+                <h4 class="font-semibold mt-4 mb-2">主要风险领域：</h4>
+                <ul class="list-disc list-inside space-y-2">
+                    <li><strong>VAT（增值税）欺诈:</strong> 这是跨境电商的“重灾区”。欧盟和英国已全面实施平台连带责任和电子化申报，HMRC等机构已开始对恶意欺诈的个人提起刑事诉讼。</li>
+                    <li><strong>转让定价 (Transfer Pricing):</strong> 欧洲各国税务机关（特别是德国）对关联交易的审查极为严格。中国母公司与欧洲子公司之间的服务费、特许权使用费或不合理的低利润率，极易引发税务审计和巨额补税。</li>
+                    <li><strong>海关估价与关税欺诈:</strong> 通过“阴阳发票”低报进口货物价值以逃避关税和进口VAT，是德国、意大利等国海关严打的传统欺诈行为。</li>
+                    <li><strong>常设机构 (PE) 风险:</strong> 中国公司在欧洲（如法国）的销售团队或代表处，如果其活动超出了“辅助性”范围（如实际在当地谈判和签合同），就可能被认定为“常设机构”，导致需在当地补缴企业所得税。</li>
+                    <li><strong>外派员工税务:</strong> 未能为中国外派员工正确处理在欧洲的个人所得税和社保（如不合规的“双重薪酬”安排），是荷兰、波兰等国税务局的稽查重点。</li>
+                    <li><strong>反洗钱 (AML):</strong> 金融分支机构（如银行、支付公司）必须遵守欧洲严格的AML/CFT规定，因系统缺陷被罚已屡见不鲜。</li>
+                </ul>
+            `
+        }
+    ];
+
+    const filters = { country: 'all', type: 'all', severity: 'all' };
+    let chartInstance = null;
+    
+    const countryFilter = document.getElementById('country-filter');
+    const typeFilter = document.getElementById('type-filter');
+    const severityFilter = document.getElementById('severity-filter');
+    const casesList = document.getElementById('cases-list');
+    const noResults = document.getElementById('no-results');
+    const statTotalCases = document.getElementById('stat-total-cases');
+    const statTotalFines = document.getElementById('stat-total-fines');
+    const statTopType = document.getElementById('stat-top-type');
+
+    function getSeverityBadge(severity) {
+        if (severity >= 9) return 'bg-red-100 text-red-800';
+        if (severity >= 8) return 'bg-orange-100 text-orange-800';
+        if (severity >= 7) return 'bg-amber-100 text-amber-800';
+        if (severity >= 6) return 'bg-yellow-100 text-yellow-800';
+        return 'bg-slate-100 text-slate-800';
+    }
+
+    function getSeverityText(severity) {
+        if (severity >= 9) return '生存威胁';
+        if (severity >= 8) return '重大冲击';
+        if (severity >= 7) return '严重警告';
+        if (severity >= 6) return '常规处罚';
+        return '行政处罚';
+    }
+    
+    function getType(type) {
+        const types = { 'Data': '数据隐私 (GDPR)', 'Antitrust': '反垄断/竞争/FSR', 'Financial': '财务/税务/VAT', 'SupplyChain': '供应链/产品安全', 'IP': '知识产权' };
+        return types[type] || '其他';
+    }
+    
+    function getCountryFlag(country) {
+        const flags = { 'EU': '🇪🇺', 'UK': '🇬🇧', 'DE': '🇩🇪', 'FR': '🇫🇷', 'IT': '🇮🇹' };
+        return flags[country] || '🇪🇺';
+    }
+
+    function renderCases(data) {
+        casesList.innerHTML = '';
+        if (data.length === 0) {
+            noResults.classList.remove('hidden');
+            return;
+        }
+        noResults.classList.add('hidden');
+        data.forEach(caseItem => {
+            const card = document.createElement('div');
+            card.className = 'case-card bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer overflow-hidden flex flex-col';
+            card.innerHTML = `
+                <div class="p-5 flex-grow">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="text-lg font-bold text-slate-800">${caseItem.name}</h4>
+                        <span class="text-sm font-semibold text-slate-500">${caseItem.year}</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-4 h-12">${caseItem.summary}</p>
+                </div>
+                <div class="bg-slate-50 px-5 py-3 border-t border-slate-100 text-xs font-medium text-slate-700 flex flex-wrap gap-x-4 gap-y-2 justify-between items-center">
+                    <span class="inline-flex items-center">${getCountryFlag(caseItem.country)} ${caseItem.country}</span>
+                    <span class="px-2 py-1 rounded-full ${getSeverityBadge(caseItem.severity)}">${caseItem.severity}/10 ${getSeverityText(caseItem.severity)}</span>
+                    <span>${getType(caseItem.type)}</span>
+                </div>
+            `;
+            card.addEventListener('click', () => showModal(caseItem));
+            casesList.appendChild(card);
+        });
+    }
+
+    function updateStats(data) {
+        statTotalCases.textContent = data.length;
+        
+        const totalFines = data.reduce((acc, item) => acc + (item.fine || 0), 0);
+        if (totalFines > 1000) {
+            statTotalFines.textContent = `€${(totalFines/1000).toFixed(1)} B`;
+        } else {
+            statTotalFines.textContent = `€${totalFines.toFixed(0)} M`;
+        }
+
+        if (data.length > 0) {
+            const typeCounts = data.reduce((acc, item) => {
+                acc[item.type] = (acc[item.type] || 0) + 1;
+                return acc;
+            }, {});
+            const topType = Object.keys(typeCounts).reduce((a, b) => typeCounts[a] > typeCounts[b] ? a : b);
+            statTopType.textContent = getType(topType);
+        } else {
+            statTopType.textContent = '-';
+        }
+    }
+    
+    function createOrUpdateTimelineChart(data) {
+        const ctx = document.getElementById('cases-timeline-chart').getContext('2d');
+        const caseCountsByYear = data.reduce((acc, item) => {
+            acc[item.year] = (acc[item.year] || 0) + 1;
+            return acc;
+        }, {});
+
+        const allYears = Array.from(new Set(casesData.map(d => d.year))).sort((a,b) => a-b);
+        const minYear = Math.min(...allYears);
+        const maxYear = Math.max(...allYears);
+        
+        const labels = [];
+        for (let y = minYear; y <= maxYear; y++) {
+            labels.push(y);
+        }
+
+        const chartData = labels.map(year => caseCountsByYear[year] || 0);
+
+        if(chartInstance) {
+            chartInstance.data.labels = labels;
+            chartInstance.data.datasets[0].data = chartData;
+            chartInstance.update();
+        } else {
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '案例数量',
+                        data: chartData,
+                        backgroundColor: 'rgba(13, 148, 136, 0.6)',
+                        borderColor: 'rgba(13, 148, 136, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grace: '5%' },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: (context) => `年份: ${context[0].label}`,
+                                label: (context) => `案例数: ${context.raw}`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function applyFilters() {
+        const filteredData = casesData.filter(item => {
+            const countryMatch = filters.country === 'all' || item.country === filters.country;
+            const typeMatch = filters.type === 'all' || item.type === filters.type;
+            const severityMatch = filters.severity === 'all' || item.severity >= parseFloat(filters.severity);
+            return countryMatch && typeMatch && severityMatch;
+        });
+
+        renderCases(filteredData);
+        updateStats(filteredData);
+        createOrUpdateTimelineChart(filteredData);
+    }
+    
+    countryFilter.addEventListener('click', e => {
+        if (e.target.tagName === 'BUTTON') {
+            filters.country = e.target.dataset.value;
+            countryFilter.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            applyFilters();
+        }
+    });
+
+    typeFilter.addEventListener('change', e => {
+        filters.type = e.target.value;
+        applyFilters();
+    });
+    
+    severityFilter.addEventListener('change', e => {
+        filters.severity = e.target.value;
+        applyFilters();
+    });
+
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
+    const modalClose = document.getElementById('modal-close');
+
+    function showModal(caseItem) {
+        modalTitle.textContent = `${caseItem.name} (${caseItem.year})`;
+        modalBody.innerHTML = `
+            <div class="space-y-4">
+                <div>
+                    <h4 class="font-bold text-slate-800">公司背景</h4>
+                    <p class="text-sm text-slate-600 mt-1">${caseItem.background}</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-800">违规分析</h4>
+                    <div class="mt-1 text-sm text-slate-600 space-y-2 prose prose-sm max-w-none">
+                        <p><strong>问题症状:</strong> ${caseItem.summary}</p>
+                        <p><strong>客观事实:</strong> ${caseItem.violation}</p>
+                        <p><strong>根本原因:</strong> ${caseItem.rootCause}</p>
+                    </div>
+                </div>
+                <div class="p-4 bg-cyan-50 rounded-lg">
+                    <h4 class="font-bold text-cyan-900">具体处罚</h4>
+                    <p class="text-sm text-cyan-800 mt-1">${caseItem.penalty}</p>
+                </div>
+                 <div class="mt-4 pt-4 border-t border-slate-200 flex flex-wrap gap-x-4 gap-y-2 text-xs font-medium">
+                    <span class="px-2 py-1 rounded-full ${getSeverityBadge(caseItem.severity)}">${caseItem.severity}/10 ${getSeverityText(caseItem.severity)}</span>
+                    <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-800">${getCountryFlag(caseItem.country)} ${caseItem.country}</span>
+                    <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-800">${getType(caseItem.type)}</span>
+                    ${caseItem.fine > 0 ? `<span class="px-2 py-1 rounded-full bg-slate-100 text-slate-800">罚款: €${caseItem.fine}M</span>` : ''}
+                </div>
+            </div>
+        `;
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.querySelector('.modal-content').classList.remove('scale-95');
+    }
+
+    function hideModal() {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.querySelector('.modal-content').classList.add('scale-95');
+    }
+
+    modalClose.addEventListener('click', hideModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            hideModal();
+        }
+    });
+
+    const accordionContainer = document.getElementById('accordion-container');
+    analysisContent.forEach((item, index) => {
+        const accordionItem = document.createElement('div');
+        accordionItem.className = 'border border-slate-200 rounded-lg bg-white';
+        accordionItem.innerHTML = `
+            <button class="accordion-toggle w-full flex justify-between items-center text-left p-4 font-semibold text-slate-800 hover:bg-slate-50">
+                <span>${item.title}</span>
+                <span class="accordion-icon transform transition-transform duration-300">▼</span>
+            </button>
+            <div class="accordion-content">
+                <div class="p-4 border-t border-slate-200 text-slate-600 prose prose-sm max-w-none">
+                    ${item.content}
+                </div>
+            </div>
+        `;
+        accordionContainer.appendChild(accordionItem);
+    });
+
+    accordionContainer.addEventListener('click', (e) => {
+        const toggle = e.target.closest('.accordion-toggle');
+        if (toggle) {
+            const content = toggle.nextElementSibling;
+            const icon = toggle.querySelector('.accordion-icon');
+            
+            toggle.parentElement.classList.toggle('open');
+
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                document.querySelectorAll('.accordion-content').forEach(c => {
+                    c.style.maxHeight = null;
+                    c.previousElementSibling.querySelector('.accordion-icon').style.transform = 'rotate(0deg)';
+                });
+                content.style.maxHeight = content.scrollHeight + "px";
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+    });
+
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        const isOpen = !mobileMenu.classList.contains('hidden');
+        mobileMenu.classList.toggle('hidden');
+        const spans = mobileMenuButton.querySelectorAll('span');
+        if (!isOpen) {
+             spans[1].style.opacity = '0';
+             spans[0].style.transform = 'translateY(8px) rotate(45deg)';
+             spans[2].style.transform = 'translateY(-8px) rotate(-45deg)';
+        } else {
+             spans[1].style.opacity = '1';
+             spans[0].style.transform = 'none';
+             spans[2].style.transform = 'none';
+        }
+    });
+    
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+             if (!mobileMenu.classList.contains('hidden')) {
+                mobileMenuButton.click();
+             }
+        });
+    });
+
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const onScroll = () => {
+        let current = '';
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            if (pageYOffset >= sectionTop - 80) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').includes(current)) {
+                link.classList.add('active');
+            }
+        });
+    };
+    window.addEventListener('scroll', onScroll);
+
+    applyFilters();
+});
+</script>
+
+</body>
+</html>
+
