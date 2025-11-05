@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canada's "Canada Strong" Budget Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Georgia, 'Times New Roman', serif;
+            color: #111827; /* text-gray-900 */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .headline {
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            font-weight: 800;
+            letter-spacing: -0.025em; /* tracking-tight */
+        }
+        .chart-container {
+            position: relative;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .nav-link {
+            @apply px-3 py-2 text-sm font-medium text-gray-700 hover:text-red-700 border-b-2 border-transparent;
+        }
+        .nav-link-mobile {
+            @apply block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-red-700;
+        }
+        .nav-link.active {
+            @apply bg-blue-100 text-blue-700;
+        }
+        .nav-link-mobile.active {
+            @apply bg-red-50 text-red-700;
+        }
+        .challenge-card {
+            @apply bg-white p-4 rounded-lg shadow-md cursor-pointer transition-transform transform hover:scale-105 border-b-4 border-transparent;
+        }
+        .challenge-card.active {
+            @apply border-red-700;
+        }
+        .strategy-tab {
+            @apply px-4 py-3 font-medium text-gray-600 border-b-2 border-transparent cursor-pointer hover:border-gray-300 hover:text-gray-800 text-sm sm:text-base;
+        }
+        .strategy-tab.active {
+            @apply border-blue-600 text-blue-600;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900">
+
+    <!-- Chosen Palette: Calm Corporate Blue -->
+    <!-- Application Structure Plan: A single-page dashboard with a sticky top nav for smooth scrolling (#home, #challenges, #strategy, #analysis, #data-forecasts, #outlook). This thematic, non-linear structure is more user-friendly than a linear report. Key Interactions: 1) Clickable cards in '#challenges' dynamically update a details 'div'. 2) A tabbed interface in '#strategy' breaks down complex policies. 3) A new '#analysis' section uses a 2-column grid for a clear pro/con comparison. This design allows users to explore topics of interest (e.g., just charts, or a deep dive on housing) at their own pace, enhancing usability and comprehension. -->
+    <!-- Visualization & Content Choices: 1) Challenges: Report Info -> Key economic/social issues. Goal -> Organize/Inform. Viz -> Clickable HTML/Tailwind cards. Interaction -> JS click events update a central text 'div'. Justification -> Interactive and digestible. 2) Strategy: Report Info -> Multi-part 'Canada Strong' plan. Goal -> Organize/Inform. Viz -> HTML/Tailwind Tabs. Interaction -> JS click toggles 'hidden' class on content panels. Justification -> Prevents text overload. 3) Analysis: Report Info -> Beneficiaries vs. Risks. Goal -> Compare/Analyze. Viz -> 2-column HTML/Tailwind list with icons. Interaction -> None (static display). Justification -> Clear, direct comparison. 4) Allocation: Report Info -> Spending breakdown. Goal -> Show proportion. Viz -> Chart.js Doughnut (Canvas). Interaction -> Tooltips. Justification -> Clear part-to-whole view. 5) Forecasts: Report Info -> Economic projections. Goal -> Show trends. Viz -> Chart.js Line (Canvas). Interaction -> Tooltips. Justification -> Best for time-series data. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <header class="bg-white sticky top-0 z-50 border-b border-gray-300">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-red-700 headline">Federal Budget Analysis</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4" id="desktop-nav">
+                        <a href="#home" class="nav-link active">Overview</a>
+                        <a href="#challenges" class="nav-link">Key Challenges</a>
+                        <a href="#strategy" class="nav-link">Budget Pillars</a>
+                        <a href="#analysis" class="nav-link">Benefits & Risks</a>
+                        <a href="#data-forecasts" class="nav-link">Data & Forecasts</a>
+                        <a href="#outlook" class="nav-link">Outlook</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button type="button" class="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100" aria-controls="mobile-menu" aria-expanded="false" id="mobile-menu-button">
+                        <span class="sr-only">Open main menu</span>
+                        <svg id="menu-icon-open" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg id="menu-icon-close" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile menu, show/hide based on menu state. -->
+            <div class="md:hidden hidden" id="mobile-menu">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a href="#home" class="nav-link-mobile active">Overview</a>
+                    <a href="#challenges" class="nav-link-mobile">Key Challenges</a>
+                    <a href="#strategy" class="nav-link-mobile">Budget Pillars</a>
+                    <a href="#analysis" class="nav-link-mobile">Benefits & Risks</a>
+                    <a href="#data-forecasts" class="nav-link-mobile">Data & Forecasts</a>
+                    <a href="#outlook" class="nav-link-mobile">Outlook</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="py-12 md:py-16 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl text-center">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-red-700 headline">
+                    Overview: The "Canada Strong" Budget
+                </h2>
+                <p class="mt-4 text-base md:text-lg text-gray-900 max-w-prose mx-auto">
+                    This section outlines the core objectives of the "Canada Strong" federal budget. Framed against a backdrop of global economic uncertainty, domestic cost-of-living pressures, and long-term productivity challenges, this budget aims to balance fiscal prudence with targeted investments to build a more resilient, affordable, and innovative economy for all Canadians.
+                </p>
+            </div>
+        </section>
+
+        <section id="challenges" class="py-12 md:py-16 bg-gray-50 border-t border-b border-gray-200">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-red-700 headline">Key Challenges Addressed</h2>
+                    <p class="mt-3 text-base md:text-lg text-gray-900 max-w-prose mx-auto">
+                        The budget attempts to navigate a series of urgent domestic and international challenges. Click the cards below to learn more about the context for each.
+                    </p>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="challenge-card active" data-challenge="housing">
+                        <span class="text-4xl">🏠</span>
+                        <h3 class="mt-3 text-xl font-semibold headline">Housing Affordability</h3>
+                        <p class="text-gray-700">Soaring home prices and rents.</p>
+                    </div>
+                    <div class="challenge-card" data-challenge="inflation">
+                        <span class="text-4xl">📈</span>
+                        <h3 class="mt-3 text-xl font-semibold headline">Inflation & Cost of Living</h3>
+                        <p class="text-gray-700">Erosion of purchasing power.</p>
+                    </div>
+                    <div class="challenge-card" data-challenge="productivity">
+                        <span class="text-4xl">💡</span>
+                        <h3 class="mt-3 text-xl font-semibold headline">Economic Growth & Productivity</h3>
+                        <p class="text-gray-700">Need for stronger innovation.</p>
+                    </div>
+                    <div class="challenge-card" data-challenge="climate">
+                        <span class="text-4xl">🌍</span>
+                        <h3 class="mt-3 text-xl font-semibold headline">Climate Change & Transition</h3>
+                        <p class="text-gray-700">Shifting to a net-zero economy.</p>
+                    </div>
+                </div>
+
+                <div id="challenge-details" class="mt-10 p-6 md:p-8 bg-white border border-gray-300 min-h-[150px]">
+                </div>
+            </div>
+        </section>
+
+        <section id="strategy" class="py-12 md:py-16 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-red-700 headline">Pillars of the "Canada Strong" Budget</h2>
+                    <p class="mt-3 text-base md:text-lg text-gray-900 max-w-prose mx-auto">
+                        To address these challenges, the budget outlines a multi-pronged strategy. Explore the key initiatives in the tabs below.
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap border-b-2 border-gray-300" id="strategy-tabs">
+                    <div class="strategy-tab active" data-tab="strategy-housing">1. Building More Homes</div>
+                    <div class="strategy-tab" data-tab="strategy-affordability">2. Easing Cost of Living</div>
+                    <div class="strategy-tab" data-tab="strategy-economy">3. Growing the Innovation Economy</div>
+                    <div class="strategy-tab" data-tab="strategy-green">4. Investing in the Clean Economy</div>
+                </div>
+
+                <div class="mt-8">
+                    <div id="strategy-housing" class="strategy-panel space-y-4 text-gray-900 max-w-prose mx-auto">
+                        <h3 class="text-2xl font-semibold headline">Pillar 1: Building More Homes, Faster</h3>
+                        <p>The budget tables a series of measures aimed at accelerating the construction of new homes. This includes new incentives for municipalities via the Housing Accelerator Fund, leveraging federal lands for affordable housing, and providing low-cost financing for apartment construction.</p>
+                        <ul class="list-disc list-inside pl-4 space-y-2">
+                            <li>Top-up to the <strong>Housing Accelerator Fund</strong> to cut red tape and fast-track approvals.</li>
+                            <li>Introducing/enhancing the <strong>Tax-Free First Home Savings Account (FHSA)</strong>.</li>
+                            <li>Expanding the <strong>Apartment Construction Loan Program</strong> to build more rental units.</li>
+                            <li>A new "Public Lands for Homes" plan to unlock federal property for development.</li>
+                        </ul>
+                    </div>
+                    <div id="strategy-affordability" class="strategy-panel hidden space-y-4 text-gray-900 max-w-prose mx-auto">
+                        <h3 class="text-2xl font-semibold headline">Pillar 2: Easing Cost of Living Pressures</h3>
+                        <p>To provide direct relief to Canadians most affected by inflation, the budget includes targeted financial support. This features measures like the one-time "Grocery Rebate" and the phased-in implementation of the national Canadian Dental Care Plan.</p>
+                        <ul class="list-disc list-inside pl-4 space-y-2">
+                            <li>The <strong>Grocery Rebate</strong>, providing targeted relief for low-to-modest-income households.</li>
+                            <li>Phased rollout of the <strong>Canadian Dental Care Plan</strong>, covering uninsured Canadians.</li>
+                            <li>Cracking down on predatory lending and "junk fees" to improve financial transparency.</li>
+                        </ul>
+                    </div>
+                    <div id="strategy-economy" class="strategy-panel hidden space-y-4 text-gray-900 max-w-prose mx-auto">
+                        <h3 class="text-2xl font-semibold headline">Pillar 3: Growing the Innovation Economy</h3>
+                        <p>Recognizing that long-term prosperity depends on productivity, the budget invests heavily in key technology sectors. This includes significant new funding for Artificial Intelligence (AI) research and commercialization, as well as support for biotech and quantum computing.</p>
+                        <ul class="list-disc list-inside pl-4 space-y-2">
+                            <li>A major investment package to bolster <strong>AI research, compute capacity, and adoption</strong>.</li>
+                            <li>Creation of a new <strong>Canada Innovation Fund</strong> to support business scale-up and R&D.</li>
+                            <li>New funding for skills training programs to adapt the workforce for high-growth jobs.</li>
+                        </ul>
+                    </div>
+                    <div id="strategy-green" class="strategy-panel hidden space-y-4 text-gray-900 max-w-prose mx-auto">
+                        <h3 class="text-2xl font-semibold headline">Pillar 4: Investing in the Clean Economy</h3>
+                        <p>The budget doubles down on the green transition by introducing a suite of major Investment Tax Credits (ITCs). These are designed to de-risk and incentivize private sector investment in clean electricity, clean-tech manufacturing, carbon capture (CCUS), and clean hydrogen.</p>
+                        <ul class="list-disc list-inside pl-4 space-y-2">
+                            <li>New <strong>Investment Tax Credits (ITCs)</strong> for Clean Electricity, Clean-Tech Manufacturing, and CCUS.</li>
+                            <li>Capitalizing the <strong>Canada Growth Fund</strong> to attract private capital for emissions-reduction projects.</li>
+                            <li>Funding to streamline regulatory processes for major green projects.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="analysis" class="py-12 md:py-16 bg-gray-50 border-t border-b border-gray-200">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-red-700 headline">Who Benefits & Potential Downsides?</h2>
+                    <p class="mt-3 text-base md:text-lg text-gray-900 max-w-prose mx-auto">
+                        Every budget creates winners and losers. This section analyzes the areas poised to benefit and the potential negative impacts or risks.
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                    
+                    <div class="bg-white p-6 border-t-4 border-gray-700">
+                        <h3 class="text-2xl font-semibold text-gray-900 mb-4 headline">Projected Beneficiaries</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <span class="text-gray-700 text-2xl mr-3">■</span>
+                                <div>
+                                    <h4 class="font-semibold headline">Clean Tech & Construction Sectors</h4>
+                                    <p class="text-gray-900">Massive beneficiaries of the new Investment Tax Credits (ITCs) and the Housing Accelerator Fund. Expect a surge in project development and capital investment.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-gray-700 text-2xl mr-3">■</span>
+                                <div>
+                                    <h4 class="font-semibold headline">AI & High-Tech Industry</h4>
+                                    <p class="text-gray-900">Direct funding for AI compute and commercialization will boost R&D, talent attraction, and start-up activity in this high-growth sector.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-gray-700 text-2xl mr-3">■</span>
+                                <div>
+                                    <h4 class="font-semibold headline">Low-to-Mid Income Families</h4>
+                                    <p class="text-gray-900">Benefit directly from cost-of-living relief, such as the Grocery Rebate and the new Dental Care Plan, increasing disposable income.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-gray-700 text-2xl mr-3">■</span>
+                                <div>
+                                    <h4 class="font-semibold headline">First-Time Home Buyers</h4>
+                                    <p class="text-gray-900">The enhanced Tax-Free First Home Savings Account (FHSA) provides a significant new tool to save for a down payment, directly supporting this group.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 border-t-4 border-red-700">
+                        <h3 class="text-2xl font-semibold text-gray-900 mb-4 headline">Potential Risks & Negative Impacts</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <span class="text-red-700 text-2xl mr-3">■</span>
+                                <div>
+                                    <h4 class="font-semibold headline">Inflationary Risk</h4>
+                                    <p class="text-gray-900">Introducing new spending, even if targeted, into an economy still battling inflation could add upward pressure on prices, potentially complicating the Bank of Canada's job.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-red-700 text-2xl mr-3">■</span>
+                                <div>
+                                    <h4 class="font-semibold headline">Fiscal Position & Taxpayers</h4>
+                                    <p class="text-gray-900">The new spending adds to the national deficit and debt. This burden is ultimately carried by taxpayers, and servicing this debt could crowd out future spending.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-red-700 text-2xl mr-3">■</span>
+                                <div>
+                                    <h4 class="font-semibold headline">Execution & Implementation Risk</h4>
+                                    <p class="text-gray-900">Many key programs (especially housing and green ITCs) are complex and require cooperation with provinces and municipalities. Delays or poor execution could blunt their intended impact.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-red-700 text-2xl mr-3">■</span>
+                                <div>
+                                    <h4 class="font-semibold headline">Traditional Economic Sectors</h4>
+                                    <p class="text-gray-900">Businesses in non-tech or non-clean-energy sectors (e.g., retail, traditional services, natural resources) may feel overlooked, receiving little direct support while facing higher costs.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="data-forecasts" class="py-12 md:py-16 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-red-700 headline">Key Data & Forecasts</h2>
+                    <p class="mt-3 text-base md:text-lg text-gray-900 max-w-prose mx-auto">
+                        This section visualizes the key fiscal data and economic projections underlying the budget.
+                    </D>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                    <div class="bg-white p-6 border border-gray-300">
+                        <h3 class="text-xl font-semibold text-center mb-4 headline">New Spending Initiative Allocation (5-Year)</h3>
+                        <div class="chart-container w-full max-w-md mx-auto h-72 max-h-72 sm:h-80 sm:max-h-80 md:h-96 md:max-h-96">
+                            <canvas id="allocationChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-600 mt-4">
+                            Estimated allocation of new program spending over five years.
+                        </p>
+                    </div>
+                    <div class="bg-white p-6 border border-gray-300">
+                        <h3 class="text-xl font-semibold text-center mb-4 headline">Key Macroeconomic Projections (2024-2028)</h3>
+                        <div class="chart-container w-full max-w-2xl mx-auto h-80 max-h-80 sm:h-96 sm:max-h-96 md:h-[450px] md:max-h-[450px]">
+                            <canvas id="projectionChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-600 mt-4">
+                            Official projections for GDP growth, inflation, and the fiscal deficit path.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="outlook" class="py-12 md:py-16 bg-gray-50 border-t border-b border-gray-200">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-red-700 headline">Overall Outlook</h2>
+                    <p class="mt-3 text-base md:text-lg text-gray-900 max-w-prose mx-auto">
+                        A neutral analysis of the budget's intended path forward.
+                    </p>
+                </div>
+                <div class="space-y-6 text-gray-900 max-w-prose mx-auto">
+                    <p>
+                        From a macroeconomic perspective, the budget attempts to thread a needle: providing targeted support without fueling inflation. By aiming to keep the fiscal deficit relatively stable as a percentage of GDP, the government is signaling fiscal prudence to markets and the Bank of Canada. However, any new spending carries inflationary risk, and the net effect will depend on the economy's overall performance.
+                    </p>
+                    <p>
+                        On the social front, the focus on housing and affordability addresses the public's most pressing concerns. The success of these measures will hinge on the speed of execution and, critically, on efficient coordination with provinces and municipalities. Accelerating housing construction, for instance, requires not just federal funds but significant reforms to local zoning laws.
+                    </p>
+                    <p>
+                        For the long-term economy, the heavy investment in the green economy and technology represents a significant strategic bet. The goal is to leverage public funds (via ITCs and the Canada Growth Fund) to "crowd in" substantial private capital. Success will be measured by Canada's ability to capture a share of the global clean-tech supply chain and translate domestic innovation into commercial success and, ultimately, higher productivity.
+                    </p>
+                    <p>
+                        Overall, this budget is an act of balancing multiple, often competing, objectives: short-term relief versus long-term investment, and fiscal discipline versus social commitments. Its ultimate success will be written in the economic data and social outcomes of the coming years.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white text-gray-500 py-8 border-t border-gray-300">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm">
+                This analysis is based on publicly available budget documents and is for informational purposes only.
+            </p>
+            <p class="text-sm mt-1">
+                &copy; 2025 Budget Analysis Platform. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chartLabelColor = '#111827'; 
+            const gridLineColor = '#E5E7EB'; 
+
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = chartLabelColor;
+
+            const allocationCtx = document.getElementById('allocationChart').getContext('2d');
+            new Chart(allocationCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Housing & Affordability', 'Green Economy & Transition', 'Healthcare & Dental', 'Innovation & Economy', 'Other'],
+                    datasets: [{
+                        label: 'Spending Allocation',
+                        data: [30, 25, 20, 15, 10],
+                        backgroundColor: [
+                            'rgba(191, 0, 0, 0.9)',   /* Economist Red */
+                            'rgba(51, 51, 51, 0.8)',   /* Dark */
+                            'rgba(110, 110, 110, 0.7)', /* Dark Gray */
+                            'rgba(170, 170, 170, 0.6)', /* Mid Gray */
+                            'rgba(210, 210, 210, 0.5)'  /* Light Gray */
+                        ],
+                        borderColor: '#FFFFFF',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: chartLabelColor,
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const projectionCtx = document.getElementById('projectionChart').getContext('2d');
+            new Chart(projectionCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2024 (f)', '2025 (f)', '2026 (f)', '2027 (f)', '2028 (f)'],
+                    datasets: [
+                        {
+                            label: 'Real GDP Growth (%)',
+                            data: [1.5, 1.9, 2.1, 2.0, 1.9],
+                            borderColor: 'rgba(191, 0, 0, 1)', /* Red */
+                            backgroundColor: 'rgba(191, 0, 0, 0.1)',
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'CPI Inflation (%)',
+                            data: [2.8, 2.4, 2.1, 2.0, 2.0],
+                            borderColor: 'rgba(51, 51, 51, 1)', /* Black */
+                            backgroundColor: 'rgba(51, 51, 51, 0.1)',
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Deficit (as % of GDP)',
+                            data: [1.4, 1.3, 1.1, 0.9, 0.8],
+                            borderColor: 'rgba(110, 110, 110, 1)', /* Gray */
+                            backgroundColor: 'rgba(110, 110, 110, 0.1)',
+                            fill: false,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: chartLabelColor,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: chartLabelColor, font: { size: 10 } },
+                            grid: { color: gridLineColor }
+                        },
+                        y: {
+                            ticks: { 
+                                color: chartLabelColor,
+                                callback: function(value) {
+                                    return value + '%';
+                                },
+                                font: { size: 10 }
+                            },
+                            grid: { color: gridLineColor }
+                        }
+                    }
+                }
+            });
+
+            const challengeData = {
+                housing: {
+                    title: "Challenge: Housing Affordability Crisis",
+                    text: "Canada, particularly in major urban centers like Vancouver and Toronto, faces a severe housing affordability crisis. A combination of high interest rates, supply shortages, and strong population growth has driven up prices and rents, making market entry incredibly difficult for many, especially young Canadians and newcomers."
+                },
+                inflation: {
+                    title: "Challenge: Inflation & Cost of Living",
+                    text: "While inflation has cooled from its peak, it remains above the Bank of Canada's 2% target. Persistently high prices, especially for essentials like groceries and shelter, have placed significant strain on household budgets. The budget must provide relief without exacerbating inflationary pressures—a difficult balancing act."
+                },
+                productivity: {
+                    title: "Challenge: Economic Growth & Productivity",
+                    text: "Canada's per-capita GDP growth and productivity levels have long lagged behind peer nations, particularly the United States. This threatens future living standards. The budget attempts to reverse this trend by investing heavily in areas like AI, clean tech, and skills training to spur private sector capital investment and innovation."
+                },
+                climate: {
+                    title: "Challenge: Climate Change & Green Transition",
+                    text: "Tackling climate change and transitioning to a net-zero economy is a core government commitment. The challenge is to achieve this in a way that does not harm economic competitiveness. The budget uses large-scale Investment Tax Credits (ITCs) to incentivize green projects, aiming to attract global capital and position Canada as a clean-tech leader."
+                }
+            };
+
+            const challengeCards = document.querySelectorAll('.challenge-card');
+            const detailsBox = document.getElementById('challenge-details');
+
+            function updateChallengeDetails(challengeKey) {
+                const data = challengeData[challengeKey];
+                detailsBox.innerHTML = `
+                    <h3 class="text-2xl font-semibold text-gray-900 mb-3 headline">${data.title}</h3>
+                    <p class="text-gray-900 text-base">${data.text}</p>
+                `;
+                challengeCards.forEach(card => {
+                    card.classList.remove('active');
+                    if (card.dataset.challenge === challengeKey) {
+                        card.classList.add('active');
+                    }
+                });
+            }
+
+            challengeCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    updateChallengeDetails(card.dataset.challenge);
+                });
+            });
+
+            const strategyTabs = document.querySelectorAll('.strategy-tab');
+            const strategyPanels = document.querySelectorAll('.strategy-panel');
+
+            strategyTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    strategyTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const targetPanelId = tab.dataset.tab;
+                    strategyPanels.forEach(panel => {
+                        if (panel.id === targetPanelId) {
+                            panel.classList.remove('hidden');
+                        } else {
+                            panel.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const navLinksMobile = document.querySelectorAll('.nav-link-mobile');
+            const sections = document.querySelectorAll('main section');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.3
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                let currentActiveId = null;
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        currentActiveId = entry.target.id;
+                    }
+                });
+
+                if (currentActiveId) {
+                    const activeHref = `#${currentActiveId}`;
+                    navLinks.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href') === activeHref);
+                    });
+                    navLinksMobile.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href') === activeHref);
+                    });
+                }
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuIconOpen = document.getElementById('menu-icon-open');
+            const menuIconClose = document.getElementById('menu-icon-close');
+
+            mobileMenuButton.addEventListener('click', () => {
+                const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+                mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
+                mobileMenu.classList.toggle('hidden');
+                menuIconOpen.classList.toggle('hidden');
+                menuIconClose.classList.toggle('hidden');
+            });
+            
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if(targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                        
+                        if (mobileMenu.classList.contains('hidden') === false) {
+                            mobileMenuButton.click();
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
