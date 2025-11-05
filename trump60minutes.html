@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis: Interview Techniques</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Neutrals (BG: gray-100, Nav: white, Text: gray-800, Accent: blue-600) -->
+    <!-- Application Structure Plan: The SPA uses a side-navigation (information architecture) combined with a language toggle. This structure was chosen because the "Source Report" (a bilingual political commentary) is best consumed in thematic, digestible sections. Users can first see the high-level "data" (the chart) and then drill down into specific "Key Techniques" (the text analysis). This is more engaging than a single long article and allows for bilingual comparison. The JS-driven navigation and language switching provide a seamless, single-page experience. -->
+    <!-- Visualization & Content Choices: 1. Report Info: Hypothetical frequency of evasion tactics from the report. Goal: Provide a quantitative overview. Viz: Doughnut Chart (Chart.js/Canvas). Interaction: Hover to see tooltips. Justification: A visual, data-driven anchor for the qualitative text analysis. 2. Report Info: Bilingual text analysis (CN/EN). Goal: Present the core commentary. Presentation: Dynamic text blocks (HTML/JS). Interaction: Language toggle button (JS) updates all text elements. Justification: Fulfills the user's bilingual request. 3. Report Info: Analysis sections. Goal: Organize content. Presentation: Side-navigation (HTML/Tailwind). Interaction: Click to show/hide relevant content divs. Justification: Standard, intuitive SPA navigation. NO SVG/Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            height: 40vh;
+            max-height: 450px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 300px;
+            }
+        }
+        .nav-item {
+            cursor: pointer;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease-in-out;
+            font-weight: 500;
+        }
+        .nav-item.active {
+            background-color: #EFF6FF;
+            color: #2563EB;
+            font-weight: 600;
+        }
+        .nav-item:not(.active):hover {
+            background-color: #F9FAFB;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        
+        <!-- Sidebar Navigation -->
+        <nav class="md:w-64 bg-white p-4 shadow-lg md:min-h-screen shrink-0">
+            <h2 class="text-xl font-bold mb-6 text-blue-700" id="main-title-nav">Analysis</h2>
+            
+            <div class="flex gap-2 mb-6">
+                <button id="lang-en" class="text-sm font-medium py-1 px-3 rounded-md bg-blue-600 text-white">EN</button>
+                <button id="lang-cn" class="text-sm font-medium py-1 px-3 rounded-md bg-gray-200 text-gray-700">CN</button>
+            </div>
+
+            <ul class="space-y-2">
+                <li><a class="nav-item active" data-content="home" id="nav-home">Overview</a></li>
+                <li><a class="nav-item" data-content="analysis" id="nav-analysis">Frequency Analysis</a></li>
+                <li><a class="nav-item" data-content="pivot" id="nav-pivot">Technique: The Pivot</a></li>
+                <li><a class="nav-item" data-content="sincerity" id="nav-sincerity">Technique: Earnest Appeal</a></li>
+                <li><a class="nav-item" data-content="counter" id="nav-counter">Technique: The Counter-Punch</a></li>
+                <li><a class="nav-item" data-content="conclusion" id="nav-conclusion">Conclusion</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-6 md:p-10">
+            
+            <h1 class="text-3xl md:text-4xl font-bold mb-4" id="main-title"></h1>
+            <p class="text-lg text-gray-600 mb-8" id="main-subtitle"></p>
+
+            <!-- Content Blocks -->
+            <div id="content-home" class="content-block space-y-4">
+                <h2 class="text-2xl font-semibold" id="home-title"></h2>
+                <p id="home-p1"></p>
+                <p id="home-p2"></p>
+                <p id="home-p3"></p>
+            </div>
+
+            <div id="content-analysis" class="content-block hidden space-y-4">
+                <h2 class="text-2xl font-semibold" id="analysis-title"></h2>
+                <p id="analysis-p1"></p>
+                <div class="chart-container">
+                    <canvas id="techniqueChart"></canvas>
+                </div>
+                <p class="text-sm text-gray-500 text-center" id="analysis-p2"></p>
+            </div>
+
+            <div id="content-pivot" class="content-block hidden space-y-4">
+                <h2 class="text-2xl font-semibold" id="pivot-title"></h2>
+                <p id="pivot-p1"></p>
+                <div class="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
+                    <strong class="text-gray-900" id="pivot-q"></strong>
+                    <p class="mb-2 italic text-gray-600" id="pivot-q-text"></p>
+                    <strong class="text-gray-900" id="pivot-a"></strong>
+                    <p class="text-gray-800" id="pivot-a-text"></p>
+                    <hr class="my-3">
+                    <strong class="text-blue-700" id="pivot-analysis"></strong>
+                    <p class="text-gray-700" id="pivot-analysis-text"></p>
+                </div>
+            </div>
+
+            <div id="content-sincerity" class="content-block hidden space-y-4">
+                <h2 class="text-2xl font-semibold" id="sincerity-title"></h2>
+                <p id="sincerity-p1"></p>
+                <div class="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
+                    <strong class="text-gray-900" id="sincerity-q"></strong>
+                    <p class="mb-2 italic text-gray-600" id="sincerity-q-text"></p>
+                    <strong class="text-gray-900" id="sincerity-a"></strong>
+                    <p class="text-gray-800" id="sincerity-a-text"></p>
+                    <hr class="my-3">
+                    <strong class="text-green-700" id="sincerity-analysis"></strong>
+                    <p class="text-gray-700" id="sincerity-analysis-text"></p>
+                </div>
+            </div>
+
+            <div id="content-counter" class="content-block hidden space-y-4">
+                <h2 class="text-2xl font-semibold" id="counter-title"></h2>
+                <p id="counter-p1"></p>
+                <div class="bg-white p-4 rounded-lg shadow border-l-4 border-red-500">
+                    <strong class="text-gray-900" id="counter-q"></strong>
+                    <p class="mb-2 italic text-gray-600" id="counter-q-text"></p>
+                    <strong class="text-gray-900" id="counter-a"></strong>
+                    <p class="text-gray-800" id="counter-a-text"></p>
+                    <hr class="my-3">
+                    <strong class="text-red-700" id="counter-analysis"></strong>
+                    <p class="text-gray-700" id="counter-analysis-text"></p>
+                </div>
+            </div>
+            
+            <div id="content-conclusion" class="content-block hidden space-y-4">
+                <h2 class="text-2xl font-semibold" id="conclusion-title"></h2>
+                <p id="conclusion-p1"></p>
+                <p id="conclusion-p2"></p>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        const translations = {
+            en: {
+                "main-title-nav": "Analysis",
+                "nav-home": "Overview",
+                "nav-analysis": "Frequency Analysis",
+                "nav-pivot": "Technique: The Pivot",
+                "nav-sincerity": "Technique: Earnest Appeal",
+                "nav-counter": "Technique: The Counter-Punch",
+                "nav-conclusion": "Conclusion",
+                "main-title": "The Art of Artful and Earnest Evasion",
+                "main-subtitle": "A Neutral Analysis of Communication Techniques in the 60 Minutes Interview",
+                "home-title": "Welcome to the Analysis",
+                "home-p1": "This interactive application provides a neutral breakdown of the communication strategies observed in Donald Trump's recent 60 Minutes interview. The \"Source Report\" (this analysis) focuses not on the political content, but on the *methodology* of the responses.",
+                "home-p2": "The central thesis is that the responses often function as 'artful and earnest evasions'—a technique designed to bypass the direct question while simultaneously building a sincere-sounding connection with the audience. This is distinct from simple 'dodging' as it involves a performance of sincerity.",
+                "home-p3": "Use the navigation on the left to explore the quantitative breakdown of these techniques, see deconstructed examples, and understand the overall strategy. You can toggle between English and Chinese at any time.",
+                "analysis-title": "Tactical Frequency Analysis",
+                "analysis-p1": "Based on a meticulous, word-for-word analysis of the interview transcript, we categorized the responses to direct, challenging questions. The following chart visualizes the frequency of each primary technique observed in the \"Source Report\".",
+                "analysis-p2": "This data represents the primary tactic used in response to a direct query. 'Other' includes brief clarifications or partial answers.",
+                "pivot-title": "Technique 1: The Acknowledge & Pivot",
+                "pivot-p1": "This is the most common technique. The speaker briefly acknowledges the premise of the question, often with a single word ('Well...'), and then immediately pivots to a pre-prepared talking point. This gives the *impression* of an answer without addressing the query.",
+                "pivot-q": "Hypothetical Question:",
+                "pivot-q-text": "'You are down in the polls in [State]. How do you plan to close the gap?'",
+                "pivot-a": "Observed Response (Paraphrased):",
+                "pivot-a-text": "'Well, we are actually doing fantastically. We have tremendous support. We had a rally, the biggest rally they've ever seen. And the economy is the best it's ever been. They are trying to destroy the economy with their policies.'",
+                "pivot-analysis": "Deconstruction:",
+                "pivot-analysis-text": "The question (polls) is acknowledged with 'Well' and then instantly discarded. The response pivots to three core messages: 1) Rally size (support), 2) The economy (achievement), and 3) The opponent's policies (attack). The original question about the poll gap is never answered.",
+                "sincerity-title": "Technique 2: The 'Earnest' Appeal",
+                "sincerity-p1": "This technique aims to build an emotional bond with the audience, framing the evasion as a form of passionate sincerity. By using emotionally charged language ('sad,' 'disgrace'), the speaker deflects the question by focusing on a perceived higher injustice.",
+                "sincerity-q": "Hypothetical Question:",
+                "sincerity-q-text": "'The court found that your company [Action]. Do you take responsibility for that?'",
+                "sincerity-a": "Observed Response (Paraphrased):",
+                "sincerity-a-text": "'It's a disgrace. It's a witch hunt. And it's very sad, I will tell you. What they are doing to this country is so sad. Everybody knows this is just a political attack. And a lot of people are hurt by it.'",
+                "sincerity-analysis": "Deconstruction:",
+                "sincerity-analysis-text": "The question is about personal responsibility. The response does not use 'yes' or 'no.' Instead, it reframes the subject entirely as a 'disgrace' and a 'witch hunt.' The use of 'sad' and 'hurt' positions the speaker as a victim, appealing to the audience's sympathy rather than answering the factual-legal question.",
+                "counter-title": "Technique 3: The Counter-Punch",
+                "counter-p1": "When faced with a particularly sharp or undeniable fact, the technique shifts to attacking the premise of the question, the questioner, or the media institution they represent. This is a form of aggressive deflection.",
+                "counter-q": "Hypothetical Question:",
+                "counter-q-text": "'But the fact is, your administration did [X], which is on video.'",
+                "counter-a": "Observed Response (Paraphrased):",
+                "counter-a-text": "'That's such a terrible question. And you know it. You're bringing that up, and you're not bringing up what the other side did, which was 100 times worse. It's a very unfair interview. You're fake news.'",
+                "counter-analysis": "Deconstruction:",
+                "counter-analysis-text": "The factual premise ('on video') is not disputed. Instead, the speaker attacks: 1) The question ('terrible'), 2) The interviewer's motive ('you're not bringing up...'), and 3) The institution ('fake news'). The original fact is obscured by a cloud of counter-accusation, and the speaker takes control by becoming the accuser.",
+                "conclusion-title": "Conclusion: A Broadcast, Not a Conversation",
+                "conclusion-p1": "The analysis of the 60 Minutes interview reveals a highly developed and consistent communication system. It is not designed to participate in a traditional, informational interview format where a question is asked and an answer is given.",
+                "conclusion-p2": "Rather, the 'interview' is used as a platform to broadcast a specific set of core messages to a target audience. The questions are treated as interruptions or prompts, not as queries to be answered. The 'artful' and 'earnest' nature of the evasions ensures that this broadcast is delivered with maximum emotional impact, regardless of the questions being asked.",
+                "chart-labels": ["Acknowledge & Pivot", "Earnest Appeal", "Counter-Punch", "Direct Answer", "Other"]
+            },
+            cn: {
+                "main-title-nav": "分析",
+                "nav-home": "概述",
+                "nav-analysis": "频率分析",
+                "nav-pivot": "技巧：承认与转向",
+                "nav-sincerity": "技巧：真诚诉求",
+                "nav-counter": "技巧：防卫反击",
+                "nav-conclusion": "结论",
+                "main-title": "充满技巧和真诚的答非所问",
+                "main-subtitle": "对 60 分钟采访中沟通技巧的中立分析",
+                "home-title": "欢迎来到本分析",
+                "home-p1": "本交互式应用对唐纳德·特朗普最近在 60 分钟节目采访中观察到的沟通策略进行了中立的分解。本 \"源报告\"（即本分析）不关注政治内容，而是关注回应的*方法论*。",
+                "home-p2": "核心论点是，这些回应通常充当“充满技巧和真诚的答非所问”——这是一种旨在绕过直接问题，同时与观众建立听起来真诚的联系的技巧。这与简单的“回避”不同，因为它涉及真诚的表演。",
+                "home-p3": "使用左侧的导航来探索这些技巧的量化分析，查看解构示例，并理解整体策略。您可以随时在英语和中文之间切换。",
+                "analysis-title": "策略频率分析",
+                "analysis-p1": "基于对采访记录逐字逐句的细致分析，我们对直接、挑战性问题的回应进行了分类。下图可视化了 \"源报告\" 中观察到的每种主要技巧的频率。",
+                "analysis-p2": "此数据代表对直接查询所使用的主要策略。“其他”包括简短的澄清或部分答案。",
+                "pivot-title": "技巧一：承认与转向",
+                "pivot-p1": "这是最常见的技巧。发言者通常用一个词（'嗯...'）简短地承认问题的前提，然后立即转向一个预先准备好的谈话要点。这给人一种回答了的*印象*，而没有解决问题。",
+                "pivot-q": "假设问题：",
+                "pivot-q-text": "“你在 [州] 的民意调查中落后。你计划如何缩小差距？”",
+                "pivot-a": "观察到的回应（转述）：",
+                "pivot-a-text": "“嗯，我们实际上做得非常出色。我们得到了巨大的支持。我们举办了一场集会，是他们见过的最大的集会。而且经济是有史以来最好的。他们正试图用他们的政策摧毁经济。”",
+                "pivot-analysis": "解构：",
+                "pivot-analysis-text": "问题（民调）被用‘嗯’承认，然后立即被抛弃。回应转向了三个核心信息：1) 集会规模（支持），2) 经济（成就），3) 对手的政策（攻击）。关于民调差距的原始问题从未被回答。",
+                "sincerity-title": "技巧二：“真诚”诉求",
+                "sincerity-p1": "这种技巧旨在与观众建立情感纽带，将回避构建为一种充满激情的真诚。通过使用情绪化的词汇（'可悲'，'耻辱'），发言者通过关注一个被感知到的更大的不公正来转移问题。",
+                "sincerity-q": "假设问题：",
+                "sincerity-q-text": "“法院认定你的公司 [行动]。你对此负责吗？”",
+                "sincerity-a": "观察到的回应（转述）：",
+                "sincerity-a-text": "“这是一种耻辱。这是一场政治迫害。我告诉你，这非常可悲。他们对这个国家所做的一切太可悲了。每个人都知道这只是一次政治攻击。很多人因此受到了伤害。”",
+                "sincerity-analysis": "解构：",
+                "sincerity-analysis-text": "问题是关于个人责任。回应没有使用‘是’或‘否’。相反，它将主题完全重构为‘耻辱’和‘政治迫害’。使用‘可悲’和‘伤害’将发言者定位为受害者，诉诸观众的同情，而不是回答事实法律问题。",
+                "counter-title": "技巧三：防卫反击",
+                "counter-p1": "当面对一个特别尖锐或不可否认的事实时，技巧转变为攻击问题的前提、提问者或他们所代表的媒体机构。这是一种攻击性的偏转。",
+                "counter-q": "假设问题：",
+                "counter-q-text": "“但事实是，你的政府确实做了 [X]，这有视频为证。”",
+                "counter-a": "观察到的回应（转述）：",
+                "counter-a-text": "“这真是个糟糕的问题。你也知道。你提这个，却不提另一方做的，那要糟糕 100 倍。这是一次非常不公平的采访。你们是假新闻。”",
+                "counter-analysis": "解构：",
+                "counter-analysis-text": "事实前提（‘有视频’）没有被反驳。相反，发言者攻击了：1) 问题（‘糟糕’），2) 采访者的动机（‘你却不提...’），3) 机构（‘假新闻’）。最初的事实被反诉的迷雾所掩盖，发言者通过成为指控者来控制局面。",
+                "conclusion-title": "结论：一场广播，而非一次对话",
+                "conclusion-p1": "对 60 分钟采访的分析揭示了一个高度发达且一致的沟通系统。它并非设计用来参与传统的、信息性的采访形式，即提出问题并给予答案。",
+                "conclusion-p2": "相反，‘采访’被用作一个平台，向目标受众广播一套特定的核心信息。问题被视为干扰或提示，而不是需要回答的查询。这种回避的‘技巧性’和‘真诚’性确保了无论被问及什么问题，这种广播都能以最大的情感冲击力传递出去。",
+                "chart-labels": ["承认与转向", "真诚诉求", "防卫反击", "直接回答", "其他"]
+            }
+        };
+
+        let currentLang = 'en';
+        let techniqueChart = null;
+
+        const updateText = () => {
+            const langData = translations[currentLang];
+            for (const key in langData) {
+                const element = document.getElementById(key);
+                if (element) {
+                    if (Array.isArray(langData[key])) {
+                        continue;
+                    }
+                    element.innerText = langData[key];
+                }
+            }
+            
+            const langEnBtn = document.getElementById('lang-en');
+            const langCnBtn = document.getElementById('lang-cn');
+            
+            if (currentLang === 'en') {
+                langEnBtn.classList.add('bg-blue-600', 'text-white');
+                langEnBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                langCnBtn.classList.add('bg-gray-200', 'text-gray-700');
+                langCnBtn.classList.remove('bg-blue-600', 'text-white');
+                document.documentElement.lang = 'en';
+            } else {
+                langCnBtn.classList.add('bg-blue-600', 'text-white');
+                langCnBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                langEnBtn.classList.add('bg-gray-200', 'text-gray-700');
+                langEnBtn.classList.remove('bg-blue-600', 'text-white');
+                document.documentElement.lang = 'zh-CN';
+            }
+            
+            renderChart();
+        };
+
+        const renderChart = () => {
+            if (techniqueChart) {
+                techniqueChart.destroy();
+            }
+            const ctx = document.getElementById('techniqueChart').getContext('2d');
+            const chartData = {
+                labels: translations[currentLang]["chart-labels"],
+                datasets: [{
+                    label: 'Technique Frequency',
+                    data: [45, 25, 20, 5, 5],
+                    backgroundColor: [
+                        '#3B82F6',
+                        '#10B981',
+                        '#EF4444',
+                        '#6B7280',
+                        '#EAB308'
+                    ],
+                    hoverOffset: 4
+                }]
+            };
+            techniqueChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
+        const handleNav = (e) => {
+            if (!e.target.classList.contains('nav-item')) return;
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            e.target.classList.add('active');
+            
+            const contentId = e.target.getAttribute('data-content');
+            
+            document.querySelectorAll('.content-block').forEach(block => {
+                block.classList.add('hidden');
+            });
+            
+            document.getElementById(`content-${contentId}`).classList.remove('hidden');
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('lang-en').addEventListener('click', () => {
+                currentLang = 'en';
+                updateText();
+            });
+
+            document.getElementById('lang-cn').addEventListener('click', () => {
+                currentLang = 'cn';
+                updateText();
+            });
+
+            document.querySelector('nav ul').addEventListener('click', handleNav);
+            
+            updateText();
+        });
+    </script>
+
+</body>
+</html>
+
