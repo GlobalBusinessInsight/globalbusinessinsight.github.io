@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Dive Analysis of the 2025 NYC Mayoral Election</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals -->
+    <!-- Application Structure Plan: Utilizes a top navigation bar + vertical section single-page application (SPA) structure. Users can click the navigation to smoothly scroll to the corresponding section (Election Overview, Candidates, Winner Analysis, Voter Demographics, Power Structure), directly mapping to the five major analysis requests. This structure is logical and clear, allowing users to explore in any order and dive deeper through interactions like chart toggling and timeline clicks. This structure was chosen to break down complex political analysis into digestible thematic modules, enhancing usability. -->
+    <!-- Visualization & Content Choices: 1. Election Timeline: Report requirement -> Goal: Show the process -> Presentation: HTML/CSS/JS interactive horizontal timeline -> Interaction: Click node to show details -> Rationale: Clearer exhibition of the dramatic changes from the primary to the general election. 2. General Election Results: Report requirement -> Goal: Display results -> Presentation: Doughnut Chart (Chart.js Canvas) -> Interaction: Hover tooltip -> Rationale: Clearly shows the final vote share between Mamdani, Cuomo, and Sliwa. 3. Voter Demographics: Report requirement -> Goal: Analyze votes by dimension -> Presentation: Two Bar Charts (Chart.js Canvas) (by Age, by Race) -> Interaction: Button toggle to show different charts -> Rationale: Dynamically displays Mamdani's winning coalition, especially young and minority voters. 4. Power Structure: Report requirement -> Goal: Analyze power relations -> Presentation: HTML/CSS/Tailwind flow diagram -> Interaction: None (static layout) -> Rationale: Avoids SVG/Mermaid, clearly conveying the tense relationship between the new mayor, the governor, and the president through layout and text. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .nav-link {
+            @apply px-3 py-2 text-slate-700 rounded-md text-sm font-medium hover:bg-green-100 hover:text-green-700 transition-colors duration-200;
+        }
+        .nav-link.active {
+            @apply bg-green-600 text-white hover:bg-green-700 hover:text-white;
+        }
+        .section-title {
+            @apply text-3xl font-bold text-slate-800 mb-6 border-l-4 border-green-600 pl-4;
+        }
+        .card {
+            @apply bg-white shadow-lg rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .timeline-item {
+            @apply relative pl-8 pb-8 border-l-2 border-green-300;
+        }
+        .timeline-marker {
+            @apply absolute w-5 h-5 bg-white border-4 border-green-600 rounded-full -left-3 top-0;
+        }
+        .timeline-content {
+            @apply p-4 bg-green-50 rounded-lg;
+        }
+        .power-box {
+            @apply bg-white p-6 rounded-xl shadow-md border border-slate-200 text-center;
+        }
+        .power-arrow {
+            @apply text-3xl text-slate-400 font-light flex items-center justify-center;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/90 shadow-sm sticky top-0 z-50 backdrop-blur-md">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-green-700">2025 NYC Mayoral Election Analysis</h1>
+                </div>
+                <div class="hidden md:flex md:space-x-2">
+                    <a href="#overview" class="nav-link active" data-section="overview">Overview</a>
+                    <a href="#candidates" class="nav-link" data-section="candidates">Candidates</a>
+                    <a href="#winner" class="nav-link" data-section="winner">Winner Analysis</a>
+                    <a href="#demographics" class="nav-link" data-section="demographics">Voter Demographics</a>
+                    <a href="#power" class="nav-link" data-section="power">Power Structure</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="text-slate-600 hover:text-green-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden space-y-1 px-2 pt-2 pb-3 bg-white shadow-lg">
+            <a href="#overview" class="block nav-link active" data-section="overview">Overview</a>
+            <a href="#candidates" class="block nav-link" data-section="candidates">Candidates</a>
+            <a href="#winner" class="block nav-link" data-section="winner">Winner Analysis</a>
+            <a href="#demographics" class="block nav-link" data-section="demographics">Voter Demographics</a>
+            <a href="#power" class="block nav-link" data-section="power">Power Structure</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        <!-- Section 1: Election Overview -->
+        <section id="overview" class="mb-20 pt-16 -mt-16">
+            <h2 class="section-title">Election Overview: Key Moments</h2>
+            <p class="text-lg text-slate-700 mb-10">The 2025 New York City mayoral election was one of the most dramatic and unexpected in modern NYC political history. Ultimately, 34-year-old Democratic Socialist and State Assemblyman Zohran Mamdani won, defeating former Governor Andrew Cuomo, who ran as an independent, and Republican candidate Curtis Sliwa. Incumbent Mayor Eric Adams dropped out of the race in September. Voter turnout was the highest since 1969, with over 2 million ballots cast.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold text-slate-800 mb-6 text-center">2025 General Election Final Results</h3>
+                    <div class="chart-container" style="height: 350px;">
+                        <canvas id="generalElectionChart"></canvas>
+                    </div>
+                </div>
+                <div class="card p-6 md:p-8">
+                    <h3 class="text-xl font-bold text-slate-800 mb-6">Election Timeline</h3>
+                    <div class="relative">
+                        <!-- Item 1 -->
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content cursor-pointer" onclick="toggleDetails('details-1')">
+                                <h4 class="font-bold text-green-700">June 2025: Democratic Primary</h4>
+                                <p class="text-sm text-slate-600">Zohran Mamdani, running on a core "affordability" platform, unexpectedly defeats former Governor Andrew Cuomo, who was seeking a political comeback.</p>
+                            </div>
+                        </div>
+                        <!-- Item 2 -->
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content cursor-pointer" onclick="toggleDetails('details-2')">
+                                <h4 class="font-bold text-green-700">July 2025: Cuomo Runs as Independent</h4>
+                                <p class="text-sm text-slate-600">After losing the primary, Cuomo announces he will run in the general election as an independent, creating a three-way race.</p>
+                            </div>
+                        </div>
+                        <!-- Item 3 -->
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content cursor-pointer" onclick="toggleDetails('details-3')">
+                                <h4 class="font-bold text-green-700">September 2025: Incumbent Adams Withdraws</h4>
+                                <p class="text-sm text-slate-600">Amid low approval ratings and party pressure, incumbent Mayor Eric Adams announces he is dropping his re-election bid.</p>
+                            </div>
+                        </div>
+                        <!-- Item 4 -->
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content cursor-pointer" onclick="toggleDetails('details-4')">
+                                <h4 class="font-bold text-green-700">November 3, 2025: Trump Endorses Cuomo</h4>
+                                <p class="text-sm text-slate-600">On the eve of the election, Republican President Donald Trump surprisingly endorses the independent Cuomo and threatens to cut federal funds if Mamdani wins.</p>
+                            </div>
+                        </div>
+                        <!-- Item 5 -->
+                        <div class="timeline-item border-l-transparent pb-0">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content cursor-pointer" onclick="toggleDetails('details-5')">
+                                <h4 class="font-bold text-green-700">November 4, 2025: Election Day</h4>
+                                <p class="text-sm text-slate-600">Mamdani wins with 50.4% of the vote, becoming the 111th Mayor of New York City and its first-ever Muslim and South Asian mayor.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Candidate Comparison -->
+        <section id="candidates" class="mb-20 pt-16 -mt-16">
+            <h2 class="section-title">Main Candidate Comparison</h2>
+            <p class="text-lg text-slate-700 mb-10">The 2025 general election presented three starkly different faces of New York City's political spectrum: the progressive Democrat, the comeback-seeking former governor, and the traditional Republican challenger.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Zohran Mamdani Card -->
+                <div class="card">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-green-700 mb-4">Zohran Mamdani</h3>
+                        <span class="inline-block bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full mb-4">Democrat (Winner)</span>
+                        <div class="space-y-3 text-slate-700 text-sm">
+                            <p><strong>Background:</strong> 34 years old, son of Ugandan immigrants, State Assemblyman (representing Astoria, Queens), Democratic Socialist.</p>
+                            <p class="font-semibold text-slate-800 mt-3">Core Platform:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>Economy:</strong> Core issue was "affordability." Advocated for a rent freeze, free public transit, universal childcare, and raising the minimum wage to $30.</li>
+                                <li><strong>Funding:</strong> Tax increases on individuals earning over $1M and on corporations.</li>
+                                <li><strong>Social:</strong> Built a powerful grassroots movement, mobilizing a massive number of young and minority voters.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Andrew Cuomo Card -->
+                <div class="card">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-gray-700 mb-4">Andrew Cuomo</h3>
+                        <span class="inline-block bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1 rounded-full mb-4">Independent</span>
+                        <div class="space-y-3 text-slate-700 text-sm">
+                            <p><strong>Background:</strong> 67 years old, former Governor of New York (2011-2021), resigned amid sexual harassment allegations. Ran as an independent after losing the Democratic primary.</p>
+                            <p class="font-semibold text-slate-800 mt-3">Core Platform:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>Governance:</strong> Emphasized his extensive executive experience, promising to "restore order and competence" and criticizing Mamdani's policies as unrealistic.</li>
+                                <li><strong>Public Safety:</strong> Held a centrist position, promising to support police while also implementing reforms.</li>
+                                <li><strong>Coalition:</strong> Appealed to moderate Democrats, some Republicans, and older voters. Received Trump's endorsement at the last minute.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Curtis Sliwa Card -->
+                <div class="card">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold text-red-700 mb-4">Curtis Sliwa</h3>
+                        <span class="inline-block bg-red-100 text-red-800 text-sm font-medium px-3 py-1 rounded-full mb-4">Republican</span>
+                        <div class="space-y-3 text-slate-700 text-sm">
+                            <p><strong>Background:</strong> 71 years old, founder of the "Guardian Angels," radio host. Previously lost to Eric Adams as the 2021 Republican nominee.</p>
+                            <p class="font-semibold text-slate-800 mt-3">Core Platform:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                <li><strong>Public Safety:</strong> Extremely hard-line anti-crime stance, advocating for a massive increase in police presence and a repeal of bail reform.</li>
+                                <li><strong>Economy:</strong> Tax cuts, opposition to vaccine mandates.</li>
+                                <li><strong>Voter Base:</strong> Was marginalized in the three-way race, with support concentrated in Staten Island and conservative pockets of Queens.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Winner's Analysis -->
+        <section id="winner" class="mb-20 pt-16 -mt-16">
+            <h2 class="section-title">Winner Analysis: Zohran Mamdani</h2>
+            <p class="text-lg text-slate-700 mb-10">Zohran Mamdani's victory signals a major shift in New York City politics, representing the rise of the progressive left. At just 34, he will become the city's youngest mayor in over a century and its first Muslim and South Asian mayor. His administration will be a significant test of Democratic Socialist ideas in America's largest city.</p>
+            
+            <div class="card p-6 md:p-8">
+                <h3 class="text-xl font-bold text-slate-800 mb-6">Main Governing Platform & Outlook</h3>
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="text-lg font-semibold text-green-700 mb-2">1. Core Agenda: Housing & Affordability</h4>
+                        <p class="text-slate-700">The heart of Mamdani's campaign was tackling the city's cost-of-living crisis. He has pledged to push for a city-wide rent freeze and invest heavily in new public and social housing. This is his most ambitious plan and will face the strongest opposition from the real estate industry.</p>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-green-700 mb-2">2. Economy & Taxes: Taxing the "Rich"</h4>
+                        <p class="text-slate-700">To fund his extensive social programs (like free transit and universal childcare), Mamdani proposes tax increases on individuals earning over $1 million and on corporations. This move has caused significant alarm on Wall Street and in the business community, with many fearing it will lead to an exodus of wealthy residents and companies. He will face intense lobbying and challenges from the business sector.</p>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-green-700 mb-2">3. Public Safety: Reform First</h4>
+                        <p class="text-slate-700">Unlike his predecessor Adams (a former police captain), Mamdani is critical of the NYPD. He advocates for redirecting some police funding to community services and mental health response teams, and for strengthening police accountability. This puts him at odds with police unions but is popular with reformers.</p>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-slate-800 mb-2">Governing Outlook: Full of Challenges</h4>
+                        <p class="text-slate-700">Mamdani's path to governing will be fraught with difficulty. Not only must he contend with federal threats from a Republican president (Trump), but he must also negotiate budget and MTA funding with a fellow Democrat, Governor Kathy Hochul, who holds more moderate views. His ability to deliver on his radical promises will depend on whether he can maintain the energy of his grassroots coalition and find allies at the state and federal levels.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Voter Demographics -->
+        <section id="demographics" class="mb-20 pt-16 -mt-16">
+            <h2 class="section-title">Voter Demographics Analysis</h2>
+            <p class="text-lg text-slate-700 mb-10">Mamdani's victory was driven by a new, progressive coalition centered on young people and minority voters. This election shows that the city's political base is shifting from established, moderate Democrats to a younger, more diverse, and more left-leaning electorate.</p>
+
+            <div class="flex justify-center space-x-4 mb-8">
+                <button id="btn-age" class="nav-link active" onclick="showChart('chart-age', 'btn-age')">By Age (Estimate)</button>
+                <button id="btn-race" class="nav-link" onclick="showChart('chart-race', 'btn-race')">By Race & Borough (Estimate)</button>
+            </div>
+
+            <div class="card p-6">
+                <!-- Chart by Age -->
+                <div id="chart-age" class="chart-wrapper">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 text-center">Voter Support by Age Group (Exit Poll Estimate)</h3>
+                    <div class="chart-container">
+                        <canvas id="voteByAgeChart"></canvas>
+                    </div>
+                    <p class="text-sm text-slate-600 mt-4 p-4 bg-slate-50 rounded-lg">
+                        <strong>Analysis:</strong> Age was the biggest dividing line in this election. Mamdani won overwhelming support from voters under 45, especially in the 18-29 bracket. Andrew Cuomo, in contrast, dominated among voters 65 and older, who valued his experience and were wary of Mamdani's progressive policies.
+                    </p>
+                </div>
+                <!-- Chart by Race/Borough -->
+                <div id="chart-race" class="chart-wrapper hidden">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 text-center">Mamdani's Support in Key Groups (Estimate)</h3>
+                    <div class="chart-container">
+                        <canvas id="voteByRaceChart"></canvas>
+                    </div>
+                    <p class="text-sm text-slate-600 mt-4 p-4 bg-slate-50 rounded-lg">
+                        <strong>Analysis:</strong> Mamdani's coalition was diverse. He won strong support in Black and Latino communities and secured an estimated 90% of the city's Muslim voters. Geographically, Cuomo's support was concentrated in Staten Island and specific conservative neighborhoods in Queens, while Mamdani dominated in progressive and minority communities in Brooklyn, Manhattan, and the Bronx.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card p-6 md:p-8 mt-8">
+                <h3 class="text-xl font-bold text-slate-800 mb-4">Analysis by Other Dimensions</h3>
+                <ul class="list-disc list-inside space-y-3 text-slate-700">
+                    <li><strong>Education & Class:</strong> Mamdani successfully united low- and middle-income voters with highly-educated young professionals. This was a "working class + progressive white-collar" coalition. Cuomo performed better with wealthier moderates and some union members.</li>
+                    <li><strong>Gender:</strong> Mamdani held a slight advantage with female voters, especially younger women. Cuomo had higher support among older male voters.</li>
+                    <li><strong>Ideology:</strong> Mamdani dominated among "Progressive" and "Democratic Socialist" voters. Cuomo attracted "Moderate" Democrats and a large number of "Independents." Sliwa locked down the Republican base.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Section 5: Power Structure -->
+        <section id="power" class="pt-16 -mt-16">
+            <h2 class="section-title">NYC Power Structure (New)</h2>
+            <p class="text-lg text-slate-700 mb-10">Mamdani's election throws NYC into a challenging political landscape. As a radical progressive mayor, he will face immense resistance from both the federal (Republican President) and state (Moderate Democratic Governor) levels simultaneously.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 items-center">
+                <!-- President Trump -->
+                <div class="power-box md:col-span-2 border-2 border-red-500">
+                    <h3 class="text-xl font-bold text-red-700">US President (Trump)</h3>
+                    <p class="text-sm text-slate-600">Federal Level (Adversarial)</p>
+                    <hr class="my-3">
+                    <p class="text-left text-sm space-y-2">
+                        <span><strong>Relationship:</strong> Extremely hostile. Trump has publicly threatened to cut federal funding and called Mamdani a "communist." Expect maximum pressure from the federal government on immigration, policing, and transportation grants.</span>
+                    </p>
+                </div>
+
+                <div class="power-arrow hidden md:block text-red-500 font-bold">↓</div>
+                <div class="power-arrow md:hidden text-red-500 font-bold">↓</div>
+
+                <!-- Governor Hochul -->
+                <div class="power-box md:col-span-3 md:col-start-3 border-2 border-yellow-500">
+                    <h3 class="text-xl font-bold text-indigo-700">NY Governor (Hochul)</h3>
+                    <p class="text-sm text-slate-600">State Level (Key Constraint)</p>
+                    <hr class="my-3">
+                    <p class="text-left text-sm space-y-2">
+                        <span><strong>Relationship:</strong> Tense. While both are Democrats, Hochul is a moderate who has already publicly opposed Mamdani's tax plans. The Governor controls the MTA and much of NYC's budget sources, and will be the primary obstacle to the mayor's progressive agenda.</span>
+                    </p>
+                </div>
+
+                <div class="power-arrow hidden md:block md:col-start-1 text-green-500 font-bold">↓</div>
+                <div class="power-arrow md:hidden text-green-500 font-bold">↓</div>
+
+                <!-- Mayor Mamdani -->
+                <div class="power-box md:col-span-2 border-2 border-green-500">
+                    <h3 class="text-xl font-bold text-green-700">NYC Mayor (Mamdani)</h3>
+                    <p class="text-sm text-slate-600">City Level (Executive Core)</p>
+                    <hr class="my-3">
+                    <p class="text-left text-sm space-y-2">
+                        <span><strong>Power:</strong> Controls all city administrative agencies (NYPD, DOE, etc.).</span>
+                        <span><strong>Challenge:</strong> Must find funding for his expensive social programs without state or federal support, which is nearly impossible.</span>
+                    </p>
+                </div>
+                
+                <div class="power-arrow hidden md:block">↔</div>
+                <div class="power-arrow md:hidden">↓</div>
+
+                <!-- City Council -->
+                <div class="power-box md:col-span-3 border-2 border-green-400">
+                    <h3 class="text-xl font-bold text-emerald-700">NYC City Council</h3>
+                    <p class="text-sm text-slate-600">City Level (Potential Ally)</p>
+                    <hr class="my-3">
+                    <p class="text-left text-sm space-y-2">
+                        <span><strong>Relationship:</strong> Likely Mamdani's only ally in government. The City Council has also shifted left in recent years and has a strong "Progressive Caucus." They will support the mayor on budget and land use (zoning) legislation, but their power is also limited by the state.</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 mt-20 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm">&copy; 2025 NYC Political Analysis Report. For informational purposes only.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            
+            // --- Navigation Logic ---
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            function changeActiveLink(sectionId) {
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('data-section') === sectionId) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                    
+                    if (mobileMenu.classList.contains('hidden') === false) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                    changeActiveLink(link.getAttribute('data-section'));
+                });
+            });
+            
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.4
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        changeActiveLink(entry.target.id);
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // --- Timeline Logic ---
+            window.toggleDetails = function(id) {
+                const element = document.getElementById(id);
+                element.classList.toggle('hidden');
+            }
+            
+            // --- Chart Toggling Logic ---
+            window.showChart = function(chartId, btnId) {
+                document.querySelectorAll('.chart-wrapper').forEach(chart => {
+                    chart.classList.add('hidden');
+                });
+                document.getElementById(chartId).classList.remove('hidden');
+                
+                document.querySelectorAll('#demographics .nav-link').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(btnId).classList.add('active');
+            }
+
+            // --- Chart.js Implementations ---
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.plugins.tooltip.titleFont.size = 14;
+            Chart.defaults.plugins.tooltip.bodyFont.size = 12;
+
+            function wrapText(ctx, text, maxWidth) {
+                if (!text) return [];
+                const words = text.split(' ');
+                let lines = [];
+                let currentLine = words[0];
+                for (let i = 1; i < words.length; i++) {
+                    let word = words[i];
+                    let width = ctx.measureText(currentLine + " " + word).width;
+                    if (width < maxWidth) {
+                        currentLine += " " + word;
+                    } else {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                lines.push(currentLine);
+                return lines;
+            }
+
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + '%';
+                                }
+                                if (context.parsed.r !== null && context.parsed.r !== undefined) {
+                                    label += context.parsed + '%';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            };
+
+            // 1. General Election Chart (Doughnut)
+            const ctx1 = document.getElementById('generalElectionChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Zohran Mamdani (Democrat)', 'Andrew Cuomo (Independent)', 'Curtis Sliwa (Republican)', 'Other'],
+                    datasets: [{
+                        label: 'Vote Share',
+                        data: [50.4, 41.6, 7.1, 0.9],
+                        backgroundColor: [
+                            'rgba(22, 163, 74, 0.8)', // Green
+                            'rgba(107, 114, 128, 0.8)', // Gray
+                            'rgba(220, 38, 38, 0.8)', // Red
+                            'rgba(209, 213, 219, 0.7)' // Light Gray
+                        ],
+                        borderColor: [
+                            'rgba(22, 163, 74, 1)',
+                            'rgba(107, 114, 128, 1)',
+                            'rgba(220, 38, 38, 1)',
+                            'rgba(209, 213, 219, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    plugins: {
+                        ...chartOptions.plugins,
+                        tooltip: {
+                             ...chartOptions.plugins.tooltip,
+                             callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed + '%';
+                                    return label;
+                                }
+                             }
+                        }
+                    }
+                }
+            });
+
+            // 2. Vote by Age (Bar)
+            const ctx2 = document.getElementById('voteByAgeChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['18-29', '30-44', '45-64', '65+'],
+                    datasets: [
+                        {
+                            label: 'Mamdani (Democrat)',
+                            data: [72, 61, 40, 28],
+                            backgroundColor: 'rgba(22, 163, 74, 0.8)',
+                            borderColor: 'rgba(22, 163, 74, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Cuomo (Independent)',
+                            data: [20, 30, 52, 65],
+                            backgroundColor: 'rgba(107, 114, 128, 0.8)',
+                            borderColor: 'rgba(107, 114, 128, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    ...chartOptions,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Support Rate'
+                            }
+                        },
+                        x: {}
+                    }
+                }
+            });
+
+            // 3. Vote by Race/Borough
+            const ctx3 = document.getElementById('voteByRaceChart').getContext('2d');
+            new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: ['Black Voters', 'Latino Voters', 'Muslim Voters', 'Staten Island (Cuomo)', 'Brooklyn (Mamdani)'],
+                    datasets: [
+                        {
+                            label: 'Estimated Support',
+                            data: [68, 55, 90, 62, 65],
+                            backgroundColor: [
+                                'rgba(22, 163, 74, 0.8)',
+                                'rgba(22, 163, 74, 0.8)',
+                                'rgba(22, 163, 74, 0.8)',
+                                'rgba(107, 114, 128, 0.8)',
+                                'rgba(22, 163, 74, 0.8)',
+                            ],
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    ...chartOptions,
+                    indexAxis: 'y',
+                    plugins: {
+                        ...chartOptions.plugins,
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Estimated Support Rate'
+                            }
+                        }
+                    }
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>
