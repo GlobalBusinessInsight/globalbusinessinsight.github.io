@@ -1,359 +1,465 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
      crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Suncatcher: Strategic Analysis</title>
+    <title>Suncatcher 计划：Google 的太空数据中心战略</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Deep Space & Solar Flare (Dark Mode with vibrant orange/gold accents) -->
+    <!-- Application Structure Plan: 采用沉浸式深色主题 SPA，以体现“太空”氛围。顶部固定导航栏用于在四个核心战略板块间切换：1. 任务简报（定义项目），2. 轨道优势（核心驱动力数据分析），3. 工程挑战（技术可行性分析），4. 战略地平线（长远影响）。这种结构旨在引导用户从理解“是什么”到“为什么”，最后思考“意味着什么”。 -->
+    <!-- Visualization & Content Choices: 
+        1. 任务架构 -> Goal: Organize -> HTML/Tailwind 流程图 -> Justification: 清晰展示从地面到太空的架构变化，无 SVG。
+        2. 能源效率对比 -> Goal: Compare -> 条形图 (Chart.js) -> Justification: 直观对比地表与太空太阳能效率的巨大差异 (8倍)。
+        3. 技术挑战就绪度 -> Goal: Relationships/Compare -> 雷达图 (Chart.js) -> Justification: 多维度评估不同技术难点（辐射、散热、光学链路）的当前状态。
+        4. 战略影响维度 -> Goal: Compare (Composition) -> 极地区域图 (Chart.js) -> Justification: 展示该项目对不同战略领域（成本、ESG、算力霸权）的潜在贡献权重。
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #0F172A; /* Slate 900 - Deep Space */
+            color: #E2E8F0; /* Slate 200 */
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            opacity: 0.7;
+        }
+        .nav-link:hover, .nav-link.active {
+            opacity: 1;
+            border-bottom-color: #F59E0B; /* Amber 500 - Solar Flare */
+            color: #FFFFFF;
+        }
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .content-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .solar-accent {
+            color: #F59E0B;
+        }
+        .bg-solar-accent {
+            background-color: #F59E0B;
+        }
+        .glass-panel {
+            background-color: rgba(30, 41, 59, 0.7); /* Slate 800 with opacity */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="min-h-screen flex flex-col">
 
-    <header class="bg-white shadow-md">
-        <div class="container mx-auto px-6 py-12 text-center">
-            <h1 class="text-4xl md:text-5xl font-bold text-[#F3722C] mb-4">Project Suncatcher</h1>
-            <p class="text-xl md:text-2xl text-gray-600">Google's Strategic Pivot to an AI-Native Ecosystem</p>
+    <!-- Fixed Navigation Bar -->
+    <nav class="bg-slate-900/90 backdrop-blur-md sticky top-0 z-50 border-b border-slate-800">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row items-center justify-between py-4">
+                <div class="flex items-center space-x-2 mb-4 md:mb-0">
+                    <div class="w-3 h-3 rounded-full bg-solar-accent animate-pulse"></div>
+                    <h1 class="text-2xl font-bold tracking-wider text-white">PROJECT <span class="solar-accent">SUNCATCHER</span></h1>
+                </div>
+                <div class="flex space-x-1 md:space-x-6 text-sm md:text-base overflow-x-auto w-full md:w-auto">
+                    <button class="nav-link active px-3 py-2 whitespace-nowrap" data-target="mission">任务简报</button>
+                    <button class="nav-link px-3 py-2 whitespace-nowrap" data-target="advantage">轨道优势</button>
+                    <button class="nav-link px-3 py-2 whitespace-nowrap" data-target="engineering">工程挑战</button>
+                    <button class="nav-link px-3 py-2 whitespace-nowrap" data-target="strategy">战略地平线</button>
+                </div>
+            </div>
         </div>
-    </header>
+    </nav>
 
-    <main class="container mx-auto p-6 md:p-8">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Main Content Area -->
+    <main class="flex-grow container mx-auto px-4 py-8">
 
-            <section class="md:col-span-2 bg-white rounded-lg shadow-lg p-6 md:p-8">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">What is Project Suncatcher?</h2>
-                <p class="text-lg text-gray-700 mb-6">
-                    Project Suncatcher is not a single product but an overarching strategy to deeply fuse Google's most advanced AI (Gemini) with its entire hardware and software ecosystem. The goal is to transform its services from reactive tools into a single, proactive, and deeply personal AI agent that anticipates user needs.
+        <!-- Section 1: Mission Brief (Overview) -->
+        <section id="mission" class="content-section active">
+            <div class="max-w-4xl mx-auto text-center mb-12">
+                <h2 class="text-4xl font-bold mb-6">将 AI 算力送入轨道</h2>
+                <p class="text-lg text-slate-300 leading-relaxed">
+                    Project Suncatcher 是 Google 一项雄心勃勃的研究计划（Moonshot），旨在通过发射搭载 TPU 芯片的小型卫星星座，在低地球轨道（LEO）构建数据中心。其核心目标是利用太空中取之不尽的太阳能，解决地面 AI 数据中心日益严峻的能源和散热瓶颈。
                 </p>
+            </div>
 
-                <div class="my-8">
-                    <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 text-center">
-                        
-                        <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-                            <div class="p-4 bg-[#F9C74F] bg-opacity-20 rounded-lg shadow">
-                                <span class="text-2xl font-bold">🤖</span>
-                                <h3 class="text-lg font-semibold text-[#F8961E]">Gemini AI</h3>
-                                <p class="text-sm">Core Intelligence</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="glass-panel p-6 rounded-xl text-center">
+                    <div class="text-5xl mb-4">🛰️</div>
+                    <h3 class="text-xl font-bold mb-2 text-white">卫星星座</h3>
+                    <p class="text-slate-400 text-sm">不是单个巨型空间站，而是由数百颗小型卫星组成的分布式计算网络。</p>
+                </div>
+                <div class="glass-panel p-6 rounded-xl text-center">
+                    <div class="text-5xl mb-4">☀️</div>
+                    <h3 class="text-xl font-bold mb-2 text-white">纯太阳能驱动</h3>
+                    <p class="text-slate-400 text-sm">利用不受大气层干扰的持续太阳光，实现真正的零碳排放计算。</p>
+                </div>
+                <div class="glass-panel p-6 rounded-xl text-center">
+                    <div class="text-5xl mb-4">📡</div>
+                    <h3 class="text-xl font-bold mb-2 text-white">激光链路</h3>
+                    <p class="text-slate-400 text-sm">使用自由空间光通信（激光）在卫星间实现 Tbps 级的高速数据传输。</p>
+                </div>
+            </div>
+
+            <!-- Interactive Architecture Diagram (HTML/Tailwind) -->
+            <div class="glass-panel p-8 rounded-2xl">
+                <h3 class="text-2xl font-bold mb-8 text-center text-white">Suncatcher 运行架构</h3>
+                <div class="flex flex-col md:flex-row items-center justify-center space-y-8 md:space-y-0 md:space-x-8">
+                    <!-- Earth -->
+                    <div class="flex flex-col items-center">
+                        <div class="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/50">
+                            <span class="text-3xl">🌍</span>
+                        </div>
+                        <p class="mt-4 font-bold text-white">地球地面站</p>
+                        <p class="text-xs text-slate-400">发送任务 / 接收结果</p>
+                    </div>
+                    <!-- Uplink Arrow -->
+                    <div class="flex flex-col items-center text-solar-accent">
+                        <div class="text-4xl transform -rotate-90 md:rotate-0">➤</div>
+                        <p class="text-xs mt-1">发射与通信</p>
+                    </div>
+                    <!-- Satellite Constellation -->
+                    <div class="glass-panel p-6 rounded-xl border-solar-accent/30 border-2 relative">
+                        <div class="absolute -top-3 -right-3 bg-solar-accent text-slate-900 text-xs font-bold px-2 py-1 rounded-full">LEO 轨道</div>
+                        <div class="flex space-x-4">
+                            <div class="text-center">
+                                <div class="text-4xl">🛰️</div>
+                                <p class="text-xs text-slate-300">TPU 节点 A</p>
                             </div>
-                            <div class="p-4 bg-[#90BE6D] bg-opacity-20 rounded-lg shadow">
-                                <span class="text-2xl font-bold">📱</span>
-                                <h3 class="text-lg font-semibold text-[#90BE6D]">Hardware</h3>
-                                <p class="text-sm">Pixel, Android</p>
+                            <div class="text-solar-accent flex items-center">⚡</div>
+                            <div class="text-center">
+                                <div class="text-4xl">🛰️</div>
+                                <p class="text-xs text-slate-300">TPU 节点 B</p>
                             </div>
-                            <div class="p-4 bg-[#43AA8B] bg-opacity-20 rounded-lg shadow">
-                                <span class="text-2xl font-bold">☁️</span>
-                                <h3 class="text-lg font-semibold text-[#43AA8B]">Software & Data</h3>
-                                <p class="text-sm">Search, Workspace</p>
+                            <div class="text-solar-accent flex items-center">⚡</div>
+                            <div class="text-center">
+                                <div class="text-4xl">🛰️</div>
+                                <p class="text-xs text-slate-300">TPU 节点 C</p>
                             </div>
                         </div>
+                        <p class="mt-4 text-center text-sm font-bold text-solar-accent">自由空间光通信网络</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                        <div class="text-4xl font-bold text-[#F94144] mx-4">→</div>
-
-                        <div class="p-6 bg-[#F94144] bg-opacity-20 rounded-lg shadow-xl border-2 border-[#F94144]">
-                            <span class="text-3xl font-bold">🌟</span>
-                            <h3 class="text-2xl font-bold text-[#F94144]">Project Suncatcher</h3>
-                            <p class="text-md font-semibold">Proactive Personal Agent</p>
+        <!-- Section 2: Orbital Advantage (Why Space?) -->
+        <section id="advantage" class="content-section">
+            <div class="max-w-4xl mx-auto mb-12">
+                <h2 class="text-3xl font-bold mb-6 text-white">为何选择太空？核心驱动力</h2>
+                <p class="text-lg text-slate-300 mb-8">
+                    地面数据中心正面临严重的能源危机。AI 训练的电力需求呈指数级增长，电网不堪重负。太空提供了独特的环境优势，特别是能源获取效率。
+                </p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div class="chart-container">
+                        <canvas id="energyChart"></canvas>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="glass-panel p-6 rounded-xl border-l-4 border-solar-accent">
+                            <h3 class="text-xl font-bold text-white mb-2">8倍能源效率</h3>
+                            <p class="text-slate-300">在太阳同步轨道，卫星几乎可以 24/7 接收阳光，没有夜晚和天气干扰。Google 研究表明，其太阳能发电效率可达地面的 8 倍。</p>
+                        </div>
+                        <div class="glass-panel p-6 rounded-xl border-l-4 border-blue-500">
+                            <h3 class="text-xl font-bold text-white mb-2">天然散热环境</h3>
+                            <p class="text-slate-300">太空背景温度接近绝对零度。虽然缺乏空气对流，但可以通过辐射将热量排向深空，理论上无需消耗大量水资源进行冷却。</p>
+                        </div>
+                        <div class="glass-panel p-6 rounded-xl border-l-4 border-green-500">
+                            <h3 class="text-xl font-bold text-white mb-2">摆脱地理限制</h3>
+                            <p class="text-slate-300">无需征地、不受本地电网限制、规避复杂的区域性法规。这是一个真正全球化的基础设施。</p>
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
 
-                <p class="text-lg text-gray-700 mt-6">
-                    This deep integration allows the AI to understand a user's context across all applications—their emails, calendar, search history, and location—to provide assistance without being asked. It represents a fundamental shift from "AI as an app" to "AI as the OS."
+        <!-- Section 3: Engineering Challenges (How?) -->
+        <section id="engineering" class="content-section">
+            <div class="max-w-4xl mx-auto mb-12">
+                <h2 class="text-3xl font-bold mb-6 text-white">工程挑战：在极端环境下计算</h2>
+                <p class="text-lg text-slate-300 mb-8">
+                    将数据中心送上太空不仅仅是发射火箭。它需要克服致命的辐射、极端的温度循环以及维护的不可能性。Google 目前正在测试其技术在这些极端条件下的可行性。
                 </p>
-            </section>
-
-            <section class="bg-white rounded-lg shadow-lg p-6">
-                <h3 class="text-2xl font-bold text-gray-900 mb-4">Google's Strategic Imperatives</h3>
-                <p class="text-gray-700 mb-4">Suncatcher is a multi-faceted strategy. It's a defensive move to protect its core Search business from AI-native competitors, while simultaneously building an offensive moat, locking users into its ecosystem, and opening new subscription-based revenue streams.</p>
-                <div class="relative w-full max-w-xl mx-auto h-80 md:h-96">
-                    <canvas id="imperativesChart"></canvas>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div class="order-2 lg:order-1">
+                        <ul class="space-y-4">
+                            <li class="glass-panel p-4 rounded-lg flex items-start">
+                                <span class="text-2xl mr-4">☢️</span>
+                                <div>
+                                    <h4 class="font-bold text-white">辐射防护</h4>
+                                    <p class="text-sm text-slate-400">太空辐射会翻转芯片比特位（造成计算错误）甚至永久损坏硬件。Google 已测试其 Trillium TPU 的抗辐射能力。</p>
+                                </div>
+                            </li>
+                            <li class="glass-panel p-4 rounded-lg flex items-start">
+                                <span class="text-2xl mr-4">🔥</span>
+                                <div>
+                                    <h4 class="font-bold text-white">热管理难题</h4>
+                                    <p class="text-sm text-slate-400">太空中没有空气，传统的风冷无法工作。热量必须通过昂贵且沉重的辐射板排散。</p>
+                                </div>
+                            </li>
+                            <li class="glass-panel p-4 rounded-lg flex items-start">
+                                <span class="text-2xl mr-4">🚀</span>
+                                <div>
+                                    <h4 class="font-bold text-white">发射成本</h4>
+                                    <p class="text-sm text-slate-400">尽管 SpaceX 降低了成本，但每公斤的发射成本仍然高昂。Suncatcher 的经济可行性依赖于未来发射成本降至 $200/kg 以下。</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="chart-container order-1 lg:order-2">
+                        <canvas id="readinessChart"></canvas>
+                    </div>
                 </div>
-                <p class="text-gray-700 mt-4">This donut chart illustrates the conceptual breakdown of Google's strategy. The largest focus is on creating a new, defensible "moat" by leveraging its unique data and distribution advantages, which competitors cannot easily replicate.</p>
-            </section>
+            </div>
+        </section>
 
-            <section class="bg-white rounded-lg shadow-lg p-6">
-                <h3 class="text-2xl font-bold text-gray-900 mb-4">Unifying the Ecosystem</h3>
-                <p class="text-gray-700 mb-4">The initiative's primary technical goal is to supercharge every key Google product with a unified AI. This integration makes the entire ecosystem more valuable than the sum of its parts, compelling users to stay within Google's walled garden for the best experience.</p>
-                <div class="relative w-full max-w-xl mx-auto h-80 md:h-96">
-                    <canvas id="ecosystemChart"></canvas>
-                </div>
-                <p class="text-gray-700 mt-4">As shown, the deepest integration is targeted at the OS (Android) and Google's own hardware (Pixel), turning them into "AI-first" platforms that serve as the primary gateway to the new Google experience.</p>
-            </section>
-
-            <section class="bg-white rounded-lg shadow-lg p-6">
-                <h3 class="text-2xl font-bold text-gray-900 mb-4">The New AI Battlefield</h3>
-                <p class="text-gray-700 mb-4">Google's move escalates the tech war. The battleground is no longer just the best AI model but the most deeply integrated ecosystem. This radar chart compares major players across the key verticals required to win this new war.</p>
-                <div class="relative w-full max-w-xl mx-auto h-80 md:h-96">
-                    <canvas id="battlefieldChart"></canvas>
-                </div>
-                <p class="text-gray-700 mt-4">While competitors may lead in a single area (like OpenAI's model or Apple's hardware), Google's strength lies in its balanced and massive scale across distribution, data, and software, which Suncatcher aims to weaponize.</p>
-            </section>
-
-            <section class="bg-white rounded-lg shadow-lg p-6">
-                <h3 class="text-2xl font-bold text-gray-900 mb-4">Key Industry Shifts</h3>
-                <p class="text-gray-700 mb-4">This strategy forces three fundamental shifts across the entire technology landscape, compelling a response from Apple, Microsoft, and all other major players.</p>
-                <ul class="space-y-4 my-6">
-                    <li class="flex items-start">
-                        <span class="flex-shrink-0 w-6 h-6 bg-[#F3722C] rounded-md mr-4 text-white font-bold flex items-center justify-center">1</span>
-                        <span class="text-gray-800"><b>From App to OS:</b> AI stops being a feature or a standalone app (like ChatGPT) and becomes an invisible, ambient layer of the operating system itself.</span>
-                    </li>
-                    <li class="flex items-start">
-                        <span class="flex-shrink-0 w-6 h-6 bg-[#F8961E] rounded-md mr-4 text-white font-bold flex items-center justify-center">2</span>
-                        <span class="text-gray-800"><b>The Ecosystem Wars:</b> The primary competitive metric becomes the seamlessness of the AI experience across a user's phone, computer, and other devices.</span>
-                    </li>
-                    <li class="flex items-start">
-                        <span class="flex-shrink-0 w-6 h-6 bg-[#F9C74F] rounded-md mr-4 text-gray-900 font-bold flex items-center justify-center">3</span>
-                        <span class="text-gray-800"><b>The Privacy-Personalization Paradox:</b> Deeply proactive AI requires deep access to personal data, intensifying the global debate over user privacy and data control.</span>
-                    </li>
-                </ul>
-            </section>
-
-            <section class="bg-white rounded-lg shadow-lg p-6">
-                <h3 class="text-2xl font-bold text-gray-900 mb-4">Evolution of AI Assistance</h3>
-                <p class="text-gray-700 mb-4">Project Suncatcher represents a quantum leap in the nature of digital assistance, moving beyond simple reactive commands to proactive, agentive behavior. This trend marks the next major phase of personal computing.</p>
-                <div class="relative w-full max-w-xl mx-auto h-80 md:h-96">
-                    <canvas id="evolutionChart"></canvas>
-                </div>
-                <p class="text-gray-700 mt-4">We are moving from a world where we "use" our devices to one where our devices actively "assist" us, anticipating needs and completing complex tasks in the background based on our learned goals and context.</p>
-            </section>
-
-            <section class="bg-white rounded-lg shadow-lg p-6">
-                <h3 class="text-2xl font-bold text-gray-900 mb-4">Societal Implications</h3>
-                <p class="text-gray-700 mb-4">The shift to proactive AI agents carries profound implications for society. It promises massive gains in productivity and personal convenience but also introduces significant ethical and social challenges that must be navigated.</p>
-                <div class="relative w-full max-w-xl mx-auto h-80 md:h-96">
-                    <canvas id="implicationsChart"></canvas>
-                </div>
-                <p class="text-gray-700 mt-4">The "Polar Area" chart highlights the key areas of impact. The potential for human augmentation and productivity is immense, but it is intrinsically linked to heightened privacy concerns and ethical risks, such as algorithmic bias and user manipulation.</p>
-            </section>
-
-            <section class="md:col-span-2 bg-white rounded-lg shadow-lg p-6 md:p-8 text-center">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">The Dawn of the AI Agent</h2>
-                <p class="text-lg text-gray-700 max-w-4xl mx-auto">
-                    Project Suncatcher is far more than an internal project; it is Google's comprehensive bet on an AI-first future. It represents a strategic and necessary pivot to redefine its entire business around proactive, personal AI agents. Its success will not only determine Google's dominance in the next era of computing but will also force humanity to confront fundamental questions about our relationship with technology, privacy, and personal autonomy.
+        <!-- Section 4: Strategic Horizon (Impact) -->
+        <section id="strategy" class="content-section">
+            <div class="max-w-4xl mx-auto mb-12">
+                <h2 class="text-3xl font-bold mb-6 text-white">战略地平线：不仅仅是实验</h2>
+                <p class="text-lg text-slate-300 mb-8">
+                     如果 Suncatcher 成功，它将重塑全球算力格局。这不仅关乎 Google，更关乎人类如何可持续地扩展智能边界。
                 </p>
-            </section>
 
-        </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                    <div class="glass-panel p-6 rounded-xl">
+                        <h3 class="text-xl font-bold text-solar-accent mb-4">对 Google 的战略意义</h3>
+                        <ul class="list-disc list-inside space-y-2 text-slate-300">
+                            <li><strong class="text-white">算力霸权：</strong> 确保未来十年 AI 扩展不受地面能源瓶颈限制。</li>
+                            <li><strong class="text-white">成本优势：</strong> 长期来看，利用免费太阳能可能比支付地面电费更便宜。</li>
+                            <li><strong class="text-white">技术护城河：</strong> 率先建立太空数据中心标准和网络协议。</li>
+                        </ul>
+                    </div>
+                    <div class="glass-panel p-6 rounded-xl">
+                        <h3 class="text-xl font-bold text-blue-400 mb-4">对人类与行业的意义</h3>
+                        <ul class="list-disc list-inside space-y-2 text-slate-300">
+                            <li><strong class="text-white">能源革命：</strong> 将高能耗产业移出地球表面，减少碳排放。</li>
+                            <li><strong class="text-white">新太空竞赛：</strong> 引发微软、亚马逊等巨头跟进，加速太空商业化。</li>
+                            <li><strong class="text-white">风险与挑战：</strong> 加剧太空碎片问题，引发轨道资源争夺。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-8 rounded-2xl text-center">
+                     <h3 class="text-2xl font-bold mb-6 text-white">未来影响权重分析</h3>
+                     <div class="chart-container">
+                        <canvas id="impactChart"></canvas>
+                    </div>
+                    <p class="text-sm text-slate-400 mt-4">图表展示了 Suncatcher 计划在不同战略维度的潜在长期影响力评估。</p>
+                </div>
+            </div>
+        </section>
+
     </main>
 
-    <footer class="text-center p-8 text-gray-600 text-sm">
-        A Strategic Analysis Infographic.
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-6 text-center text-slate-500 text-sm border-t border-slate-800">
+        <p>基于 Google 公开研究与行业分析生成的概念信息图。</p>
     </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            
-            const tooltipTitleCallback = function(tooltipItems) {
+            // --- Navigation Logic ---
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.content-section');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    const targetId = link.getAttribute('data-target');
+                    
+                    // Update active states
+                    navLinks.forEach(nav => nav.classList.remove('active'));
+                    link.classList.add('active');
+                    
+                    sections.forEach(section => {
+                        section.classList.remove('active');
+                        if (section.id === targetId) {
+                            section.classList.add('active');
+                        }
+                    });
+                });
+            });
+
+            // --- Chart.js Global Config for Dark Mode ---
+            Chart.defaults.color = '#94a3b8'; // Slate 400
+            Chart.defaults.borderColor = '#334155'; // Slate 700
+            Chart.defaults.font.family = "'Noto Sans SC', sans-serif";
+
+            // Tooltip Label Wrap Helper (Requirement)
+            const tooltipTitleCallback = (tooltipItems) => {
                 const item = tooltipItems[0];
-                let label = item.chart.data.labels[item.dataIndex];
-                if (Array.isArray(label)) {
-                    return label.join(' ');
-                } else {
-                    return label;
+                const label = item.chart.data.labels[item.dataIndex];
+                return Array.isArray(label) ? label.join(' ') : label;
+            };
+
+            // Label splitting helper for long text
+            const splitLabel = (str, maxLen = 10) => {
+                if (str.length <= maxLen) return str;
+                const result = [];
+                let currentLine = '';
+                str.split('').forEach(char => { // Simple split for Chinese characters
+                     if (currentLine.length >= maxLen) {
+                         result.push(currentLine);
+                         currentLine = '';
+                     }
+                     currentLine += char;
+                });
+                if (currentLine) result.push(currentLine);
+                return result;
+            };
+
+            // --- Chart 1: Energy Advantage (Bar Chart) ---
+            const energyCtx = document.getElementById('energyChart').getContext('2d');
+            new Chart(energyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['地面太阳能', '太空太阳能 (LEO)'],
+                    datasets: [{
+                        label: '相对能源生产效率',
+                        data: [1, 8],
+                        backgroundColor: ['#3b82f6', '#F59E0B'],
+                        borderWidth: 0,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: '能源生产效率对比 (基准值=1)',
+                            color: '#E2E8F0',
+                            font: { size: 16 }
+                        },
+                        tooltip: {
+                            callbacks: { title: tooltipTitleCallback }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                             grid: { display: false }
+                        }
+                    }
                 }
-            };
+            });
 
-            const processLabels = (labels) => {
-                return labels.map(label => {
-                    if (label.length <= 16) return label;
-                    if (label === 'Ecosystem Lock-in') return ['Ecosystem', 'Lock-in'];
-                    if (label === 'Human Augmentation') return ['Human', 'Augmentation'];
-                    if (label === 'Productivity Boost') return ['Productivity', 'Boost'];
-                    if (label === 'Privacy Concerns') return ['Privacy', 'Concerns'];
-                    return label; 
-                });
-            };
-
-            const chartColors = ['#F94144', '#F3722C', '#F8961E', '#F9C74F', '#90BE6D', '#43AA8B', '#577590'];
-
-            if (document.getElementById('imperativesChart')) {
-                const ctx = document.getElementById('imperativesChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: processLabels(['Defend Core Business', 'Offensive Moat', 'Ecosystem Lock-in', 'New Revenue']),
-                        datasets: [{
-                            label: 'Strategic Weight',
-                            data: [30, 35, 25, 10],
-                            backgroundColor: [chartColors[0], chartColors[1], chartColors[2], chartColors[3]],
-                            borderColor: '#ffffff',
-                            borderWidth: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
+            // --- Chart 2: Technical Readiness (Radar Chart) ---
+            const readinessCtx = document.getElementById('readinessChart').getContext('2d');
+            new Chart(readinessCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['抗辐射芯片', '热管理系统', '激光通信链路', '发射成本经济性', '远程维护能力'],
+                    datasets: [{
+                        label: '当前技术就绪度 (1-10)',
+                        data: [7, 4, 6, 3, 1],
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)', // Solar orange transparent
+                        borderColor: '#F59E0B',
+                        pointBackgroundColor: '#F59E0B',
+                        pointBorderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: {
+                                color: '#E2E8F0',
+                                font: { size: 12 }
                             },
-                            tooltip: {
-                                callbacks: {
-                                    title: tooltipTitleCallback
-                                }
+                            min: 0,
+                            max: 10,
+                            ticks: {
+                                backdropColor: 'transparent',
+                                color: '#94a3b8'
                             }
                         }
-                    }
-                });
-            }
-
-            if (document.getElementById('ecosystemChart')) {
-                const ctx = document.getElementById('ecosystemChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Search', 'Workspace', 'Android (OS)', 'Pixel (Hardware)'],
-                        datasets: [{
-                            label: 'Degree of AI Integration',
-                            data: [8, 7, 10, 9],
-                            backgroundColor: [chartColors[1], chartColors[2], chartColors[4], chartColors[5]],
-                        }]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 10
-                            }
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: { color: '#E2E8F0' }
                         },
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    title: tooltipTitleCallback
-                                }
-                            }
+                        tooltip: {
+                            callbacks: { title: tooltipTitleCallback }
                         }
                     }
-                });
-            }
+                }
+            });
 
-            if (document.getElementById('battlefieldChart')) {
-                const ctx = document.getElementById('battlefieldChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'radar',
-                    data: {
-                        labels: ['AI Model', 'Hardware', 'Software (OS)', 'Distribution', 'Data'],
-                        datasets: [{
-                            label: 'Google',
-                            data: [8, 7, 9, 10, 10],
-                            backgroundColor: 'rgba(249, 65, 68, 0.2)',
-                            borderColor: chartColors[0],
-                            pointBackgroundColor: chartColors[0],
-                            pointBorderColor: '#fff',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: chartColors[0]
-                        }, {
-                            label: 'Apple',
-                            data: [6, 10, 10, 9, 7],
-                            backgroundColor: 'rgba(87, 117, 144, 0.2)',
-                            borderColor: chartColors[6],
-                            pointBackgroundColor: chartColors[6],
-                            pointBorderColor: '#fff',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: chartColors[6]
+            // --- Chart 3: Strategic Impact (Polar Area) ---
+            const impactCtx = document.getElementById('impactChart').getContext('2d');
+            new Chart(impactCtx, {
+                type: 'polarArea',
+                data: {
+                    labels: ['解决能源瓶颈', 'ESG/可持续性', '长期成本降低', '新商业模式', '地缘政治规避'],
+                    datasets: [{
+                        label: '影响力权重',
+                        data: [9, 8, 7, 6, 5],
+                        backgroundColor: [
+                            'rgba(245, 158, 11, 0.8)',  // Orange (Energy)
+                            'rgba(16, 185, 129, 0.8)',  // Green (ESG)
+                            'rgba(59, 130, 246, 0.8)',  // Blue (Cost)
+                            'rgba(139, 92, 246, 0.8)',  // Purple (Business)
+                            'rgba(239, 68, 68, 0.8)'    // Red (Geopolitics)
+                        ],
+                        borderWidth: 1,
+                        borderColor: '#0F172A'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: { backdropColor: 'transparent', z: 10 }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#E2E8F0' }
                         },
-                        {
-                            label: 'Microsoft/OpenAI',
-                            data: [10, 5, 8, 8, 7],
-                            backgroundColor: 'rgba(67, 170, 139, 0.2)',
-                            borderColor: chartColors[5],
-                            pointBackgroundColor: chartColors[5],
-                            pointBorderColor: '#fff',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: chartColors[5]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    title: tooltipTitleCallback
-                                }
-                            }
+                        tooltip: {
+                            callbacks: { title: tooltipTitleCallback }
                         }
                     }
-                });
-            }
-
-            if (document.getElementById('evolutionChart')) {
-                const ctx = document.getElementById('evolutionChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Reactive', 'Context-Aware', 'Proactive', 'Agentive'],
-                        datasets: [{
-                            label: 'AI Capability',
-                            data: [2, 4, 7, 10],
-                            fill: true,
-                            backgroundColor: 'rgba(243, 114, 44, 0.2)',
-                            borderColor: chartColors[1],
-                            tension: 0.3
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    title: tooltipTitleCallback
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            if (document.getElementById('implicationsChart')) {
-                const ctx = document.getElementById('implicationsChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'polarArea',
-                    data: {
-                        labels: processLabels(['Productivity Boost', 'Ethical Risks', 'Privacy Concerns', 'Human Augmentation']),
-                        datasets: [{
-                            label: 'Significance',
-                            data: [10, 8, 9, 7],
-                            backgroundColor: [
-                                'rgba(144, 190, 109, 0.7)',
-                                'rgba(249, 65, 68, 0.7)',
-                                'rgba(248, 150, 30, 0.7)',
-                                'rgba(67, 170, 139, 0.7)'
-                            ]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    title: tooltipTitleCallback
-                                }
-                            }
-                        }
-                    }
-                });
-            }
+                }
+            });
 
         });
     </script>
