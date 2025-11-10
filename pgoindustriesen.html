@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProcessGo Plus™ Industry Solutions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 250px;
+            max-height: 320px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        nav::-webkit-scrollbar {
+            height: 4px;
+        }
+        nav::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        nav::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 20px;
+        }
+        .flow-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+        .flow-container::-webkit-scrollbar {
+            height: 4px;
+        }
+        .flow-container::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+    </style>
+    <!-- Chosen Palette: Calm Corporate Blue -->
+    <!-- Application Structure Plan: Designed a single-page application (SPA) using a main tabbed-pane (horizontal navigation) structure. This was chosen over a simple linear report to allow for non-linear, user-driven exploration. The user can immediately select their industry of interest. A central, dynamic content pane is updated (HTML + Chart.js) by a single JavaScript function, providing an integrated and responsive experience. This structure is ideal for presenting discrete, parallel solution sets (one per industry) clearly and concisely. -->
+    <!-- Visualization & Content Choices: Report Info (Solution for Industry X) -> Goal (Inform/Compare) -> Viz/Method (HTML Text, HTML Grid Cards, HTML Flex-Flowchart, Chart.js Bar Chart) -> Interaction (Click tab to update all content, hover chart for tooltip) -> Justification (This mix provides a clear hierarchy: high-level challenges, specific solutions (cards), a visual process (flowchart), and a quantitative benefit (chart). The HTML flowchart avoids SVG/Mermaid. The Chart.js bar chart (Before/After) is a reusable, data-driven element. All elements are dynamically loaded into a single pane for a seamless SPA feel.) -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-700">ProcessGo Plus™</h1>
+            <p class="text-xl md:text-2xl text-gray-600 mt-2">Industry Solutions for SMEs & Overseas Branches</p>
+            <p class="text-md text-gray-500 mt-1">Tailored for growing teams of up to 100 people</p>
+        </header>
+
+        <main class="bg-white rounded-xl shadow-2xl overflow-hidden">
+            <nav id="industry-nav" class="flex border-b border-gray-200 bg-gray-50 overflow-x-auto whitespace-nowrap">
+                <button data-industry="trade" class="nav-button active py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    Trade & Distribution
+                </button>
+                <button data-industry="assembly" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    Light Assembly
+                </button>
+                <button data-industry="logistics" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    3PL/Overseas Warehousing
+                </button>
+                <button data-industry="service" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    Catering & Life Services
+                </button>
+                <button data-industry="education" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    Small Education Inst.
+                </button>
+                <button data-industry="entertainment" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    Small Entertainment
+                </button>
+                <button data-industry="software" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    Software & IT
+                </button>
+                <button data-industry="professional" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    Professional Services
+                </button>
+            </nav>
+
+            <div id="content-pane" class="p-6 md:p-10">
+            </div>
+        </main>
+
+        <footer class="text-center mt-8 text-gray-500 text-sm">
+            &copy; 2025 ProcessGo Plus™. All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navContainer = document.getElementById('industry-nav');
+            const contentPane = document.getElementById('content-pane');
+            let chartInstance = null;
+
+            const industryData = {
+                trade: {
+                    title: "PGo+ for Trade & Distribution",
+                    intro: "SME traders face challenges with complex orders, messy inventory, numerous clients, and difficult settlements. PGo+ provides a lightweight, flexible integrated business-finance flow, connecting everything from leads to payment collection.",
+                    challenges: [
+                        "Order processing relies on manual work, prone to errors and omissions, low efficiency.",
+                        "Inaccurate inventory data, difficult to coordinate across multiple platforms and warehouses.",
+                        "Confusing customer pricing systems, slow quotation calculations.",
+                        "Cumbersome reconciliation of receivables and payables, unclear capital turnover."
+                    ],
+                    solutions: [
+                        { icon: "📦", name: "Full Order Cycle Management", desc: "Automated workflow from quotation, order, shipment to invoicing and collection." },
+                        { icon: "📊", name: "Accurate Multi-Warehouse Synergy", desc: "Real-time synchronization of multi-warehouse inventory, setting safety stock alerts." },
+                        { icon: "👤", name: "CRM & Pricing", desc: "Manage customer profiles, follow-up records, and multi-level pricing strategies." },
+                        { icon: "💰", name: "Simple Business-Finance Accounting", desc: "Automatically generate AR/AP, link orders to calculate costs and profits." }
+                    ],
+                    flow: [
+                        { name: "Inquiry & Quotation", color: "blue" },
+                        { name: "Sales Order", color: "blue" },
+                        { name: "Purchase/Stocking", color: "sky" },
+                        { name: "Outbound Shipping", color: "blue" },
+                        { name: "Invoicing & Collection", color: "green" }
+                    ]
+                },
+                assembly: {
+                    title: "PGo+ for Light Assembly",
+                    intro: "Small-scale processing and assembly businesses need to balance orders, production, materials, and costs. PGo+ offers a simple 'Sales-Production-Inventory' closed loop for transparent management.",
+                    challenges: [
+                        "Inconvenient BOM management, chaotic material picking.",
+                        "Production progress is a black box, unable to accurately reply to customer delivery dates.",
+                        "Disconnection between orders, materials, and production, high coordination costs.",
+                        "Difficult cost accounting, unknown profit or loss per order."
+                    ],
+                    solutions: [
+                        { icon: "📝", name: "Lightweight BOM & Work Orders", desc: "Flexibly configure BOMs, issue production work orders by order, automatically calculate material needs." },
+                        { icon: "🏭", name: "Production Progress Tracking", desc: "Report work on key processes, grasp work order status in real-time, timely feedback on anomalies." },
+                        { icon: "🔗", name: "Sales-Production-Inventory Integration", desc: "Sales orders drive production, production picking links to inventory, automatic data flow." },
+                        { icon: "📈", name: "Order Cost Collection", desc: "Automatically collect materials, labor, and expenses related to work orders, calculate order gross profit." }
+                    ],
+                    flow: [
+                        { name: "Sales Order", color: "blue" },
+                        { name: "Create Work Order (BOM)", color: "sky" },
+                        { name: "Picking/Purchasing", color: "sky" },
+                        { name: "Production Reporting", color: "indigo" },
+                        { name: "QC & Inbound", color: "green" }
+                    ]
+                },
+                logistics: {
+                    title: "PGo+ for 3PL/Overseas Warehousing",
+                    intro: "For SME 3PLs and overseas warehouse service providers, the core lies in efficient, accurate warehousing operations and clear billing. PGo+ streamlines core WMS processes for standardized operations.",
+                    challenges: [
+                        "Non-standardized inbound, outbound, putaway, and picking processes, reliant on veteran staff.",
+                        "Untimely inventory information updates, chaotic bin management, difficult to find goods.",
+                        "Variable operation instructions, difficult to track execution status.",
+                        "Complex billing by customer and operation, prone to errors."
+                    ],
+                    solutions: [
+                        { icon: "📥", name: "Standard WMS Operations", desc: "Standardize inbound, putaway, picking, checking, and outbound processes, supports PDA operation." },
+                        { icon: "🗺️", name: "Visual Bin Inventory", desc: "Real-time inventory dashboard clearly showing bins, SKUs, batches, and quantities." },
+                        { icon: "📋", name: "Instruction & Task Collaboration", desc: "System dispatches operation instructions, staff accept and execute, real-time status feedback." },
+                        { icon: "🧾", name: "Flexible Billing Engine", desc: "Configure storage rent, operation fees, etc., by customer, automatically generate bills." }
+                    ],
+                    flow: [
+                        { name: "Customer Booking (ASN)", color: "blue" },
+                        { name: "Receiving & Putaway", color: "sky" },
+                        { name: "In-Warehouse Mgmt (Counting/Moving)", color: "indigo" },
+                        { name: "Order Picking", color: "sky" },
+                        { name: "Checking & Packing", color: "sky" },
+                        { name: "Outbound/Billing", color: "green" }
+                    ]
+                },
+                service: {
+                    title: "PGo+ for Catering & Life Services",
+                    intro: "Chain catering, beauty, housekeeping, and other life service industries focus on customer appointments, staff scheduling, and service fulfillment. PGo+ helps you manage customers, staff, and orders well.",
+                    challenges: [
+                        "Multiple customer appointment channels, unsynchronized information, easy to conflict.",
+                        "Difficult to control staff scheduling, SOP execution, and service quality.",
+                        "Complex member/stored value/package management, difficult verification and reconciliation.",
+                        "Disconnection between store material (ingredients) consumption and purchasing."
+                    ],
+                    solutions: [
+                        { icon: "📅", name: "Multi-Channel Scheduling", desc: "Unified management of customer appointments, intelligent matching of staff (technician) time and skills." },
+                        { icon: "🧑‍🔧", name: "Staff Scheduling & SOP", desc: "Flexible scheduling, push service SOPs, record service process and customer feedback." },
+                        { icon: "💳", name: "Member & Coupon Management", desc: "Manage member information, stored value, count cards, coupons, supports scan code verification." },
+                        { icon: "🍲", name: "Simple Inventory (Materials)", desc: "Store material/ingredient inbound, consumption, inventory counting, and purchase requisitions." }
+                    ],
+                    flow: [
+                        { name: "Customer Appointment", color: "blue" },
+                        { name: "Staff/Technician Scheduling", color: "indigo" },
+                        { name: "In-Store/On-Site Service", color: "sky" },
+                        { name: "Service Confirmation/Verification", color: "green" },
+                        { name: "Payment/Review", color: "green" }
+                    ]
+                },
+                education: {
+                    title: "PGo+ for Small Education Institutions",
+                    intro: "Kindergartens, Daycares, K12 tutoring classes, etc., core is the effective connection of students, courses, teachers, and parents. PGo+ provides an integrated 'Academic-Teaching-Parent' platform.",
+                    challenges: [
+                        "Tedious academic work like enrollment, class division, and scheduling, prone to errors.",
+                        "Complex calculation of lesson fees and packages, untimely follow-up on student renewals.",
+                        "Inconvenient recording of teaching processes (e.g., attendance, homework).",
+                        "Low efficiency in communication with parents, easy disconnection of information."
+                    ],
+                    solutions: [
+                        { icon: "🧑‍🎓", name: "Student Profiles & Follow-up", desc: "Manage student (family) information, intended courses, trial classes, follow-up status." },
+                        { icon: "📚", name: "Smart Scheduling & Attendance", desc: "Visual scheduling, supports one-on-one, group classes, student/teacher scan code attendance." },
+                        { icon: "💰", name: "Package & Fee Management", desc: "Flexibly set packages, miscellaneous fees, automatically deduct class hours, generate payment notices." },
+                        { icon: "📱", name: "Home-School Portal", desc: "Teachers publish notices, homework, classroom performance, parents receive and feedback in real-time." }
+                    ],
+                    flow: [
+                        { name: "Enrollment Consultation", color: "blue" },
+                        { name: "Registration & Payment", color: "green" },
+                        { name: "Scheduling/Class Division", color: "indigo" },
+                        { name: "Class/Attendance", color: "sky" },
+                        { name: "After-Class/Home-School Comm", color: "indigo" }
+                    ]
+                },
+                entertainment: {
+                    title: "PGo+ for Small Entertainment",
+                    intro: "Script murder mysteries, escape rooms, small performances, etc., rely on precise matching of venues, time, and personnel. PGo+ helps you efficiently manage event scheduling and ticketing.",
+                    challenges: [
+                        "Scheduling conflicts for venues, scripts, and DM (host) resources.",
+                        "Unsynchronized ticketing inventory across multiple channels, overselling or vacancies.",
+                        "Untimely response to temporary group formation, group buying needs.",
+                        "Single means of member management and repurchase incentives."
+                    ],
+                    solutions: [
+                        { icon: "🏟️", name: "Venue/Resource Scheduling", desc: "Visual calendar, manage occupancy status of venues, rooms, scripts, DMs." },
+                        { icon: "🎫", name: "Event Publishing & Ticketing", desc: "Publish events, set ticket types (group buying/booking entire venue), multi-channel inventory locking." },
+                        { icon: "🤝", name: "Group Formation Mgmt", desc: "Supports customers initiating group buying, backend assists in forming groups, improving occupancy rate." },
+                        { icon: "🎯", name: "Membership & Marketing", desc: "Member levels, points, stored value, issue targeted coupons, promote repurchase." }
+                    ],
+                    flow: [
+                        { name: "Create Event/Schedule", color: "indigo" },
+                        { name: "Multi-Channel Ticketing", color: "blue" },
+                        { name: "Customer Grouping", color: "blue" },
+                        { name: "On-Site Verification", color: "sky" },
+                        { name: "Event Starts", color: "green" }
+                    ]
+                },
+                software: {
+                    title: "PGo+ for Software & IT Companies",
+                    intro: "Small software outsourcing, SaaS, or IT service teams need to agilely respond to needs, manage project progress, and account for man-hours. PGo+ connects the 'Requirement-Project-Man-hour' chain.",
+                    challenges: [
+                        "Scattered customer requirements, frequent changes, difficult to track.",
+                        "Opaque project progress, difficult task allocation and resource coordination.",
+                        "Non-standardized man-hour reporting, inaccurate project cost accounting.",
+                        "Slow Helpdesk/O&M support response, chaotic handling process."
+                    ],
+                    solutions: [
+                        { icon: "💡", name: "Requirement/Ticket Pool", desc: "Unified collection of customer requirements (Tickets), allocate, circulate, track processing status." },
+                        { icon: "🚀", name: "Agile Project Management", desc: "Manage projects, versions, tasks, visual dashboard tracks progress." },
+                        { icon: "⏱️", name: "Man-hours & Expenses", desc: "Employees report man-hours, link to projects/tasks, collect project costs." },
+                        { icon: "🧾", name: "Service & Billing", desc: "Generate service bills by project, man-hour, man-month, manage contract collection." }
+                    ],
+                    flow: [
+                        { name: "Requirement/Ticket", color: "blue" },
+                        { name: "Assessment/Project Initiation", color: "indigo" },
+                        { name: "Task Assignment", color: "indigo" },
+                        { name: "R&D/Execution", color: "sky" },
+                        { name: "Man-hour Reporting", color: "sky" },
+                        { name: "Testing/Acceptance/Billing", color: "green" }
+                    ]
+                },
+                professional: {
+                    title: "PGo+ for Professional Services",
+                    intro: "Accounting, legal, consulting, engineering, and other professional services, core is refined management of clients, projects (cases), and man-hours. PGo+ helps you manage 'People, Matters, Time, Money' well.",
+                    challenges: [
+                        "Scattered client and project (case) files, difficult to find historical information.",
+                        "Non-standard service processes, reliant on manual follow-up, easy to omit.",
+                        "Untimely, inaccurate man-hour recording, affecting billing and performance.",
+                        "Chaotic compliance/SOP document management, poor execution."
+                    ],
+                    solutions: [
+                        { icon: "💼", name: "Client & Project/Case Mgmt", desc: "360-degree client view, manage project (case) files, stages, documents." },
+                        { icon: "⏱️", name: "Refined Man-hours & Expenses", desc: "Conveniently record man-hours and expenses, link to clients and projects, supports approval flows." },
+                        { icon: "📊", name: "Project Billing & Analysis", desc: "Issue bills by man-hour, project, fixed price, and other modes." },
+                        { icon: "📂", name: "SOP & Knowledge Base", desc: "Accumulate standard service process (SOP) and knowledge documents, standardize operations." }
+                    ],
+                    flow: [
+                        { name: "New Client/Case", color: "blue" },
+                        { name: "Initiation/SOP Start", color: "indigo" },
+                        { name: "Man-hour/Expense Recording", color: "sky" },
+                        { name: "Internal Review", color: "indigo" },
+                        { name: "Issue Report/Bill", color: "green" }
+                    ]
+                }
+            };
+
+            const chartData = {
+                trade: {
+                    title: "Order Processing Efficiency Improved",
+                    labels: ['Before PGo+', 'After PGo+'],
+                    datasets: [{
+                        label: 'Manual Processing Time (Hours)',
+                        data: [48, 8],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                assembly: {
+                    title: "On-Time Delivery Rate",
+                    labels: ['Before PGo+', 'After PGo+'],
+                    datasets: [{
+                        label: 'On-Time Delivery Rate (%)',
+                        data: [65, 92],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                logistics: {
+                    title: "Inventory Accuracy",
+                    labels: ['Before PGo+', 'After PGo+'],
+                    datasets: [{
+                        label: 'Inventory Accuracy (%)',
+                        data: [82, 99.5],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                service: {
+                    title: "Appointment Conflict Rate",
+                    labels: ['Before PGo+', 'After PGo+'],
+                    datasets: [{
+                        label: 'Appointment Conflict Rate (%)',
+                        data: [15, 1],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                education: {
+                    title: "Academic Admin Man-hours",
+                    labels: ['Before PGo+', 'After PGo+'],
+                    datasets: [{
+                        label: 'Weekly Admin Man-hours',
+                        data: [40, 10],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                entertainment: {
+                    title: "Venue Vacancy Rate",
+                    labels: ['Before PGo+', 'After PGo+'],
+                    datasets: [{
+                        label: 'Venue Vacancy Rate (%)',
+                        data: [30, 8],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                software: {
+                    title: "Project Man-hour Accounting Accuracy",
+                    labels: ['Before PGo+', 'After PGo+'],
+                    datasets: [{
+                        label: 'Man-hour Accounting Deviation (%)',
+                        data: [25, 5],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                professional: {
+                    title: "Billable Hour Rate",
+                    labels: ['Before PGo+', 'After PGo+'],
+                    datasets: [{
+                        label: 'Billable Hour Capture Rate (%)',
+                        data: [70, 95],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                }
+            };
+
+            function createFlowchart(flowSteps) {
+                return flowSteps.map((step, index) => `
+                    <div class="flex-shrink-0 p-3 rounded-lg shadow-sm bg-${step.color}-50 text-${step.color}-800 font-medium text-sm">
+                        ${step.name}
+                    </div>
+                    ${index < flowSteps.length - 1 ? `<div class="flex-shrink-0 text-xl text-${step.color}-400 mx-1 md:mx-2">→</div>` : ''}
+                `).join('');
+            }
+
+            function renderContent(industryId) {
+                const data = industryData[industryId];
+                if (!data) return;
+
+                const chartConfig = chartData[industryId];
+
+                const html = `
+                    <div class="animate-fade-in">
+                        <h2 class="text-3xl font-bold text-blue-800 mb-2">${data.title}</h2>
+                        <p class="text-lg text-gray-600 mb-8">${data.intro}</p>
+
+                        <section class="mb-10">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">Core Challenges</h3>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                ${data.challenges.map(challenge => `<li>${challenge}</li>`).join('')}
+                            </ul>
+                        </section>
+
+                        <section class="mb-10">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-5 border-b-2 border-blue-200 pb-2">PGo+ Core Modules</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${data.solutions.map(solution => `
+                                    <div class="bg-gray-50 rounded-xl p-5 shadow-sm border border-gray-100">
+                                        <div class="flex items-center space-x-3 mb-2">
+                                            <span class="text-2xl">${solution.icon}</span>
+                                            <h4 class="text-lg font-semibold text-blue-700">${solution.name}</h4>
+                                        </div>
+                                        <p class="text-gray-600 text-sm">${solution.desc}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </section>
+
+                        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                            <div class="mb-10 lg:mb-0">
+                                <h3 class="text-2xl font-semibold text-gray-800 mb-5 border-b-2 border-blue-200 pb-2">Value Highlights</h3>
+                                <div class="chart-container">
+                                    <canvas id="industry-chart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="mb-10 lg:mb-0">
+                                <h3 class="text-2xl font-semibold text-gray-800 mb-5 border-b-2 border-blue-200 pb-2">Typical Workflow</h3>
+                                <div class="flow-container p-4 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center">
+                                        ${createFlowchart(data.flow)}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                `;
+                contentPane.innerHTML = html;
+
+                renderChart(chartConfig);
+            }
+
+            function renderChart(chartConfig) {
+                if (chartInstance) {
+                    chartInstance.destroy();
+                }
+                const ctx = document.getElementById('industry-chart').getContext('2d');
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartConfig.labels,
+                        datasets: chartConfig.datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: chartConfig.title,
+                                font: {
+                                    size: 16,
+                                    weight: '600'
+                                },
+                                color: '#374151'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#e5e7eb'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function updateActiveButton(targetButton) {
+                navContainer.querySelectorAll('.nav-button').forEach(button => {
+                    button.classList.remove('text-blue-600', 'font-bold', 'border-b-2', 'border-blue-600');
+                    button.classList.add('text-gray-500');
+                });
+                targetButton.classList.add('text-blue-600', 'font-bold', 'border-b-2', 'border-blue-600');
+                targetButton.classList.remove('text-gray-500');
+            }
+
+            navContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('.nav-button');
+                if (button) {
+                    const industryId = button.dataset.industry;
+                    updateActiveButton(button);
+                    renderContent(industryId);
+
+                    button.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                        inline: 'center'
+                    });
+                }
+            });
+
+            const firstButton = navContainer.querySelector('.nav-button');
+            updateActiveButton(firstButton);
+            renderContent(firstButton.dataset.industry);
+        });
+    </script>
+</body>
+</html>
