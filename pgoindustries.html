@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProcessGo Plus™ 行业解决方案</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 250px;
+            max-height: 320px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        nav::-webkit-scrollbar {
+            height: 4px;
+        }
+        nav::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        nav::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 20px;
+        }
+        .flow-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+        .flow-container::-webkit-scrollbar {
+            height: 4px;
+        }
+        .flow-container::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+    </style>
+    <!-- Chosen Palette: Calm Corporate Blue -->
+    <!-- Application Structure Plan: Designed a single-page application (SPA) using a main tabbed-pane (horizontal navigation) structure. This was chosen over a simple linear report to allow for non-linear, user-driven exploration. The user can immediately select their industry of interest. A central, dynamic content pane is updated (HTML + Chart.js) by a single JavaScript function, providing an integrated and responsive experience. This structure is ideal for presenting discrete, parallel solution sets (one per industry) clearly and concisely. -->
+    <!-- Visualization & Content Choices: Report Info (Solution for Industry X) -> Goal (Inform/Compare) -> Viz/Method (HTML Text, HTML Grid Cards, HTML Flex-Flowchart, Chart.js Bar Chart) -> Interaction (Click tab to update all content, hover chart for tooltip) -> Justification (This mix provides a clear hierarchy: high-level challenges, specific solutions (cards), a visual process (flowchart), and a quantitative benefit (chart). The HTML flowchart avoids SVG/Mermaid. The Chart.js bar chart (Before/After) is a reusable, data-driven element. All elements are dynamically loaded into a single pane for a seamless SPA feel.) -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-700">ProcessGo Plus™</h1>
+            <p class="text-xl md:text-2xl text-gray-600 mt-2">中小企业及海外分支机构行业解决方案</p>
+            <p class="text-md text-gray-500 mt-1">专为100人以内的成长型团队打造</p>
+        </header>
+
+        <main class="bg-white rounded-xl shadow-2xl overflow-hidden">
+            <nav id="industry-nav" class="flex border-b border-gray-200 bg-gray-50 overflow-x-auto whitespace-nowrap">
+                <button data-industry="trade" class="nav-button active py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    贸易分销
+                </button>
+                <button data-industry="assembly" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    简单加工装配
+                </button>
+                <button data-industry="logistics" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    三方物流/海外仓
+                </button>
+                <button data-industry="service" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    餐饮及生活服务
+                </button>
+                <button data-industry="education" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    小型教育机构
+                </button>
+                <button data-industry="entertainment" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    小型娱乐业
+                </button>
+                <button data-industry="software" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    软件及IT公司
+                </button>
+                <button data-industry="professional" class="nav-button py-4 px-6 font-medium text-sm md:text-base text-gray-500 hover:text-blue-600 transition-colors duration-200 relative">
+                    专业服务
+                </button>
+            </nav>
+
+            <div id="content-pane" class="p-6 md:p-10">
+            </div>
+        </main>
+
+        <footer class="text-center mt-8 text-gray-500 text-sm">
+            &copy; 2025 ProcessGo Plus™. All rights reserved. 
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navContainer = document.getElementById('industry-nav');
+            const contentPane = document.getElementById('content-pane');
+            let chartInstance = null;
+
+            const industryData = {
+                trade: {
+                    title: "PGo+ 赋能贸易分销企业",
+                    intro: "中小型贸易商面临订单杂、库存乱、客户多、结算难的挑战。PGo+ 提供轻量、灵活的业财一体化流程，打通从线索到回款的全链路。",
+                    challenges: [
+                        "订单处理依赖人工，易错漏，效率低。",
+                        "库存数据不准，多平台多仓库难协同。",
+                        "客户价格体系混乱，报价核算慢。",
+                        "应收应付对账繁琐，资金周转不明晰。"
+                    ],
+                    solutions: [
+                        { icon: "📦", name: "订单全周期管理", desc: "从报价、订单、发货到开票回款，流程自动化。" },
+                        { icon: "📊", name: "精准备库存协同", desc: "实时同步多仓库存，设置安全库存预警。" },
+                        { icon: "👤", name: "客户关系与定价", desc: "管理客户档案、跟进记录及多级价格策略。" },
+                        { icon: "💰", name: "简易业财核算", desc: "自动生成应收应付，关联订单核算成本利润。" }
+                    ],
+                    flow: [
+                        { name: "询价报价", color: "blue" },
+                        { name: "销售订单", color: "blue" },
+                        { name: "采购/备货", color: "sky" },
+                        { name: "出库发货", color: "blue" },
+                        { name: "开票收款", color: "green" }
+                    ]
+                },
+                assembly: {
+                    title: "PGo+ 助力简单加工装配",
+                    intro: "小规模加工装配企业需要平衡订单、生产、物料与成本。PGo+ 提供简洁的“销售-生产-库存”闭环，实现透明化管理。",
+                    challenges: [
+                        "物料清单 (BOM) 管理不便，领料混乱。",
+                        "生产进度黑盒，无法准确答复客户交期。",
+                        "订单、物料、生产脱节，协调成本高。",
+                        "成本核算困难，不知道订单是赚是亏。"
+                    ],
+                    solutions: [
+                        { icon: "📝", name: "轻量BOM与工单", desc: "灵活配置BOM，按单下达生产工单，自动核算物料需求。" },
+                        { icon: "🏭", name: "生产进度跟踪", desc: "关键工序报工，实时掌握工单状态，及时反馈异常。" },
+                        { icon: "🔗", name: "销产存一体化", desc: "销售订单驱动生产，生产领料关联库存，数据自动流转。" },
+                        { icon: "📈", name: "订单成本归集", desc: "自动归集工单相关的物料、人工、费用，核算订单毛利。" }
+                    ],
+                    flow: [
+                        { name: "销售订单", color: "blue" },
+                        { name: "创建工单 (BOM)", color: "sky" },
+                        { name: "领料/采购", color: "sky" },
+                        { name: "生产报工", color: "indigo" },
+                        { name: "质检入库", color: "green" }
+                    ]
+                },
+                logistics: {
+                    title: "PGo+ 优化三方物流/海外仓",
+                    intro: "中小型3PL和海外仓服务商，核心在于高效、准确的仓储作业和清晰的计费。PGo+ 梳理核心WMS流程，实现作业标准化。",
+                    challenges: [
+                        "入库、出库、上架、拣货流程不规范，依赖老员工。",
+                        "库存信息更新不及时，库位管理混乱，找货难。",
+                        "操作指令多变，难以跟踪执行情况。",
+                        "按客户、按操作计费复杂，易出错。"
+                    ],
+                    solutions: [
+                        { icon: "📥", name: "标准WMS作业", desc: "规范化入库、上架、拣货、复核、出库全流程，支持PDA操作。" },
+                        { icon: "🗺️", name: "可视化库位库存", desc: "实时库存看板，清晰展现库位、SKU、批次、数量。" },
+                        { icon: "📋", name: "指令与任务协同", desc: "系统派发作业指令，员工接单执行，状态实时反馈。" },
+                        { icon: "🧾", name: "灵活计费引擎", desc: "按客户配置仓租、操作费等计费规则，自动生成账单。" }
+                    ],
+                    flow: [
+                        { name: "客户预约 (ASN)", color: "blue" },
+                        { name: "收货上架", color: "sky" },
+                        { name: "在库管理 (盘点/移位)", color: "indigo" },
+                        { name: "订单拣货", color: "sky" },
+                        { name: "复核打包", color: "sky" },
+                        { name: "出库/计费", color: "green" }
+                    ]
+                },
+                service: {
+                    title: "PGo+ 赋能餐饮及生活服务",
+                    intro: "连锁餐饮、美容、家政等生活服务业，重点是客户预约、员工排班与服务履约。PGo+ 帮您管好客户、员工和订单。",
+                    challenges: [
+                        "客户预约渠道多，信息不同步，易冲突。",
+                        "员工排班、SOP执行、服务质量难管控。",
+                        "会员/储值/套餐管理复杂，核销对账难。",
+                        "门店物料（食材）消耗与采购脱节。"
+                    ],
+                    solutions: [
+                        { icon: "📅", name: "多渠道预约排程", desc: "统一管理客户预约，智能匹配员工(技师)时间与技能。" },
+                        { icon: "🧑‍🔧", name: "员工排班与SOP", desc: "灵活排班，推送服务SOP，记录服务过程与客户反馈。" },
+                        { icon: "💳", name: "会员与卡券管理", desc: "管理会员信息、储值、计次卡、优惠券，支持扫码核销。" },
+                        { icon: "🍲", name: "简易库存(物料)", desc: "门店物料/食材的入库、消耗、盘点及采购申请。" }
+                    ],
+                    flow: [
+                        { name: "客户预约", color: "blue" },
+                        { name: "员工/技师排班", color: "indigo" },
+                        { name: "到店/上门服务", color: "sky" },
+                        { name: "服务确认/核销", color: "green" },
+                        { name: "支付/评价", color: "green" }
+                    ]
+                },
+                education: {
+                    title: "PGo+ 关爱小型教育机构",
+                    intro: "幼儿园、Daycare、K12辅导班等，核心是学员、课程、老师和家长的有效连接。PGo+ 提供“教务-教学-家长”一体化平台。",
+                    challenges: [
+                        "招生、分班、排课等教务工作繁琐，易出错。",
+                        "课时费、课包核算复杂，学员续费跟进不及时。",
+                        "教学过程（如出勤、作业）记录不便。",
+                        "与家长沟通效率低，信息传达易断层。"
+                    ],
+                    solutions: [
+                        { icon: "🧑‍🎓", name: "学员档案与跟进", desc: "管理学员(家庭)信息、意向课程、试听、跟进状态。" },
+                        { icon: "📚", name: "智能排课与考勤", desc: "可视化排课，支持一对一、班课，学员/老师扫码考勤。" },
+                        { icon: "💰", name: "课包与收费管理", desc: "灵活设置课包、杂费，自动扣减课时，生成缴费通知。" },
+                        { icon: "📱", name: "家校互通门户", desc: "老师发布通知、作业、课堂表现，家长实时接收、反馈。" }
+                    ],
+                    flow: [
+                        { name: "招生咨询", color: "blue" },
+                        { name: "报名缴费", color: "green" },
+                        { name: "排课/分班", color: "indigo" },
+                        { name: "上课/考勤", color: "sky" },
+                        { name: "课后/家校沟通", color: "indigo" }
+                    ]
+                },
+                entertainment: {
+                    title: "PGo+ 激活小型娱乐业",
+                    intro: "剧本杀、密室、小型演出等，依赖于场地、时间、人员的精准匹配。PGo+ 帮助您高效管理活动排期与票务。",
+                    challenges: [
+                        "场地、剧本、DM(主持人)资源排期冲突。",
+                        "多渠道票务库存不同步，超卖或空置。",
+                        "临时组局、拼团等需求响应不及时。",
+                        "会员管理与复购激励手段单一。"
+                    ],
+                    solutions: [
+                        { icon: "🏟️", name: "场地/资源排期", desc: "可视化日历，管理场地、房间、剧本、DM的占用状态。" },
+                        { icon: "🎫", name: "活动发布与票务", desc: "发布活动、设置票种(拼团/包场)，多渠道库存锁定。" },
+                        { icon: "🤝", name: "组局与拼团管理", desc: "支持客户发起拼团，后台协助组局，提升满座率。" },
+                        { icon: "🎯", name: "会员与营销", desc: "会员等级、积分、储值，发放定向优惠券，促进复购。" }
+                    ],
+                    flow: [
+                        { name: "创建活动/排期", color: "indigo" },
+                        { name: "多渠道售票", color: "blue" },
+                        { name: "客户组局/拼团", color: "blue" },
+                        { name: "到场核销", color: "sky" },
+                        { name: "活动开始", color: "green" }
+                    ]
+                },
+                software: {
+                    title: "PGo+ 协同软件及IT公司",
+                    intro: "小型软件外包、SaaS或IT服务团队，需要敏捷响应需求、管理项目进度和核算工时。PGo+ 打通“需求-项目-工时”链条。",
+                    challenges: [
+                        "客户需求零散，变更频繁，难以跟踪。",
+                        "项目进度不透明，任务分配与资源协调难。",
+                        "工时填报不规范，项目成本核算不准。",
+                        "Helpdesk/运维支持响应慢，处理过程混乱。"
+                    ],
+                    solutions: [
+                        { icon: "💡", name: "需求/工单池", desc: "统一收集客户需求(Ticket)，分配、流转、跟踪处理状态。" },
+                        { icon: "🚀", name: "敏捷项目管理", desc: "管理项目、版本、任务，可视化看板跟踪进度。" },
+                        { icon: "⏱️", name: "工时与费用", desc: "员工填报工时，关联项目/任务，归集项目成本。" },
+                        { icon: "🧾", name: "服务与计费", desc: "按项目、按工时、按人月生成服务账单，管理合同回款。" }
+                    ],
+                    flow: [
+                        { name: "需求/Ticket", color: "blue" },
+                        { name: "评估/立项", color: "indigo" },
+                        { name: "任务分配", color: "indigo" },
+                        { name: "研发/执行", color: "sky" },
+                        { name: "工时填报", color: "sky" },
+                        { name: "测试/验收/计费", color: "green" }
+                    ]
+                },
+                professional: {
+                    title: "PGo+ 助力专业服务机构",
+                    intro: "会计、法律、咨询、工程等专业服务，核心是客户、项目(案件)和工时的精细化管理。PGo+ 帮您管好“人、事、时、钱”。",
+                    challenges: [
+                        "客户与项目(案件)档案分散，历史信息查找难。",
+                        "服务过程非标，依赖人工跟进，易遗漏。",
+                        "工时记录不及时、不准确，影响计费和绩效。",
+                        "合规/SOP文档管理混乱，执行不到位。"
+                    ],
+                    solutions: [
+                        { icon: "💼", name: "客户与项目/案件管理", desc: "360度客户视图，管理项目(案件)档案、阶段、文档。" },
+                        { icon: "⏱️", name: "精细工时与费用", desc: "便捷记录工时与开支，关联客户与项目，支持审批流。" },
+                        { icon: "📊", name: "项目计费与分析", desc: "按工时、按项目、按固定价等多种模式出具账单。" },
+                        { icon: "📂", name: "SOP与知识库", desc: "沉淀标准服务流程(SOP)和知识文档，规范作业。" }
+                    ],
+                    flow: [
+                        { name: "新客户/案件", color: "blue" },
+                        { name: "立项/SOP启动", color: "indigo" },
+                        { name: "工时/费用记录", color: "sky" },
+                        { name: "内部审核", color: "indigo" },
+                        { name: "出具报告/账单", color: "green" }
+                    ]
+                }
+            };
+
+            const chartData = {
+                trade: {
+                    title: "订单处理效率提升",
+                    labels: ['使用PGo+前', '使用PGo+后'],
+                    datasets: [{
+                        label: '人工处理时间 (小时)',
+                        data: [48, 8],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                assembly: {
+                    title: "按时交付率",
+                    labels: ['使用PGo+前', '使用PGo+后'],
+                    datasets: [{
+                        label: '按时交付率 (%)',
+                        data: [65, 92],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                logistics: {
+                    title: "库存准确率",
+                    labels: ['使用PGo+前', '使用PGo+后'],
+                    datasets: [{
+                        label: '库存准确率 (%)',
+                        data: [82, 99.5],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                service: {
+                    title: "预约冲突率",
+                    labels: ['使用PGo+前', '使用PGo+后'],
+                    datasets: [{
+                        label: '预约冲突率 (%)',
+                        data: [15, 1],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                education: {
+                    title: "教务管理工时",
+                    labels: ['使用PGo+前', '使用PGo+后'],
+                    datasets: [{
+                        label: '每周行政工时 (小时)',
+                        data: [40, 10],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                entertainment: {
+                    title: "场地空置率",
+                    labels: ['使用PGo+前', '使用PGo+后'],
+                    datasets: [{
+                        label: '场地空置率 (%)',
+                        data: [30, 8],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                software: {
+                    title: "项目工时核算准确度",
+                    labels: ['使用PGo+前', '使用PGo+后'],
+                    datasets: [{
+                        label: '工时核算偏差 (%)',
+                        data: [25, 5],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                },
+                professional: {
+                    title: "工时可计费率",
+                    labels: ['使用PGo+前', '使用PGo+后'],
+                    datasets: [{
+                        label: '可计费工时捕获率 (%)',
+                        data: [70, 95],
+                        backgroundColor: ['#fca5a5', '#86efac'],
+                        borderColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 1
+                    }]
+                }
+            };
+
+            function createFlowchart(flowSteps) {
+                return flowSteps.map((step, index) => `
+                    <div class="flex-shrink-0 p-3 rounded-lg shadow-sm bg-${step.color}-50 text-${step.color}-800 font-medium text-sm">
+                        ${step.name}
+                    </div>
+                    ${index < flowSteps.length - 1 ? `<div class="flex-shrink-0 text-xl text-${step.color}-400 mx-1 md:mx-2">→</div>` : ''}
+                `).join('');
+            }
+
+            function renderContent(industryId) {
+                const data = industryData[industryId];
+                if (!data) return;
+
+                const chartConfig = chartData[industryId];
+
+                const html = `
+                    <div class="animate-fade-in">
+                        <h2 class="text-3xl font-bold text-blue-800 mb-2">${data.title}</h2>
+                        <p class="text-lg text-gray-600 mb-8">${data.intro}</p>
+
+                        <section class="mb-10">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">核心挑战</h3>
+                            <ul class="list-disc list-inside space-y-2 text-gray-700">
+                                ${data.challenges.map(challenge => `<li>${challenge}</li>`).join('')}
+                            </ul>
+                        </section>
+
+                        <section class="mb-10">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-5 border-b-2 border-blue-200 pb-2">PGo+ 核心模块</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${data.solutions.map(solution => `
+                                    <div class="bg-gray-50 rounded-xl p-5 shadow-sm border border-gray-100">
+                                        <div class="flex items-center space-x-3 mb-2">
+                                            <span class="text-2xl">${solution.icon}</span>
+                                            <h4 class="text-lg font-semibold text-blue-700">${solution.name}</h4>
+                                        </div>
+                                        <p class="text-gray-600 text-sm">${solution.desc}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </section>
+
+                        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                            <div class="mb-10 lg:mb-0">
+                                <h3 class="text-2xl font-semibold text-gray-800 mb-5 border-b-2 border-blue-200 pb-2">价值亮点</h3>
+                                <div class="chart-container">
+                                    <canvas id="industry-chart"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="mb-10 lg:mb-0">
+                                <h3 class="text-2xl font-semibold text-gray-800 mb-5 border-b-2 border-blue-200 pb-2">典型流程示意</h3>
+                                <div class="flow-container p-4 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center">
+                                        ${createFlowchart(data.flow)}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                `;
+                contentPane.innerHTML = html;
+
+                renderChart(chartConfig);
+            }
+
+            function renderChart(chartConfig) {
+                if (chartInstance) {
+                    chartInstance.destroy();
+                }
+                const ctx = document.getElementById('industry-chart').getContext('2d');
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartConfig.labels,
+                        datasets: chartConfig.datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: chartConfig.title,
+                                font: {
+                                    size: 16,
+                                    weight: '600'
+                                },
+                                color: '#374151'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#e5e7eb'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function updateActiveButton(targetButton) {
+                navContainer.querySelectorAll('.nav-button').forEach(button => {
+                    button.classList.remove('text-blue-600', 'font-bold', 'border-b-2', 'border-blue-600');
+                    button.classList.add('text-gray-500');
+                });
+                targetButton.classList.add('text-blue-600', 'font-bold', 'border-b-2', 'border-blue-600');
+                targetButton.classList.remove('text-gray-500');
+            }
+
+            navContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('.nav-button');
+                if (button) {
+                    const industryId = button.dataset.industry;
+                    updateActiveButton(button);
+                    renderContent(industryId);
+                    
+                    button.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                        inline: 'center'
+                    });
+                }
+            });
+
+            const firstButton = navContainer.querySelector('.nav-button');
+            updateActiveButton(firstButton);
+            renderContent(firstButton.dataset.industry);
+        });
+    </script>
+</body>
+</html>
