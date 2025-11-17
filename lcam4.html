@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧资产全生命周期管理框架 (Smart ALCM Framework)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif';
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .phase-btn.active-phase {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+            transform: translateY(-4px);
+            background-color: #eff6ff;
+        }
+        .tab-btn.active {
+            border-bottom-color: #3b82f6;
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        nav.sticky {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        section {
+            scroll-margin-top: 80px;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals (White, Slate, Blue Accent) -->
+    <!-- Application Structure Plan: 本应用设计采用自上而下的主题式结构，而非复刻源报告的线性章节。顶部导航栏实现“滚动侦测”和“平滑滚动”，便于用户在单页内快速定位。1. 首页(Hero): 宏观定义升级后的框架。2. 核心理念: 阐明从传统EAM到智能ALCM的思想转变，使用卡片布局对比“旧”与“新”。3. 智能技术: 采用标签页(Tabs)交互，将IoT、AI、Digital Twin三大技术支柱的功能和作用在资产管理中进行拆分讲解，避免信息过载。4. 周期模型: 这是核心交互区。摒弃线性流程，设计了一个以“数字孪生”为中心的、四象限的、可点击的CSS图表。用户点击任一新阶段（规划、建造、运维、处置），右侧即时更新该阶段的详细说明（JS驱动），直观展示新框架的数据驱动和闭环特性。5. 价值与指标: 结合文本和图表，用Chart.js条形图量化对比新旧框架的关键绩效指标(KPI)，使优势一目了然。此结构设计旨在引导用户从“是什么”到“为什么”再到“怎么做”和“有何价值”进行探索式学习，比静态文档更具吸引力和可用性。 -->
+    <!-- Visualization & Content Choices: 
+        1. 报告信息: 传统的、分阶段的生命周期（规划、设计、采购、建设、运维、报废）。目标: 升级为现代数据驱动的闭环模型。呈现方式: 交互式HTML/CSS四象限图表，中心为“数字孪生”。交互: 点击各象限（智能规划、透明建造、预测性运维、循环处置）时，JS会显示/隐藏对应的详细说明文本。理由: 动态展示数字孪生作为数据核心的中心地位，以及各阶段如何被新技术赋能，比静态列表更直观。库/方法: Vanilla JS。
+        2. 报告信息: 成本、效率、评估体系。目标: 量化展示新框架相较于传统框架的显著优势。呈现方式: Chart.js 条形图。交互: 鼠标悬停显示详细数据（Chart.js内置tooltip）。理由: 条形图是对比两组（传统 vs 智慧）多个指标（如资产利用率、维护成本）的最清晰、最标准的可视化方法。库/方法: Chart.js (Canvas)。
+        3. 报告信息: (隐含) 需整合新技术。目标: 分类详细阐述IoT、AI、数字孪生三大核心技术的作用。呈现方式: 标签页(Tabs)界面。交互: 点击标签切换内容面板。理由: 标签页是标准UI组件，能在有限空间内清晰组织大量信息，避免页面过长，用户可按需查看。库/方法: Vanilla JS。
+        4. 报告信息: (隐含) 国际视野。目标: 融合国际先进理念（如ISO 55000、循环经济）。呈现方式: 结构化HTML文本，穿插在“核心理念”和“周期模型”的说明文字中。交互: 无（静态阅读）。理由: 这些是指导思想，适合作为上下文融入框架的定义和说明中。库/方法: HTML。
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800 leading-relaxed">
+
+    <nav id="navbar" class="bg-white shadow-md w-full sticky top-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-blue-600">智慧资产管理</div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#home" class="nav-link text-slate-600 hover:text-blue-600 transition-colors">首页</a>
+                <a href="#concept" class="nav-link text-slate-600 hover:text-blue-600 transition-colors">核心理念</a>
+                <a href="#tech" class="nav-link text-slate-600 hover:text-blue-600 transition-colors">智能技术</a>
+                <a href="#model" class="nav-link text-slate-600 hover:text-blue-600 transition-colors">周期模型</a>
+                <a href="#value" class="nav-link text-slate-600 hover:text-blue-600 transition-colors">价值与指标</a>
+            </div>
+            <div class="md:hidden">
+                <button id="mobile-menu-btn" class="text-slate-600 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden bg-white shadow-lg">
+            <a href="#home" class="nav-link block px-6 py-3 text-slate-600 hover:bg-slate-100">首页</a>
+            <a href="#concept" class="nav-link block px-6 py-3 text-slate-600 hover:bg-slate-100">核心理念</a>
+            <a href="#tech" class="nav-link block px-6 py-3 text-slate-600 hover:bg-slate-100">智能技术</a>
+            <a href="#model" class="nav-link block px-6 py-3 text-slate-600 hover:bg-slate-100">周期模型</a>
+            <a href="#value" class="nav-link block px-6 py-3 text-slate-600 hover:bg-slate-100">价值与指标</a>
+        </div>
+    </nav>
+
+    <main>
+        <section id="home" class="bg-white">
+            <div class="container mx-auto px-6 py-24 md:py-32 text-center">
+                <h1 class="text-4xl md:text-6xl font-extrabold mb-6">
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-teal-500">
+                        智慧资产全生命周期管理
+                    </span>
+                </h1>
+                <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">
+                    融合 AI、IoT 与数字孪生的新范式。本框架基于源报告的核心思想，整合全球先进实践，构建一个从被动响应到主动预测、从成本中心到价值中心的智能资产管理体系。
+                </p>
+                <a href="#concept" class="mt-10 inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-blue-700 transition-transform hover:scale-105">
+                    探索新范式
+                </a>
+            </div>
+        </section>
+
+        <section id="concept" class="py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-center mb-4">核心理念转变</h2>
+                <p class="text-center text-slate-600 max-w-2xl mx-auto mb-12">
+                    现代资产管理不再是孤立的维护任务，而是支撑战略目标的价值创造过程。我们必须从根本上转变管理思维，以适应数字化和智能化的浪G。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-blue-500">
+                        <h3 class="text-xl font-semibold mb-3">从“成本”到“价值”</h3>
+                        <p class="text-slate-600">
+                            遵循 ISO 55000 国际标准，将资产管理视为实现组织目标的价值活动，而不仅仅是控制成本。平衡风险、成本与绩效，实现资产组合价值最大化。
+                        </p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-teal-500">
+                        <h3 class="text-xl font-semibold mb-3">从“被动”到“预测”</h3>
+                        <p class="text-slate-600">
+                            利用实时数据和 AI 算法，从“故障后维修”和“定期维修”升级到“预测性维护”(PdM)，在故障发生前精准预警，大幅降低非计划停机时间。
+                        </p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-purple-500">
+                        <h3 class="text-xl font-semibold mb-3">从“孤岛”到“协同”</h3>
+                        <p class="text-slate-600">
+                            打破规划、采购、运维和财务之间的数据壁垒。通过统一的数字孪生平台，实现跨部门、跨阶段的数据贯通和决策协同，优化全生命周期总成本(TCO)。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tech" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-center mb-4">智能技术基石</h2>
+                <p class="text-center text-slate-600 max-w-2xl mx-auto mb-12">
+                    新技术是实现智慧管理的引擎。物联网是感知，人工智能是决策，数字孪生是承载一切的虚拟映射。三者协同，构筑了资产管理的“神经系统”。
+                </p>
+                
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex justify-center border-b border-slate-200 mb-8">
+                        <button data-tab="iot" class="tab-btn active py-4 px-6 text-slate-600 border-b-2 border-transparent hover:border-blue-500 hover:text-blue-500 transition-colors">
+                            物联网 (IoT) · 感知
+                        </button>
+                        <button data-tab="ai" class="tab-btn py-4 px-6 text-slate-600 border-b-2 border-transparent hover:border-blue-500 hover:text-blue-500 transition-colors">
+                            人工智能 (AI) · 决策
+                        </button>
+                        <button data-tab="dt" class="tab-btn py-4 px-6 text-slate-600 border-b-2 border-transparent hover:border-blue-500 hover:text-blue-500 transition-colors">
+                            数字孪生 (DT) · 协同
+                        </button>
+                    </div>
+
+                    <div id="iot" class="tab-content">
+                        <h3 class="text-2xl font-semibold mb-4">物联网 (IoT): 资产的“神经网络”</h3>
+                        <p class="text-slate-600 mb-4">
+                            物联网(IoT)技术通过部署在资产上的海量传感器，替代了传统的人工巡检。它提供了关于资产状态的连续、实时的数据流，实现了“全域感知”。
+                        </p>
+                        <ul class="list-disc list-inside text-slate-600 space-y-2">
+                            <li><b>实时状态监测:</b> 7x24小时不间断收集温度、振动、压力、电流等关键参数。</li>
+                            <li><b>远程操作与控制:</b> 在某些情况下，允许远程调整设备参数或执行关停操作，提高响应速度。</li>
+                            <li><b>环境数据采集:</b> 监测资产所处的环境（如湿度、海拔、污染等级），为状态评估提供更丰富维度。</li>
+                            <li><b>数据源头:</b> 为 AI 模型的训练和数字孪生的实时映射提供高质量的原始数据。</li>
+                        </ul>
+                    </div>
+
+                    <div id="ai" class="tab-content hidden">
+                        <h3 class="text-2xl font-semibold mb-4">人工智能 (AI): 智慧的“中央大脑”</h3>
+                        <p class="text-slate-600 mb-4">
+                            人工智能，特别是机器学习(ML)，是分析海量IoT数据的核心。它从数据中发现模式、预测趋势，并提供前瞻性的决策支持，实现“智能决策”。
+                        </p>
+                        <ul class="list-disc list-inside text-slate-600 space-y-2">
+                            <li><b>预测性维护 (PdM):</b> 分析历史和实时数据，构建故障预测模型，提前数周或数月预警潜在故障。</li>
+                            <li><b>根因分析 (RCA):</b> 发生故障时，AI能快速分析多维数据，辅助工程师定位问题的根本原因。</li>
+                            <li><b>优化决策:</b> 在规划阶段优化资产选型；在运维阶段优化备件库存和维修人员调度。</li>
+                            <li><b>图像与语音识别:</b> 利用AI进行无人机巡检图像的缺陷自动识别，或通过语音助手赋能一线工人。</li>
+                        </ul>
+                    </div>
+
+                    <div id="dt" class="tab-content hidden">
+                        <h3 class="text-2xl font-semibold mb-4">数字孪生 (DT): 虚拟与现实的“映射桥梁”</h3>
+                        <p class="text-slate-600 mb-4">
+                            数字孪生是物理资产的、高保真的、动态的虚拟副本。它集成资产的几何模型、物理属性、历史数据和实时IoT数据，是所有信息的核心汇聚点。
+                        </p>
+                        <ul class="list-disc list-inside text-slate-600 space-y-2">
+                            <li><b>全周期数据视图:</b> 唯一的数据中台，整合从设计图纸、采购合同到运维记录的所有信息。</li>
+                            <li><b>仿真与“假设”分析:</b> 在虚拟环境中模拟不同工况或运维策略（如“增加30%负载会怎样？”），评估影响，规避风险。</li>
+                            <li><b>沉浸式培训:</b> 在虚拟环境中对员工进行操作和维修培训，无需接触高危物理设备。</li>
+                            <li><b>实时状态可视化:</b> 以3D可视化的方式直观展示资产的实时运行状态和健康度。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="model" class="py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-center mb-4">数据驱动的生命周期模型</h2>
+                <p class="text-center text-slate-600 max-w-2xl mx-auto mb-12">
+                    新框架以数字孪生为核心，将传统线性流程重塑为数据驱动的闭环。点击下方各阶段，查看新技术如何赋能资产管理的每一个环节。
+                </p>
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+                    
+                    <div class="lg:col-span-3 relative h-[500px] md:h-[600px] flex items-center justify-center">
+                        <div class="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-4">
+                            <div data-phase="planning" class="phase-btn active-phase flex items-center justify-center text-center p-6 bg-white rounded-2xl shadow-lg cursor-pointer transition-all duration-300 transform hover:-translate-y-1">
+                                <span class="text-5xl mr-4">💡</span>
+                                <div>
+                                    <h4 class="font-semibold text-lg md:text-xl text-blue-700">智能规划与设计</h4>
+                                    <p class="text-sm text-slate-500 hidden md:block">AI 仿真与价值工程</p>
+                                </div>
+                            </div>
+                            <div data-phase="building" class="phase-btn flex items-center justify-center text-center p-6 bg-white rounded-2xl shadow-lg cursor-pointer transition-all duration-300 transform hover:-translate-y-1">
+                                <span class="text-5xl mr-4">🏗️</span>
+                                <div>
+                                    <h4 class="font-semibold text-lg md:text-xl text-green-700">透明采购与建造</h4>
+                                    <p class="text-sm text-slate-500 hidden md:block">供应链协同与DT监控</p>
+                                </div>
+                            </div>
+                            <div data-phase="operation" class="phase-btn flex items-center justify-center text-center p-6 bg-white rounded-2xl shadow-lg cursor-pointer transition-all duration-300 transform hover:-translate-y-1">
+                                <span class="text-5xl mr-4">🔧</span>
+                                <div>
+                                    <h4 class="font-semibold text-lg md:text-xl text-red-700">预测性运营维护</h4>
+                                    <p class="text-sm text-slate-500 hidden md:block">IoT 监测与 AI 预警</p>
+                                </div>
+                            </div>
+                            <div data-phase="disposal" class="phase-btn flex items-center justify-center text-center p-6 bg-white rounded-2xl shadow-lg cursor-pointer transition-all duration-300 transform hover:-translate-y-1">
+                                <span class="text-5xl mr-4">♻️</span>
+                                <div>
+                                    <h4 class="font-semibold text-lg md:text-xl text-purple-700">循环处置与再生</h4>
+                                    <p class="text-sm text-slate-500 hidden md:block">循环经济与残值评估</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="absolute w-40 h-40 md:w-48 md:h-48 bg-blue-600 text-white rounded-full flex items-center justify-center text-center z-10 shadow-2xl">
+                            <div class="p-4">
+                                <h3 class="font-bold text-xl md:text-2xl">数字孪生</h3>
+                                <p class="text-sm md:text-base text-blue-100">数据核心</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg min-h-[400px]">
+                        <div data-phase="planning" class="phase-detail">
+                            <h3 class="text-2xl font-semibold mb-4 text-blue-700">智能规划与设计</h3>
+                            <p class="text-slate-600 mb-4">
+                                这是价值的源头。在规划阶段，利用AI和仿真技术，对多种资产配置方案进行全生命周期成本(LCC)和风险评估，选择最优解，而非“拍脑袋”决策。
+                            </p>
+                            <ul class="list-disc list-inside text-slate-600 space-y-2">
+                                <li><b>AI 驱动的需求预测:</b> 基于历史数据和宏观经济模型，更准确地预测未来的负荷或使用需求。</li>
+                                <li><b>设计仿真:</b> 在数字孪生环境中模拟不同设计方案（如不同材料、不同冗余配置）的长期性能表现。</li>
+                                <li><b>可持续性设计:</b> 融合法国、北欧等地的“循环经济”理念，在设计之初就考虑后续的易维护性、可升级性和可回收性。</li>
+                            </ul>
+                        </div>
+                        <div data-phase="building" class="phase-detail hidden">
+                            <h3 class="text-2xl font-semibold mb-4 text-green-700">透明采购与建造</h3>
+                            <p class="text-slate-600 mb-4">
+                                建造和采购过程是资产“先天健康”的关键。利用技术确保采购的设备符合标准（“源头监造”），并确保施工过程严格按设计执行。
+                            </p>
+                            <ul class="list-disc list-inside text-slate-600 space-y-2">
+                                <li><b>供应链透明化:</b> 结合物联网和区块链技术，追踪关键部件的制造和物流过程，确保来源可靠。</li>
+                                <li><b>施工过程DT监控:</b> 将施工进度和质量检查数据实时同步到数字孪生模型，与BIM设计图纸进行比对，及时发现偏差。</li>
+                                <li><b>数字化移交:</b> 确保所有资产数据（规格、手册、测试报告）在建成交付时，完整、准确地录入到数字孪生平台。</li>
+                            </ul>
+                        </div>
+                        <div data-phase="operation" class="phase-detail hidden">
+                            <h3 class="text-2xl font-semibold mb-4 text-red-700">预测性运营维护</h3>
+                            <p class="text-slate-600 mb-4">
+                                这是资产生命周期中最长、成本最高的阶段。目标是从“被动救火”转向“主动管理”，实现安全、高效、低成本的运行。
+                            </p>
+                            <ul class="list-disc list-inside text-slate-600 space-y-2">
+                                <li><b>状态基准维护 (CBM):</b> 基于IoT实时数据，当参数偏离安全阈值时触发维护，而非按固定周期。</li>
+                                <li><b>预测性维护 (PdM):</b> 利用AI算法分析数据，预测设备剩余使用寿命(RUL)和潜在故障，实现“零非计划停机”。</li>
+                                <li><b>规范化运维:</b> 结合AR眼镜和移动应用，为现场工程师提供标准作业流程(SOP)指导和远程专家支持。</li>
+                            </ul>
+                        </div>
+                        <div data-phase="disposal" class="phase-detail hidden">
+                            <h3 class="text-2xl font-semibold mb-4 text-purple-700">循环处置与再生</h3>
+                            <p class="text-slate-600 mb-4">
+                                资产的终点不是报废，而是价值的再生。融合欧洲的“循环经济”和“资产再利用”理念，最大化挖掘退役资产的剩余价值。
+                            </p>
+                            <ul class="list-disc list-inside text-slate-600 space-y-2">
+                                <li><b>精准状态评估:</b> 基于完整的运维数据，准确评估退役资产的健康状况和剩余价值。</li>
+                                <li><b>资产再利用:</b> 推动备品备件和退役资产在企业内部甚至跨企业间的调配和再利用，如巴西国家石油(Petrobras)的资产共享平台。</li>
+                                <li><b>绿色拆解与回收:</b> 指导资产的环保拆解，回收有价值的原材料，实现资源闭环。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="value" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold text-center mb-4">核心价值与绩效指标</h2>
+                <p class="text-center text-slate-600 max-w-2xl mx-auto mb-12">
+                    实施智慧资产管理框架，将带来可量化的绩效提升和战略价值。它不仅是技术升级，更是企业运营效率和核心竞争力的全面革新。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-6">绩效提升对比</h3>
+                        <div class="chart-container">
+                            <canvas id="kpiChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-semibold mb-6">实现的战略价值</h3>
+                        <ul class="space-y-4">
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center mr-3 font-bold text-sm">✓</span>
+                                <div>
+                                    <h4 class="font-semibold">提升资产利用率 (OEE)</h4>
+                                    <p class="text-slate-600">通过预测性维护大幅减少非计划停机，确保核心资产持续稳定输出，实现更高综合设备效率。</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center mr-3 font-bold text-sm">✓</span>
+                                <div>
+                                    <h4 class="font-semibold">优化运维成本 (OpEx)</h4>
+                                    <p class="text-slate-600">从过度维护（按周期）和昂贵的紧急维护转向精准维护，只在需要时采取行动，同时优化备件库存。</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center mr-3 font-bold text-sm">✓</span>
+                                <div>
+                                    <h4 class="font-semibold">强化风险与合规</h4>
+                                    <p class="text-slate-600">实时监控和数据追溯能力，确保运营始终符合安全和环保法规，尤其适用于能源、化工等高风险行业。</p>
+                                </div>
+                            </li>
+                             <li class="flex items-start">
+                                <span class="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center mr-3 font-bold text-sm">✓</span>
+                                <div>
+                                    <h4 class="font-semibold">赋能可持续发展 (ESG)</h4>
+                                    <p class="text-slate-600">通过优化能效、延长资产寿命和循环利用，直接服务于企业的环境、社会和治理(ESG)目标。</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 py-12">
+        <div class="container mx-auto px-6 text-center">
+            <p>&copy; 2025 智慧资产全生命周期管理框架研究。保留所有权利。</p>
+            <p class="text-sm text-slate-400 mt-2">
+                本页面内容基于公开研究和行业最佳实践整合而成，仅供参考。
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            function smoothScroll(e) {
+                e.preventDefault();
+                const targetId = e.currentTarget.getAttribute('href');
+                if (targetId.startsWith('#')) {
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                        if (mobileMenu.classList.contains('hidden') === false) {
+                             mobileMenu.classList.add('hidden');
+                        }
+                    }
+                }
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', smoothScroll);
+            });
+
+            const sections = document.querySelectorAll('section');
+            const nav = document.getElementById('navbar');
+            const desktopNavLinks = document.querySelectorAll('nav .hidden a');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5
+            };
+
+            const sectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        desktopNavLinks.forEach(link => {
+                            link.classList.remove('text-blue-600', 'font-semibold');
+                            link.classList.add('text-slate-600');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('text-blue-600', 'font-semibold');
+                                link.classList.remove('text-slate-600');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                sectionObserver.observe(section);
+            });
+
+            const tabs = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.dataset.tab;
+                    
+                    tabs.forEach(t => t.classList.remove('active', 'text-blue-600', 'font-semibold', 'border-blue-500'));
+                    tab.classList.add('active', 'text-blue-600', 'font-semibold', 'border-blue-500');
+                    
+                    tabContents.forEach(content => {
+                        if (content.id === target) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            const phaseBtns = document.querySelectorAll('.phase-btn');
+            const phaseDetails = document.querySelectorAll('.phase-detail');
+
+            phaseBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetPhase = btn.dataset.phase;
+
+                    phaseBtns.forEach(b => b.classList.remove('active-phase', 'bg-blue-50'));
+                    btn.classList.add('active-phase', 'bg-blue-50');
+
+                    phaseDetails.forEach(detail => {
+                        if (detail.dataset.phase === targetPhase) {
+                            detail.classList.remove('hidden');
+                        } else {
+                            detail.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            const kpiCtx = document.getElementById('kpiChart').getContext('2d');
+            
+            function formatLabel(str) {
+                if (str.length <= 16) return str;
+                let lines = [];
+                let currentLine = '';
+                for (let word of str.split(' ')) {
+                    if (currentLine.length + word.length > 16) {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    } else {
+                        currentLine += ' ' + word;
+                    }
+                }
+                lines.push(currentLine.trim());
+                return lines;
+            }
+
+            const kpiChart = new Chart(kpiCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['资产利用率', '综合维护成本', '非计划停机时间', '决策效率'],
+                    datasets: [
+                        {
+                            label: '传统管理',
+                            data: [65, 100, 100, 50],
+                            backgroundColor: 'rgba(107, 114, 128, 0.5)',
+                            borderColor: 'rgba(107, 114, 128, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: '智慧管理 (ALCM)',
+                            data: [85, 70, 20, 90],
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '绩效指标 (相对百分比)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            enabled: true,
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#1f2937',
+                            titleFont: {
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                weight: 'normal'
+                            },
+                            padding: 12,
+                            cornerRadius: 6,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
