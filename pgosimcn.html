@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<!-- Chosen Palette: Cybernetic Operations (High Contrast Dark Mode) -->
+<!-- Application Structure Plan:
+    1.  **Mobile-First Layout Engine**: 
+        -   Detect screen aspect ratio.
+        -   If Portrait (Mobile): Use a larger radius relative to width (85% width usage).
+        -   If Landscape (Desktop): Use standard layout.
+    2.  **Upscaled Rendering**:
+        -   Base font sizes increased from 11px to 14px/16px.
+        -   Node radius increased from 28 to 38.
+        -   Particle/Chip sizes increased by 1.5x.
+    3.  **Touch-Friendly UI**:
+        -   Top bar: Horizontal scroll for buttons (no wrapping).
+        -   Bottom card: Compact, high contrast text.
+-->
+<!-- CONFIRMATION: NO SVG used. Canvas API used for high-performance rendering. -->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ProcessGo Plus™ 移动端协同仿真</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #0b1121; /* Darker Slate */
+            color: #f1f5f9;
+            overflow: hidden;
+            touch-action: none; /* Prevent pull-to-refresh on mobile */
+        }
+        
+        #simulation-canvas {
+            width: 100%;
+            height: 100vh;
+            display: block;
+        }
+
+        /* Mobile-friendly scrollable button bar */
+        .nav-scroll-container {
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Firefox */
+        }
+        .nav-scroll-container::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        .control-btn {
+            @apply flex-shrink-0 px-5 py-3 rounded-xl border border-slate-700 bg-slate-800/90 text-slate-400 text-sm font-bold transition-all duration-300 flex items-center gap-2 active:scale-95 backdrop-blur-md;
+        }
+
+        .control-btn.active {
+            @apply bg-blue-600 text-white border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.5)];
+        }
+
+        .info-card {
+            @apply bg-slate-900/85 backdrop-blur-lg border-t-4 border-blue-500 p-5 rounded-t-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.5)] transition-all duration-500;
+        }
+        
+        /* High visibility badges */
+        .log-badge-data { @apply text-[11px] uppercase font-mono bg-blue-600 text-white px-2 py-0.5 rounded shadow-sm; }
+        .log-badge-phy { @apply text-[11px] uppercase font-mono bg-amber-600 text-white px-2 py-0.5 rounded shadow-sm; }
+        .log-badge-fin { @apply text-[11px] uppercase font-mono bg-yellow-500 text-black px-2 py-0.5 rounded shadow-sm; }
+    </style>
+</head>
+<body class="relative h-screen w-screen">
+
+    <!-- Top UI: Scrollable Scenario Selectors -->
+    <div class="absolute top-0 left-0 w-full z-20 pt-safe-top bg-gradient-to-b from-slate-900/90 to-transparent pb-4 pointer-events-none">
+        <div class="pt-4 px-4 pointer-events-auto">
+            <div class="flex gap-3 overflow-x-auto nav-scroll-container pb-2">
+                <button class="control-btn active" onclick="app.setScenario('o2c')">
+                    <span class="text-lg">📦</span> 销售 (O2C)
+                </button>
+                <button class="control-btn" onclick="app.setScenario('p2p')">
+                    <span class="text-lg">🏗️</span> 采购 (P2P)
+                </button>
+                <button class="control-btn" onclick="app.setScenario('compliance')">
+                    <span class="text-lg">🚧</span> 合规管控
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canvas -->
+    <canvas id="simulation-canvas"></canvas>
+
+    <!-- Bottom Info Panel (Fixed to bottom, full width on mobile) -->
+    <div class="absolute bottom-0 left-0 w-full z-20 pointer-events-none">
+        <div id="step-container" class="info-card opacity-0 transform translate-y-full pointer-events-auto pb-8">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-blue-400 font-black text-sm uppercase tracking-widest" id="step-phase">PHASE</span>
+                <div class="flex gap-2" id="step-badges">
+                    <!-- Badges injected by JS -->
+                </div>
+            </div>
+            <p class="text-lg md:text-xl font-bold leading-tight text-white drop-shadow-md" id="step-desc">正在初始化...</p>
+            
+            <!-- Mini Legend Inline -->
+            <div class="mt-4 pt-3 border-t border-slate-700/50 flex gap-4 text-xs text-slate-400 font-medium">
+                <span class="flex items-center gap-1"><span class="w-2 h-2 bg-blue-500 rounded-full"></span>数据</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 bg-amber-500 rounded-full"></span>实物</span>
+                <span class="flex items-center gap-1"><span class="w-2 h-2 bg-yellow-400 rounded-full"></span>资金</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MobileFlowApp {
+            constructor() {
+                this.canvas = document.getElementById('simulation-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                // Force High DPI
+                this.dpr = window.devicePixelRatio || 2; 
+
+                this.nodes = {};
+                this.particles = [];
+                this.activeScenario = 'o2c';
+                this.stepIndex = 0;
+                
+                this.init();
+                // Handle rotation/resize
+                window.addEventListener('resize', () => this.resize());
+            }
+
+            init() {
+                this.resize();
+                this.setScenario('o2c');
+                this.animate();
+            }
+
+            resize() {
+                this.width = window.innerWidth;
+                this.height = window.innerHeight;
+                
+                // Set actual canvas size to match screen pixels
+                this.canvas.width = this.width * this.dpr;
+                this.canvas.height = this.height * this.dpr;
+                
+                // CSS size matches logical pixels
+                this.canvas.style.width = `${this.width}px`;
+                this.canvas.style.height = `${this.height}px`;
+                
+                // Normalize coordinate system
+                this.ctx.scale(this.dpr, this.dpr);
+                
+                this.createNodes();
+            }
+
+            createNodes() {
+                const cx = this.width / 2;
+                // Shift center up slightly to account for bottom card
+                const cy = (this.height * 0.45); 
+                
+                // Layout Logic: Determine if mobile portrait
+                const isPortrait = this.height > this.width;
+                
+                // Radius: Make it fill width on mobile
+                const r = isPortrait 
+                    ? (this.width * 0.42)  // 42% of width in portrait
+                    : (this.height * 0.35); // 35% of height in landscape
+
+                this.nodes = {
+                    hub: { x: cx, y: cy, label: 'ProcessGo Plus', sub: 'HUB', type: 'hub', icon: '⚡' },
+                    // Top
+                    erp: { x: cx, y: cy - r, label: '总部 ERP', sub: '集中运营', type: 'system', icon: '🏢' },
+                    // Right (slightly lower in portrait to clear corners)
+                    wh: { x: cx + r * (isPortrait ? 0.9 : 1), y: cy + r * 0.3, label: '海外仓', sub: 'WMS', type: 'physical', icon: '🏭' },
+                    // Bottom
+                    log: { x: cx, y: cy + r, label: '物流/关务', sub: '3PL/SAT', type: 'logistics', icon: '🚢' },
+                    // Left
+                    ext: { x: cx - r * (isPortrait ? 0.9 : 1), y: cy + r * 0.3, label: '渠道/客户', sub: 'Partner', type: 'external', icon: '🛒' }
+                };
+            }
+
+            setScenario(id) {
+                this.activeScenario = id;
+                this.stepIndex = 0;
+                this.particles = [];
+                
+                document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll(`button[onclick="app.setScenario('${id}')"]`).forEach(btn => btn.classList.add('active'));
+
+                clearTimeout(this.timer);
+                this.runStep();
+            }
+
+            runStep() {
+                const ui = document.getElementById('step-container');
+                ui.classList.remove('opacity-0', 'translate-y-full');
+
+                // Scenarios with clearer text for mobile
+                let steps = [];
+                if (this.activeScenario === 'o2c') {
+                    this.nodes.ext.label = '电商平台';
+                    this.nodes.ext.icon = '🛒';
+                    steps = [
+                        { phase: '1. 订单获取', desc: '客户下单，Shopify 实时推送 JSON 数据至 HUB。', flows: [{ from: 'ext', to: 'hub', type: 'data', label: 'Order #101', color: '#3b82f6' }] },
+                        { phase: '2. 核心集成', desc: 'HUB 清洗数据，在 SAP 中自动创建销售单。', flows: [{ from: 'hub', to: 'erp', type: 'data', label: 'SO Created', color: '#3b82f6' }] },
+                        { phase: '3. 仓库指令', desc: 'ERP 确认库存，下发拣货指令至 WMS。', flows: [{ from: 'erp', to: 'hub', type: 'data', label: 'Release', color: '#3b82f6' }, { from: 'hub', to: 'wh', type: 'data', label: 'Pick List', color: '#3b82f6', delay: 400 }] },
+                        { phase: '4. 实物发运', desc: '仓库打包包裹，移交物流商配送。', flows: [{ from: 'wh', to: 'log', type: 'physical', label: '📦 包裹', color: '#f59e0b' }] },
+                        { phase: '5. 签收回传', desc: '客户签收，物流轨迹 API 回传至系统。', flows: [{ from: 'log', to: 'ext', type: 'physical', label: '🚚 配送', color: '#f59e0b' }, { from: 'log', to: 'hub', type: 'data', label: 'Signed', color: '#10b981', delay: 1000 }] },
+                        { phase: '6. 资金回笼', desc: '触发财务开票，自动核销应收账款。', flows: [{ from: 'hub', to: 'erp', type: 'data', label: 'Billing', color: '#3b82f6' }, { from: 'ext', to: 'erp', type: 'finance', label: '$ 支付', color: '#eab308', delay: 500 }] }
+                    ];
+                } else if (this.activeScenario === 'p2p') {
+                    this.nodes.ext.label = '供应商';
+                    this.nodes.ext.icon = '🏭';
+                    steps = [
+                        { phase: '1. 采购计划', desc: 'ERP 生成 PO 单，发送给供应商。', flows: [{ from: 'erp', to: 'hub', type: 'data', label: 'PO #889', color: '#3b82f6' }, { from: 'hub', to: 'ext', type: 'data', label: 'Email PO', color: '#3b82f6', delay: 400 }] },
+                        { phase: '2. 发货通知', desc: '供应商确认发货，回传 ASN 单据。', flows: [{ from: 'ext', to: 'hub', type: 'data', label: 'ASN Data', color: '#3b82f6' }] },
+                        { phase: '3. 跨境运输', desc: '货物通过海运抵达海外港口。', flows: [{ from: 'ext', to: 'log', type: 'physical', label: '🚛 货物', color: '#f59e0b' }, { from: 'log', to: 'wh', type: 'physical', label: '🚢 集装箱', color: '#f59e0b', delay: 1000 }] },
+                        { phase: '4. 入库上架', desc: '仓库收货质检，同步库存数据。', flows: [{ from: 'wh', to: 'hub', type: 'data', label: 'Receipt', color: '#3b82f6' }, { from: 'hub', to: 'erp', type: 'data', label: 'Stock +', color: '#3b82f6', delay: 400 }] },
+                        { phase: '5. 货款支付', desc: '单据匹配成功，自动付款给供应商。', flows: [{ from: 'erp', to: 'ext', type: 'finance', label: '¥ 付款', color: '#eab308' }] }
+                    ];
+                } else if (this.activeScenario === 'compliance') {
+                    this.nodes.ext.label = '客户';
+                    this.nodes.log.label = 'SAT 税务局';
+                    steps = [
+                        { phase: '1. 触发合规', desc: '仓库准备发货，因无发票被系统锁定。', flows: [{ from: 'wh', to: 'hub', type: 'data', label: 'Req: Ship', color: '#f59e0b' }] },
+                        { phase: '2. 税务申报', desc: 'HUB 构建 CFDI 数据包提交给 SAT。', flows: [{ from: 'hub', to: 'log', type: 'data', label: 'XML 申报', color: '#10b981' }] },
+                        { phase: '3. 获得电子章', desc: 'SAT 验证通过，返回 UUID 签章。', flows: [{ from: 'log', to: 'hub', type: 'data', label: 'UUID 签章', color: '#10b981' }] },
+                        { phase: '4. 放行发货', desc: '系统解锁，允许卡车离场配送。', flows: [{ from: 'hub', to: 'wh', type: 'data', label: 'Unlock', color: '#3b82f6' }, { from: 'wh', to: 'ext', type: 'physical', label: '🚛 离场', color: '#f59e0b', delay: 600 }] },
+                        { phase: '5. 发票交付', desc: '合规发票自动发送至客户邮箱。', flows: [{ from: 'hub', to: 'ext', type: 'data', label: 'Email PDF', color: '#10b981' }] }
+                    ];
+                }
+
+                if (this.stepIndex >= steps.length) {
+                    this.timer = setTimeout(() => {
+                        this.stepIndex = 0;
+                        this.runStep();
+                    }, 4000);
+                    return;
+                }
+
+                const step = steps[this.stepIndex];
+                document.getElementById('step-phase').innerText = step.phase;
+                document.getElementById('step-desc').innerText = step.desc;
+                
+                const badges = document.getElementById('step-badges');
+                badges.innerHTML = '';
+                [...new Set(step.flows.map(f => f.type))].forEach(t => {
+                    const s = document.createElement('span');
+                    s.className = t === 'data' ? 'log-badge-data' : (t === 'physical' ? 'log-badge-phy' : 'log-badge-fin');
+                    s.innerText = t === 'data' ? 'DATA' : (t === 'physical' ? 'PHYS' : '$$$');
+                    badges.appendChild(s);
+                });
+
+                step.flows.forEach(f => {
+                    setTimeout(() => this.spawnParticle(f), f.delay || 0);
+                });
+
+                this.timer = setTimeout(() => {
+                    this.stepIndex++;
+                    this.runStep();
+                }, 3500);
+            }
+
+            spawnParticle(flow) {
+                const s = this.nodes[flow.from];
+                const e = this.nodes[flow.to];
+                this.particles.push({
+                    sx: s.x, sy: s.y, ex: e.x, ey: e.y,
+                    x: s.x, y: s.y,
+                    progress: 0,
+                    speed: flow.type === 'data' ? 0.02 : 0.01, // Faster data, slower trucks
+                    type: flow.type,
+                    label: flow.label,
+                    color: flow.color
+                });
+            }
+
+            animate() {
+                this.ctx.fillStyle = '#0b1121';
+                this.ctx.fillRect(0, 0, this.width, this.height);
+
+                // Connections
+                this.ctx.beginPath();
+                this.ctx.lineWidth = 2; // Thicker lines for mobile
+                this.ctx.strokeStyle = '#1e293b';
+                Object.values(this.nodes).forEach(n => {
+                    if (n.type !== 'hub') {
+                        this.ctx.moveTo(this.nodes.hub.x, this.nodes.hub.y);
+                        this.ctx.lineTo(n.x, n.y);
+                    }
+                });
+                this.ctx.stroke();
+
+                // Physical Path (Dashed)
+                this.ctx.beginPath();
+                this.ctx.setLineDash([8, 8]);
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeStyle = '#334155';
+                this.ctx.moveTo(this.nodes.ext.x, this.nodes.ext.y);
+                this.ctx.lineTo(this.nodes.log.x, this.nodes.log.y);
+                this.ctx.lineTo(this.nodes.wh.x, this.nodes.wh.y);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+
+                // Particles
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    let p = this.particles[i];
+                    p.progress += p.speed;
+                    const t = p.progress;
+                    const ease = p.type === 'physical' ? t : (t < .5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
+                    p.x = p.sx + (p.ex - p.sx) * ease;
+                    p.y = p.sy + (p.ey - p.sy) * ease;
+
+                    if (p.type === 'data') this.drawChip(p);
+                    else if (p.type === 'physical') this.drawTruck(p);
+                    else this.drawCoin(p);
+
+                    if (p.progress >= 1) this.particles.splice(i, 1);
+                }
+
+                // Nodes
+                Object.values(this.nodes).forEach(n => this.drawNode(n));
+                requestAnimationFrame(() => this.animate());
+            }
+
+            // --- Drawing Helpers (SCALED UP FOR MOBILE) ---
+            drawNode(n) {
+                // Glow
+                if (n.type === 'hub') {
+                    const g = this.ctx.createRadialGradient(n.x, n.y, 25, n.x, n.y, 50);
+                    g.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+                    g.addColorStop(1, 'transparent');
+                    this.ctx.fillStyle = g;
+                    this.ctx.beginPath(); this.ctx.arc(n.x, n.y, 50, 0, Math.PI*2); this.ctx.fill();
+                }
+
+                // Base Circle (Larger: 35px radius)
+                this.ctx.beginPath();
+                this.ctx.arc(n.x, n.y, 38, 0, Math.PI*2);
+                this.ctx.fillStyle = '#1e293b';
+                this.ctx.strokeStyle = n.type === 'hub' ? '#3b82f6' : '#475569';
+                this.ctx.lineWidth = 3;
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                // Icon (Larger font)
+                this.ctx.fillStyle = '#fff';
+                this.ctx.font = '32px Arial'; 
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText(n.icon, n.x, n.y); // Icon centered
+
+                // Label (Larger, bolder)
+                this.ctx.fillStyle = '#e2e8f0';
+                this.ctx.font = 'bold 14px "Noto Sans SC"';
+                this.ctx.fillText(n.label, n.x, n.y + 55);
+                
+                // Sub-label
+                this.ctx.fillStyle = '#64748b';
+                this.ctx.font = '12px "Noto Sans SC"';
+                this.ctx.fillText(n.sub, n.x, n.y + 70);
+            }
+
+            drawChip(p) {
+                this.ctx.save();
+                this.ctx.translate(p.x, p.y);
+                // Larger Chip
+                this.ctx.font = 'bold 12px "JetBrains Mono"';
+                const w = this.ctx.measureText(p.label).width + 16;
+                
+                this.ctx.fillStyle = p.color;
+                this.ctx.shadowColor = p.color;
+                this.ctx.shadowBlur = 15;
+                this.ctx.beginPath();
+                this.ctx.roundRect(-w/2, -30, w, 22, 6);
+                this.ctx.fill();
+                this.ctx.shadowBlur = 0;
+
+                this.ctx.fillStyle = '#fff';
+                this.ctx.fillText(p.label, 0, -14);
+
+                // Dot
+                this.ctx.beginPath(); this.ctx.arc(0,0, 5, 0, Math.PI*2); this.ctx.fill();
+                this.ctx.strokeStyle = p.color; this.ctx.lineWidth=2; this.ctx.beginPath(); this.ctx.moveTo(0,0); this.ctx.lineTo(0,-8); this.ctx.stroke();
+                this.ctx.restore();
+            }
+
+            drawTruck(p) {
+                this.ctx.save();
+                this.ctx.translate(p.x, p.y);
+                // Larger Box
+                this.ctx.fillStyle = '#d97706';
+                this.ctx.strokeStyle = '#fff';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.rect(-14, -14, 28, 28);
+                this.ctx.fill();
+                this.ctx.stroke();
+                // Label
+                this.ctx.fillStyle = '#fbbf24';
+                this.ctx.font = 'bold 12px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(p.label, 0, 28);
+                this.ctx.restore();
+            }
+
+            drawCoin(p) {
+                this.ctx.save();
+                this.ctx.translate(p.x, p.y);
+                // Larger Coin
+                const scaleX = Math.abs(Math.cos(p.progress * 8));
+                this.ctx.scale(scaleX, 1);
+                this.ctx.beginPath(); this.ctx.arc(0,0, 12, 0, Math.PI*2);
+                this.ctx.fillStyle = '#eab308'; this.ctx.fill();
+                this.ctx.strokeStyle = '#fff'; this.ctx.lineWidth=2; this.ctx.stroke();
+                this.ctx.fillStyle = '#451a03'; this.ctx.font='bold 14px Arial'; this.ctx.textAlign='center'; this.ctx.textBaseline='middle'; this.ctx.fillText('$',0,1);
+                this.ctx.restore();
+                
+                this.ctx.fillStyle = '#facc15';
+                this.ctx.font = 'bold 12px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(p.label, p.x, p.y - 20);
+            }
+        }
+
+        window.onload = () => { window.app = new MobileFlowApp(); };
+    </script>
+</body>
+</html>
