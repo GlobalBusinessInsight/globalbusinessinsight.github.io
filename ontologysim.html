@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ontology Engine Visualization | Airbus Skywise Case Study</title>
+    <title>Palantir Ontology Visualization Engine</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -18,28 +18,29 @@
                 extend: {
                     colors: {
                         foundry: {
-                            bg: '#10161d',
-                            panel: '#1f2937',
-                            border: '#2d3748',
-                            blue: '#3b82f6',   // Semantic
-                            orange: '#f97316', // Kinetic
-                            purple: '#a855f7', // Dynamic
-                            text: '#f8f0e4',
-                            dim: '#94a3b8'
+                            bg: '#10161d',      // Palantir Dark Background
+                            panel: '#1f2937',   // Card Background
+                            border: '#2d3748',  // Border Color
+                            blue: '#3b82f6',    // Semantic Layer
+                            orange: '#f97316',  // Kinetic Layer
+                            purple: '#a855f7',  // Dynamic Layer
+                            text: '#f8f0e4',    // Primary Text
+                            dim: '#94a3b8'      // Secondary Text
                         }
                     },
-                    fontFamily: {
-                        sans:,
-                        mono:
-                    },
                     animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'spin-slow': 'spin 8s linear infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'float': 'float 6s ease-in-out infinite',
+                        'dash': 'dash 15s linear infinite',
                     },
                     keyframes: {
                         float: {
                             '0%, 100%': { transform: 'translateY(0)' },
                             '50%': { transform: 'translateY(-10px)' },
+                        },
+                        dash: {
+                            'to': { strokeDashoffset: '1000' }
                         }
                     }
                 }
@@ -48,147 +49,166 @@
     </script>
 
     <style>
-        body { background-color: #10161d; color: #f8f0e4; }
-       .glass-panel {
-            background: rgba(31, 41, 55, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        body { 
+            background-color: #10161d; 
+            color: #f8f0e4; 
+            overflow: hidden; /* Prevent scrollbars for the app feel */
         }
+        /* Grid Background Pattern */
        .grid-bg {
-            background-image: radial-gradient(#2d3748 1px, transparent 1px);
-            background-size: 24px 24px;
-            opacity: 0.3;
+            background-image: 
+                linear-gradient(rgba(45, 55, 72, 0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(45, 55, 72, 0.2) 1px, transparent 1px);
+            background-size: 40px 40px;
         }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #10161d; }
+        ::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4a5568; }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root" class="h-screen w-screen flex flex-col"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // --- Icons (SVG Components) ---
+        // --- 1. Hand-coded SVG Icons (No external dependencies) ---
         const Icons = {
-            Database: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>,
-            Layers: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>,
-            Activity: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>,
-            GitBranch: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>,
-            Plane: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h20"></path><path d="M13 2l9 10-9 10"></path><path d="M6 12l5-8"></path><path d="M6 12l5 8"></path></svg>,
-            Cpu: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>,
-            AlertTriangle: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>,
-            CheckCircle: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            Database: () => <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>,
+            Activity: () => <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+            Cpu: () => <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>,
+            Plane: () => <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 12h20M13 2l9 10-9 10M6 12l5-8M6 12l5 8"/></svg>,
+            Alert: () => <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+            Check: () => <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+            File: () => <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>,
+            Wrench: () => <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
         };
 
-        // --- Main Application ---
+        // --- 2. Core Application Component ---
         const App = () => {
-            const = useState('principle');
-            const = useState(true);
+            const = useState(0);
+            
+            // Auto-play feature
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    setActiveTab(prev => (prev + 1) % 4);
+                }, 10000); // Switch every 10 seconds
+                return () => clearInterval(timer);
+            },);
 
             const tabs =;
 
             return (
-                <div className="min-h-screen flex flex-col">
+                <div className="h-full flex flex-col relative">
+                    {/* Background Grid */}
+                    <div className="absolute inset-0 grid-bg z-0 pointer-events-none"></div>
+
                     {/* Header */}
-                    <header className="h-16 border-b border-foundry-border bg-foundry-bg/80 backdrop-blur-md flex items-center justify-between px-6 fixed top-0 w-full z-50">
+                    <header className="h-16 border-b border-foundry-border bg-foundry-bg/90 backdrop-blur-md flex items-center justify-between px-8 z-20">
                         <div className="flex items-center gap-3">
                             <div className="w-3 h-3 bg-foundry-blue rounded-full animate-pulse"></div>
-                            <h1 className="font-bold tracking-widest text-sm uppercase text-foundry-text">Palantir Ontology Engine</h1>
+                            <div>
+                                <h1 className="font-bold tracking-widest text-sm uppercase text-white">Palantir Ontology</h1>
+                                <p className="text-[10px] text-foundry-dim">Visualization Engine</p>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1 bg-foundry-panel rounded-lg p-1 border border-foundry-border">
-                            {tabs.map(tab => (
+                        
+                        {/* Navigation Tabs */}
+                        <div className="flex gap-2 bg-foundry-panel p-1 rounded-lg border border-foundry-border">
+                            {tabs.map((tab, index) => (
                                 <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
+                                    key={index}
+                                    onClick={() => setActiveTab(index)}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-xs font-medium transition-all duration-300 ${
-                                        activeTab === tab.id 
-                                       ? 'bg-foundry-blue text-white shadow-lg shadow-blue-900/50' 
-                                        : 'text-foundry-dim hover:text-white hover:bg-foundry-border'
+                                        activeTab === index 
+                                      ? 'bg-foundry-blue text-white shadow-lg' 
+                                        : 'text-foundry-dim hover:text-white hover:bg-white/5'
                                     }`}
                                 >
-                                    <span className="w-4 h-4">{tab.icon}</span>
+                                    <span className="scale-75">{tab.icon}</span>
                                     {tab.label}
                                 </button>
                             ))}
                         </div>
                     </header>
 
-                    {/* Main Stage */}
-                    <main className="flex-1 pt-16 relative overflow-hidden">
-                        {showGrid && <div className="absolute inset-0 grid-bg pointer-events-none"></div>}
-                        
-                        <div className="max-w-7xl mx-auto h-full p-8">
-                            {activeTab === 'principle' && <ViewPrinciple />}
-                            {activeTab === 'framework' && <ViewFramework />}
-                            {activeTab === 'process' && <ViewProcess />}
-                            {activeTab === 'application' && <ViewApplication />}
-                        </div>
+                    {/* Main Content Area */}
+                    <main className="flex-1 relative z-10 p-8 flex items-center justify-center overflow-hidden">
+                        {activeTab === 0 && <ScenePrinciple />}
+                        {activeTab === 1 && <SceneFramework />}
+                        {activeTab === 2 && <SceneAirbusProcess />}
+                        {activeTab === 3 && <SceneSkywiseApp />}
                     </main>
 
                     {/* Footer */}
-                    <footer className="h-10 border-t border-foundry-border bg-foundry-bg text-xs text-foundry-dim flex items-center justify-center gap-6">
-                        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-foundry-blue"></span> Semantic Layer</span>
-                        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-foundry-orange"></span> Kinetic Layer</span>
-                        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-foundry-purple"></span> Dynamic Layer</span>
+                    <footer className="h-10 border-t border-foundry-border bg-foundry-bg/90 z-20 flex items-center justify-center text-[10px] text-foundry-dim gap-8 uppercase tracking-wider">
+                        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-foundry-blue"></span> Semantic Layer (Nouns)</span>
+                        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-foundry-orange"></span> Kinetic Layer (Verbs)</span>
+                        <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-foundry-purple"></span> Dynamic Layer (Brains)</span>
                     </footer>
                 </div>
             );
         };
 
-        // --- View 1: Principle (Chaos to Order) ---
-        const ViewPrinciple = () => {
+        // --- Scene 1: Principle (Data Silos -> Digital Twin) ---
+        const ScenePrinciple = () => {
             return (
-                <div className="h-[600px] flex items-center justify-center relative">
-                    {/* Left: Chaos */}
-                    <div className="absolute left-10 top-1/2 -translate-y-1/2 w-64 h-64 border border-foundry-border rounded-xl bg-foundry-panel/30 p-4 flex flex-col items-center justify-center">
-                        <h3 className="text-foundry-dim text-xs font-bold uppercase tracking-widest mb-4">原始数据 (Data Silos)</h3>
-                        <div className="relative w-full h-full">
-                            {[...Array(5)].map((_, i) => (
-                                <div key={i} className="absolute p-2 bg-foundry-border rounded text-foundry-dim animate-float" 
-                                     style={{
-                                         top: `${Math.random() * 80}%`, 
-                                         left: `${Math.random() * 80}%`,
-                                         animationDelay: `${i * 0.5}s`,
-                                         animationDuration: `${3 + i}s`
-                                     }}>
-                                    <Icons.FileText />
-                                    <span className="text-[8px] block mt-1">Table_{i}</span>
-                                </div>
-                            ))}
-                        </div>
+                <div className="w-full max-w-5xl h-[500px] flex items-center justify-between relative">
+                    {/* Left: Silos */}
+                    <div className="w-1/3 h-full border border-foundry-border border-dashed rounded-xl p-4 relative bg-foundry-panel/20 flex flex-col items-center justify-center overflow-hidden">
+                        <div className="absolute top-4 left-4 text-xs font-bold text-foundry-dim uppercase">Raw Data (Silos)</div>
+                        
+                        {/* Floating Particles */}
+                        {[...Array(6)].map((_, i) => (
+                            <div key={i} className="absolute p-3 bg-foundry-panel border border-foundry-border rounded shadow text-foundry-dim"
+                                 style={{
+                                     animation: `float ${3 + i}s ease-in-out infinite`,
+                                     top: `${20 + (i * 15)}%`,
+                                     left: `${10 + (i % 2 * 50)}%`
+                                 }}>
+                                <Icons.File />
+                                <span className="text-[8px] block mt-1 opacity-50">Table_0{i+1}</span>
+                            </div>
+                        ))}
                     </div>
 
-                    {/* Center: Animation Arrow */}
-                    <div className="flex flex-col items-center gap-2 z-10 mx-12">
-                        <div className="w-32 h-1 bg-gradient-to-r from-transparent via-foundry-blue to-transparent"></div>
-                        <span className="text-foundry-blue text-xs font-mono">Ontology Mapping</span>
+                    {/* Center: Integration Logic */}
+                    <div className="flex-1 flex flex-col items-center justify-center relative">
+                        <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-foundry-blue to-transparent absolute"></div>
+                        <div className="bg-foundry-bg border border-foundry-blue px-4 py-2 rounded-full text-xs text-foundry-blue font-mono z-10 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                            Mapping & Resolution
+                        </div>
+                        {/* Moving dots */}
+                        <div className="absolute w-full flex justify-center">
+                             <div className="w-2 h-2 bg-foundry-blue rounded-full animate-ping"></div>
+                        </div>
                     </div>
 
                     {/* Right: Digital Twin */}
-                    <div className="absolute right-10 top-1/2 -translate-y-1/2 w-80 h-96 border-2 border-foundry-blue/50 rounded-xl bg-blue-900/10 p-6 flex flex-col items-center shadow-[0_0_50px_rgba(59,130,246,0.1)] backdrop-blur-sm">
-                        <h3 className="text-foundry-blue text-xs font-bold uppercase tracking-widest mb-6">数字孪生 (Digital Twin)</h3>
+                    <div className="w-1/3 h-full border-2 border-foundry-blue/30 rounded-xl p-6 bg-blue-900/5 flex flex-col items-center justify-center shadow-[0_0_50px_rgba(59,130,246,0.1)] relative">
+                        <div className="absolute top-4 left-4 text-xs font-bold text-foundry-blue uppercase">Ontology Object</div>
                         
-                        <div className="w-24 h-24 bg-foundry-blue rounded-full flex items-center justify-center shadow-lg mb-6 relative group cursor-pointer transition-all hover:scale-110">
-                            <div className="text-white"><Icons.Plane /></div>
-                            <div className="absolute inset-0 border-4 border-blue-400/30 rounded-full animate-ping"></div>
+                        <div className="w-32 h-32 bg-gradient-to-br from-foundry-blue to-blue-700 rounded-full flex items-center justify-center shadow-2xl mb-8 relative">
+                            <div className="text-white scale-150"><Icons.Plane /></div>
+                            {/* Rings */}
+                            <div className="absolute inset-0 border-4 border-blue-400/20 rounded-full animate-ping"></div>
                         </div>
 
-                        <div className="w-full space-y-4">
-                            <div className="bg-foundry-bg p-3 rounded border border-foundry-border flex justify-between items-center">
-                                <span className="text-xs text-foundry-dim">Object ID</span>
-                                <span className="text-sm font-mono font-bold">A350-MSN1024</span>
+                        <div className="w-full space-y-3">
+                            <div className="bg-foundry-bg border border-foundry-border p-3 rounded flex justify-between items-center">
+                                <span className="text-xs text-foundry-dim">Entity ID</span>
+                                <span className="text-sm font-mono text-white">A350-XWB</span>
                             </div>
-                            <div className="bg-foundry-bg p-3 rounded border border-foundry-border">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs text-foundry-dim">Fuel Level</span>
-                                    <span className="text-xs text-green-400 font-bold">82%</span>
+                            <div className="bg-foundry-bg border border-foundry-border p-3 rounded">
+                                <div className="flex justify-between text-xs mb-1">
+                                    <span className="text-foundry-dim">Health Score</span>
+                                    <span className="text-green-400">98%</span>
                                 </div>
-                                <div className="w-full bg-gray-700 h-1.5 rounded-full">
-                                    <div className="bg-green-500 h-1.5 rounded-full" style={{width: '82%'}}></div>
+                                <div className="w-full bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                                    <div className="h-full bg-green-500 w-[98%]"></div>
                                 </div>
-                            </div>
-                            <div className="bg-foundry-bg p-3 rounded border border-foundry-border flex justify-between items-center border-l-4 border-foundry-orange">
-                                <span className="text-xs text-foundry-dim">Status</span>
-                                <span className="text-xs text-foundry-orange font-bold">In Flight</span>
                             </div>
                         </div>
                     </div>
@@ -196,205 +216,193 @@
             );
         };
 
-        // --- View 2: Framework (Three Layers) ---
-        const ViewFramework = () => {
+        // --- Scene 2: Framework (3 Layers) ---
+        const SceneFramework = () => {
             return (
-                <div className="h-[600px] flex flex-col items-center justify-center gap-6">
-                    <h2 className="text-xl font-bold text-white mb-4">本体论三层架构</h2>
+                <div className="w-full max-w-3xl flex flex-col gap-6 relative">
+                    <h2 className="text-center text-xl font-bold text-white mb-4 tracking-widest">THE ONTOLOGY STACK</h2>
 
                     {/* Layer 3: Dynamic */}
-                    <div className="w-2/3 h-32 glass-panel rounded-xl border-l-4 border-foundry-purple flex items-center px-8 hover:translate-x-2 transition-transform duration-300 group">
-                        <div className="p-4 bg-foundry-purple/20 rounded-lg mr-6 text-foundry-purple">
+                    <div className="h-28 bg-gradient-to-r from-foundry-panel to-foundry-bg border-l-4 border-foundry-purple rounded-r-xl border-y border-r border-foundry-border p-6 flex items-center gap-6 hover:translate-x-4 transition-transform duration-500 cursor-default group shadow-lg">
+                        <div className="p-4 bg-foundry-purple/20 text-foundry-purple rounded-lg group-hover:scale-110 transition-transform">
                             <Icons.Cpu />
                         </div>
-                        <div className="flex-1">
-                            <div className="flex justify-between items-center mb-2">
-                                <h3 className="text-xl font-bold text-foundry-purple">3. 动态层 (Dynamic Layer)</h3>
-                                <span className="px-2 py-1 bg-foundry-purple/20 text-[10px] rounded border border-foundry-purple/50">Simulation</span>
-                            </div>
-                            <p className="text-sm text-foundry-dim">"大脑"：负责智能决策、模拟仿真 (Simulation) 和 AI 预测。支持 "What-if" 假设分析。</p>
+                        <div>
+                            <h3 className="text-lg font-bold text-foundry-purple mb-1">3. 动态层 (Dynamic Layer)</h3>
+                            <p className="text-xs text-foundry-dim">The "Brain": Simulation, AI Prediction, What-If Analysis.</p>
+                        </div>
+                        <div className="ml-auto text-[10px] font-mono bg-foundry-purple/10 text-foundry-purple px-2 py-1 rounded border border-foundry-purple/30">
+                            SIMULATE
                         </div>
                     </div>
 
-                    {/* Connector */}
-                    <div className="h-8 w-0.5 bg-gray-700"></div>
+                    {/* Connection Line */}
+                    <div className="h-6 w-0.5 bg-gray-700 mx-12"></div>
 
                     {/* Layer 2: Kinetic */}
-                    <div className="w-2/3 h-32 glass-panel rounded-xl border-l-4 border-foundry-orange flex items-center px-8 hover:translate-x-2 transition-transform duration-300 group">
-                        <div className="p-4 bg-foundry-orange/20 rounded-lg mr-6 text-foundry-orange">
+                    <div className="h-28 bg-gradient-to-r from-foundry-panel to-foundry-bg border-l-4 border-foundry-orange rounded-r-xl border-y border-r border-foundry-border p-6 flex items-center gap-6 hover:translate-x-4 transition-transform duration-500 cursor-default group shadow-lg">
+                        <div className="p-4 bg-foundry-orange/20 text-foundry-orange rounded-lg group-hover:scale-110 transition-transform">
                             <Icons.Activity />
                         </div>
-                        <div className="flex-1">
-                            <div className="flex justify-between items-center mb-2">
-                                <h3 className="text-xl font-bold text-foundry-orange">2. 动力学层 (Kinetic Layer)</h3>
-                                <span className="px-2 py-1 bg-foundry-orange/20 text-[10px] rounded border border-foundry-orange/50">Actions</span>
-                            </div>
-                            <p className="text-sm text-foundry-dim">"动词"：定义改变系统状态的规则。包括行动 (Actions)、流程编排和向源系统的写回 (Write-back)。</p>
+                        <div>
+                            <h3 className="text-lg font-bold text-foundry-orange mb-1">2. 动力学层 (Kinetic Layer)</h3>
+                            <p className="text-xs text-foundry-dim">The "Verbs": Actions, Write-back, Orchestration, Process Flow.</p>
+                        </div>
+                        <div className="ml-auto text-[10px] font-mono bg-foundry-orange/10 text-foundry-orange px-2 py-1 rounded border border-foundry-orange/30">
+                            ACT
                         </div>
                     </div>
 
-                    {/* Connector */}
-                    <div className="h-8 w-0.5 bg-gray-700"></div>
+                    {/* Connection Line */}
+                    <div className="h-6 w-0.5 bg-gray-700 mx-12"></div>
 
                     {/* Layer 1: Semantic */}
-                    <div className="w-2/3 h-32 glass-panel rounded-xl border-l-4 border-foundry-blue flex items-center px-8 hover:translate-x-2 transition-transform duration-300 group">
-                        <div className="p-4 bg-foundry-blue/20 rounded-lg mr-6 text-foundry-blue">
+                    <div className="h-28 bg-gradient-to-r from-foundry-panel to-foundry-bg border-l-4 border-foundry-blue rounded-r-xl border-y border-r border-foundry-border p-6 flex items-center gap-6 hover:translate-x-4 transition-transform duration-500 cursor-default group shadow-lg">
+                        <div className="p-4 bg-foundry-blue/20 text-foundry-blue rounded-lg group-hover:scale-110 transition-transform">
                             <Icons.Database />
                         </div>
-                        <div className="flex-1">
-                            <div className="flex justify-between items-center mb-2">
-                                <h3 className="text-xl font-bold text-foundry-blue">1. 语义层 (Semantic Layer)</h3>
-                                <span className="px-2 py-1 bg-foundry-blue/20 text-[10px] rounded border border-foundry-blue/50">Objects</span>
-                            </div>
-                            <p className="text-sm text-foundry-dim">"名词"：将物理资产映射为数字对象。提供单一事实来源 (Single Source of Truth) 和关系图谱。</p>
+                        <div>
+                            <h3 className="text-lg font-bold text-foundry-blue mb-1">1. 语义层 (Semantic Layer)</h3>
+                            <p className="text-xs text-foundry-dim">The "Nouns": Objects, Properties, Links. Single Source of Truth.</p>
+                        </div>
+                        <div className="ml-auto text-[10px] font-mono bg-foundry-blue/10 text-foundry-blue px-2 py-1 rounded border border-foundry-blue/30">
+                            DEFINE
                         </div>
                     </div>
                 </div>
             );
         };
 
-        // --- View 3: Airbus Process ---
-        const ViewProcess = () => {
+        // --- Scene 3: Airbus Process (Timeline) ---
+        const SceneAirbusProcess = () => {
             return (
-                <div className="h-full flex flex-col">
-                    <div className="flex justify-between items-end mb-10 pb-6 border-b border-foundry-border">
+                <div className="w-full h-full flex flex-col p-4">
+                    <div className="flex justify-between items-end border-b border-foundry-border pb-4 mb-12">
                         <div>
-                            <h2 className="text-2xl font-bold text-white">Case Study: Airbus A350 产能爬坡</h2>
-                            <p className="text-sm text-foundry-dim mt-2">背景：4国8厂数据割裂，导致交付延误</p>
+                            <div className="text-xs text-foundry-blue font-bold uppercase mb-1">Case Study</div>
+                            <h2 className="text-2xl font-bold text-white">A350 Production Ramp-up</h2>
                         </div>
                         <div className="text-right">
-                             <div className="text-4xl font-black text-green-400">+33%</div>
-                             <div className="text-xs text-green-600 font-bold uppercase tracking-widest">生产效率提升</div>
+                            <div className="text-4xl font-black text-green-400">+33%</div>
+                            <div className="text-[10px] text-green-600 font-bold uppercase tracking-widest">Production Rate</div>
                         </div>
                     </div>
 
-                    <div className="flex-1 flex items-center justify-between px-12">
-                        {/* Step 1 */}
-                        <div className="w-72 h-64 border border-red-500/30 bg-red-900/10 rounded-xl p-6 relative group hover:border-red-500 transition-colors">
-                            <div className="absolute -top-4 -left-4 w-10 h-10 bg-red-600 rounded-full flex items-center justify-center font-bold text-white shadow-lg">1</div>
-                            <h3 className="text-lg font-bold text-red-400 mb-4">Before: Data Chaos</h3>
-                            <div className="grid grid-cols-2 gap-3 mb-4">
-                                <div className="bg-foundry-bg p-2 rounded text-center border border-foundry-border text-[10px] text-foundry-dim">ERP (Germany)</div>
-                                <div className="bg-foundry-bg p-2 rounded text-center border border-foundry-border text-[10px] text-foundry-dim">MES (France)</div>
-                                <div className="bg-foundry-bg p-2 rounded text-center border border-foundry-border text-[10px] text-foundry-dim">Excel (Spain)</div>
-                                <div className="bg-foundry-bg p-2 rounded text-center border border-foundry-border text-[10px] text-foundry-dim">IoT (UK)</div>
-                            </div>
-                            <p className="text-xs text-gray-400 text-center">"Stop-and-Fix" 模式导致瓶颈</p>
-                        </div>
+                    <div className="flex-1 flex items-center justify-between gap-4 relative">
+                        {/* Connecting Line */}
+                        <div className="absolute top-1/2 left-0 w-full h-1 bg-foundry-border -z-10"></div>
 
-                        {/* Arrow */}
-                        <div className="text-foundry-dim"><Icons.GitBranch /></div>
+                        {/* Step 1 */}
+                        <div className="w-1/3 h-64 bg-foundry-panel border border-red-500/30 rounded-xl p-6 flex flex-col items-center justify-center relative group hover:border-red-500 transition-colors">
+                            <div className="absolute -top-3 -left-3 w-8 h-8 bg-red-600 rounded-full flex items-center justify-center font-bold text-white">1</div>
+                            <div className="text-red-400 font-bold mb-4 uppercase tracking-wider text-xs">The Challenge</div>
+                            <div className="grid grid-cols-2 gap-2 w-full mb-4">
+                                <div className="bg-foundry-bg p-2 rounded text-center text-[10px] text-foundry-dim border border-foundry-border">Germany (ERP)</div>
+                                <div className="bg-foundry-bg p-2 rounded text-center text-[10px] text-foundry-dim border border-foundry-border">France (SAP)</div>
+                                <div className="bg-foundry-bg p-2 rounded text-center text-[10px] text-foundry-dim border border-foundry-border">UK (Legacy)</div>
+                                <div className="bg-foundry-bg p-2 rounded text-center text-[10px] text-foundry-dim border border-foundry-border">Spain (Excel)</div>
+                            </div>
+                            <p className="text-xs text-center text-gray-400">"Stop-and-Fix" methodology causing bottlenecks.</p>
+                        </div>
 
                         {/* Step 2 */}
-                        <div className="w-72 h-64 border border-foundry-blue/50 bg-blue-900/10 rounded-xl p-6 relative group hover:border-foundry-blue transition-colors">
-                            <div className="absolute -top-4 -left-4 w-10 h-10 bg-foundry-blue rounded-full flex items-center justify-center font-bold text-white shadow-lg">2</div>
-                            <h3 className="text-lg font-bold text-foundry-blue mb-4">Solution: Ontology</h3>
-                            <div className="flex items-center justify-center h-24 mb-4">
-                                <div className="relative w-20 h-20 border-2 border-dashed border-foundry-blue rounded-full animate-spin-slow flex items-center justify-center">
-                                    <div className="w-2 h-2 bg-foundry-blue rounded-full"></div>
+                        <div className="w-1/3 h-64 bg-foundry-panel border border-foundry-blue/50 rounded-xl p-6 flex flex-col items-center justify-center relative group hover:border-foundry-blue transition-colors">
+                            <div className="absolute -top-3 -left-3 w-8 h-8 bg-foundry-blue rounded-full flex items-center justify-center font-bold text-white">2</div>
+                            <div className="text-foundry-blue font-bold mb-4 uppercase tracking-wider text-xs">The Solution</div>
+                            
+                            <div className="w-20 h-20 border-2 border-dashed border-foundry-blue rounded-full flex items-center justify-center animate-spin-slow mb-4">
+                                <div className="w-12 h-12 bg-foundry-blue rounded-full flex items-center justify-center animate-pulse text-white">
+                                    <Icons.Plane />
                                 </div>
-                                <div className="absolute text-2xl">✈️</div>
                             </div>
-                            <p className="text-xs text-gray-400 text-center">建立 "A350" 统一语义对象，关联所有生产环节</p>
+                            <p className="text-xs text-center text-gray-400">Unified Ontology: "Traveling Work" across all plants.</p>
                         </div>
 
-                         {/* Arrow */}
-                         <div className="text-foundry-dim"><Icons.CheckCircle /></div>
-
                         {/* Step 3 */}
-                        <div className="w-72 h-64 border border-green-500/50 bg-green-900/10 rounded-xl p-6 relative group hover:border-green-500 transition-colors">
-                            <div className="absolute -top-4 -left-4 w-10 h-10 bg-green-600 rounded-full flex items-center justify-center font-bold text-white shadow-lg">3</div>
-                            <h3 className="text-lg font-bold text-green-400 mb-4">Result: Acceleration</h3>
-                            <div className="h-24 flex items-end gap-2 px-4 mb-4">
-                                <div className="w-1/3 bg-gray-700 h-1/2 rounded-t"></div>
-                                <div className="w-1/3 bg-gray-600 h-2/3 rounded-t"></div>
+                        <div className="w-1/3 h-64 bg-foundry-panel border border-green-500/30 rounded-xl p-6 flex flex-col items-center justify-center relative group hover:border-green-500 transition-colors">
+                            <div className="absolute -top-3 -left-3 w-8 h-8 bg-green-600 rounded-full flex items-center justify-center font-bold text-white">3</div>
+                            <div className="text-green-400 font-bold mb-4 uppercase tracking-wider text-xs">The Result</div>
+                            
+                            <div className="flex items-end gap-2 h-24 w-full px-8 mb-4">
+                                <div className="w-1/3 bg-gray-700 h-[40%] rounded-t"></div>
+                                <div className="w-1/3 bg-gray-600 h-[60%] rounded-t"></div>
                                 <div className="w-1/3 bg-green-500 h-full rounded-t relative">
-                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-green-400">Target</div>
+                                    <div className="absolute -top-6 w-full text-center text-xs font-bold text-green-400">Target</div>
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-400 text-center">跨部门协同加速，达成交付目标</p>
+                            <p className="text-xs text-center text-gray-400">Accelerated delivery & proactive supply chain.</p>
                         </div>
                     </div>
                 </div>
             );
         };
 
-        // --- View 4: Application (Skywise Dashboard) ---
-        const ViewApplication = () => {
-            // Simple simulation of sensor data
-            const = useState([20, 30, 45, 30, 50, 65, 55, 70, 85, 90, 80, 95]);
-            const = useState('warning'); // normal, warning, critical
-
-            useEffect(() => {
-                const interval = setInterval(() => {
-                    setSensorData(prev => {
-                        const newData = [...prev.slice(1), Math.floor(Math.random() * 30) + 60];
-                        return newData;
-                    });
-                }, 1000);
-                return () => clearInterval(interval);
-            },);
-
-            // Convert data to SVG path
-            const points = sensorData.map((val, i) => `${i * 25},${100 - val}`).join(' L');
-            const pathD = `M0,100 L${points}`;
+        // --- Scene 4: Skywise Application (Predictive Maintenance) ---
+        const SceneSkywiseApp = () => {
+            // Mock Data for Line Chart
+            const dataPoints = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+            // Create SVG path command
+            const path = "M " + dataPoints.map((p, i) => `${i * 40 + 10},${100 - p}`).join(" L ");
 
             return (
-                <div className="h-full grid grid-cols-12 gap-6">
-                    {/* Sidebar */}
-                    <div className="col-span-3 border-r border-foundry-border pr-6 space-y-4">
-                        <h3 className="text-xs font-bold text-foundry-dim uppercase mb-4">Fleet Ontology</h3>
-                        {.map((plane, i) => (
-                            <div key={i} className={`p-3 rounded cursor-pointer border transition-all ${i===1? 'bg-foundry-panel border-foundry-blue' : 'border-transparent hover:bg-foundry-panel'}`}>
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 rounded-full ${i===1? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></div>
-                                    <span className="text-sm font-mono">{plane}</span>
+                <div className="w-full h-full grid grid-cols-12 gap-6 relative">
+                    {/* Sidebar List */}
+                    <div className="col-span-3 border-r border-foundry-border pr-4 flex flex-col gap-3">
+                        <div className="text-xs font-bold text-foundry-dim uppercase mb-2">Fleet Status</div>
+                        <div className="p-3 bg-foundry-panel border border-foundry-blue rounded-lg flex items-center gap-3 cursor-pointer">
+                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                            <div>
+                                <div className="text-xs font-bold text-white">MSN-1024</div>
+                                <div className="text-[10px] text-foundry-dim">A350-900 • Flight 442</div>
+                            </div>
+                        </div>
+                        {.[13, 14, 15]map(i => (
+                            <div key={i} className="p-3 border border-transparent hover:bg-foundry-panel rounded-lg flex items-center gap-3 cursor-pointer opacity-50">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <div>
+                                    <div className="text-xs font-bold text-white">MSN-200{i}</div>
+                                    <div className="text-[10px] text-foundry-dim">A320 • Grounded</div>
                                 </div>
                             </div>
                         ))}
                     </div>
 
-                    {/* Main Dashboard */}
+                    {/* Main Dashboard Area */}
                     <div className="col-span-9 flex flex-col gap-6">
-                        {/* Header */}
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <Icons.Wrench size={20} /> 
-                                    Predictive Maintenance Console
-                                </h2>
-                                <p className="text-xs text-foundry-dim font-mono">Object Context: A350-900 / Hydraulic System A</p>
-                            </div>
-                            <div className="bg-red-500/20 border border-red-500 text-red-400 px-4 py-2 rounded flex items-center gap-2">
-                                <Icons.AlertTriangle size={16} />
-                                <span className="text-sm font-bold">PREDICTIVE ALERT: 48h RUL</span>
-                            </div>
-                        </div>
-
-                        {/* Virtual Sensor Graph */}
+                        {/* 1. Dynamic Layer (Alerts & Charts) */}
                         <div className="bg-foundry-panel border border-foundry-border rounded-xl p-6 relative overflow-hidden">
-                            <h4 className="text-xs font-bold text-foundry-blue uppercase mb-4 flex items-center gap-2">
-                                <Icons.Activity size={14} /> Virtual Sensor: Pressure
-                            </h4>
-                            <div className="h-40 w-full relative">
-                                <svg className="w-full h-full" preserveAspectRatio="none">
-                                    {/* Grid */}
-                                    <line x1="0" y1="20%" x2="100%" y2="20%" stroke="#2d3748" strokeDasharray="4" />
-                                    <line x1="0" y1="50%" x2="100%" y2="50%" stroke="#2d3748" strokeDasharray="4" />
-                                    <line x1="0" y1="80%" x2="100%" y2="80%" stroke="#2d3748" strokeDasharray="4" />
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-white font-bold flex items-center gap-2">
+                                    <span className="text-foundry-purple"><Icons.Activity /></span>
+                                    Virtual Sensor: Hydraulic Pressure
+                                </h3>
+                                <div className="bg-red-500/20 border border-red-500 text-red-400 px-3 py-1 rounded text-xs font-bold flex items-center gap-2">
+                                    <Icons.Alert /> PREDICTIVE FAIL: 48h
+                                </div>
+                            </div>
+                            
+                            {/* SVG Chart */}
+                            <div className="h-32 w-full relative">
+                                <svg className="w-full h-full overflow-visible">
+                                    {/* Grid lines */}
+                                    <line x1="0" y1="0" x2="100%" y2="0" stroke="#374151" strokeDasharray="4"/>
+                                    <line x1="0" y1="50" x2="100%" y2="50" stroke="#374151" strokeDasharray="4"/>
+                                    <line x1="0" y1="100" x2="100%" y2="100" stroke="#374151" strokeDasharray="4"/>
                                     
                                     {/* Threshold Line */}
-                                    <line x1="0" y1="30%" x2="100%" y2="30%" stroke="#f97316" strokeWidth="1" strokeDasharray="5" />
-                                    <text x="5" y="25%" fill="#f97316" fontSize="10">Warning Threshold</text>
+                                    <line x1="0" y1="20" x2="100%" y2="20" stroke="#f97316" strokeWidth="1" strokeDasharray="5,5" />
+                                    <text x="460" y="15" fill="#f97316" fontSize="10" fontFamily="monospace">WARNING THRESHOLD</text>
 
-                                    {/* Data Path */}
-                                    <path d={pathD} fill="none" stroke="#ef4444" strokeWidth="2" />
+                                    {/* The Data Line */}
+                                    <path d={path} fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <animate attributeName="stroke-dasharray" from="0, 1000" to="1000, 0" duration="3s" fill="freeze" />
+                                    </path>
                                     
-                                    {/* Area under curve */}
-                                    <path d={`${pathD} L300,100 L0,100 Z`} fill="url(#grad1)" opacity="0.2" />
+                                    {/* Area fill */}
+                                    <path d={`${path} L 450,100 L 10,100 Z`} fill="url(#grad)" opacity="0.3" />
                                     <defs>
-                                        <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
-                                            <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
+                                        <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
                                             <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
                                         </linearGradient>
                                     </defs>
@@ -402,36 +410,41 @@
                             </div>
                         </div>
 
-                        {/* Kinetic Actions */}
+                        {/* 2. Kinetic Layer (Action) */}
                         <div className="grid grid-cols-2 gap-6">
-                             <div className="bg-foundry-panel border border-foundry-border rounded-xl p-6">
-                                 <h4 className="text-xs font-bold text-foundry-orange uppercase mb-4">Kinetic Layer Action</h4>
-                                 <p className="text-sm text-gray-400 mb-4">Recommended: Schedule preventive replacement of Valve #42 based on predictive model confidence (92%).</p>
-                                 <button className="w-full bg-foundry-blue hover:bg-blue-600 text-white py-2 rounded font-bold text-sm transition-colors flex items-center justify-center gap-2">
-                                     <Icons.CheckCircle size={16} /> Generate Work Order
-                                 </button>
-                             </div>
-                             <div className="bg-foundry-panel border border-foundry-border rounded-xl p-6">
-                                 <h4 className="text-xs font-bold text-foundry-purple uppercase mb-4">Dynamic Simulation</h4>
-                                 <div className="flex justify-between items-center mb-2 text-sm">
-                                     <span className="text-gray-400">Cost of Delay</span>
-                                     <span className="text-white font-mono">$120,000</span>
-                                 </div>
-                                 <div className="flex justify-between items-center mb-4 text-sm">
-                                     <span className="text-gray-400">Parts Availability</span>
-                                     <span className="text-green-400 font-bold">In Stock (LHR)</span>
-                                 </div>
-                                 <div className="h-1 w-full bg-gray-700 rounded-full overflow-hidden">
-                                     <div className="h-full bg-foundry-purple w-3/4"></div>
-                                 </div>
-                             </div>
+                            <div className="bg-foundry-panel border border-foundry-border rounded-xl p-5 flex flex-col justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-foundry-orange uppercase mb-2">Kinetic Action</div>
+                                    <p className="text-sm text-foundry-dim">System recommends replacing Valve #4 based on probability (92%).</p>
+                                </div>
+                                <button className="mt-4 w-full bg-foundry-blue hover:bg-blue-600 text-white py-2 rounded font-bold text-sm transition-all flex items-center justify-center gap-2">
+                                    <Icons.Wrench /> Generate Work Order
+                                </button>
+                            </div>
+                            
+                            <div className="bg-foundry-panel border border-foundry-border rounded-xl p-5 flex flex-col justify-between">
+                                <div>
+                                    <div className="text-xs font-bold text-foundry-purple uppercase mb-2">Parts Simulation</div>
+                                    <div className="flex justify-between text-sm mb-1 text-white">
+                                        <span>LHR Inventory</span>
+                                        <span className="text-green-400">Available</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm text-white">
+                                        <span>Cost Impact</span>
+                                        <span className="font-mono">$12,500</span>
+                                    </div>
+                                </div>
+                                <div className="mt-4 h-8 w-full bg-gray-700 rounded overflow-hidden relative">
+                                    <div className="absolute top-0 left-0 h-full bg-foundry-purple w-3/4 flex items-center justify-center text-[10px] font-bold">Optimization Score: 75/100</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             );
         };
 
-        // Mount App
+        // --- Render ---
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
