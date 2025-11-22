@@ -1,0 +1,587 @@
+<!-- Chosen Palette: Dark Navy (Header), Clean White/Gray (Body), Tech Blue (Accents) -->
+<!-- Application Structure Plan: 
+     1. Header: Dark themed command center style. Logo background is BLACK.
+     2. Main Grid: 4 Business Blocks surrounding a semi-transparent central Hub.
+     3. Physical Layer: A timeline view of goods movement.
+     4. Solver Layer: Interactive console at the bottom simulating AI optimization.
+-->
+<!-- Visualization & Content Choices:
+     - Central Hub: Semi-transparent.
+     - Simulation: Red/Blue particles are now LARGER (14px) and SLOWER (1.7s duration) for better visibility.
+-->
+<!-- CONFIRMATION: NO SVG graphics used (except logo image source). NO Mermaid JS used. -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全球供应链协同作战室</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', 'Microsoft YaHei', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        /* 动画过渡 */
+        .transition-all-300 { transition: all 0.3s ease; }
+        
+        /* 按钮状态 */
+        .flow-toggle-btn.active { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        
+        /* 业务模块悬停效果 */
+        .biz-block { border: 1px solid transparent; transition: all 0.3s ease; }
+        .biz-block:hover { transform: translateY(-2px); border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+
+        /* 中心枢纽样式 - 缩小且半透明 */
+        #processgo-hub {
+            backdrop-filter: blur(4px);
+            background-color: rgba(31, 41, 55, 0.75); /* Gray-800 with opacity */
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* 物理流层样式 */
+        .physical-stage { position: relative; flex: 1; text-align: center; z-index: 1; }
+        .physical-stage::after {
+            content: ''; position: absolute; top: 20px; right: -50%; width: 100%; height: 2px;
+            background-color: #e5e7eb; z-index: -1;
+        }
+        .physical-stage:last-child::after { display: none; }
+        
+        /* 包裹移动动画元素 */
+        #physical-package {
+            transition: left 0.1s linear; /* JS控制每一帧 */
+        }
+
+        /* 粒子样式 - 优化版：更大、更清晰 */
+        .flow-particle {
+            position: absolute; 
+            width: 14px; /* 增大尺寸 */
+            height: 14px; /* 增大尺寸 */
+            border-radius: 50%;
+            pointer-events: none; 
+            opacity: 0; 
+            z-index: 50;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* 增加阴影提升立体感 */
+        }
+
+        /* 求解器控制台样式 */
+        .console-text { font-family: 'Courier New', monospace; }
+        .blinking-cursor::after { content: '|'; animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* 自定义滚动条 */
+        .console-scroll::-webkit-scrollbar { width: 6px; }
+        .console-scroll::-webkit-scrollbar-track { background: #1f2937; }
+        .console-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+
+    </style>
+</head>
+<body class="pb-10">
+
+    <!-- 1. 顶部控制栏 (深色主题) -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center">
+                    <!-- LOGO 底色保持黑色 -->
+                    <div class="bg-black p-1 rounded mr-3 border border-slate-700">
+                        <img src="https://globalbusinessinsight.github.io/picture/inossem_logo.svg" alt="Inossem Logo" class="h-6">
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-wide">全球供应链协同作战室</h1>
+                        <p class="text-xs text-slate-400">Powered by ProcessGo Plus Integration Cloud</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap justify-center gap-2">
+                    <button id="toggle-data" class="flow-toggle-btn active bg-blue-600 hover:bg-blue-500 text-white text-sm px-3 py-1.5 rounded-full transition-colors border border-blue-400">
+                        🔵 数据流
+                    </button>
+                    <button id="toggle-physical" class="flow-toggle-btn active bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-3 py-1.5 rounded-full transition-colors border border-emerald-400">
+                        🟢 商品流
+                    </button>
+                    <button id="toggle-financial" class="flow-toggle-btn active bg-rose-600 hover:bg-rose-500 text-white text-sm px-3 py-1.5 rounded-full transition-colors border border-rose-400">
+                        🔴 资金流
+                    </button>
+                    <div class="w-px h-6 bg-slate-700 mx-1"></div>
+                    <button id="start-sim" class="bg-slate-700 hover:bg-slate-600 text-white text-sm px-4 py-1.5 rounded-full font-bold transition-all flex items-center gap-1 border border-slate-500">
+                        <span>▶️</span> 全流程模拟
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 mt-8 relative">
+
+        <!-- 2. 核心网络图 -->
+        <div class="relative min-h-[500px] mb-8" id="network-container">
+            
+            <!-- 中心枢纽 (缩小、半透明、不遮挡) -->
+            <div id="processgo-hub" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full flex flex-col items-center justify-center z-20 text-center pointer-events-none transition-transform duration-500 hover:scale-110">
+                <div class="text-3xl mb-1">☁️</div>
+                <span class="font-bold text-white text-sm leading-tight">ProcessGo+</span>
+                <span class="text-[10px] text-blue-200">Integration Cloud</span>
+            </div>
+
+            <!-- 四大业务板块布局 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+                
+                <!-- 左上：供应端 -->
+                <div id="supply-side" class="biz-block bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-slate-700">供应端 (Supply Side)</h2>
+                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">ERP 集成</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div id="factory-cn" class="p-2 bg-slate-50 rounded border border-slate-200">🇨🇳 中国工厂</div>
+                        <div class="p-2 bg-slate-50 rounded border border-slate-200">🇻🇳 越南工厂</div>
+                        <div class="p-2 bg-slate-50 rounded border border-slate-200">🇩🇪 德国工厂</div>
+                        <div class="p-2 bg-slate-50 rounded border border-slate-200">🇪🇬 埃及工厂</div>
+                    </div>
+                </div>
+
+                <!-- 右上：需求端 -->
+                <div id="demand-side" class="biz-block bg-white rounded-xl shadow-sm p-6 border-l-4 border-rose-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-slate-700">需求端 (Demand Side)</h2>
+                        <span class="text-xs bg-rose-100 text-rose-800 px-2 py-1 rounded">全渠道</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="text-sm space-y-2">
+                            <div id="sales-us" class="p-2 bg-slate-50 rounded border border-slate-200">🇺🇸 北美销售公司</div>
+                            <div class="p-2 bg-slate-50 rounded border border-slate-200">🏢 分销商网络</div>
+                            <div id="customer" class="p-2 bg-slate-50 rounded border border-slate-200">🧑‍💻 终端客户</div>
+                        </div>
+                        <div class="chart-container h-32 w-full">
+                            <canvas id="orderChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 左下：运营与控制 -->
+                <div id="ops-control" class="biz-block bg-white rounded-xl shadow-sm p-6 border-l-4 border-indigo-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-slate-700">全局运营 (Global Ops)</h2>
+                        <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded">控制塔</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="text-sm space-y-2">
+                            <div id="ops-hq" class="p-2 bg-slate-50 rounded border border-slate-200">🇨🇳 总部运营中心</div>
+                            <div id="ops-settle" class="p-2 bg-slate-50 rounded border border-slate-200">🇸🇬 全球结算中心</div>
+                        </div>
+                        <div class="chart-container h-32 w-full">
+                            <canvas id="capacityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右下：物流与履行 -->
+                <div id="logistics" class="biz-block bg-white rounded-xl shadow-sm p-6 border-l-4 border-emerald-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-slate-700">物流与履行 (Logistics)</h2>
+                        <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded">TMS/关务</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="p-2 bg-slate-50 rounded border border-slate-200">🚚 3PL / 货代</div>
+                        <div class="p-2 bg-slate-50 rounded border border-slate-200">🚢 国际货运</div>
+                        <div class="p-2 bg-slate-50 rounded border border-slate-200">🧾 进出口报关</div>
+                        <div class="p-2 bg-slate-50 rounded border border-slate-200">🇺🇸 美国海关 (CBP)</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 3. 商品货物流层 (Physical Goods Flow) -->
+        <div id="goods-flow-layer" class="bg-white rounded-xl shadow-md p-8 mb-8 border border-slate-200 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+            <h3 class="text-lg font-bold text-slate-700 mb-6 flex items-center">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+                商品货物流层 (Physical Goods Flow)
+            </h3>
+            
+            <div class="relative px-4 py-4">
+                <!-- 进度线 -->
+                <div class="absolute top-10 left-0 w-full h-1 bg-slate-100 z-0"></div>
+                
+                <div class="flex justify-between relative z-10">
+                    <div class="physical-stage">
+                        <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2 text-xl border border-slate-300">🏭</div>
+                        <div class="text-xs font-medium text-slate-600">工厂发货</div>
+                    </div>
+                    <div class="physical-stage">
+                        <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2 text-xl border border-slate-300">✈️</div>
+                        <div class="text-xs font-medium text-slate-600">口岸出口</div>
+                    </div>
+                    <div class="physical-stage">
+                        <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2 text-xl border border-slate-300">🌊</div>
+                        <div class="text-xs font-medium text-slate-600">国际运输</div>
+                    </div>
+                    <div class="physical-stage">
+                        <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2 text-xl border border-slate-300">⚓</div>
+                        <div class="text-xs font-medium text-slate-600">目的港清关</div>
+                    </div>
+                    <div class="physical-stage">
+                        <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2 text-xl border border-slate-300">📦</div>
+                        <div class="text-xs font-medium text-slate-600">入库分销</div>
+                    </div>
+                    <div class="physical-stage">
+                        <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-2 text-xl border border-slate-300">🏁</div>
+                        <div class="text-xs font-medium text-slate-600">最终交付</div>
+                    </div>
+                </div>
+
+                <!-- 移动的包裹 -->
+                <div id="physical-package" class="absolute top-8 left-0 w-8 h-8 bg-emerald-500 rounded text-white flex items-center justify-center shadow-lg opacity-0 z-20">
+                    Box
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. 智能决策求解器 (Optimization Solver) -->
+        <section id="solver-section" class="bg-slate-800 rounded-xl shadow-xl overflow-hidden text-white border border-slate-600">
+            <div class="bg-slate-900 p-4 border-b border-slate-700 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <h3 class="ml-4 font-mono font-bold text-blue-400">>> 智能决策求解器 (Optimization Solver)</h3>
+                </div>
+                <div class="text-xs text-slate-400">AI-Powered Optimization Engine</div>
+            </div>
+            
+            <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 输入面板：干扰因子 -->
+                <div class="col-span-1 border-r border-slate-700 pr-6">
+                    <h4 class="text-sm font-bold text-slate-300 mb-4 border-b border-slate-700 pb-2">设定干扰因子 (Constraints & Variables)</h4>
+                    <div class="space-y-3">
+                        <label class="flex items-center space-x-3 cursor-pointer hover:bg-slate-700/50 p-2 rounded transition">
+                            <input type="checkbox" id="constraint-order" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-slate-700 border-slate-500 focus:ring-offset-slate-800">
+                            <span class="text-sm text-slate-200">客户订单变更 (Order Modification)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer hover:bg-slate-700/50 p-2 rounded transition">
+                            <input type="checkbox" id="constraint-port" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-slate-700 border-slate-500 focus:ring-offset-slate-800">
+                            <span class="text-sm text-slate-200">港口拥堵/不确定性 (Port Uncertainty)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer hover:bg-slate-700/50 p-2 rounded transition">
+                            <input type="checkbox" id="constraint-tariff" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-slate-700 border-slate-500 focus:ring-offset-slate-800">
+                            <span class="text-sm text-slate-200">关税政策变化 (Tariff Policy)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer hover:bg-slate-700/50 p-2 rounded transition">
+                            <input type="checkbox" id="constraint-capacity" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-slate-700 border-slate-500 focus:ring-offset-slate-800">
+                            <span class="text-sm text-slate-200">工厂产能限制 (Capacity Limit)</span>
+                        </label>
+                    </div>
+                    <button id="run-solver" class="mt-6 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded shadow-lg transition-all transform active:scale-95 flex justify-center items-center gap-2">
+                        <span>⚡</span> 运行优化计算
+                    </button>
+                </div>
+
+                <!-- 输出面板：计算日志 -->
+                <div class="col-span-1 bg-slate-900 rounded p-4 font-mono text-xs text-green-400 h-64 overflow-y-auto console-scroll shadow-inner">
+                    <div id="solver-log">
+                        <p class="opacity-50">// 等待输入指令...</p>
+                        <p class="opacity-50">// System Ready.</p>
+                    </div>
+                    <div class="blinking-cursor mt-1"></div>
+                </div>
+
+                <!-- 结果面板：仪表盘 -->
+                <div class="col-span-1 flex flex-col justify-between">
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-300 mb-4">优化结果 (Optimization Result)</h4>
+                        
+                        <!-- 结果卡片 -->
+                        <div id="result-card" class="bg-slate-700/50 rounded p-4 border border-slate-600 opacity-50 transition-opacity duration-500">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs text-slate-400">总成本 (Total Cost)</span>
+                                <span class="font-bold text-white" id="res-cost">--</span>
+                            </div>
+                            <div class="w-full bg-slate-600 rounded-full h-2 mb-4">
+                                <div id="bar-cost" class="bg-blue-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                            </div>
+
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs text-slate-400">交付时效 (Lead Time)</span>
+                                <span class="font-bold text-white" id="res-time">--</span>
+                            </div>
+                            <div class="w-full bg-slate-600 rounded-full h-2 mb-4">
+                                <div id="bar-time" class="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                            </div>
+                            
+                            <div class="mt-4 p-3 bg-blue-900/30 border border-blue-500/30 rounded">
+                                <span class="text-xs text-blue-300 block mb-1">推荐策略 (Recommendation):</span>
+                                <p id="res-rec" class="text-sm text-white font-medium">等待计算...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- 粒子容器 -->
+    <div id="particle-container"></div>
+
+    <script>
+        // --- 粒子系统 ---
+        class ParticleSystem {
+            constructor() {
+                this.container = document.getElementById('particle-container');
+            }
+
+            createParticle(color) {
+                const p = document.createElement('div');
+                p.className = 'flow-particle';
+                p.style.backgroundColor = color;
+                this.container.appendChild(p);
+                return p;
+            }
+
+            animate(fromId, toId, color, delay = 0) {
+                setTimeout(() => {
+                    const fromEl = document.getElementById(fromId);
+                    const toEl = document.getElementById(toId);
+                    if (!fromEl || !toEl) return;
+
+                    const rect1 = fromEl.getBoundingClientRect();
+                    const rect2 = toEl.getBoundingClientRect();
+                    
+                    // 计算中心点
+                    const startX = rect1.left + rect1.width / 2 + window.scrollX;
+                    const startY = rect1.top + rect1.height / 2 + window.scrollY;
+                    const endX = rect2.left + rect2.width / 2 + window.scrollX;
+                    const endY = rect2.top + rect2.height / 2 + window.scrollY;
+
+                    const p = this.createParticle(color);
+                    p.style.left = startX + 'px';
+                    p.style.top = startY + 'px';
+                    p.style.opacity = '1';
+
+                    // 强制重绘
+                    p.offsetHeight;
+
+                    // 优化：动画时间 1.7s，更加清晰
+                    p.style.transition = 'all 1.7s cubic-bezier(0.4, 0, 0.2, 1)';
+                    p.style.left = endX + 'px';
+                    p.style.top = endY + 'px';
+
+                    setTimeout(() => {
+                        p.remove();
+                    }, 1700); // 对应动画时长
+                }, delay);
+            }
+        }
+
+        const particles = new ParticleSystem();
+
+        // --- 模拟逻辑 ---
+        const activeFlows = { data: true, goods: true, financial: true };
+        let isSimulating = false;
+
+        document.getElementById('toggle-data').onclick = function() {
+            this.classList.toggle('bg-blue-600'); this.classList.toggle('bg-slate-400');
+            activeFlows.data = !activeFlows.data;
+        };
+        document.getElementById('toggle-physical').onclick = function() {
+            this.classList.toggle('bg-emerald-600'); this.classList.toggle('bg-slate-400');
+            activeFlows.goods = !activeFlows.goods;
+            const layer = document.getElementById('goods-flow-layer');
+            layer.style.opacity = activeFlows.goods ? '1' : '0.5';
+        };
+        document.getElementById('toggle-financial').onclick = function() {
+            this.classList.toggle('bg-rose-600'); this.classList.toggle('bg-slate-400');
+            activeFlows.financial = !activeFlows.financial;
+        };
+
+        document.getElementById('start-sim').onclick = function() {
+            if (isSimulating) return;
+            isSimulating = true;
+            const btn = this;
+            btn.innerHTML = '<span>⏳</span> 模拟运行中...';
+            btn.classList.add('opacity-75');
+
+            let t = 0;
+
+            // 1. 客户 -> 销售 (下单) - 数据流
+            if(activeFlows.data) particles.animate('customer', 'sales-us', '#3b82f6', t+=100);
+
+            // 2. 销售 -> Hub (订单同步) - 数据流
+            if(activeFlows.data) particles.animate('sales-us', 'processgo-hub', '#3b82f6', t+=1000);
+
+            // 3. Hub -> 运营 (寻源) - 数据流
+            if(activeFlows.data) particles.animate('processgo-hub', 'ops-hq', '#3b82f6', t+=1000);
+
+            // 4. Hub -> 工厂 (排产) - 数据流
+            if(activeFlows.data) particles.animate('processgo-hub', 'factory-cn', '#3b82f6', t+=1000);
+
+            // 5. 物理流开始 (工厂 -> 交付)
+            setTimeout(() => {
+                if(activeFlows.goods) {
+                    const pkg = document.getElementById('physical-package');
+                    // 动态计算进度
+                    pkg.style.opacity = '1';
+                    pkg.style.left = '20px';
+                    pkg.style.transition = 'left 4s linear';
+                    setTimeout(() => { pkg.style.left = '95%'; }, 100);
+                    setTimeout(() => { pkg.style.opacity = '0'; }, 4100);
+                }
+            }, t);
+
+            // 6. Hub -> 物流 (订舱/报关)
+            if(activeFlows.data) {
+                particles.animate('processgo-hub', 'logistics', '#3b82f6', t+=1500);
+            }
+
+            // 7. 资金流 (结算)
+            if(activeFlows.financial) {
+                particles.animate('sales-us', 'ops-settle', '#ef4444', t+=2500); // 销售回款
+                particles.animate('ops-settle', 'factory-cn', '#ef4444', t+=500); // 内部结算
+            }
+
+            setTimeout(() => {
+                isSimulating = false;
+                btn.innerHTML = '<span>▶️</span> 全流程模拟';
+                btn.classList.remove('opacity-75');
+            }, t + 2000);
+        };
+
+        // --- 图表初始化 ---
+        const chartConfig = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+        };
+
+        new Chart(document.getElementById('orderChart'), {
+            type: 'bar',
+            data: {
+                labels: ['待处理', '生产中', '运输中', '已完成'],
+                datasets: [{
+                    data: [120, 300, 150, 800],
+                    backgroundColor: ['#e2e8f0', '#3b82f6', '#f59e0b', '#10b981'],
+                    borderRadius: 4
+                }]
+            },
+            options: { ...chartConfig, plugins: { title: { display: true, text: '订单状态分布' } } }
+        });
+
+        new Chart(document.getElementById('capacityChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['中国', '越南', '德国', '其他'],
+                datasets: [{
+                    data: [40, 30, 20, 10],
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444', '#94a3b8'],
+                    borderWidth: 0
+                }]
+            },
+            options: { ...chartConfig, plugins: { title: { display: true, text: '全球产能负载' } } }
+        });
+
+
+        // --- 求解器逻辑 ---
+        const logEl = document.getElementById('solver-log');
+        const resCard = document.getElementById('result-card');
+        const resCost = document.getElementById('res-cost');
+        const resTime = document.getElementById('res-time');
+        const resRec = document.getElementById('res-rec');
+        const barCost = document.getElementById('bar-cost');
+        const barTime = document.getElementById('bar-time');
+
+        function addLog(text, color = 'text-green-400') {
+            const p = document.createElement('p');
+            p.className = `mb-1 ${color}`;
+            p.innerText = `> ${text}`;
+            logEl.appendChild(p);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        document.getElementById('run-solver').onclick = async function() {
+            // 重置界面
+            logEl.innerHTML = '';
+            resCard.classList.remove('opacity-100');
+            resCard.classList.add('opacity-50');
+            addLog("初始化求解器...", "text-blue-300");
+            
+            // 获取输入
+            const constraints = [];
+            if(document.getElementById('constraint-order').checked) constraints.push("订单激增");
+            if(document.getElementById('constraint-port').checked) constraints.push("港口拥堵");
+            if(document.getElementById('constraint-tariff').checked) constraints.push("关税上涨");
+            if(document.getElementById('constraint-capacity').checked) constraints.push("产能受限");
+
+            await wait(600);
+            addLog(`加载约束条件: [${constraints.length > 0 ? constraints.join(', ') : '标准模式'}]`);
+            
+            await wait(800);
+            addLog("连接 ProcessGo+ 数据湖...", "text-yellow-300");
+            
+            await wait(800);
+            addLog("正在进行多目标线性规划 (Simplex Algorithm)...");
+            
+            // 模拟计算过程
+            let costVal = "$1.2M";
+            let costPercent = "60%";
+            let timeVal = "14 Days";
+            let timePercent = "40%";
+            let recText = "维持当前路由，利用中国工厂产能，通过洛杉矶港(LAX)进口。";
+
+            if (constraints.includes("关税上涨")) {
+                await wait(500);
+                addLog("警告：检测到成本参数变化 (Tariff +25%)", "text-red-400");
+                addLog("正在重新计算寻源策略...");
+                costVal = "$1.4M"; costPercent = "75%";
+                recText = "建议转移 30% 订单至越南工厂生产以规避关税；其余保持现状。";
+            }
+            
+            if (constraints.includes("港口拥堵")) {
+                await wait(500);
+                addLog("警告：检测到物流瓶颈 (Lead Time Risk)", "text-red-400");
+                addLog("正在模拟多式联运方案...");
+                timeVal = "18 Days"; timePercent = "80%";
+                recText = "建议改道长滩港 (LGB) 或启用空运加急服务；通知客户可能的延误。";
+            }
+            
+            if (constraints.includes("产能受限") && constraints.includes("订单激增")) {
+                await wait(500);
+                addLog("严重警告：供需严重失衡！", "text-red-500 font-bold");
+                addLog("启动全球库存调拨算法...");
+                costVal = "$2.1M"; costPercent = "95%";
+                recText = "启用德国工厂备用产能；拆分订单，紧急部分空运，常规部分海运。";
+            }
+
+            await wait(600);
+            addLog("计算完成。最优解已生成。", "text-white");
+            
+            // 显示结果
+            resCost.innerText = costVal;
+            resTime.innerText = timeVal;
+            resRec.innerText = recText;
+            
+            barCost.style.width = costPercent;
+            barTime.style.width = timePercent;
+
+            if (constraints.length > 0) {
+                 if (parseInt(costPercent) > 70) barCost.classList.replace('bg-blue-500', 'bg-red-500');
+                 else barCost.classList.replace('bg-red-500', 'bg-blue-500');
+            } else {
+                barCost.classList.replace('bg-red-500', 'bg-blue-500');
+            }
+
+            resCard.classList.remove('opacity-50');
+            resCard.classList.add('opacity-100');
+        };
+
+        function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    </script>
+</body>
+</html>
