@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>纳斯达克深度分析报告 | Nasdaq Deep Dive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@400;700;900&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* 字体策略 */
+        body {
+            background-color: #f3f2f1;
+            color: #1a1a1a;
+            transition: all 0.3s ease;
+        }
+
+        /* 语言显示控制 */
+        body.lang-cn .lang-en { display: none !important; }
+        body.lang-en .lang-cn { display: none !important; }
+
+        /* 中文排版 */
+        body.lang-cn { font-family: 'Noto Serif SC', 'Georgia', serif; }
+        body.lang-cn h1, body.lang-cn h2, body.lang-cn h3, body.lang-cn h4, body.lang-cn .sans-font { font-family: 'Noto Sans SC', sans-serif; }
+
+        /* 英文排版 */
+        body.lang-en { font-family: 'Noto Serif', 'Georgia', serif; }
+        body.lang-en h1, body.lang-en h2, body.lang-en h3, body.lang-en h4, body.lang-en .sans-font { font-family: 'Noto Sans', sans-serif; letter-spacing: -0.01em;}
+        
+        /* 经济学人风格元素 */
+        .economist-red { background-color: #E3120B; }
+        .economist-red-text { color: #E3120B; }
+        
+        .drop-cap::first-letter {
+            float: left;
+            font-weight: 900;
+            font-size: 4.5rem;
+            line-height: 0.85;
+            padding-right: 0.5rem;
+            padding-top: 0.2rem;
+            color: #E3120B;
+        }
+        body.lang-en .drop-cap::first-letter { font-family: 'Noto Sans', sans-serif; }
+        body.lang-cn .drop-cap::first-letter { font-family: 'Noto Sans SC', sans-serif; }
+
+        .section-divider {
+            border-top: 1px solid #d1d5db;
+            margin: 3rem 0;
+            position: relative;
+        }
+        .section-divider::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 0;
+            width: 4rem;
+            height: 4px;
+            background-color: #E3120B;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; 
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 400px; }
+        }
+        
+        .image-caption {
+            font-size: 0.8rem;
+            color: #4b5563;
+            text-align: left;
+            border-left: 3px solid #E3120B;
+            padding-left: 0.5rem;
+            margin-bottom: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        body.lang-en .image-caption { font-family: 'Noto Sans', sans-serif; }
+        body.lang-cn .image-caption { font-family: 'Noto Sans SC', sans-serif; }
+
+        p {
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+            font-size: 1.125rem;
+        }
+        
+        .article-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            border: 1px solid #e5e7eb;
+            min-height: 250px;
+            background-color: #ddd;
+            object-fit: cover;
+        }
+
+        /* 语言切换按钮 - 顶部居中 */
+        .lang-toggle {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: white;
+            border: 1px solid #1a1a1a;
+            box-shadow: 2px 2px 0px #1a1a1a;
+            padding: 5px 15px;
+            font-family: 'Noto Sans', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+            font-size: 0.9rem;
+            border-radius: 2px;
+        }
+        .lang-toggle:active {
+            transform: translate(-50%, 2px);
+            box-shadow: none;
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        .data-table th {
+            border-bottom: 2px solid #1a1a1a;
+            text-align: left;
+            padding: 8px;
+            font-weight: bold;
+        }
+        .data-table td {
+            border-bottom: 1px solid #d1d5db;
+            padding: 8px;
+            color: #333;
+        }
+        .timeline-item {
+            border-left: 2px solid #E3120B;
+            padding-left: 1rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body class="lang-cn">
+
+    <!-- Language Toggle -->
+    <button class="lang-toggle" onclick="toggleLanguage()">
+        <span class="lang-cn">English Version</span>
+        <span class="lang-en">中文版本</span>
+    </button>
+
+    <!-- Top Navigation / Branding -->
+    <div class="w-full bg-[#E3120B] h-2"></div>
+    <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between border-b border-black mt-8">
+        <div class="sans-font font-bold text-lg tracking-tight">
+            <span class="lang-cn">深度分析</span>
+            <span class="lang-en">Briefing</span>
+        </div>
+        <div class="sans-font text-sm uppercase tracking-widest text-gray-600">Finance & Economics</div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="max-w-3xl mx-auto px-4 py-8 md:py-12 bg-white md:shadow-lg md:my-8">
+        
+        <!-- Header Section -->
+        <header class="mb-8">
+            <span class="economist-red-text sans-font font-bold uppercase tracking-wider text-sm mb-2 block">
+                <span class="lang-cn">全球股市特别报告</span>
+                <span class="lang-en">Special Report: Global Equities</span>
+            </span>
+            <h1 class="text-3xl md:text-5xl font-bold leading-tight mb-4 sans-font text-black">
+                <span class="lang-cn">数字帝国的引擎</span>
+                <span class="lang-en">The Engine of the Digital Empire</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-700 italic font-serif leading-relaxed">
+                <span class="lang-cn">从1971年的电子实验到2025年的AI霸主：深度解析纳斯达克的演变、机制与权力结构。</span>
+                <span class="lang-en">From a 1971 electronic experiment to the AI hegemon of 2025: A deep dive into Nasdaq's evolution, mechanics, and power structure.</span>
+            </p>
+        </header>
+
+        <!-- Section 1: Definition & History -->
+        <div class="section-divider"></div>
+        <h2 class="text-xl font-bold sans-font uppercase mb-4">
+            <span class="lang-cn">一、 硅谷的金融心脏：定义与历史</span>
+            <span class="lang-en">I. Silicon Valley's Financial Heart: Definition & History</span>
+        </h2>
+        
+        <!-- Image 1: Nasdaq MarketSite -->
+        <img src="https://oss.ebuypress.com/pc/static/images/z_1.png?v=20250903" alt="Nasdaq MarketSite" class="article-image">
+        <div class="image-caption">
+            <span class="lang-cn">纽约时代广场的纳斯达克大屏：虽然它是一个“无大厅”的电子市场，但这已成为其标志性图腾。</span>
+            <span class="lang-en">The Nasdaq MarketSite in Times Square: Although a "floorless" electronic market, this has become its iconic totem.</span>
+        </div>
+
+        <p class="drop-cap">
+            <span class="lang-cn">纳
+            斯达克（Nasdaq），全称“全国证券交易商协会自动报价系统”，不仅是全球第二大证券交易所，更是现代科技资本主义的代名词。与拥有数百年历史、依赖交易员大厅的纽交所（NYSE）不同，纳斯达克诞生于1971年，是世界上第一个完全电子化的股票市场。</span>
+            <span class="lang-en">N
+            asdaq (National Association of Securities Dealers Automated Quotations) is not just the world's second-largest stock exchange, but a synonym for modern techno-capitalism. Unlike the NYSE with its centuries-old trading floor, Nasdaq was born in 1971 as the world's first fully electronic stock market.</span>
+        </p>
+        <p>
+            <span class="lang-cn">起初，它只是一个为不符合纽交所上市标准的小公司提供报价的“场外交易”系统。然而，随着英特尔、微软、苹果等科技巨头的崛起，纳斯达克从边缘走向了中心，重塑了全球资本市场的格局。今天，它是高增长、高科技和高风险的代名词。</span>
+            <span class="lang-en">Initially, it was merely an "over-the-counter" system for small firms that didn't meet NYSE standards. However, with the rise of tech giants like Intel, Microsoft, and Apple, Nasdaq moved from the periphery to the center, reshaping global capital markets. Today, it is synonymous with high growth, high tech, and high risk.</span>
+        </p>
+
+        <!-- Section 2: Mechanism -->
+        <div class="section-divider"></div>
+        <h2 class="text-xl font-bold sans-font uppercase mb-4">
+            <span class="lang-cn">二、 运作机制：做市商与分层</span>
+            <span class="lang-en">II. Mechanism: Market Makers & Tiers</span>
+        </h2>
+
+        <div class="bg-gray-50 border-l-4 border-black p-6 my-6">
+            <h3 class="font-bold sans-font text-lg mb-2">
+                <span class="lang-cn">做市商制度 (Dealer Market)</span>
+                <span class="lang-en">The Dealer Market System</span>
+            </h3>
+            <p class="text-base mb-0">
+                <span class="lang-cn">与纽交所的“竞价市场”（依靠专门做市商匹配买卖）不同，纳斯达克是一个<strong>“交易商市场”</strong>。每只股票都有多个做市商（Market Makers）竞争，他们必须时刻提供买入和卖出价格，利用自有资金通过电脑网络完成交易。这种竞争机制极大地提高了市场的流动性。</span>
+                <span class="lang-en">Unlike the NYSE's "auction market" (relying on specialists to match trades), Nasdaq is a <strong>"dealer market."</strong> Multiple market makers compete for each stock, obliged to post buy and sell prices continuously, executing trades via computer networks using their own capital. This competition maximizes liquidity.</span>
+            </p>
+        </div>
+
+        <p>
+            <span class="lang-cn">为了适应不同体量的公司，纳斯达克将市场划分为三个层级：</span>
+            <span class="lang-en">To accommodate companies of various sizes, Nasdaq is divided into three tiers:</span>
+        </p>
+        <ul class="list-disc list-inside font-sans text-sm space-y-2 mb-4 text-gray-700">
+            <li>
+                <span class="lang-cn"><strong>全球精选市场 (Global Select Market):</strong> 标准最高，汇聚了苹果、微软、英伟达等全球蓝筹科技股。</span>
+                <span class="lang-en"><strong>Global Select Market:</strong> The highest standard, home to global blue-chip tech like Apple, Microsoft, and Nvidia.</span>
+            </li>
+            <li>
+                <span class="lang-cn"><strong>全球市场 (Global Market):</strong> 面向中型企业，流动性要求适中。</span>
+                <span class="lang-en"><strong>Global Market:</strong> For mid-cap companies with moderate liquidity requirements.</span>
+            </li>
+            <li>
+                <span class="lang-cn"><strong>资本市场 (Capital Market):</strong> 门槛较低，主要服务于成长初期的小型公司。</span>
+                <span class="lang-en"><strong>Capital Market:</strong> Lower entry barriers, serving early-stage small-cap companies.</span>
+            </li>
+        </ul>
+
+        <!-- Section 3: Milestones (History) -->
+        <div class="section-divider"></div>
+        <h2 class="text-xl font-bold sans-font uppercase mb-4">
+            <span class="lang-cn">三、 创新编年史：从互联互通到AI革命</span>
+            <span class="lang-en">III. Chronicles of Innovation: From Connectivity to AI</span>
+        </h2>
+
+        <div class="timeline-item">
+            <h4 class="font-bold sans-font text-lg">1971-1980s: <span class="text-gray-600">电子化黎明 (The Electronic Dawn)</span></h4>
+            <p class="text-sm text-gray-600">
+                <span class="lang-cn">1971年2月8日开市。1980年苹果(Apple)上市，1986年微软(Microsoft)上市，这两次IPO定义了未来的PC时代，也奠定了纳斯达克的科技基因。</span>
+                <span class="lang-en">Launched Feb 8, 1971. Apple IPO (1980) and Microsoft IPO (1986) defined the coming PC era and cemented Nasdaq's tech DNA.</span>
+            </p>
+        </div>
+
+        <div class="timeline-item">
+            <h4 class="font-bold sans-font text-lg">1995-2000: <span class="text-gray-600">互联网泡沫 (The Dot-com Bubble)</span></h4>
+            <p class="text-sm text-gray-600">
+                <span class="lang-cn">纳斯达克指数在2000年3月突破5000点，随后崩盘暴跌近80%。这是成长的阵痛，虽然亚马逊等幸存下来，但无数“.com”公司灰飞烟灭。</span>
+                <span class="lang-en">The index breached 5,000 in March 2000, then crashed nearly 80%. Growing pains: while Amazon survived, countless ".coms" vanished.</span>
+            </p>
+        </div>
+
+        <div class="timeline-item">
+            <h4 class="font-bold sans-font text-lg">2010s: <span class="text-gray-600">移动互联网时代 (The Mobile Era)</span></h4>
+            <p class="text-sm text-gray-600">
+                <span class="lang-cn">FAANG（Facebook, Apple, Amazon, Netflix, Google）组合统治市场。纳斯达克不仅收复了2000年的失地，更成为全球经济增长的引擎。</span>
+                <span class="lang-en">The FAANG era. Nasdaq not only recovered its 2000 losses but became the engine of global growth.</span>
+            </p>
+        </div>
+
+        <div class="timeline-item">
+            <h4 class="font-bold sans-font text-lg">2023-2025: <span class="text-gray-600">AI奇点 (The AI Singularity)</span></h4>
+            <p class="text-sm text-gray-600">
+                <span class="lang-cn">由ChatGPT引发的AI狂潮。英伟达(Nvidia)市值一度超越苹果，纳斯达克指数突破20,000点大关，市场进入算力主导的新纪元。</span>
+                <span class="lang-en">The AI boom sparked by ChatGPT. Nvidia briefly surpassed Apple in value; the index breached 20,000, entering a compute-driven era.</span>
+            </p>
+        </div>
+
+        <!-- Section 4: Data Analysis -->
+        <div class="section-divider"></div>
+        <h2 class="text-xl font-bold sans-font uppercase mb-4">
+            <span class="lang-cn">四、 数据透视：20年的指数长牛</span>
+            <span class="lang-en">IV. Data Insights: The 20-Year Bull Run</span>
+        </h2>
+
+        <p>
+            <span class="lang-cn">过去二十年，纳斯达克综合指数（Nasdaq Composite）的回报率远超传统标普500，反映了科技行业对全球经济价值的吸纳。</span>
+            <span class="lang-en">Over the past two decades, the Nasdaq Composite has vastly outperformed the S&P 500, reflecting tech's absorption of global economic value.</span>
+        </p>
+
+        <!-- Chart 1: Index Performance -->
+        <div class="my-8">
+            <h4 class="sans-font font-bold text-center mb-2" id="label-index-title">
+                <span class="lang-cn">纳斯达克综合指数走势 (2005-2025)</span>
+                <span class="lang-en">Nasdaq Composite Index (2005-2025)</span>
+            </h4>
+            <div class="chart-container">
+                <canvas id="indexChart"></canvas>
+            </div>
+            <div class="text-sm text-gray-500 mt-2 text-center font-sans">
+                <span class="lang-cn">2025年11月数据约为22,000点，显示出AI驱动的强劲动能。</span>
+                <span class="lang-en">Nov 2025 data approx 22,000, showing strong AI-driven momentum.</span>
+            </div>
+        </div>
+
+        <!-- Section 5: The "Mag 7" -->
+        <div class="section-divider"></div>
+        <h2 class="text-xl font-bold sans-font uppercase mb-4">
+            <span class="lang-cn">五、 谁在统治纳斯达克？(Top 10 权重股)</span>
+            <span class="lang-en">V. Who Rules Nasdaq? (Top 10 Constituents)</span>
+        </h2>
+
+        <!-- Image 2: Nasdaq Screen -->
+        <img src="https://www.nasdaq.com/sites/acquia.prod/files/styles/1100x620/public/2020/09/23/Screen%20Shot%202020-09-23%20at%2011.19.54%20AM.png?itok=Qd1WURDR" alt="Nasdaq Data Screen" class="article-image">
+        <div class="image-caption">
+            <span class="lang-cn">算力即权力：半导体公司在指数中的权重从未如此之高。</span>
+            <span class="lang-en">Compute is Power: Semiconductor weights in the index have never been higher.</span>
+        </div>
+
+        <p>
+            <span class="lang-cn">纳斯达克100指数（NDX）呈现出极端的头部集中效应。所谓的“七巨头”（Magnificent Seven）贡献了指数大部分的涨幅。以下是截至2025年11月的权重估算：</span>
+            <span class="lang-en">The Nasdaq-100 (NDX) shows extreme concentration. The "Magnificent Seven" drive most gains. Here is the estimated weighting as of Nov 2025:</span>
+        </p>
+
+        <!-- Top 10 Table -->
+        <div class="overflow-x-auto">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th><span class="lang-cn">排名</span><span class="lang-en">Rank</span></th>
+                        <th><span class="lang-cn">公司 (代码)</span><span class="lang-en">Company (Ticker)</span></th>
+                        <th><span class="lang-cn">行业</span><span class="lang-en">Sector</span></th>
+                        <th><span class="lang-cn">指数权重估算*</span><span class="lang-en">Est. Weight*</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="bg-blue-50">
+                        <td>1</td>
+                        <td><strong>Nvidia (NVDA)</strong></td>
+                        <td><span class="lang-cn">半导体/AI</span><span class="lang-en">Semis/AI</span></td>
+                        <td class="font-bold">~13.5%</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                        <td>2</td>
+                        <td><strong>Apple (AAPL)</strong></td>
+                        <td><span class="lang-cn">消费电子</span><span class="lang-en">Consumer Tech</span></td>
+                        <td>~12.4%</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                        <td>3</td>
+                        <td><strong>Microsoft (MSFT)</strong></td>
+                        <td><span class="lang-cn">软件/云</span><span class="lang-en">Software/Cloud</span></td>
+                        <td>~10.7%</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                        <td>4</td>
+                        <td><strong>Amazon (AMZN)</strong></td>
+                        <td><span class="lang-cn">电商/云</span><span class="lang-en">Retail/Cloud</span></td>
+                        <td>~7.3%</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                        <td>5</td>
+                        <td><strong>Alphabet (GOOG/GOOGL)</strong></td>
+                        <td><span class="lang-cn">通讯服务/搜索</span><span class="lang-en">Comm/Search</span></td>
+                        <td>~6.0%</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                        <td>6</td>
+                        <td><strong>Broadcom (AVGO)</strong></td>
+                        <td><span class="lang-cn">半导体</span><span class="lang-en">Semiconductors</span></td>
+                        <td>~5.4%</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                        <td>7</td>
+                        <td><strong>Meta Platforms (META)</strong></td>
+                        <td><span class="lang-cn">社交媒体</span><span class="lang-en">Social Media</span></td>
+                        <td>~4.7%</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Tesla (TSLA)</td>
+                        <td><span class="lang-cn">电动车/机器人</span><span class="lang-en">EV/Robotics</span></td>
+                        <td>~4.2%</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Netflix (NFLX)</td>
+                        <td><span class="lang-cn">流媒体</span><span class="lang-en">Streaming</span></td>
+                        <td>~1.4%</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Costco (COST)</td>
+                        <td><span class="lang-cn">消费必需品</span><span class="lang-en">Consumer Staples</span></td>
+                        <td>~1.2%</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="text-xs text-gray-500 mt-1">
+                <span class="lang-cn">*注：权重随股价每日波动，并受每季度“特别再平衡”（Special Rebalance）规则限制以防单一股票权重过大。数据截止2025年11月。</span>
+                <span class="lang-en">*Note: Weights fluctuate daily and are subject to quarterly "Special Rebalance" rules to prevent over-concentration. Data as of Nov 2025.</span>
+            </p>
+        </div>
+
+        <!-- Chart 2: Concentration -->
+        <div class="my-8">
+            <h4 class="sans-font font-bold text-center mb-2" id="label-weight-title">
+                <span class="lang-cn">纳斯达克100：头部集中度分析</span>
+                <span class="lang-en">Nasdaq-100: Concentration Analysis</span>
+            </h4>
+            <div class="chart-container">
+                <canvas id="weightChart"></canvas>
+            </div>
+            <div class="text-sm text-gray-500 mt-2 text-center font-sans">
+                <span class="lang-cn">前7大公司占据了指数近60%的权重。</span>
+                <span class="lang-en">The top 7 companies account for nearly 60% of the index weight.</span>
+            </div>
+        </div>
+
+        <!-- Section 6: Risks -->
+        <div class="section-divider"></div>
+        <h2 class="text-xl font-bold sans-font uppercase mb-4">
+            <span class="lang-cn">六、 风险与挑战：繁荣的阴影</span>
+            <span class="lang-en">VI. Risks & Challenges: Shadows of Boom</span>
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+            <div class="bg-red-50 p-4 border-t-2 border-red-600">
+                <h4 class="font-bold sans-font text-red-700 mb-2">
+                    <span class="lang-cn">1. 估值泡沫与利率敏感性</span>
+                    <span class="lang-en">1. Valuation Bubbles & Rate Sensitivity</span>
+                </h4>
+                <p class="text-sm">
+                    <span class="lang-cn">科技股是典型的“长久期资产”，其估值极度依赖对未来的增长预期和低利率环境。如果通胀反弹导致美联储维持高利率，纳斯达克的高市盈率（PE）将面临剧烈收缩。</span>
+                    <span class="lang-en">Tech stocks are "long-duration assets," heavily reliant on growth forecasts and low rates. If inflation rebounds and the Fed holds rates high, Nasdaq's high PE ratios face severe contraction.</span>
+                </p>
+            </div>
+            <div class="bg-gray-100 p-4 border-t-2 border-gray-600">
+                <h4 class="font-bold sans-font text-gray-800 mb-2">
+                    <span class="lang-cn">2. 反垄断监管 (Antitrust)</span>
+                    <span class="lang-en">2. Antitrust Regulation</span>
+                </h4>
+                <p class="text-sm">
+                    <span class="lang-cn">指数权重的过度集中引来了监管的目光。无论是在美国还是欧盟，针对谷歌搜索、苹果应用商店或亚马逊电商的拆分呼声从未停止，这构成了最大的政策“黑天鹅”。</span>
+                    <span class="lang-en">Extreme concentration attracts regulatory scrutiny. In the US and EU, calls to break up Google Search, Apple's App Store, or Amazon Retail persist—the ultimate policy "Black Swan."</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="section-divider"></div>
+        <footer class="text-center pt-8 pb-12">
+            <div class="w-12 h-1 bg-black mx-auto mb-4"></div>
+            <p class="sans-font font-bold text-sm uppercase tracking-widest">
+                <span class="lang-cn">完</span>
+                <span class="lang-en">End</span>
+            </p>
+            <p class="font-serif italic text-gray-500 text-sm mt-4">
+                <span class="lang-cn">数据截止：2025年11月。<br>数据来源：Nasdaq, Bloomberg, Slickcharts, Invesco QQQ Trust.</span>
+                <span class="lang-en">Data as of Nov 2025.<br>Sources: Nasdaq, Bloomberg, Slickcharts, Invesco QQQ Trust.</span>
+            </p>
+        </footer>
+
+    </main>
+
+    <!-- Script for Charts & Language Toggle -->
+    <script>
+        // Language State
+        let currentLang = 'cn';
+        const body = document.body;
+
+        // Chart Instances
+        let indexChart, weightChart;
+
+        // Chart Data Translations
+        const chartTranslations = {
+            index: {
+                cn: '纳斯达克综合指数 (点)',
+                en: 'Nasdaq Composite Index (Points)'
+            },
+            weight: {
+                cn: { label: '权重 (%)', labels: ['前7大巨头 (Mag 7)', '剩余93家公司'] },
+                en: { label: 'Weight (%)', labels: ['Top 7 (Mag 7)', 'Remaining 93'] }
+            }
+        };
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'cn' ? 'en' : 'cn';
+            body.className = `lang-${currentLang}`;
+            updateCharts();
+        }
+
+        // Economist Theme Colors
+        const econRed = '#E3120B';
+        const econBlue = '#005F86';
+        const econGrey = '#495057';
+
+        // Common Chart Options
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { family: "'Noto Sans SC', sans-serif", size: 11 },
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    titleColor: '#000',
+                    bodyColor: '#333',
+                    borderColor: '#ddd',
+                    borderWidth: 1,
+                    padding: 10,
+                    displayColors: true
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#666' }
+                },
+                y: {
+                    grid: { color: '#e5e5e5', borderDash: [2, 2] },
+                    ticks: { color: '#666' },
+                    beginAtZero: false
+                }
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+        };
+
+        function initCharts() {
+            // 1. Index Chart (Nasdaq Composite 2005-2025)
+            // Historical milestones + 2025 Projection (~22,000)
+            indexChart = new Chart(document.getElementById('indexChart'), {
+                type: 'line',
+                data: {
+                    labels: ['2005', '2008', '2010', '2013', '2015', '2018', '2020', '2021', '2022', '2023', '2024', '2025.11'],
+                    datasets: [{
+                        label: chartTranslations.index[currentLang],
+                        // Data approximate year-end or peak values
+                        data: [2205, 1577, 2652, 4176, 5007, 6635, 12888, 15644, 10466, 15011, 19700, 22273], 
+                        borderColor: econBlue,
+                        backgroundColor: 'rgba(0, 95, 134, 0.1)',
+                        borderWidth: 2.5,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: { ...commonOptions.scales.y, beginAtZero: false }
+                    }
+                }
+            });
+
+            // 2. Weight Chart (Doughnut - Concentration)
+            // Top 7 (NVDA, AAPL, MSFT, AMZN, GOOG/L, AVGO, META) approx 60%
+            weightChart = new Chart(document.getElementById('weightChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: chartTranslations.weight[currentLang].labels,
+                    datasets: [{
+                        label: chartTranslations.weight[currentLang].label,
+                        data: [60, 40],
+                        backgroundColor: [econRed, '#bdc3c7'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { padding: 15, usePointStyle: true }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            // Update Index Chart
+            document.getElementById('label-index-title').innerText = chartTranslations.index[currentLang];
+            indexChart.data.datasets[0].label = chartTranslations.index[currentLang];
+            indexChart.update();
+
+            // Update Weight Chart
+            document.getElementById('label-weight-title').innerText = (currentLang === 'cn' ? '纳斯达克100：头部集中度分析' : 'Nasdaq-100: Concentration Analysis');
+            weightChart.data.labels = chartTranslations.weight[currentLang].labels;
+            weightChart.data.datasets[0].label = chartTranslations.weight[currentLang].label;
+            weightChart.update();
+        }
+
+        // Initialize on Load
+        document.addEventListener('DOMContentLoaded', initCharts);
+
+    </script>
+</body>
+</html>
