@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>芝加哥商品交易所深度分析 | CME Group Deep Dive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@400;700;900&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Noto+Sans:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* 字体策略 */
+        body {
+            background-color: #f3f2f1;
+            color: #1a1a1a;
+            transition: all 0.3s ease;
+        }
+
+        /* 语言显示控制 */
+        body.lang-cn .lang-en { display: none !important; }
+        body.lang-en .lang-cn { display: none !important; }
+
+        /* 中文排版 */
+        body.lang-cn { font-family: 'Noto Serif SC', 'Georgia', serif; }
+        body.lang-cn h1, body.lang-cn h2, body.lang-cn h3, body.lang-cn h4, body.lang-cn .sans-font { font-family: 'Noto Sans SC', sans-serif; }
+
+        /* 英文排版 */
+        body.lang-en { font-family: 'Noto Serif', 'Georgia', serif; }
+        body.lang-en h1, body.lang-en h2, body.lang-en h3, body.lang-en h4, body.lang-en .sans-font { font-family: 'Noto Sans', sans-serif; letter-spacing: -0.01em;}
+        
+        /* 经济学人风格元素 */
+        .economist-red { background-color: #E3120B; }
+        .economist-red-text { color: #E3120B; }
+        
+        .drop-cap::first-letter {
+            float: left;
+            font-weight: 900;
+            font-size: 4.5rem;
+            line-height: 0.85;
+            padding-right: 0.5rem;
+            padding-top: 0.2rem;
+            color: #E3120B;
+        }
+        body.lang-en .drop-cap::first-letter { font-family: 'Noto Sans', sans-serif; }
+        body.lang-cn .drop-cap::first-letter { font-family: 'Noto Sans SC', sans-serif; }
+
+        .section-divider {
+            border-top: 1px solid #d1d5db;
+            margin: 3rem 0;
+            position: relative;
+        }
+        .section-divider::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 0;
+            width: 4rem;
+            height: 4px;
+            background-color: #E3120B;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; 
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 400px; }
+        }
+        
+        .image-caption {
+            font-size: 0.8rem;
+            color: #4b5563;
+            text-align: left;
+            border-left: 3px solid #E3120B;
+            padding-left: 0.5rem;
+            margin-bottom: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        body.lang-en .image-caption { font-family: 'Noto Sans', sans-serif; }
+        body.lang-cn .image-caption { font-family: 'Noto Sans SC', sans-serif; }
+
+        p {
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+            font-size: 1.125rem;
+        }
+        
+        .article-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            border: 1px solid #e5e7eb;
+            min-height: 250px;
+            background-color: #ddd;
+            object-fit: cover;
+        }
+
+        /* 语言切换按钮 - 顶部居中 */
+        .lang-toggle {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: white;
+            border: 1px solid #1a1a1a;
+            box-shadow: 2px 2px 0px #1a1a1a;
+            padding: 5px 15px;
+            font-family: 'Noto Sans', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+            font-size: 0.9rem;
+            border-radius: 2px;
+        }
+        .lang-toggle:active {
+            transform: translate(-50%, 2px);
+            box-shadow: none;
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+        .data-table th {
+            border-bottom: 2px solid #1a1a1a;
+            text-align: left;
+            padding: 8px;
+            font-weight: bold;
+        }
+        .data-table td {
+            border-bottom: 1px solid #d1d5db;
+            padding: 8px;
+            color: #333;
+        }
+        .timeline-item {
+            border-left: 2px solid #E3120B;
+            padding-left: 1rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body class="lang-cn">
+
+    <!-- Language Toggle -->
+    <button class="lang-toggle" onclick="toggleLanguage()">
+        <span class="lang-cn">English Version</span>
+        <span class="lang-en">中文版本</span>
+    </button>
+
+    <!-- Top Navigation / Branding -->
+    <div class="w-full bg-[#E3120B] h-2"></div>
+    <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between border-b border-black mt-8">
+        <div class="sans-font font-bold text-lg tracking-tight">
+            <span class="lang-cn">深度分析</span>
+            <span class="lang-en">Briefing</span>
+        </div>
+        <div class="sans-font text-sm uppercase tracking-widest text-gray-600">Finance & Economics</div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="max-w-3xl mx-auto px-4 py-8 md:py-12 bg-white md:shadow-lg md:my-8">
+        
+        <!-- Header Section -->
+        <header class="mb-8">
+            <span class="economist-red-text sans-font font-bold uppercase tracking-wider text-sm mb-2 block">
+                <span class="lang-cn">全球衍生品市场特别报告</span>
+                <span class="lang-en">Special Report: Global Derivatives</span>
+            </span>
+            <h1 class="text-3xl md:text-5xl font-bold leading-tight mb-4 sans-font text-black">
+                <span class="lang-cn">为世界定价的巨人</span>
+                <span class="lang-en">The Pricing Giant of the World</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-gray-700 italic font-serif leading-relaxed">
+                <span class="lang-cn">从“黄油鸡蛋”到“全球避险中心”：解析芝加哥商品交易所（CME Group）如何掌控从石油到利率的全球基准。</span>
+                <span class="lang-en">From "Butter and Eggs" to "Global Risk Center": How CME Group controls global benchmarks from oil to interest rates.</span>
+            </p>
+        </header>
+
+        <!-- Section 1: Definition & History -->
+        <div class="section-divider"></div>
+        <h2 class="text-xl font-bold sans-font uppercase mb-4">
+            <span class="lang-cn">一、 定义与历史：不仅仅是农业</span>
+            <span class="lang-en">I. Definition & History: More Than Just Agriculture</span>
+        </h2>
+        
+        <!-- Image 1: CME Building -->
+        <img src="https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1d/10/77/81/because-the-building.jpg?w=1200&h=-1&s=1" alt="Chicago Board of Trade Building" class="article-image">
+        <div class="image-caption">
+            <span class="lang-cn">芝加哥期货交易所大楼顶端的谷物女神（Ceres）雕像，见证了从公开喊价到电子交易的百年变迁。</span>
+            <span class="lang-en">The statue of Ceres atop the Chicago Board of Trade building, witnessing the century-long shift from open outcry to electronic trading.</span>
+        </div>
+
+        <p class="drop-cap">
+            <span class="lang-cn">芝
+            加哥商品交易所集团（CME Group）是全球最大的衍生品市场。它不仅仅是一个交易场所，更是全球经济的“神经中枢”。在这里，无论是美国中西部的玉米价格，还是纽约WTI原油的报价，亦或是全球借贷基准利率（SOFR），都在此通过期货合约被“发现”和定价。</span>
+            <span class="lang-en">C
+            ME Group is the world's largest derivatives marketplace. It is not merely a trading venue but the "neural center" of the global economy. Whether it's the price of corn in the Midwest, WTI crude oil in New York, or the global benchmark interest rate (SOFR), all are "discovered" and priced here via futures contracts.</span>
+        </p>
+        <p>
+            <span class="lang-cn">其历史可追溯至1898年成立的“芝加哥黄油和鸡蛋委员会”。然而，真正让它脱胎换骨的，是通过一系列雄心勃勃的并购——吞并了历史悠久的芝加哥期货交易所（CBOT）、纽约商业交易所（NYMEX）和纽约商品交易所（COMEX），构建了一个横跨农产品、能源、金属、利率和股指的金融帝国。</span>
+            <span class="lang-en">Its roots date back to the 1898 "Chicago Butter and Egg Board." However, its true transformation came through ambitious mergers—acquiring the historic Chicago Board of Trade (CBOT), New York Mercantile Exchange (NYMEX), and Commodity Exchange (COMEX)—building a financial empire spanning agriculture, energy, metals, rates, and equities.</span>
+        </p>
+
+        <!-- Section 2: Mechanism -->
+        <div class="section-divider"></div>
+        <h2 class="text-xl font-bold sans-font uppercase mb-4">
+            <span class="lang-cn">二、 运作机制：对冲与清算的艺术</span>
+            <span class="lang-en">II. Mechanism: The Art of Hedging & Clearing</span>
+        </h2>
+
+        <p>
+            <span class="lang-cn">CME的核心功能是<strong>风险管理</strong>。航空公司买入原油期货以锁定燃油成本（对冲），而投机者则提供流动性并承担风险。</span>
+            <span class="lang-en">CME's core function is <strong>Risk Management</strong>. Airlines buy crude futures to lock in fuel costs (hedging), while speculators provide liquidity and assume risk.</span>
+        </p>
+
+        <div class="bg-gray-50 border-l-4 border-red-600 p-6 my-6">
+            <h3 class="font-bold sans-font text-lg mb-2">
+                <span class="lang-cn">中央对手方清算 (CCP)</span>
+                <span class="lang-en">Central Counterparty Clearing (CCP)</span>
+            </h3>
+            <p class="text-base mb-0">
+                <span class="lang-cn">这是CME最强大的护城河。作为每一笔交易的买方的卖方，和卖方的买方，CME清算所消除了交易双方的信用风险。即使在大流行病或金融危机期间，这种机制也确保了市场的平稳运行。</span>
+                <span class="lang-en">This is CME's strongest moat. Acting as the seller to every buyer and the buyer to every seller, the CME Clearing House eliminates counterparty credit risk. Even during pandemics or financial crises, this mechanism ensures market stability.</span>
+            </p>
+        </div>
+
+        <!-- Section 3: Milestones -->
+        <div class="section-divider"></div>
+        <h2 class="text-xl font-bold sans-font uppercase mb-4">
+            <span class="lang-cn">三、 创新编年史：金融期货的诞生</span>
+            <span class="lang-en">III. Chronicles of Innovation: The Birth of Financial Futures</span>
+        </h2>
+
+        <div class="timeline-item">
+            <h4 class="font-bold sans-font text-lg">1972: <span class="text-gray-600">金融期货革命 (Financial Futures Revolution)</span></h4>
+            <p class="text-sm text-gray-600">
+                <span class="lang-cn">在利奥·梅拉梅德（Leo Melamed）的领导下，CME推出了外汇期货。这打破了期货只能交易实物商品（如小麦）的传统，开启了金融衍生品时代。</span>
+                <span class="lang-en">Led by Leo Melamed, CME launched foreign exchange futures. This broke the tradition that futures could only trade physical commodities (like wheat), launching the era of financial derivatives.</span>
+            </p>
+        </div>
+
+        <div class="timeline-item">
+            <h4 class="font-bold sans-font text-lg">1992: <span class="text-gray-600">Globex 电子交易系统 (Globex Launch)</span></h4>
+            <p class="text-sm text-gray-600">
+                <span class="lang-cn">推出了全球首个全天候电子交易系统 Globex。这标志着从喧闹的“公开喊价”大厅向屏幕交易的转变，极大扩展了全球流动性。</span>
+                <span class="lang-en">Launched Globex, the first global electronic trading system. This marked the shift from the raucous "open outcry" pits to screen-based trading, massively expanding global liquidity.</span>
+            </p>
+        </div>
+
+        <div class="timeline-item">
+            <h4 class="font-bold sans-font text-lg">2007-2008: <span class="text-gray-600">巨头合并 (The Great Mergers)</span></h4>
+            <p class="text-sm text-gray-600">
+                <span class="lang-cn">CME与CBOT合并，随后收购NYMEX。这次整合将国债、农产品和能源期货统一在一个屋檐下，确立了其绝对霸主地位。</span>
+                <span class="lang-en">CME merged with CBOT, then acquired NYMEX. This consolidation brought Treasuries, Agriculture, and Energy under one roof, cementing its absolute dominance.</span>
+            </p>
+        </div>
+
+        <div class="timeline-item">
+            <h4 class="font-bold sans-font text-lg">2017-2024: <span class="text-gray-600">加密货币与新基准 (Crypto & New Benchmarks)</span></h4>
+            <p class="text-sm text-gray-600">
+                <span class="lang-cn">上线比特币期货，赋予加密资产华尔街合规地位。同时，平稳完成了从Eurodollar到SOFR利率基准的历史性迁移。</span>
+                <span class="lang-en">Launched Bitcoin futures, giving crypto Wall Street legitimacy. Also successfully managed the historic migration from Eurodollar to SOFR interest rate benchmarks.</span>
+            </p>
+        </div>
+
+        <!-- Section 4: Data Analysis -->
+        <div class="section-divider"></div>
+        <h2 class="text-xl font-bold sans-font uppercase mb-4">
+            <span class="lang-cn">四、 数据透视：交易量与资产构成 (2024-2025)</span>
+            <span class="lang-en">IV. Data Insights: Volume & Asset Mix (2024-2025)</span>
+        </h2>
+
+        <p>
+            <span class="lang-cn">2024年，CME集团创下了日均交易量（ADV）2650万张合约的历史新高。2025年初，这一数字继续攀升，主要受利率市场波动驱动。</span>
+            <span class="lang-en">In 2024, CME Group hit a record Average Daily Volume (ADV) of 26.5 million contracts. In early 2025, this figure continued to climb, driven primarily by volatility in interest rate markets.</span>
+        </p>
+
+        <!-- Chart 1: Volume Trend -->
+        <div class="my-8">
+            <h4 class="sans-font font-bold text-center mb-2" id="label-volume-title">
+                <span class="lang-cn">CME日均交易量趋势 (2015-2025)</span>
+                <span class="lang-en">CME Average Daily Volume Trend (2015-2025)</span>
+            </h4>
+            <div class="chart-container">
+                <canvas id="volumeChart"></canvas>
+            </div>
+            <div class="text-sm text-gray-500 mt-2 text-center font-sans">
+                <span class="lang-cn">单位：百万张合约。波动率是交易量的燃料。</span>
+                <span class="lang-en">Unit: Million Contracts. Volatility is the fuel for volume.</span>
+            </div>
+        </div>
+
+        <!-- Section 5: Key Products -->
+        <div class="section-divider"></div>
+        <h2 class="text-xl font-bold sans-font uppercase mb-4">
+            <span class="lang-cn">五、 皇冠上的宝石：核心产品解析</span>
+            <span class="lang-en">V. Jewels in the Crown: Key Products</span>
+        </h2>
+
+        <p>
+            <span class="lang-cn">CME的产品线覆盖了全球经济的每一个角落。以下是其最具影响力的“五大金刚”：</span>
+            <span class="lang-en">CME's product line covers every corner of the global economy. Here are its influential "Big Five":</span>
+        </p>
+
+        <!-- Top Products Table -->
+        <div class="overflow-x-auto">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th><span class="lang-cn">类别</span><span class="lang-en">Category</span></th>
+                        <th><span class="lang-cn">核心产品</span><span class="lang-en">Key Product</span></th>
+                        <th><span class="lang-cn">全球地位</span><span class="lang-en">Global Status</span></th>
+                        <th><span class="lang-cn">收入占比估算*</span><span class="lang-en">Rev. Share Est.*</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="bg-blue-50">
+                        <td><span class="lang-cn">利率</span><span class="lang-en">Interest Rates</span></td>
+                        <td><strong>SOFR / U.S. Treasuries</strong></td>
+                        <td><span class="lang-cn">全球资金成本的“锚”</span><span class="lang-en">The "Anchor" of Cost of Capital</span></td>
+                        <td class="font-bold">~35-40%</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                        <td><span class="lang-cn">能源</span><span class="lang-en">Energy</span></td>
+                        <td><strong>WTI Crude Oil (NYMEX)</strong></td>
+                        <td><span class="lang-cn">全球原油定价基准</span><span class="lang-en">Global Oil Pricing Benchmark</span></td>
+                        <td>~15-20%</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                        <td><span class="lang-cn">股指</span><span class="lang-en">Equity Index</span></td>
+                        <td><strong>E-mini S&P 500</strong></td>
+                        <td><span class="lang-cn">全球流动性最强的股指期货</span><span class="lang-en">Most Liquid Equity Futures</span></td>
+                        <td>~20-25%</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                        <td><span class="lang-cn">农产品</span><span class="lang-en">Agriculture</span></td>
+                        <td><strong>Corn / Soybeans (CBOT)</strong></td>
+                        <td><span class="lang-cn">粮食安全的风向标</span><span class="lang-en">Food Security Barometer</span></td>
+                        <td>~10-15%</td>
+                    </tr>
+                    <tr>
+                        <td><span class="lang-cn">金属</span><span class="lang-en">Metals</span></td>
+                        <td><strong>Gold / Copper (COMEX)</strong></td>
+                        <td><span class="lang-cn">避险与工业的双重指标</span><span class="lang-en">Safe Haven & Industrial Gauge</span></td>
+                        <td>~5-10%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Chart 2: Asset Mix -->
+        <div class="my-8">
+            <h4 class="sans-font font-bold text-center mb-2" id="label-mix-title">
+                <span class="lang-cn">CME交易量构成 (按资产类别)</span>
+                <span class="lang-en">CME Volume Mix by Asset Class</span>
+            </h4>
+            <div class="chart-container">
+                <canvas id="mixChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Section 6: Future & Risks -->
+        <div class="section-divider"></div>
+        <h2 class="text-xl font-bold sans-font uppercase mb-4">
+            <span class="lang-cn">六、 风险与未来：垄断与颠覆</span>
+            <span class="lang-en">VI. Future & Risks: Monopoly & Disruption</span>
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+            <div class="bg-red-50 p-4 border-t-2 border-red-600">
+                <h4 class="font-bold sans-font text-red-700 mb-2">
+                    <span class="lang-cn">1. 监管压力 (CFTC)</span>
+                    <span class="lang-en">1. Regulatory Pressure (CFTC)</span>
+                </h4>
+                <p class="text-sm">
+                    <span class="lang-cn">作为“大到不能倒”的金融基础设施，CME面临严格的资本金要求和反垄断审查。其掌握的市场数据定价权也是监管关注的焦点。</span>
+                    <span class="lang-en">As "Too Big to Fail" infrastructure, CME faces strict capital requirements and antitrust scrutiny. Its pricing power over market data is also a regulatory target.</span>
+                </p>
+            </div>
+            <div class="bg-gray-100 p-4 border-t-2 border-gray-600">
+                <h4 class="font-bold sans-font text-gray-800 mb-2">
+                    <span class="lang-cn">2. 24/7 交易与加密挑战</span>
+                    <span class="lang-en">2. 24/7 Trading & Crypto Challenge</span>
+                </h4>
+                <p class="text-sm">
+                    <span class="lang-cn">虽然CME已涉足比特币期货，但来自原生加密交易所（如Binance, Coinbase）的24/7现货交易模式正在挑战传统金融的时间观念和清算机制。</span>
+                    <span class="lang-en">While CME trades Bitcoin futures, the 24/7 spot trading model from crypto-native exchanges (Binance, Coinbase) challenges traditional finance's time zones and clearing mechanics.</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="section-divider"></div>
+        <footer class="text-center pt-8 pb-12">
+            <div class="w-12 h-1 bg-black mx-auto mb-4"></div>
+            <p class="sans-font font-bold text-sm uppercase tracking-widest">
+                <span class="lang-cn">完</span>
+                <span class="lang-en">End</span>
+            </p>
+            <p class="font-serif italic text-gray-500 text-sm mt-4">
+                <span class="lang-cn">数据截止：2025年1月。<br>数据来源：CME Group Investor Relations, CFTC Reports.</span>
+                <span class="lang-en">Data as of Jan 2025.<br>Sources: CME Group Investor Relations, CFTC Reports.</span>
+            </p>
+        </footer>
+
+    </main>
+
+    <!-- Script for Charts & Language Toggle -->
+    <script>
+        // Language State
+        let currentLang = 'cn';
+        const body = document.body;
+
+        // Chart Instances
+        let volumeChart, mixChart;
+
+        // Chart Data Translations
+        const chartTranslations = {
+            volume: {
+                cn: '日均交易量 (百万张)',
+                en: 'Avg Daily Volume (Millions)'
+            },
+            mix: {
+                cn: { label: '占比 (%)', labels: ['利率', '权益指数', '能源', '农产品', '外汇', '金属'] },
+                en: { label: 'Share (%)', labels: ['Interest Rates', 'Equities', 'Energy', 'Ag', 'FX', 'Metals'] }
+            }
+        };
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'cn' ? 'en' : 'cn';
+            body.className = `lang-${currentLang}`;
+            updateCharts();
+        }
+
+        // Economist Theme Colors
+        const econRed = '#E3120B';
+        const econBlue = '#005F86';
+        const econGrey = '#495057';
+
+        // Common Chart Options
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { family: "'Noto Sans SC', sans-serif", size: 11 },
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    titleColor: '#000',
+                    bodyColor: '#333',
+                    borderColor: '#ddd',
+                    borderWidth: 1,
+                    padding: 10,
+                    displayColors: true
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#666' }
+                },
+                y: {
+                    grid: { color: '#e5e5e5', borderDash: [2, 2] },
+                    ticks: { color: '#666' },
+                    beginAtZero: true
+                }
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+        };
+
+        function initCharts() {
+            // 1. Volume Chart (2015-2025)
+            // Data source: CME Annual Reports. 2024=26.5M, 2025(est)=27M+
+            volumeChart = new Chart(document.getElementById('volumeChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['2015', '2017', '2019', '2021', '2022', '2023', '2024', '2025(E)'],
+                    datasets: [{
+                        label: chartTranslations.volume[currentLang],
+                        data: [14.0, 16.3, 19.2, 19.6, 23.3, 24.4, 26.5, 27.2],
+                        backgroundColor: econBlue,
+                        barPercentage: 0.6,
+                    }]
+                },
+                options: commonOptions
+            });
+
+            // 2. Asset Mix Chart (Doughnut)
+            // 2024 Data: Interest Rates ~45-50%, Equities ~25%, Energy ~10%, Ag ~7%, FX ~5%, Metals ~3%
+            mixChart = new Chart(document.getElementById('mixChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: chartTranslations.mix[currentLang].labels,
+                    datasets: [{
+                        label: chartTranslations.mix[currentLang].label,
+                        data: [48, 24, 10, 8, 6, 4],
+                        backgroundColor: [econBlue, '#2c3e50', '#e67e22', '#27ae60', '#8e44ad', '#f1c40f'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { padding: 15, usePointStyle: true }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            // Update Volume Chart
+            document.getElementById('label-volume-title').innerText = chartTranslations.volume[currentLang];
+            volumeChart.data.datasets[0].label = chartTranslations.volume[currentLang];
+            volumeChart.update();
+
+            // Update Mix Chart
+            document.getElementById('label-mix-title').innerText = (currentLang === 'cn' ? 'CME交易量构成 (按资产类别)' : 'CME Volume Mix by Asset Class');
+            mixChart.data.labels = chartTranslations.mix[currentLang].labels;
+            mixChart.data.datasets[0].label = chartTranslations.mix[currentLang].label;
+            mixChart.update();
+        }
+
+        // Initialize on Load
+        document.addEventListener('DOMContentLoaded', initCharts);
+
+    </script>
+</body>
+</html>
