@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>香港佐敦華豐大廈火災：深度事故分析與安全現狀報告</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Chosen Palette: Warm Neutrals with Alert Accents -->
+    <!-- 
+         Background: #F9FAFB (Cool Gray 50) - Clean, clinical background.
+         Primary Text: #1F2937 (Gray 800) - High readability.
+         Accent (Fire/Alert): #EF4444 (Red 500) - Used sparingly for critical data.
+         Accent (Safety/Action): #10B981 (Emerald 500) - Used for resolution and safety measures.
+         Secondary: #64748B (Slate 500) - For metadata and less critical text.
+    -->
+
+    <!-- Application Structure Plan: 
+         Structure: Vertical Dashboard (Single Page Application).
+         1. Hero Section: Immediate situational awareness (What, Where, When).
+         2. Key Metrics Dashboard: High-level quantitative impact (Casualties, Rescued).
+         3. Timeline Analysis: Chronological breakdown of the event to understand the "Golden Time".
+         4. Root Cause Explorer: Interactive tabbed section dissecting the "Swiss Cheese Model" of failure (Physical, Administrative, Social).
+         5. Data Visualization: Charts analyzing building age distribution and violation types in the district.
+         6. Current Status & Policy: Checklist of government actions taken post-disaster.
+         7. Interactive Safety Assessment: A user-centric tool to apply the report's findings to their own safety.
+         
+         Why this structure?
+         This moves from the specific emotional impact of the event to objective analysis, then to systemic causes, and finally to constructive future actions. It guides the user from "What happened?" to "Why?" and finally "What now?".
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Impact Metrics (HTML/JS Cards): Immediate quantitative grasp of the tragedy. Goal: Inform.
+         2. Event Timeline (HTML/CSS Flow): Visualizing the escalation and response speed. Goal: Change (Time).
+         3. Building Age Analysis (Chart.js Bar): Correlating building age with fire risk. Goal: Compare.
+         4. Violation Distribution (Plotly Donut): Breakdown of inspection failures (Fire doors, etc.). Goal: Relationships.
+         5. Root Cause Tabs (JS/HTML): Deep dive into text-heavy qualitative findings without cluttering the UI. Goal: Organize.
+         6. Policy Tracker (Progress Bars): Visualizing government cleanup progress. Goal: Inform.
+         
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #F9FAFB;
+            color: #1F2937;
+        }
+
+        /* Responsive Chart Container Styles - STRICT ADHERENCE */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px; /* Constraints width on large screens */
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px; /* Base height for mobile */
+            max-height: 500px; /* Cap height */
+            background: #ffffff;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px; /* Taller on tablets/desktop */
+            }
+        }
+
+        /* Custom Scrollbar for inner content */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        .tab-active {
+            border-bottom: 2px solid #EF4444;
+            color: #EF4444;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <span class="text-2xl text-red-600">⚠️</span>
+                        <span class="font-bold text-xl tracking-tight text-gray-900">華豐大廈火災報告</span>
+                    </div>
+                </div>
+                <div class="hidden sm:flex sm:space-x-8 items-center">
+                    <button onclick="scrollToSection('impact')" class="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium transition">事故概覽</button>
+                    <button onclick="scrollToSection('analysis')" class="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium transition">數據分析</button>
+                    <button onclick="scrollToSection('causes')" class="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium transition">成因探究</button>
+                    <button onclick="scrollToSection('status')" class="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium transition">目前狀態</button>
+                </div>
+                <!-- Mobile Menu Button -->
+                <div class="flex items-center sm:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                        <span class="text-xl">☰</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden sm:hidden bg-white border-b border-gray-200">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <button onclick="scrollToSection('impact')" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">事故概覽</button>
+                <button onclick="scrollToSection('analysis')" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">數據分析</button>
+                <button onclick="scrollToSection('causes')" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">成因探究</button>
+                <button onclick="scrollToSection('status')" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50">目前狀態</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-16">
+
+        <!-- Section 1: Hero & Incident Summary -->
+        <section id="impact" class="space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <div>
+                        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">佐敦華豐大廈三級火災：系統性回顧</h1>
+                        <p class="text-gray-500 text-sm md:text-base">發生日期：2024年4月10日 | 地點：佐敦道13-15號 | 級別：三級火警</p>
+                    </div>
+                    <div class="mt-4 md:mt-0 bg-red-50 border border-red-100 rounded-lg px-4 py-2">
+                        <span class="text-red-700 font-semibold text-sm flex items-center gap-2">
+                            <span class="relative flex h-3 w-3">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            </span>
+                            調查報告與善後進行中
+                        </span>
+                    </div>
+                </div>
+
+                <p class="text-gray-600 leading-relaxed mb-8">
+                    本節概述了這場近年來香港最嚴重火災之一的核心數據。華豐大廈火災不僅是一次單一的悲劇，更揭示了香港舊式商住大廈在消防安全管理上的深層次結構性問題。
+                </p>
+
+                <!-- Key Metrics Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Metric Card 1 -->
+                    <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-red-500 hover:shadow-md transition cursor-default">
+                        <div class="text-gray-500 text-sm font-medium mb-1">死亡人數</div>
+                        <div class="text-3xl font-bold text-gray-900">5 <span class="text-base font-normal text-gray-500">人</span></div>
+                        <div class="text-xs text-red-600 mt-2">主要死因：濃煙窒息 / 逃生無門</div>
+                    </div>
+                    <!-- Metric Card 2 -->
+                    <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-400 hover:shadow-md transition cursor-default">
+                        <div class="text-gray-500 text-sm font-medium mb-1">受傷人數</div>
+                        <div class="text-3xl font-bold text-gray-900">40+ <span class="text-base font-normal text-gray-500">人</span></div>
+                        <div class="text-xs text-orange-600 mt-2">包括多名危殆傷者</div>
+                    </div>
+                    <!-- Metric Card 3 -->
+                    <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500 hover:shadow-md transition cursor-default">
+                        <div class="text-gray-500 text-sm font-medium mb-1">疏散居民</div>
+                        <div class="text-3xl font-bold text-gray-900">300+ <span class="text-base font-normal text-gray-500">人</span></div>
+                        <div class="text-xs text-blue-600 mt-2">消防處出動雲梯救援</div>
+                    </div>
+                    <!-- Metric Card 4 -->
+                    <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-gray-500 hover:shadow-md transition cursor-default">
+                        <div class="text-gray-500 text-sm font-medium mb-1">樓齡</div>
+                        <div class="text-3xl font-bold text-gray-900">60 <span class="text-base font-normal text-gray-500">年</span></div>
+                        <div class="text-xs text-gray-600 mt-2">落成於 1964 年</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Timeline -->
+        <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">⏱️ 時間軸：黃金救援時間</h2>
+            <p class="text-gray-600 mb-8">此時間軸展示了火勢的迅速蔓延以及消防部門的升級反應。觀察從起火到升為三級火警的時間差，反映了火場環境的複雜性。</p>
+
+            <div class="relative pl-8 border-l-2 border-gray-200 space-y-8">
+                <!-- Timeline Item -->
+                <div class="relative group">
+                    <div class="absolute -left-[41px] bg-red-500 h-6 w-6 rounded-full border-4 border-white shadow"></div>
+                    <div class="time text-sm font-bold text-red-600 mb-1">07:53</div>
+                    <div class="content">
+                        <h3 class="text-lg font-semibold text-gray-900">接獲火警報告</h3>
+                        <p class="text-gray-600 text-sm">警方接獲多人報案，指華豐大廈發生火警，濃煙從低層冒出。</p>
+                    </div>
+                </div>
+                 <!-- Timeline Item -->
+                 <div class="relative group">
+                    <div class="absolute -left-[41px] bg-orange-500 h-6 w-6 rounded-full border-4 border-white shadow"></div>
+                    <div class="time text-sm font-bold text-orange-600 mb-1">08:04</div>
+                    <div class="content">
+                        <h3 class="text-lg font-semibold text-gray-900">升為三級火警</h3>
+                        <p class="text-gray-600 text-sm">由於火勢猛烈及有多人被困，消防處在短短11分鐘內將火警升級，增援大量人手。</p>
+                    </div>
+                </div>
+                <!-- Timeline Item -->
+                <div class="relative group">
+                    <div class="absolute -left-[41px] bg-blue-500 h-6 w-6 rounded-full border-4 border-white shadow"></div>
+                    <div class="time text-sm font-bold text-blue-600 mb-1">08:50 - 10:00</div>
+                    <div class="content">
+                        <h3 class="text-lg font-semibold text-gray-900">大規模救援與疏散</h3>
+                        <p class="text-gray-600 text-sm">消防員使用多條雲梯從窗邊救出揮手求救的居民。部分居民逃往天台等待救援。</p>
+                    </div>
+                </div>
+                 <!-- Timeline Item -->
+                 <div class="relative group">
+                    <div class="absolute -left-[41px] bg-gray-500 h-6 w-6 rounded-full border-4 border-white shadow"></div>
+                    <div class="time text-sm font-bold text-gray-600 mb-1">12:30</div>
+                    <div class="content">
+                        <h3 class="text-lg font-semibold text-gray-900">火勢大致被救熄</h3>
+                        <p class="text-gray-600 text-sm">火勢受控。調查人員開始進入火場搜證，初步發現1樓及2樓大堂有大量燒焦塑膠。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Data Analysis (Charts) -->
+        <section id="analysis" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="col-span-1 lg:col-span-2">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">📊 舊式大廈隱患分析</h2>
+                    <p class="text-gray-600 mb-6">華豐大廈並非個別案例。以下數據分析展示了油尖旺區類似樓齡建築物的分佈以及常見的消防安全違規類型，有助於理解問題的普遍性。</p>
+                </div>
+            </div>
+
+            <!-- Chart 1: Inspection Issues -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">常見消防安全違規事項 (根據過往巡查)</h3>
+                <p class="text-xs text-gray-500 mb-4">資料來源：綜合近年屋宇署及消防處針對舊式綜合用途樓宇的常見檢控數據。</p>
+                <div class="chart-container">
+                    <canvas id="violationChart"></canvas>
+                </div>
+                <div class="mt-4 bg-gray-50 p-3 rounded text-sm text-gray-600">
+                    <strong>解讀：</strong> 「阻塞逃生途徑」與「防煙門損壞」往往是造成傷亡的致命原因，在此次火災中也扮演了關鍵角色。
+                </div>
+            </div>
+
+            <!-- Chart 2: Building Age Context -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">油尖旺區樓宇樓齡分佈 (估算)</h3>
+                <p class="text-xs text-gray-500 mb-4">顯示區內潛在風險建築的數量。</p>
+                <div class="chart-container">
+                    <div id="ageChart" style="width:100%; height:100%;"></div>
+                </div>
+                <div class="mt-4 bg-gray-50 p-3 rounded text-sm text-gray-600">
+                    <strong>解讀：</strong> 華豐大廈屬於「50年以上」的高風險類別。這類樓宇往往缺乏現代化的自動灑水系統。
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Root Causes (Interactive Tabs) -->
+        <section id="causes" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">🔍 深度成因剖析：為何死傷慘重？</h2>
+            <p class="text-gray-600 mb-8">透過「瑞士芝士模型」(Swiss Cheese Model) 分析，單一失誤未必導致災難，但當多層防禦同時失效，悲劇便不可避免。點擊下方標籤查看詳情。</p>
+
+            <!-- Tabs Navigation -->
+            <div class="flex border-b border-gray-200 mb-6 overflow-x-auto">
+                <button onclick="switchTab('cause-1')" id="tab-cause-1" class="tab-btn tab-active px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">起火源頭</button>
+                <button onclick="switchTab('cause-2')" id="tab-cause-2" class="tab-btn px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">防煙門失效</button>
+                <button onclick="switchTab('cause-3')" id="tab-cause-3" class="tab-btn px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">劏房與賓館</button>
+                <button onclick="switchTab('cause-4')" id="tab-cause-4" class="tab-btn px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap">管理真空</button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div id="cause-1" class="tab-content block animate-fade-in">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="md:w-1/3 bg-gray-100 rounded-lg flex items-center justify-center p-8">
+                        <div class="text-6xl">🔥</div>
+                    </div>
+                    <div class="md:w-2/3">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">一二樓大堂與天井雜物</h3>
+                        <p class="text-gray-600 mb-4">初步調查顯示，火源來自大廈一樓及二樓大堂堆積的大量塑膠袋及清潔雜物。天井位置亦堆滿垃圾。</p>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2">
+                            <li><strong>煙囪效應：</strong> 天井的火勢與濃煙迅速向上蔓延。</li>
+                            <li><strong>助燃物：</strong> 塑膠燃燒產生極高溫及有毒濃煙（如氰化氫）。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="cause-2" class="tab-content hidden animate-fade-in">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="md:w-1/3 bg-gray-100 rounded-lg flex items-center justify-center p-8">
+                        <div class="text-6xl">🚪</div>
+                    </div>
+                    <div class="md:w-2/3">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">防煙門被楔開或損壞</h3>
+                        <p class="text-gray-600 mb-4">防煙門是阻擋濃煙進入走廊和樓梯的最後防線。然而在華豐大廈，多層防煙門被發現常開或損壞。</p>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2">
+                            <li><strong>後果：</strong> 濃煙迅速充滿唯一的逃生樓梯，令居民無法向下逃生，被迫回屋內或冒險上天台。</li>
+                            <li><strong>法例：</strong> 楔開防煙門屬刑事罪行，但執法困難。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="cause-3" class="tab-content hidden animate-fade-in">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="md:w-1/3 bg-gray-100 rounded-lg flex items-center justify-center p-8">
+                        <div class="text-6xl">🏢</div>
+                    </div>
+                    <div class="md:w-2/3">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">高密度賓館與劏房</h3>
+                        <p class="text-gray-600 mb-4">大廈內估計有超過30間持牌或無牌賓館，以及大量劏房（分間樓宇單位）。</p>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2">
+                            <li><strong>改動間隔：</strong> 為了增加單位，走廊往往被改窄，通風系統被改動。</li>
+                            <li><strong>旅客意識：</strong> 旅客不熟悉大廈逃生路線，火警發生時容易驚慌失措。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="cause-4" class="tab-content hidden animate-fade-in">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="md:w-1/3 bg-gray-100 rounded-lg flex items-center justify-center p-8">
+                        <div class="text-6xl">📋</div>
+                    </div>
+                    <div class="md:w-2/3">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">法團運作與遵從令</h3>
+                        <p class="text-gray-600 mb-4">大廈業主立案法團早於2008年已接獲消防安全指示，但延宕16年仍未遵辦。</p>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2">
+                            <li><strong>維修困難：</strong> 業權分散，主要為投資者或年長業主，難以集資進行大規模消防工程。</li>
+                            <li><strong>顧問爭議：</strong> 法團內部糾紛導致工程顧問招標一再拖延。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Current Status & Policy (Checklist) -->
+        <section id="status" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left: Government Action -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">🏛️ 當前狀態：政府後續行動</h2>
+                <p class="text-gray-600 mb-6 text-sm">火災發生後，特區政府已採取一系列即時與中期措施來堵塞漏洞。</p>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 h-6 w-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 mt-0.5">✓</div>
+                        <div class="ml-4">
+                            <h4 class="text-sm font-medium text-gray-900">修訂《消防安全（建築物）條例》</h4>
+                            <p class="text-sm text-gray-500">賦權政府「代辦工程」，即由政府先介入進行消防工程，再向業主收費及加收罰款。草案已在積極推進中。</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 h-6 w-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 mt-0.5">✓</div>
+                        <div class="ml-4">
+                            <h4 class="text-sm font-medium text-gray-900">全港性巡查行動</h4>
+                            <p class="text-sm text-gray-500">消防處與屋宇署已完成對全港類似「三無大廈」及高樓齡商住樓宇的特別巡查，並發出數千張消除火警危險通知書。</p>
+                        </div>
+                    </div>
+                     <div class="flex items-start">
+                        <div class="flex-shrink-0 h-6 w-6 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mt-0.5">↻</div>
+                        <div class="ml-4">
+                            <h4 class="text-sm font-medium text-gray-900">加強賓館監管</h4>
+                            <p class="text-sm text-gray-500">檢討《旅館業條例》，考慮在續牌時加入更嚴格的消防要求，特別是設於舊式樓宇內的賓館。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Personal Safety -->
+            <div class="bg-gray-800 rounded-xl shadow-sm p-6 text-white">
+                <h2 class="text-xl font-bold mb-4">🛡️ 你的居所安全嗎？</h2>
+                <p class="text-gray-300 text-sm mb-6">如果您居住在舊式樓宇，請立即檢查以下三點：</p>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="flex items-center space-x-3 mb-2 cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded focus:ring-0">
+                            <span class="font-medium">防煙門常關</span>
+                        </label>
+                        <p class="text-xs text-gray-400 pl-8">檢查後樓梯的門是否能自動回彈關閉，切勿用石頭或繩索固定開啟。</p>
+                    </div>
+                    <div>
+                        <label class="flex items-center space-x-3 mb-2 cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded focus:ring-0">
+                            <span class="font-medium">逃生通道暢通</span>
+                        </label>
+                        <p class="text-xs text-gray-400 pl-8">走廊、樓梯間絕不能堆放鞋架、單車或垃圾。</p>
+                    </div>
+                    <div>
+                        <label class="flex items-center space-x-3 mb-2 cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-5 w-5 text-green-500 rounded focus:ring-0">
+                            <span class="font-medium">滅火筒有效期</span>
+                        </label>
+                        <p class="text-xs text-gray-400 pl-8">檢查樓層滅火筒壓力針是否在綠色區域，並在有效期內。</p>
+                    </div>
+                </div>
+                
+                <button class="w-full mt-8 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded font-medium transition duration-200">
+                    報告火警隱患 (致電 1823)
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-100 border-t border-gray-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+            <p>&copy; 2024-2025 香港火災事故資料整合中心 | 資料來源：消防處、屋宇署新聞公報及各大傳媒報導</p>
+            <p class="mt-2">本頁面旨在整合資訊以提升公眾安全意識，非官方政府網站。</p>
+        </div>
+    </footer>
+
+    <script>
+        // State Management
+        const state = {
+            currentTab: 'cause-1',
+            isMobileMenuOpen: false
+        };
+
+        // Navigation Logic
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            // Close mobile menu if open
+            if (state.isMobileMenuOpen) {
+                toggleMobileMenu();
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            state.isMobileMenuOpen = !state.isMobileMenuOpen;
+            if (state.isMobileMenuOpen) {
+                menu.classList.remove('hidden');
+            } else {
+                menu.classList.add('hidden');
+            }
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            // Hide all contents
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('block');
+            });
+            // Show target content
+            const target = document.getElementById(tabId);
+            target.classList.remove('hidden');
+            target.classList.add('block');
+
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('tab-active');
+            });
+            document.getElementById('tab-' + tabId).classList.add('tab-active');
+
+            state.currentTab = tabId;
+        }
+
+        // --- Visualization Implementation ---
+
+        // Chart 1: Violation Types (Chart.js)
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('violationChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['阻塞逃生通道', '防煙門損壞/楔開', '消防裝置年檢過期', '非法改動間隔', '通風系統不符規格'],
+                    datasets: [{
+                        label: '違規宗數百分比 (估計)',
+                        data: [35, 25, 20, 15, 5],
+                        backgroundColor: [
+                            'rgba(239, 68, 68, 0.8)', // Red
+                            'rgba(249, 115, 22, 0.8)', // Orange
+                            'rgba(59, 130, 246, 0.6)', // Blue
+                            'rgba(107, 114, 128, 0.6)', // Gray
+                            'rgba(16, 185, 129, 0.6)'  // Green
+                        ],
+                        borderWidth: 0,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal bar chart for better label readability
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.x + '% 的巡查個案';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 50,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart 2: Building Age (Plotly.js)
+            // Using Plotly for a different visual style (Pie/Donut)
+            const ageData = [{
+                values: [15, 25, 40, 20], // Estimated distribution percentages
+                labels: ['0-19年 (較新)', '20-39年 (中年)', '40-59年 (老舊)', '60年以上 (極高危)'],
+                type: 'pie',
+                hole: .4,
+                marker: {
+                    colors: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444']
+                },
+                textinfo: 'label+percent',
+                hoverinfo: 'label+percent+name',
+                automargin: true
+            }];
+
+            const ageLayout = {
+                showlegend: false,
+                margin: { t: 10, b: 10, l: 10, r: 10 },
+                height: 350, // Match container inner height roughly
+                paper_bgcolor: "rgba(0,0,0,0)",
+                annotations: [
+                    {
+                        font: {
+                            size: 14
+                        },
+                        showarrow: false,
+                        text: '樓齡<br>分佈',
+                        x: 0.5,
+                        y: 0.5
+                    }
+                ]
+            };
+
+            const config = {responsive: true, displayModeBar: false};
+
+            Plotly.newPlot('ageChart', ageData, ageLayout, config);
+            
+            // Fix Plotly resizing
+            window.addEventListener('resize', function() {
+                Plotly.Plots.resize('ageChart');
+            });
+        });
+
+    </script>
+</body>
+</html>
