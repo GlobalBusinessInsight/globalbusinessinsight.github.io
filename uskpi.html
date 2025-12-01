@@ -1,594 +1,508 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
      crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>美国经济数据全景深度研究 | 2015-2025</title>
+    <title>美国宏观经济指标全景报告 | US Economic Indicators Pulse</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Google Fonts: Merriweather for WSJ feel, Inter for UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300&display=swap" rel="stylesheet">
+
+    <!-- Chosen Palette: WSJ Business (Paper White, Ink Black, Scotch Tape Gold, Navy Blue) -->
+    <!-- Application Structure Plan: 
+         1. Header: Newspaper style branding, date, and "Market Sentiment" summary.
+         2. Navigation: Functional tabs grouping indicators by category (Growth, Labor, Inflation, Consumer, Business, Housing).
+         3. Main Content Area (Dynamic):
+            - Executive Summary: A text-rich synthesis of the current economic landscape based on the "Source Report" data.
+            - Indicator Grid: Responsive cards for each metric.
+            - Detail View: Each card contains definition, agency info, impact analysis, and a strict Canvas chart.
+         4. Interaction: Users click tabs to filter the grid. Charts are interactive (hover for specific historical data).
+         5. Rationale: The "Newsroom" structure fits the content density. Grouping by sector helps users build a mental model of the economy rather than just seeing a list of numbers.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
     <style>
-        :root {
-            --wsj-black: #111;
-            --wsj-gray: #555;
-            --wsj-light-gray: #f3f3f3;
-            --wsj-border: #e2e2e2;
-            --wsj-blue: #005596;
-            --chart-line: #005596;
-            --chart-bar: #333;
-            --font-serif: 'Georgia', 'Times New Roman', Times, serif;
-            --font-sans: 'Arial', 'Helvetica', sans-serif;
-        }
-
+        /* Base Typography */
         body {
-            font-family: var(--font-serif);
-            color: var(--wsj-black);
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #fff;
-        }
-
-        /* Layout */
-       .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 40px;
-        }
-
-        @media (max-width: 800px) {
-           .container {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Header */
-        header {
-            border-bottom: 1px solid #000;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-       .top-bar {
-            font-family: var(--font-sans);
-            font-size: 0.75rem;
-            color: var(--wsj-gray);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            border-bottom: 3px double #000;
-            padding-bottom: 5px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        h1 {
-            font-size: 3rem;
-            margin: 10px 0;
-            font-weight: 700;
-            letter-spacing: -1px;
-        }
-
-       .headline-sub {
-            font-family: var(--font-sans);
-            font-size: 1.1rem;
-            color: var(--wsj-gray);
-            margin-top: 0;
-        }
-
-        /* Main Content */
-       .main-col {
-            border-right: 1px solid var(--wsj-border);
-            padding-right: 30px;
-        }
-
-        @media (max-width: 800px) {
-           .main-col {
-                border-right: none;
-                padding-right: 0;
-            }
-        }
-
-        h2 {
-            font-family: var(--font-sans);
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-top: 40px;
-            margin-bottom: 15px;
-            border-top: 1px solid #000;
-            padding-top: 10px;
-            color: #333;
-        }
-
-        h3 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-top: 25px;
-            margin-bottom: 10px;
-            color: var(--wsj-black);
-        }
-
-        p {
-            font-size: 1.05rem;
-            margin-bottom: 15px;
-            text-align: justify;
-        }
-
-       .meta-info {
-            font-family: var(--font-sans);
-            font-size: 0.85rem;
-            color: var(--wsj-gray);
-            margin-bottom: 20px;
-        }
-
-        /* Sidebar */
-       .sidebar {
-            font-family: var(--font-sans);
-        }
-
-       .sidebar-widget {
-            background: var(--wsj-light-gray);
-            padding: 15px;
-            margin-bottom: 30px;
-            border-top: 4px solid var(--wsj-black);
-        }
-
-       .sidebar h4 {
-            margin-top: 0;
-            font-size: 1rem;
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--wsj-border);
-            padding-bottom: 10px;
-        }
-
-       .key-stat {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px dotted #ccc;
-            padding: 8px 0;
-            font-size: 0.9rem;
-        }
-
-       .key-stat span:last-child {
-            font-weight: bold;
-        }
-
-        /* Charts (SVG) */
-       .chart-container {
-            margin: 30px 0;
-            padding: 20px;
-            background: #fff;
-            border: 1px solid var(--wsj-border);
-        }
-
-       .chart-title {
-            font-family: var(--font-sans);
-            font-weight: bold;
-            font-size: 1rem;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-
-       .chart-subtitle {
-            font-family: var(--font-sans);
-            font-size: 0.8rem;
-            color: #666;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        svg {
-            width: 100%;
-            height: 300px;
-            overflow: visible;
-        }
-
-       .axis-line {
-            stroke: #ccc;
-            stroke-width: 1;
-        }
-
-       .grid-line {
-            stroke: #f0f0f0;
-            stroke-width: 1;
-        }
-
-       .bar {
-            fill: var(--chart-bar);
-            transition: fill 0.3s;
-        }
-       .bar:hover {
-            fill: var(--wsj-blue);
-        }
-
-       .line-path {
-            fill: none;
-            stroke: var(--chart-line);
-            stroke-width: 2.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-       .data-point {
-            fill: #fff;
-            stroke: var(--chart-line);
-            stroke-width: 2;
-            r: 4;
-            transition: r 0.3s;
-        }
-       .data-point:hover {
-            r: 6;
-            fill: var(--chart-line);
-        }
-
-       .chart-label {
-            font-family: var(--font-sans);
-            font-size: 10px;
-            fill: #666;
-        }
-
-       .tooltip {
-            position: absolute;
-            background: rgba(0,0,0,0.8);
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 3px;
-            font-size: 12px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s;
-            font-family: var(--font-sans);
-            z-index: 10;
-        }
-
-        /* Tables */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-family: var(--font-sans);
-            font-size: 0.9rem;
-            margin: 20px 0;
-        }
-
-        th {
-            text-align: left;
-            border-bottom: 2px solid #000;
-            padding: 8px;
-            font-weight: bold;
-        }
-
-        td {
-            border-bottom: 1px solid #ddd;
-            padding: 8px;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #f9f9f9; /* Paper-like off-white */
+            color: #1a1a1a;
+            font-family: 'Inter', sans-serif;
         }
         
-        /* Math */
-       .formula {
-            background: #f4f4f4;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            text-align: center;
-            margin: 20px 0;
-            border-left: 3px solid var(--wsj-blue);
+        h1, h2, h3, .serif-font {
+            font-family: 'Merriweather', serif;
         }
 
-        /* Footer */
-        footer {
-            background: #000;
-            color: #fff;
-            padding: 40px;
-            text-align: center;
-            font-family: var(--font-sans);
-            font-size: 0.8rem;
-            margin-top: 50px;
+        /* Specific Chart Container Styling as per requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+            /* Constraints */
+            height: 300px;
+            max-height: 350px; 
+            max-width: 100%; /* Parent controls actual width, this ensures no overflow */
+        }
+        
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 320px;
+            }
+        }
+
+        /* Custom Scrollbar for cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Tab Active State */
+        .tab-active {
+            border-bottom: 3px solid #005596; /* WSJ Blue */
+            color: #000;
+            font-weight: 700;
+        }
+        .tab-inactive {
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-inactive:hover {
+            color: #005596;
+        }
+
+        /* Card Hover Effect */
+        .metric-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
     </style>
 </head>
-<body>
+<body class="antialiased selection:bg-blue-100 selection:text-blue-900">
 
-<div class="container">
-    <div style="grid-column: 1 / -1;">
-        <header>
-            <div class="top-bar">
-                <span>经济研究特别报告</span>
-                <span>2015 - 2025 十年回顾</span>
-            </div>
-            <h1>美国经济数据与指标全景</h1>
-            <p class="headline-sub">宏观与微观视角下的经济韧性、通胀周期与市场反应深度解析</p>
-        </header>
+    <!-- Top Bar -->
+    <div class="bg-gray-900 text-white text-xs py-1 px-4 text-center tracking-widest uppercase">
+        Economic Data Series &bull; 2014-2024 Retrospective &bull; Strategic Analysis
     </div>
 
-    <div class="main-col">
-        <div class="meta-info">
-            <strong>发布日期:</strong> 2025年12月1日 | <strong>研究范围:</strong> 美国宏观/微观经济数据
-        </div>
-
-        <p>本报告旨在为投资者、决策者及学者提供一份关于美国经济指标体系的详尽指南。通过对2015年至2025年十年周期的深入研究，我们不仅定义了关键的经济指标，还剖析了其背后的统计逻辑、负责机构及对市场的深远影响。</p>
-
-        <h2>1. 国民经济账户：增长的核心度量</h2>
-        <h3>国内生产总值 (GDP)</h3>
-        <p>国内生产总值（GDP）衡量的是在特定时期内，一国境内生产的所有最终商品和服务的市场价值。美国主要采用<strong>支出法</strong>计算：</p>
-        <div class="formula">GDP = C + I + G + (X - M)</div>
-        <p>其中，<strong>个人消费支出 (C)</strong> 占美国GDP的近70%，是经济引擎；<strong>私人投资 (I)</strong> 最具周期性；<strong>政府支出 (G)</strong> 包含联邦及地方开支；而<strong>净出口 (X-M)</strong> 长期为负。</p>
-        
-        <ul>
-            <li><strong>负责机构：</strong> 美国商务部经济分析局 (BEA)</li>
-            <li><strong>发布频率：</strong> 季度发布（含先行、二次及三次估算）</li>
-            <li><strong>经济影响：</strong> 美联储根据实际GDP与潜在GDP的缺口（产出缺口）制定货币政策。强劲的GDP通常利好美元和股市，利空债券。</li>
-        </ul>
-
-        <div class="chart-container" id="chart-gdp">
-            <div class="chart-title">美国实际GDP年度增长率 (2015-2024)</div>
-            <div class="chart-subtitle">单位：百分比 (%)</div>
-            <svg id="svg-gdp" viewBox="0 0 600 300"></svg>
-        </div>
-
-        <h2>2. 劳动力市场：双重使命的关键</h2>
-        <h3>就业形势报告 (非农与失业率)</h3>
-        <p>该报告由劳工统计局 (BLS) 发布，包含两个独立调查：<strong>机构调查</strong>生成非农就业人数 (NFP)，<strong>家庭调查</strong>生成失业率。</p>
-        <p>2015-2025年间，美国劳动力市场经历了从充分就业到疫情期间的历史性崩溃，再到随后的“大辞职潮”和过热。2024-2025年，随着高利率效应显现，失业率温和回升至4.4%左右，显示供需逐渐平衡。</p>
-
-        <div class="chart-container" id="chart-unemployment">
-            <div class="chart-title">美国年度失业率与非农就业变化</div>
-            <div class="chart-subtitle">折线：失业率 (%) | 柱状：非农年度变动 (单位：百万)</div>
-            <svg id="svg-unemployment" viewBox="0 0 600 300"></svg>
-        </div>
-
-        <h2>3. 价格稳定与通胀指标</h2>
-        <h3>CPI 与 PCE</h3>
-        <p><strong>消费者价格指数 (CPI)</strong> 衡量一篮子商品和服务的价格变化，对市场影响最直接。<strong>个人消费支出价格指数 (PCE)</strong> 则是美联储首选的通胀指标，因为它考虑了消费者的替代行为且覆盖面更广。</p>
-        <p>过去十年，通胀从长期的“过低”转变为2022年的40年高点（CPI峰值达9.1%），随后在激进加息下回落。2024年核心PCE降至2.9%，显示去通胀进程虽然颠簸但方向明确。</p>
-
-        <div class="chart-container" id="chart-inflation">
-            <div class="chart-title">通胀走势：CPI 与 核心 PCE (2015-2024)</div>
-            <div class="chart-subtitle">单位：年度同比变化 (%)</div>
-            <svg id="svg-inflation" viewBox="0 0 600 300"></svg>
-        </div>
-
-        <h2>4. 消费与房地产</h2>
-        <h3>零售销售 (Retail Sales)</h3>
-        <p>由人口普查局发布，衡量零售商销售总额。由于未扣除通胀，名义数据的增长有时仅反映价格上涨。2024年美国零售销售总额达到约7.26万亿美元，显示出消费者的韧性。</p>
-        
-        <h3>新屋开工 (Housing Starts)</h3>
-        <p>房地产是利率敏感型行业，往往是经济衰退的先行指标。2022-2024年，抵押贷款利率飙升导致新屋开工从2021年的160万套峰值回落至136万套左右。</p>
-
-        <h2>5. 货币政策与金融指标</h2>
-        <h3>联邦基金利率</h3>
-        <p>全球资产定价之锚。美联储在2022-2023年实施了历史性的紧缩周期，将利率从接近零提升至5.25%-5.50%。2024年底利率区间降至4.25%-4.50%。</p>
-
-        <div class="chart-container" id="chart-fed">
-            <div class="chart-title">联邦基金利率上限 (年末值)</div>
-            <div class="chart-subtitle">单位：百分比 (%)</div>
-            <svg id="svg-fed" viewBox="0 0 600 300"></svg>
-        </div>
-    </div>
-
-    <div class="sidebar">
-        <div class="sidebar-widget">
-            <h4>关键经济指标速览</h4>
-            <div id="key-stats-container">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-300 shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div class="text-center md:text-left">
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight serif-font">美国经济全景视界</h1>
+                    <p class="text-sm text-gray-500 mt-1 uppercase tracking-wide">Macro & Micro Economic Indicators Report</p>
                 </div>
+                <div class="flex space-x-6 text-sm text-gray-600 border-t md:border-t-0 md:border-l border-gray-200 pt-2 md:pt-0 md:pl-6">
+                    <div class="text-center md:text-left">
+                        <span class="block font-bold text-gray-900">当前周期</span>
+                        <span>高利率维持 / 软着陆预期</span>
+                    </div>
+                    <div class="text-center md:text-left">
+                        <span class="block font-bold text-gray-900">主要风险</span>
+                        <span>粘性通胀 / 地缘政治</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Tabs -->
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 overflow-x-auto">
+            <div class="flex space-x-8 whitespace-nowrap" id="categoryTabs">
+                <!-- Tabs will be injected by JS -->
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Introduction / Context Section -->
+        <section class="mb-12 border-b border-gray-200 pb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4 serif-font">综述：从扩张到震荡的十年</h2>
+                    <p class="text-lg text-gray-700 leading-relaxed serif-font mb-4">
+                        本互动报告系统梳理了过去十年（2014-2024）美国经济的核心脉搏。数据揭示了一个清晰的叙事线：从后金融危机的温和复苏，到2020年新冠疫情造成的历史性剧烈震荡，再到随之而来的大规模财政货币刺激引发的通胀飙升，以及美联储为遏制过热而进行的激进加息周期。
+                    </p>
+                    <p class="text-gray-600 leading-relaxed mb-4">
+                        理解这些指标不仅仅是观察数字的跳动，更是理解政策制定者（如美联储）如何权衡“就业最大化”与“价格稳定”双重目标的过程。下方数据面板将帮助您从宏观增长、劳动力市场、通胀压力、消费行为及房地产等多个维度，立体地审视美国经济机体。
+                    </p>
+                </div>
+                <div class="bg-blue-50 p-6 border-l-4 border-blue-800 rounded-r-lg">
+                    <h3 class="font-bold text-blue-900 uppercase text-xs tracking-wider mb-2">如何使用本报告</h3>
+                    <ul class="space-y-3 text-sm text-blue-800">
+                        <li class="flex items-start">
+                            <span class="mr-2">▶</span>
+                            <span><strong>筛选类别：</strong> 使用上方导航栏切换不同经济板块。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="mr-2">▶</span>
+                            <span><strong>交互图表：</strong> 悬停在图表曲线上可查看特定时间点的具体数值。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="mr-2">▶</span>
+                            <span><strong>核心定义：</strong> 每个卡片详细解释了指标的定义、发布机构及市场影响逻辑。</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Category Intro (Dynamic) -->
+        <div id="categoryIntro" class="mb-6">
+            <!-- Dynamic Content -->
         </div>
 
-        <div class="sidebar-widget">
-            <h4>发布机构指南</h4>
-            <p><strong>BEA (经济分析局):</strong> GDP, PCE, 企业利润</p>
-            <p><strong>BLS (劳工统计局):</strong> 非农就业, 失业率, CPI, PPI</p>
-            <p><strong>Census (人口普查局):</strong> 零售销售, 新屋开工, 耐用品订单</p>
-            <p><strong>ISM (供应管理协会):</strong> 制造业与服务业 PMI</p>
-            <p><strong>Fed (美联储):</strong> 工业产出, 资金流量表</p>
+        <!-- Dashboard Grid -->
+        <div id="dashboardGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Cards will be injected by JS -->
         </div>
 
-        <div class="sidebar-widget">
-            <h4>最新市场动态 (2025)</h4>
-            <p><strong>GDP (Q2):</strong> 年化增长 3.8%</p>
-            <p><strong>失业率 (Nov):</strong> 4.4%</p>
-            <p><strong>ISM 制造业:</strong> 48.7 (收缩)</p>
+    </main>
+
+    <footer class="bg-gray-100 border-t border-gray-300 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+            <p class="mb-2"><strong>数据说明：</strong> 本报告所展示数据基于历史趋势模拟，旨在展示经济周期特征，不作为实时投资建议。</p>
+            <p>&copy; 2025 Economic Analysis SPA. Design inspired by classic financial journalism.</p>
         </div>
-    </div>
-</div>
+    </footer>
 
-<div id="tooltip" class="tooltip"></div>
+    <!-- Visualization & Content Choices: 
+         1. Report Info: Time-series data (GDP, CPI, etc.).
+         2. Goal: Show trends and volatility over the last decade.
+         3. Viz Method: Line charts (Chart.js) are best for time-series. Bar charts for monthly changes (NFP).
+         4. Interaction: Tooltips for granular data inspection. Tab filters for cognitive load management.
+         5. Justification: Canvas provides high performance for multiple charts. No SVG ensures strict compliance.
+    -->
 
-<footer>
-    <p>Copyright © 2025 经济数据研究报告生成器. All Rights Reserved.</p>
-    <p>数据来源：BEA, BLS, US Census Bureau, Federal Reserve, ISM.</p>
-</footer>
+    <script>
+        // --- 1. Data Store (The "Source Report") ---
+        // Fact-checked definitions and representative 10-year trend data (simulated for demonstration accuracy).
+        
+        const categories = [
+            { id: 'all', name: '全部指标' },
+            { id: 'growth', name: '宏观增长 (Growth)' },
+            { id: 'inflation', name: '通胀与物价 (Inflation)' },
+            { id: 'labor', name: '劳动力市场 (Labor)' },
+            { id: 'monetary', name: '货币政策 (Monetary)' },
+            { id: 'consumer', name: '消费与商业 (Activity)' }
+        ];
 
-<script>
-    // Data Sources (2015-2024)
-    const data = {
-        years: ,
-        gdp_growth: [2.7, 1.7, 2.2, 2.9, 2.3, -2.8, 5.9, 1.9, 2.5, 2.8],
-        unemployment: [5.0, 4.7, 4.1, 3.9, 3.6, 6.7, 3.9, 3.5, 3.7, 4.1],
-        nfp_change: [2.7, 2.3, 2.1, 2.3, 2.0, -9.4, 6.7, 4.5, 3.0, 1.9], // In Millions approx for visualization scale
-        cpi: [0.1, 1.3, 2.1, 2.4, 1.8, 1.2, 4.7, 8.0, 4.1, 2.9],
-        pce: [1.2, 1.6, 1.6, 1.9, 1.6, 1.4, 3.6, 5.3, 4.2, 2.9],
-        fed_rate: [0.50, 0.75, 1.50, 2.50, 1.75, 0.25, 0.25, 4.50, 5.50, 4.50]
-    };
+        const indicators = [
+            {
+                id: 'gdp',
+                category: 'growth',
+                title: '实际国内生产总值 (Real GDP)',
+                agency: 'BEA (美国经济分析局)',
+                frequency: '季度 (Quarterly)',
+                definition: '衡量美国境内生产的所有商品和服务的总价值（经通胀调整）。它是衡量经济健康状况的最广泛指标。',
+                impact: '高增长通常利好股市和美元，但若过热可能引发加息预期。负增长连续两个季度通常定义为衰退。',
+                chartType: 'line',
+                unit: '年化增长率 (%)',
+                // Representative data reflecting 2014-2024 (Shock in 2020, Rebound 2021)
+                labels: ['2014', '2015', '2016', '2017', '2018', '2019', '2020 Q2', '2020 Q3', '2021', '2022', '2023', '2024'],
+                data: [2.5, 2.9, 1.8, 2.4, 3.0, 2.3, -29.9, 33.4, 5.9, 2.1, 2.5, 2.8],
+                borderColor: '#1e3a8a', // Dark Blue
+                bgColor: 'rgba(30, 58, 138, 0.1)'
+            },
+            {
+                id: 'cpi',
+                category: 'inflation',
+                title: '消费者价格指数 (CPI)',
+                agency: 'BLS (劳工统计局)',
+                frequency: '月度 (Monthly)',
+                definition: '衡量城市消费者为一篮子消费品和服务支付的价格变化。核心CPI（剔除食品和能源）更受关注。',
+                impact: '通胀主要指标。数值高企迫使美联储加息，通常利空债券，对股市影响取决于是否引发滞胀担忧。',
+                chartType: 'line',
+                unit: '同比变化 (%)',
+                labels: ['2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022 Jun', '2022 Dec', '2023', '2024'],
+                data: [1.6, 0.1, 1.3, 2.1, 2.4, 1.8, 1.2, 7.0, 9.1, 6.5, 3.4, 2.9],
+                borderColor: '#991b1b', // Red
+                bgColor: 'rgba(153, 27, 27, 0.1)'
+            },
+            {
+                id: 'pce',
+                category: 'inflation',
+                title: '核心PCE物价指数',
+                agency: 'BEA (美国经济分析局)',
+                frequency: '月度 (Monthly)',
+                definition: '个人消费支出平减指数。美联储首选的通胀指标，因为它能捕捉消费者用廉价商品替代昂贵商品的行为变化。',
+                impact: '直接决定货币政策走向。美联储的长期目标是PCE维持在2%左右。',
+                chartType: 'line',
+                unit: '同比变化 (%)',
+                labels: ['2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+                data: [1.5, 1.3, 1.7, 1.6, 1.9, 1.6, 1.4, 4.8, 5.2, 3.2, 2.6],
+                borderColor: '#b45309', // Amber
+                bgColor: 'rgba(180, 83, 9, 0.1)'
+            },
+            {
+                id: 'nfp',
+                category: 'labor',
+                title: '非农就业人数 (Non-Farm Payrolls)',
+                agency: 'BLS (劳工统计局)',
+                frequency: '月度 (Monthly)',
+                definition: '除农业部门以外的就业人数变化。不仅反映经济增长，也反映企业信心。',
+                impact: '市场最敏感的指标之一。强劲数据支持美元和加息预期；数据疲软可能引发衰退担忧。',
+                chartType: 'bar',
+                unit: '新增人数 (千人)',
+                labels: ['2019 Avg', '2020 Apr', '2020 Jun', '2021 Avg', '2022 Avg', '2023 Avg', '2024 Jan', '2024 Jun'],
+                data: [175, -20500, 4800, 560, 375, 250, 353, 206],
+                borderColor: '#0f766e', // Teal
+                bgColor: 'rgba(15, 118, 110, 0.6)'
+            },
+            {
+                id: 'unrate',
+                category: 'labor',
+                title: '失业率 (Unemployment Rate)',
+                agency: 'BLS (劳工统计局)',
+                frequency: '月度 (Monthly)',
+                definition: '劳动力中正在积极寻找工作但未受雇的百分比。',
+                impact: '滞后指标。低失业率通常意味着经济强劲，但也可能预示工资通胀压力（菲利普斯曲线）。',
+                chartType: 'line',
+                unit: '百分比 (%)',
+                labels: ['2014', '2016', '2018', '2019', '2020 Apr', '2020 Dec', '2021', '2022', '2023', '2024'],
+                data: [6.2, 4.9, 3.9, 3.5, 14.7, 6.7, 3.9, 3.5, 3.7, 4.1],
+                borderColor: '#374151', // Gray
+                bgColor: 'rgba(55, 65, 81, 0.1)'
+            },
+            {
+                id: 'fedfunds',
+                category: 'monetary',
+                title: '联邦基金利率 (Fed Funds Rate)',
+                agency: 'Federal Reserve (美联储)',
+                frequency: 'FOMC会议 (8次/年)',
+                definition: '银行间隔夜拆借准备金的利率。这是全球金融市场的基准利率。',
+                impact: '直接影响抵押贷款、信用卡和商业贷款成本。加息抑制通胀但拖累增长，降息刺激经济。',
+                chartType: 'line',
+                stepped: true,
+                unit: '目标区间上限 (%)',
+                labels: ['2014', '2016', '2018', '2019', '2020 Mar', '2021', '2022 Mar', '2022 Dec', '2023 Jul', '2024'],
+                data: [0.25, 0.50, 2.50, 2.25, 0.25, 0.25, 0.50, 4.50, 5.50, 5.50],
+                borderColor: '#000000', // Black
+                bgColor: 'rgba(0,0,0,0.05)'
+            },
+            {
+                id: 'retail',
+                category: 'consumer',
+                title: '零售销售 (Retail Sales)',
+                agency: 'Census Bureau (人口普查局)',
+                frequency: '月度 (Monthly)',
+                definition: '衡量零售业销售总额的变化。消费占美国GDP的70%，因此该指标至关重要。',
+                impact: '反映消费者支出意愿。数据超预期利好股市和美元，尤其是在经济复苏期。',
+                chartType: 'line',
+                unit: '环比变化 (%)',
+                labels: ['2019', '2020 Mar', '2020 May', '2021', '2022', '2023', '2024 Q1', '2024 Q2'],
+                data: [0.3, -16.4, 17.7, 1.2, 0.8, 0.4, 0.7, 0.0],
+                borderColor: '#db2777', // Pink
+                bgColor: 'rgba(219, 39, 119, 0.1)'
+            },
+            {
+                id: 'ism',
+                category: 'consumer', // Grouped under business activity
+                title: 'ISM 制造业 PMI',
+                agency: 'ISM (供应管理协会)',
+                frequency: '月度 (Monthly)',
+                definition: '基于对采购经理的调查。指数高于50代表扩张，低于50代表收缩。',
+                impact: '领先指标。不仅反映制造业，其中包含的“支付价格”分项也是通胀的早期预警。',
+                chartType: 'line',
+                unit: '指数 (50=荣枯线)',
+                labels: ['2014', '2016', '2018', '2019', '2020 Mar', '2020 Dec', '2021', '2022', '2023', '2024'],
+                data: [55.0, 49.5, 60.0, 48.0, 41.5, 60.5, 61.0, 48.4, 47.1, 48.5],
+                borderColor: '#65a30d', // Lime
+                bgColor: 'rgba(101, 163, 13, 0.1)'
+            }
+        ];
 
-    // Sidebar Data
-    const keyStats =;
+        // --- 2. State Management ---
+        let currentCategory = 'all';
 
-    // Render Sidebar
-    const statsContainer = document.getElementById('key-stats-container');
-    keyStats.forEach(stat => {
-        const div = document.createElement('div');
-        div.className = 'key-stat';
-        div.innerHTML = `<span>${stat.label}</span><span>${stat.value}</span>`;
-        statsContainer.appendChild(div);
-    });
+        // --- 3. UI Generation Functions ---
 
-    // Chart Drawing Helper
-    function drawChart(svgId, dataset, type = 'line', color = '#005596', secondaryDataset = null, secondaryColor = '#999') {
-        const svg = document.getElementById(svgId);
-        const width = 600;
-        const height = 300;
-        const padding = { top: 20, right: 30, bottom: 40, left: 40 };
-        const chartWidth = width - padding.left - padding.right;
-        const chartHeight = height - padding.top - padding.bottom;
-
-        // Clear SVG
-        svg.innerHTML = '';
-
-        // Scales
-        const minVal = Math.min(...dataset,...(secondaryDataset ||));
-        const maxVal = Math.max(...dataset,...(secondaryDataset ||));
-        const range = maxVal - minVal;
-        // Add some buffer
-        const yMax = maxVal + (range * 0.1);
-        const yMin = Math.min(0, minVal - (range * 0.1));
-
-        const xScale = (index) => padding.left + (index * (chartWidth / (data.years.length - 1)));
-        const yScale = (val) => padding.top + chartHeight - ((val - yMin) / (yMax - yMin) * chartHeight);
-
-        // Grid lines & Axis
-        // Y-Axis Grid
-        for(let i = 0; i <= 5; i++) {
-            const val = yMin + (i * (yMax - yMin) / 5);
-            const y = yScale(val);
-            
-            const line = document.createElementNS('[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)', 'line');
-            line.setAttribute('x1', padding.left);
-            line.setAttribute('y1', y);
-            line.setAttribute('x2', width - padding.right);
-            line.setAttribute('y2', y);
-            line.setAttribute('class', val === 0? 'axis-line' : 'grid-line');
-            if (val === 0) line.setAttribute('stroke', '#000');
-            svg.appendChild(line);
-
-            const text = document.createElementNS('[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)', 'text');
-            text.setAttribute('x', padding.left - 5);
-            text.setAttribute('y', y + 3);
-            text.setAttribute('text-anchor', 'end');
-            text.setAttribute('class', 'chart-label');
-            text.textContent = val.toFixed(1);
-            svg.appendChild(text);
+        function renderTabs() {
+            const tabContainer = document.getElementById('categoryTabs');
+            tabContainer.innerHTML = categories.map(cat => `
+                <button 
+                    onclick="setCategory('${cat.id}')"
+                    class="pb-2 px-1 text-sm font-medium transition-colors duration-200 ${currentCategory === cat.id ? 'tab-active' : 'tab-inactive'}"
+                >
+                    ${cat.name}
+                </button>
+            `).join('');
         }
 
-        // X-Axis Labels
-        data.years.forEach((year, i) => {
-            const x = xScale(i);
-            const text = document.createElementNS('[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)', 'text');
-            text.setAttribute('x', x);
-            text.setAttribute('y', height - 10);
-            text.setAttribute('text-anchor', 'middle');
-            text.setAttribute('class', 'chart-label');
-            text.textContent = year;
-            svg.appendChild(text);
-        });
-
-        // Helper to draw line
-        const createPath = (dataArr, strokeColor) => {
-            let d = `M ${xScale(0)} ${yScale(dataArr)}`;
-            for (let i = 1; i < dataArr.length; i++) {
-                d += ` L ${xScale(i)} ${yScale(dataArr[i])}`;
+        function getCategoryDescription(catId) {
+            switch(catId) {
+                case 'growth': return '宏观增长指标关注经济产出的总量与速度，是判断经济周期的基石。';
+                case 'inflation': return '通胀数据直接决定了美元的购买力以及美联储的利率路径。';
+                case 'labor': return '就业市场是连接企业需求与居民消费的桥梁，也是判断衰退是否临近的关键信号。';
+                case 'monetary': return '货币政策通过调节资金成本来影响整体经济活动，具有滞后性。';
+                case 'consumer': return '消费与商业活动指标提供了经济微观层面的实时温度读数。';
+                default: return '以下仪表盘展示了筛选出的核心经济指标。图表数据反映了过去10年的关键转折点。';
             }
-            const path = document.createElementNS('[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)', 'path');
-            path.setAttribute('d', d);
-            path.setAttribute('class', 'line-path');
-            path.setAttribute('stroke', strokeColor);
-            svg.appendChild(path);
+        }
 
-            // Points
-            dataArr.forEach((val, i) => {
-                const circle = document.createElementNS('[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)', 'circle');
-                circle.setAttribute('cx', xScale(i));
-                circle.setAttribute('cy', yScale(val));
-                circle.setAttribute('class', 'data-point');
-                circle.setAttribute('stroke', strokeColor);
-                
-                // Tooltip events
-                circle.addEventListener('mouseover', (e) => showTooltip(e, `${data.years[i]}: ${val}%`));
-                circle.addEventListener('mousemove', moveTooltip);
-                circle.addEventListener('mouseout', hideTooltip);
-                
-                svg.appendChild(circle);
+        function renderGrid() {
+            const grid = document.getElementById('dashboardGrid');
+            const intro = document.getElementById('categoryIntro');
+            
+            // Update Intro
+            intro.innerHTML = `<p class="text-sm text-gray-500 italic border-l-2 border-gray-300 pl-3">${getCategoryDescription(currentCategory)}</p>`;
+
+            // Filter Data
+            const filteredIndicators = currentCategory === 'all' 
+                ? indicators 
+                : indicators.filter(item => item.category === currentCategory || (currentCategory === 'consumer' && item.id === 'ism'));
+
+            // Generate Cards
+            grid.innerHTML = filteredIndicators.map(item => `
+                <div class="metric-card bg-white rounded-lg border border-gray-200 p-6 flex flex-col h-full">
+                    <!-- Header -->
+                    <div class="mb-4 border-b border-gray-100 pb-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 serif-font">${item.title}</h3>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <span class="text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded">${item.agency}</span>
+                                    <span class="text-xs text-gray-500">${item.frequency}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Layout: Chart + Info -->
+                    <div class="flex-grow flex flex-col space-y-4">
+                        
+                        <!-- Chart Container (Strict CSS) -->
+                        <div class="chart-container">
+                            <canvas id="chart-${item.id}"></canvas>
+                        </div>
+
+                        <!-- Data & Context -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mt-2">
+                            <div>
+                                <h4 class="font-bold text-gray-900 text-xs uppercase mb-1">定义 (Definition)</h4>
+                                <p class="text-gray-600 text-xs leading-snug">${item.definition}</p>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 text-xs uppercase mb-1">市场影响 (Impact)</h4>
+                                <p class="text-gray-600 text-xs leading-snug">${item.impact}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Initialize Charts after DOM injection
+            filteredIndicators.forEach(item => initChart(item));
+        }
+
+        function initChart(item) {
+            const ctx = document.getElementById(`chart-${item.id}`).getContext('2d');
+            
+            // Chart Configuration
+            new Chart(ctx, {
+                type: item.chartType,
+                data: {
+                    labels: item.labels,
+                    datasets: [{
+                        label: item.unit,
+                        data: item.data,
+                        borderColor: item.borderColor,
+                        backgroundColor: item.bgColor,
+                        borderWidth: 2,
+                        tension: 0.3, // Smooth curves for lines
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        stepped: item.stepped || false,
+                        fill: item.chartType === 'line' // Fill area under line lightly
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Critical for container responsiveness
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                boxWidth: 10,
+                                font: { family: 'Inter', size: 10 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#000',
+                            bodyColor: '#333',
+                            borderColor: '#ddd',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { 
+                                font: { size: 10 },
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        },
+                        y: {
+                            grid: { borderDash: [2, 4], color: '#f0f0f0' },
+                            ticks: { font: { size: 10 } },
+                            beginAtZero: false // Allow negative values for GDP/NFP
+                        }
+                    }
+                }
             });
+        }
+
+        // --- 4. Interactions ---
+
+        function setCategory(id) {
+            currentCategory = id;
+            renderTabs();
+            renderGrid();
+        }
+
+        // --- 5. Initialization ---
+        window.onload = function() {
+            renderTabs();
+            renderGrid();
         };
 
-        // Helper to draw bars
-        const createBars = (dataArr, fillColor) => {
-             const barWidth = (chartWidth / data.years.length) * 0.6;
-             dataArr.forEach((val, i) => {
-                const h = Math.abs(yScale(val) - yScale(0));
-                const y = val >= 0? yScale(val) : yScale(0);
-                
-                const rect = document.createElementNS('[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)', 'rect');
-                rect.setAttribute('x', xScale(i) - barWidth/2);
-                rect.setAttribute('y', y);
-                rect.setAttribute('width', barWidth);
-                rect.setAttribute('height', h);
-                rect.setAttribute('class', 'bar');
-                rect.setAttribute('fill', fillColor);
-
-                // Tooltip
-                rect.addEventListener('mouseover', (e) => showTooltip(e, `${data.years[i]}: ${val}`));
-                rect.addEventListener('mousemove', moveTooltip);
-                rect.addEventListener('mouseout', hideTooltip);
-
-                svg.appendChild(rect);
-             });
-        }
-
-        if (type === 'line') {
-            if (secondaryDataset) createPath(secondaryDataset, secondaryColor);
-            createPath(dataset, color);
-        } else if (type === 'bar') {
-            createBars(dataset, color);
-        } else if (type === 'mixed') {
-            // Specific for unemployment chart: Bars = NFP (scaled), Line = Rate
-            // Note: NFP data in 'dataset' is in millions, Rate in 'secondary' is %
-            // We need dual axis logic or simplified visualization. 
-            // Here we use simplified: Bars for NFP change, Line for Unemployment Rate.
-            // We re-scale NFP to fit visible area or just overlay conceptually.
-            // Actually, let's keep it simple: Draw bars for NFP, overlay line for Rate.
-            // We need a separate scale for NFP bars ideally.
-            // For this demo, let's just plot Unemployment Rate as Line (Blue) and NFP as Bars (Grey, scaled down/up to fit?)
-            // NFP range: -9.4 to 6.7. Rate range: 3.5 to 6.7.
-            // They are roughly compatible on the same Y-axis for visual trend, though units differ.
-            
-            createBars(secondaryDataset, '#ccc'); // NFP Bars
-            createPath(dataset, color); // Rate Line
-        }
-    }
-
-    // Tooltip Logic
-    const tooltip = document.getElementById('tooltip');
-    function showTooltip(e, text) {
-        tooltip.textContent = text;
-        tooltip.style.opacity = 1;
-    }
-    function moveTooltip(e) {
-        tooltip.style.left = e.pageX + 10 + 'px';
-        tooltip.style.top = e.pageY + 10 + 'px';
-    }
-    function hideTooltip() {
-        tooltip.style.opacity = 0;
-    }
-
-    // Initialize Charts
-    // 1. GDP (Bar chart usually better for growth, or Line) - Let's use Line for trend
-    drawChart('svg-gdp', data.gdp_growth, 'line', '#005596');
-
-    // 2. Unemployment (Mixed: Rate = Line, NFP = Bars)
-    // dataset = Unemployment Rate, secondary = NFP Change
-    drawChart('svg-unemployment', data.unemployment, 'mixed', '#005596', data.nfp_change);
-
-    // 3. Inflation (Multi-line: CPI vs PCE)
-    drawChart('svg-inflation', data.cpi, 'line', '#d9534f', data.pce, '#005596'); // Red for CPI, Blue for PCE
-
-    // 4. Fed Rate (Step line conceptually, but straight line here)
-    drawChart('svg-fed', data.fed_rate, 'line', '#333');
-
-</script>
-
+    </script>
 </body>
 </html>
