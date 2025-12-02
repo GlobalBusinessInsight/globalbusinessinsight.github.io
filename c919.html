@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COMAC C919 Lifecycle Research Report v4.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Orbitron:wght@500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --comac-blue: #004797;
+            --sky-blue: #38bdf8;
+            --tech-grey: #f1f5f9;
+            --blueprint-bg: #0f172a;
+            --blueprint-line: #38bdf8;
+        }
+        body {
+            font-family: 'Noto Sans', 'Noto Sans SC', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        .font-tech { font-family: 'Orbitron', sans-serif; }
+        .font-hud { font-family: 'Rajdhani', sans-serif; }
+        
+        /* Layout */
+        .container-main { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+
+        /* Navigation */
+        .nav-scroll-container {
+            display: flex; overflow-x: auto; white-space: nowrap;
+            -ms-overflow-style: none; scrollbar-width: none; 
+        }
+        .nav-scroll-container::-webkit-scrollbar { display: none; }
+        .nav-item {
+            cursor: pointer; padding: 12px 24px; border-bottom: 3px solid transparent;
+            transition: all 0.3s; color: #64748b; font-weight: 500; font-size: 0.95rem; flex-shrink: 0;
+        }
+        .nav-item:hover { color: var(--comac-blue); background-color: rgba(0, 71, 151, 0.05); }
+        .nav-item.active { border-bottom-color: var(--comac-blue); color: var(--comac-blue); font-weight: 700; }
+
+        /* Language Toggle */
+        .lang-toggle {
+            display: flex; background: #e2e8f0; border-radius: 20px; cursor: pointer;
+            position: relative; width: 80px; height: 32px; align-items: center; justify-content: space-between;
+            padding: 0 8px; font-size: 12px; font-weight: bold; color: #64748b; margin-left: 20px;
+        }
+        .lang-toggle::before {
+            content: ''; position: absolute; background: white; width: 38px; height: 26px; border-radius: 16px;
+            top: 3px; left: 3px; transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+        .lang-toggle.zh::before { transform: translateX(36px); }
+        .lang-toggle span { z-index: 1; user-select: none; }
+        .lang-toggle.en .en-text { color: #0f172a; }
+        .lang-toggle.zh .zh-text { color: #0f172a; }
+        
+        /* Deep Dive Sections */
+        .deep-dive {
+            background-color: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 24px;
+            margin-top: 0;
+        }
+        .deep-dive h4 {
+            color: #334155;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+        .deep-dive h4::before {
+            content: ''; width: 4px; height: 16px; background: var(--comac-blue);
+            display: inline-block; margin-right: 8px; border-radius: 2px;
+        }
+        .deep-dive p { margin-bottom: 12px; color: #475569; font-size: 0.9rem; text-align: justify; }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.6s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .chart-wrapper { position: relative; height: 350px; width: 100%; }
+
+        /* Timeline */
+        .timeline-container { position: relative; padding-left: 2rem; border-left: 2px solid #e2e8f0; }
+        .timeline-item { position: relative; margin-bottom: 2rem; }
+        .timeline-dot {
+            position: absolute; left: -2.4rem; top: 0.25rem;
+            width: 1rem; height: 1rem; background: white;
+            border: 3px solid #cbd5e1; border-radius: 50%;
+        }
+        .timeline-item.major .timeline-dot { border-color: var(--comac-blue); background: var(--comac-blue); }
+
+        /* --- ANATOMY POSTER STYLES --- */
+        .anatomy-container {
+            position: relative; width: 100%; height: 750px; background-color: #020617; 
+            background-image: linear-gradient(rgba(2, 6, 23, 0.3), rgba(2, 6, 23, 0.7)), url('https://globalbusinessinsight.github.io/picture/c919.png');
+            background-size: cover; background-position: center; overflow: hidden;
+            border-radius: 12px; border: 1px solid #1e293b; box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+        }
+        .blueprint-grid {
+            position: absolute; inset: 0; pointer-events: none;
+            background-image: linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .hotspot {
+            position: absolute; width: 14px; height: 14px; background: #020617; border: 2px solid #38bdf8; border-radius: 50%; cursor: pointer; z-index: 20; transition: all 0.3s; box-shadow: 0 0 10px #38bdf8;
+        }
+        .hotspot::after {
+            content: ''; position: absolute; inset: -6px; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 50%; animation: pulse 2.5s infinite;
+        }
+        .hotspot:hover { background: #38bdf8; transform: scale(1.3); box-shadow: 0 0 20px #38bdf8; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+        .connector-line {
+            position: absolute; height: 1px; background: #38bdf8; transform-origin: 0 50%; opacity: 0; transition: opacity 0.3s 0.1s; z-index: 10; pointer-events: none; box-shadow: 0 0 4px #38bdf8;
+        }
+        .label-card {
+            position: absolute; background: rgba(2, 6, 23, 0.95); border: 1px solid #38bdf8; border-left: 4px solid #38bdf8; padding: 12px; width: 280px; color: white; opacity: 0; transform: translateY(10px); transition: all 0.3s; z-index: 30; backdrop-filter: blur(8px); pointer-events: none; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.8);
+        }
+        .label-card h4 { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1.1rem; color: #fff; margin-bottom: 2px; letter-spacing: 1px; text-transform: uppercase; }
+        .label-card .supplier-row { display: flex; align-items: center; margin-bottom: 6px; border-bottom: 1px solid rgba(56, 189, 248, 0.3); padding-bottom: 4px; }
+        .label-card .supplier-label { font-size: 0.65rem; color: #94a3b8; margin-right: 6px; }
+        .label-card .supplier-val { font-size: 0.85rem; color: #38bdf8; font-weight: bold; }
+        .label-card .desc { font-size: 0.75rem; color: #cbd5e1; line-height: 1.5; }
+        .hotspot:hover + .connector-line { opacity: 1; }
+        .hotspot:hover + .connector-line + .label-card { opacity: 1; transform: translateY(0); }
+        
+        .tag-problem { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .tag-solution { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <!-- Header / Nav -->
+    <header class="bg-white sticky top-0 z-50 border-b border-slate-200 shadow-sm backdrop-blur-md bg-white/90">
+        <div class="container-main flex flex-col md:flex-row justify-between items-center py-2">
+            <div class="flex items-center w-full md:w-auto px-4 md:px-0 justify-between md:justify-start">
+                <div class="flex items-center space-x-3 flex-shrink-0">
+                    <div class="w-10 h-10 bg-[#004797] rounded flex items-center justify-center text-white font-tech font-bold text-xl">C</div>
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-800 tracking-tight" data-key="header_title">C919 Lifecycle Research</h1>
+                        <div class="text-xs text-slate-500" data-key="header_subtitle">COMAC C919 Research & Analytics Platform</div>
+                    </div>
+                </div>
+                <!-- Language Switcher -->
+                <div class="lang-toggle en" id="langSwitch" onclick="toggleLanguage()">
+                    <span class="en-text">EN</span>
+                    <span class="zh-text">中</span>
+                </div>
+            </div>
+            
+            <nav class="nav-scroll-container w-full md:w-auto px-4 md:px-0">
+                <div class="nav-item active" onclick="switchView('dashboard')" id="nav-dashboard" data-key="nav_dashboard">Dashboard</div>
+                <div class="nav-item" onclick="switchView('anatomy')" id="nav-anatomy" data-key="nav_anatomy">Anatomy (Pro)</div>
+                <div class="nav-item" onclick="switchView('delivery')" id="nav-delivery" data-key="nav_delivery">Delivery</div>
+                <div class="nav-item" onclick="switchView('ops')" id="nav-ops" data-key="nav_ops">Ops & MRO</div>
+                <div class="nav-item" onclick="switchView('history')" id="nav-history" data-key="nav_history">R&D History</div>
+                <div class="nav-item" onclick="switchView('cert')" id="nav-cert" data-key="nav_cert">Certification</div>
+                <div class="nav-item" onclick="switchView('comparison')" id="nav-comparison" data-key="nav_comparison">Comparison</div>
+                <div class="nav-item" onclick="switchView('range')" id="nav-range" data-key="nav_range">Range Sim</div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container-main py-6">
+
+        <!-- VIEW 0: ANATOMY POSTER -->
+        <div id="view-anatomy" class="view-section hidden fade-in">
+            <div class="card p-0 overflow-hidden bg-slate-900 border-none shadow-2xl">
+                <div class="p-6 bg-slate-800 border-b border-slate-700 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white" data-key="ana_title">Structural Anatomy & Supply Chain</h2>
+                        <p class="text-slate-400 mt-1 text-sm" data-key="ana_desc">Interactive Blueprint: Data Strictly Verified</p>
+                    </div>
+                    <div class="hidden md:block text-xs font-tech text-[#38bdf8] text-right">
+                        BLUEPRINT MODE: ACTIVE <br> UNIT: B-001J
+                    </div>
+                </div>
+
+                <div class="anatomy-container group">
+                    <div class="blueprint-grid"></div>
+                    <div class="absolute top-8 left-8 z-10 pointer-events-none">
+                        <h1 class="text-7xl font-tech text-white/5 font-bold select-none absolute -top-4 -left-4">C919</h1>
+                        <div class="text-white font-hud text-3xl font-bold tracking-[0.2em] mb-1">STRUCTURAL ANATOMY</div>
+                        <div class="flex items-center space-x-4 text-xs text-[#38bdf8]">
+                            <span>• AL-LI ALLOY (3rd Gen)</span>
+                            <span>• LEAP-1C IPS</span>
+                            <span>• FBW CONTROL</span>
+                        </div>
+                    </div>
+
+                    <!-- 1. Nose / Radome -->
+                    <div style="left: 15%; top: 60%;">
+                        <div class="hotspot"></div>
+                        <div class="connector-line" style="width: 60px; transform: rotate(-135deg); left: -58px; top: -40px;"></div>
+                        <div class="label-card" style="left: -280px; top: -120px;">
+                            <div class="flex justify-between items-start">
+                                <h4 data-key="part_nose_title">Nose & Radome</h4>
+                                <span class="text-[10px] text-red-400 border border-red-900 px-1 rounded font-mono">DOMESTIC</span>
+                            </div>
+                            <div class="supplier-row">
+                                <span class="supplier-label">SUPPLIER:</span>
+                                <span class="supplier-val" data-key="part_nose_sup">Chengdu Aircraft (AVIC)</span>
+                            </div>
+                            <div class="desc" data-key="part_nose_desc">Includes cockpit frame and radome. Key aerodynamic forming.</div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Forward Fuselage -->
+                    <div style="left: 30%; top: 58%;">
+                        <div class="hotspot"></div>
+                        <div class="connector-line" style="width: 50px; transform: rotate(-90deg); left: -23px; top: -50px;"></div>
+                        <div class="label-card" style="left: -120px; top: -160px;">
+                            <div class="flex justify-between items-start">
+                                <h4 data-key="part_fwd_title">Fwd Fuselage</h4>
+                                <span class="text-[10px] text-red-400 border border-red-900 px-1 rounded font-mono">DOMESTIC</span>
+                            </div>
+                            <div class="supplier-row">
+                                <span class="supplier-label">SUPPLIER:</span>
+                                <span class="supplier-val" data-key="part_fwd_sup">Hongdu Aviation (AVIC)</span>
+                            </div>
+                            <div class="desc" data-key="part_fwd_desc">Al-Li alloy sections. Includes forward doors and cargo bay structure.</div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Wings -->
+                    <div style="left: 50%; top: 65%;">
+                        <div class="hotspot"></div>
+                        <div class="connector-line" style="width: 80px; transform: rotate(45deg); left: 10px; top: 10px;"></div>
+                        <div class="label-card" style="left: 80px; top: 80px;">
+                            <div class="flex justify-between items-start">
+                                <h4 data-key="part_wing_title">Supercritical Wings</h4>
+                                <span class="text-[10px] text-red-400 border border-red-900 px-1 rounded font-mono">DOMESTIC</span>
+                            </div>
+                            <div class="supplier-row">
+                                <span class="supplier-label">SUPPLIER:</span>
+                                <span class="supplier-val" data-key="part_wing_sup">Xi'an Aircraft (AVIC)</span>
+                            </div>
+                            <div class="desc" data-key="part_wing_desc">Core aerodynamic design. Includes center wing box.</div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Engine -->
+                    <div style="left: 42%; top: 72%;">
+                        <div class="hotspot"></div>
+                        <div class="connector-line" style="width: 60px; transform: rotate(135deg); left: -58px; top: 10px;"></div>
+                        <div class="label-card" style="left: -280px; top: 60px;">
+                            <div class="flex justify-between items-start">
+                                <h4 data-key="part_eng_title">Engine (Propulsion)</h4>
+                                <span class="text-[10px] text-blue-400 border border-blue-900 px-1 rounded font-mono">JV / IMPORT</span>
+                            </div>
+                            <div class="supplier-row">
+                                <span class="supplier-label">SUPPLIER:</span>
+                                <span class="supplier-val">CFM International</span>
+                            </div>
+                            <div class="desc" data-key="part_eng_desc">Model: LEAP-1C. Integrated Propulsion System (IPS). Domestic CJ-1000A under development.</div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Landing Gear -->
+                    <div style="left: 48%; top: 80%;">
+                        <div class="hotspot"></div>
+                        <div class="connector-line" style="width: 40px; transform: rotate(90deg); left: -19px; top: 16px;"></div>
+                        <div class="label-card" style="left: -140px; top: 70px;">
+                            <div class="flex justify-between items-start">
+                                <h4 data-key="part_lg_title">Landing Gear</h4>
+                                <span class="text-[10px] text-blue-400 border border-blue-900 px-1 rounded font-mono">JV</span>
+                            </div>
+                            <div class="supplier-row">
+                                <span class="supplier-label">SUPPLIER:</span>
+                                <span class="supplier-val">Liebherr (Germany)</span>
+                            </div>
+                            <div class="desc" data-key="part_lg_desc">Main and nose landing gear systems. Joint venture production.</div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Rear Fuselage & Tail -->
+                    <div style="left: 72%; top: 55%;">
+                        <div class="hotspot"></div>
+                        <div class="connector-line" style="width: 50px; transform: rotate(-45deg); left: 14px; top: -35px;"></div>
+                        <div class="label-card" style="left: 60px; top: -140px;">
+                            <div class="flex justify-between items-start">
+                                <h4 data-key="part_tail_title">Aft Fuselage & Tail</h4>
+                                <span class="text-[10px] text-red-400 border border-red-900 px-1 rounded font-mono">DOMESTIC</span>
+                            </div>
+                            <div class="supplier-row">
+                                <span class="supplier-label">SUPPLIER:</span>
+                                <span class="supplier-val" data-key="part_tail_sup">Shenyang Aircraft (AVIC)</span>
+                            </div>
+                            <div class="desc" data-key="part_tail_desc">Vertical & horizontal stabilizers, tail cone structure.</div>
+                        </div>
+                    </div>
+
+                    <!-- 7. APU -->
+                    <div style="left: 85%; top: 52%;">
+                        <div class="hotspot"></div>
+                        <div class="connector-line" style="width: 40px; transform: rotate(0deg); left: 16px; top: 7px;"></div>
+                        <div class="label-card" style="left: 60px; top: -10px;">
+                            <div class="flex justify-between items-start">
+                                <h4 data-key="part_apu_title">APU</h4>
+                                <span class="text-[10px] text-blue-400 border border-blue-900 px-1 rounded font-mono">IMPORT</span>
+                            </div>
+                            <div class="supplier-row">
+                                <span class="supplier-label">SUPPLIER:</span>
+                                <span class="supplier-val">Honeywell (US)</span>
+                            </div>
+                            <div class="desc" data-key="part_apu_desc">Model: HGT750. Provides ground power and emergency air start.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mt-6">
+                <div class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                    <div class="text-xs text-slate-500 font-bold uppercase" data-key="stat_airframe">Airframe Structure</div>
+                    <div class="text-xl font-bold text-[#004797]">90%+ <span data-key="stat_domestic">Domestic</span></div>
+                    <div class="text-[10px] text-slate-400" data-key="stat_avic">AVIC (Chengdu/Xi'an/Shenyang)</div>
+                </div>
+                <div class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                    <div class="text-xs text-slate-500 font-bold uppercase" data-key="stat_sys">Systems</div>
+                    <div class="text-xl font-bold text-sky-500" data-key="stat_global">Global JV</div>
+                    <div class="text-[10px] text-slate-400">GE/Honeywell/Liebherr/etc.</div>
+                </div>
+                <div class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                    <div class="text-xs text-slate-500 font-bold uppercase" data-key="stat_int">Integration</div>
+                    <div class="text-xl font-bold text-slate-800">100% <span data-key="stat_prop">Proprietary</span></div>
+                    <div class="text-[10px] text-slate-400">COMAC (Shanghai)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 1: DASHBOARD -->
+        <div id="view-dashboard" class="view-section fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="card p-6 border-l-4 border-[#004797]">
+                    <div class="text-xs text-slate-500 uppercase tracking-wider" data-key="dash_order">Total Orders</div>
+                    <div class="text-3xl font-tech font-bold text-slate-800 mt-1">1,061+</div>
+                    <div class="text-xs text-green-600 mt-2 flex items-center" data-key="dash_order_sub">Confirmed orders from Big 3</div>
+                </div>
+                <div class="card p-6 border-l-4 border-sky-500">
+                    <div class="text-xs text-slate-500 uppercase tracking-wider" data-key="dash_range">Standard Range</div>
+                    <div class="text-3xl font-tech font-bold text-slate-800 mt-1">4,075 <span class="text-sm text-slate-400">km</span></div>
+                    <div class="text-xs text-slate-500 mt-2" data-key="dash_range_sub">Extended Range: 5,555 km</div>
+                </div>
+                <div class="card p-6 border-l-4 border-indigo-500">
+                    <div class="text-xs text-slate-500 uppercase tracking-wider" data-key="dash_pax">Max Passengers</div>
+                    <div class="text-3xl font-tech font-bold text-slate-800 mt-1">192 <span class="text-sm text-slate-400" data-key="unit_seats">seats</span></div>
+                    <div class="text-xs text-slate-500 mt-2" data-key="dash_pax_sub">Typical 2-class: 158 seats</div>
+                </div>
+                <div class="card p-6 border-l-4 border-slate-500">
+                    <div class="text-xs text-slate-500 uppercase tracking-wider" data-key="dash_del">Delivery Status</div>
+                    <div class="text-3xl font-tech font-bold text-slate-800 mt-1" data-key="dash_del_val">Ramp-up</div>
+                    <div class="text-xs text-orange-600 mt-2" data-key="dash_del_sub">Supply chain challenges</div>
+                </div>
+            </div>
+
+            <div class="card p-8 bg-white mb-8">
+                <h2 class="text-2xl font-bold text-slate-800 mb-4" data-key="intro_title">The Crown Jewel of Chinese Aviation</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <p class="text-slate-600 leading-relaxed mb-4" data-key="intro_text">
+                            The C919 is China's first trunk jetliner developed to international airworthiness standards. It marks the transition of China's aviation industry from "manufacturing" to "creation". Targeting the duopoly of Boeing 737 and Airbus A320, the C919 aims for "safer, more economical, comfortable, and eco-friendly" operations.
+                        </p>
+                        <div class="flex space-x-4 mt-4">
+                            <div class="px-3 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold" data-key="tag_al">Al-Li Alloy</div>
+                            <div class="px-3 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold" data-key="tag_wing">Supercritical Wing</div>
+                            <div class="px-3 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold" data-key="tag_ima">IMA Avionics</div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-inner flex flex-col justify-center">
+                        <div class="text-sm font-bold text-slate-500 uppercase mb-2" data-key="proj_status">Project Status</div>
+                        <div class="w-full bg-slate-200 rounded-full h-4 mb-2">
+                            <div class="bg-[#004797] h-4 rounded-full" style="width: 85%"></div>
+                        </div>
+                        <div class="flex justify-between text-[10px] text-slate-600">
+                            <span data-key="st_rd">R&D</span>
+                            <span data-key="st_tc">Certified</span>
+                            <span data-key="st_ops">Commercial</span>
+                            <span class="font-bold text-[#004797]" data-key="st_ramp">Ramp-up</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Deep Dive: Market Strategy -->
+                <div class="deep-dive mt-6">
+                    <h4 data-key="dd_market_title">Deep Dive: Market Strategy & Order Composition</h4>
+                    <p data-key="dd_market_1">
+                        The 1,061+ order figure is largely composed of commitments from Chinese state-owned lessors (ICBC Leasing, CMB Leasing) and the "Big Three" airlines (Air China, China Eastern, China Southern). In April 2024, Air China and China Southern each announced confirmed orders for 100 aircraft, signaling a definitive shift from "supportive intent" to fleet integration.
+                    </p>
+                    <p data-key="dd_market_2">
+                        Strategically, the C919 is priced to compete. While the list price is around $99M (estimated), significantly lower than the A320neo's $110M+, the real value lies in providing a bargaining chip against the Airbus/Boeing duopoly. For the domestic market, it offers a "security backup" for capacity.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: DELIVERY -->
+        <div id="view-delivery" class="view-section hidden fade-in">
+            <div class="card p-8 mb-8 border-l-4 border-orange-500">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2" data-key="del_title">Production Ramp-up: The Dawn Challenge</h2>
+                <p class="text-slate-600 max-w-4xl" data-key="del_desc">
+                    Despite holding over 1,000 orders, C919 deliveries are currently in low-rate production. Compared to Airbus/Boeing's mature 50+ per month rate, C919 faces "production hell".
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="card p-6">
+                    <h3 class="font-bold text-slate-800 mb-6 flex items-center" data-key="del_bottle_title">
+                        <span class="bg-red-100 text-red-600 p-1 rounded mr-2">!</span> Core Bottlenecks
+                    </h3>
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <h4 class="font-bold text-slate-700 text-sm" data-key="bot_1_title">1. Supply Chain Choke Points</h4>
+                                <span class="tag-problem" data-key="risk_high">High Risk</span>
+                            </div>
+                            <p class="text-sm text-slate-600 leading-relaxed" data-key="bot_1_desc">
+                                Key subsystems (Engine, Avionics) rely on JV suppliers. Geopolitics and global shortages (e.g., Titanium) cause instability.
+                            </p>
+                        </div>
+                        <div class="border-t border-slate-100 pt-4">
+                            <div class="flex justify-between items-center mb-1">
+                                <h4 class="font-bold text-slate-700 text-sm" data-key="bot_2_title">2. Production Learning Curve</h4>
+                                <span class="tag-problem" data-key="risk_internal">Internal</span>
+                            </div>
+                            <p class="text-sm text-slate-600 leading-relaxed" data-key="bot_2_desc">
+                                Moving from prototypes to mass production requires refining assembly processes. Early batches face efficiency issues.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6 bg-slate-50">
+                    <h3 class="font-bold text-slate-800 mb-6 flex items-center" data-key="del_sol_title">
+                        <span class="bg-green-100 text-green-600 p-1 rounded mr-2">✓</span> Solutions
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h4 class="font-bold text-[#004797] text-sm mb-2" data-key="sol_1_title">Short Term: 2nd Assembly Line</h4>
+                            <p class="text-xs text-slate-600" data-key="sol_1_desc">
+                                Planning new assembly lines beyond Shanghai Pudong to physically expand capacity.
+                            </p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-sm">
+                            <h4 class="font-bold text-[#004797] text-sm mb-2" data-key="sol_2_title">Mid Term: Indigenization (Plan B)</h4>
+                            <p class="text-xs text-slate-600" data-key="sol_2_desc">
+                                Accelerating certification of CJ-1000A Engine and domestic avionics.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deep Dive: Production Details -->
+            <div class="card p-0">
+                <div class="deep-dive">
+                    <h4 data-key="dd_prod_title">Deep Dive: From "Handmade" to "Assembly Line"</h4>
+                    <p data-key="dd_prod_1">
+                        The first few C919s delivered to China Eastern (B-919A, B-919C) were largely assembled with a high degree of manual intervention and testing. COMAC is currently undergoing the painful transition to a pulsed production line. This involves standardizing the work breakdown structure (WBS) and ensuring parts arrive "Just-In-Time".
+                    </p>
+                    <p data-key="dd_prod_2">
+                        A critical bottleneck is the LEAP-1C engine availability. CFM International allocates engines based on global demand, and with Boeing/Airbus ramping up, COMAC must compete for slot allocation. This underscores the strategic urgency of the CJ-1000A domestic engine program, which is currently in intensive flight testing on the Y-20 testbed.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: OPS & MRO -->
+        <div id="view-ops" class="view-section hidden fade-in">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-slate-800" data-key="ops_title">Operations & MRO Research</h2>
+                <p class="text-slate-600 mt-2" data-key="ops_desc">Delivery is just the start. 20 years of MRO is the real commercial test.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="card p-5 bg-white">
+                    <div class="text-xs text-slate-500 font-bold uppercase" data-key="op_dispatch">Dispatch Reliability</div>
+                    <div class="text-2xl font-tech font-bold text-green-600 mt-2">~99.0%</div>
+                </div>
+                <div class="card p-5 bg-white">
+                    <div class="text-xs text-slate-500 font-bold uppercase" data-key="op_util">Daily Utilization</div>
+                    <div class="text-2xl font-tech font-bold text-blue-600 mt-2">6-8h</div>
+                </div>
+                <div class="card p-5 bg-white">
+                    <div class="text-xs text-slate-500 font-bold uppercase" data-key="op_load">Load Factor</div>
+                    <div class="text-2xl font-tech font-bold text-orange-500 mt-2">80%+</div>
+                </div>
+                 <div class="card p-5 bg-white">
+                    <div class="text-xs text-slate-500 font-bold uppercase" data-key="op_noise">Noise Feedback</div>
+                    <div class="text-2xl font-tech font-bold text-slate-700 mt-2" data-key="op_ex">Excellent</div>
+                </div>
+            </div>
+
+            <div class="card p-8 border-t-4 border-slate-600 bg-slate-50 mb-8">
+                <div class="flex items-center mb-6">
+                    <h3 class="text-xl font-bold text-slate-800" data-key="mro_title">MRO Engineering Challenges</h3>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                        <h4 class="font-bold text-slate-700 mb-2" data-key="mro_1_title">1. Spare Parts Network</h4>
+                        <p class="text-sm text-slate-600" data-key="mro_1_desc">Unlike mature fleets, C919 spares are centralized. High AOG risk in non-hub airports.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                        <h4 class="font-bold text-slate-700 mb-2" data-key="mro_2_title">2. Tech Manuals & Experience</h4>
+                        <p class="text-sm text-slate-600" data-key="mro_2_desc">Manuals need refinement. Maintenance currently relies heavily on COMAC on-site support.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                        <h4 class="font-bold text-slate-700 mb-2" data-key="mro_3_title">3. Composite Repair</h4>
+                        <p class="text-sm text-slate-600" data-key="mro_3_desc">Extensive composite usage requires strict environmental controls and expensive equipment for repairs.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deep Dive: Operational Feedback -->
+            <div class="card p-0">
+                <div class="deep-dive">
+                    <h4 data-key="dd_ops_title">Deep Dive: Real-world Pilot & Passenger Feedback</h4>
+                    <p data-key="dd_ops_1">
+                        <strong>Pilot Perspective:</strong> Pilots report that the C919's fly-by-wire control laws are stable and precise, comparable to the A320. The "active side-stick" feedback mechanism is a notable feature that improves situational awareness compared to passive sticks. However, some minor avionics software bugs require occasional resets on the ground.
+                    </p>
+                    <p data-key="dd_ops_2">
+                        <strong>Passenger Perspective:</strong> The "middle seat width" (18.5 inches vs standard 18) is a genuine selling point. The cabin noise level (approx. 70dB in cruise) is perceivably quieter than the B737NG. The lighting system and overhead bin space are modern and competitive.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: HISTORY -->
+        <div id="view-history" class="view-section hidden fade-in">
+             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6" data-key="hist_title">15 Years of R&D</h2>
+                    <div class="timeline-container">
+                        <div class="timeline-item major">
+                            <div class="timeline-dot"></div>
+                            <div class="text-xs font-tech text-slate-500 mb-1">2023.05.28</div>
+                            <h3 class="font-bold text-slate-800 text-lg" data-key="h_comm">Commercial Debut</h3>
+                            <p class="text-sm text-slate-600 mt-1" data-key="h_comm_desc">CES MU9191 Shanghai to Beijing.</p>
+                        </div>
+                        <div class="timeline-item major">
+                            <div class="timeline-dot"></div>
+                            <div class="text-xs font-tech text-slate-500 mb-1">2022.09.29</div>
+                            <h3 class="font-bold text-slate-800 text-lg" data-key="h_tc">Type Certificate (TC)</h3>
+                            <p class="text-sm text-slate-600 mt-1" data-key="h_tc_desc">Awarded by CAAC, validating airworthiness design.</p>
+                        </div>
+                        <div class="timeline-item major">
+                            <div class="timeline-dot"></div>
+                            <div class="text-xs font-tech text-slate-500 mb-1">2017.05.05</div>
+                            <h3 class="font-bold text-slate-800 text-lg" data-key="h_ff">First Flight</h3>
+                            <p class="text-sm text-slate-600 mt-1" data-key="h_ff_desc">Prototype B-001A takes off from Shanghai Pudong.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="text-xs font-tech text-slate-500 mb-1">2015.11.02</div>
+                            <h3 class="font-bold text-slate-800 text-lg" data-key="h_rollout">Rollout</h3>
+                            <p class="text-sm text-slate-600 mt-1" data-key="h_rollout_desc">First aircraft rolls off the assembly line.</p>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="text-xs font-tech text-slate-500 mb-1">2008.05.11</div>
+                            <h3 class="font-bold text-slate-800 text-lg" data-key="h_comac">COMAC Founded</h3>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-dot"></div>
+                            <div class="text-xs font-tech text-slate-500 mb-1">2007.02</div>
+                            <h3 class="font-bold text-slate-800 text-lg" data-key="h_launch">Project Launch</h3>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card p-0 h-fit">
+                    <div class="deep-dive rounded-lg">
+                        <h4 data-key="dd_rd_title">Deep Dive: The "Iron Bird" & Testing</h4>
+                        <p data-key="dd_rd_1">
+                            Before the first flight, COMAC built massive ground test rigs, known as "Iron Birds". These rigs physically simulate the hydraulic, electrical, and flight control systems. Thousands of failure modes were tested here.
+                        </p>
+                        <p data-key="dd_rd_2">
+                            <strong>Static Strength Test (2010s):</strong> In the first attempt at the ultimate load test (2.5G), a composite wingbox structure failed prematurely. This was a critical setback. The engineering team redesigned the reinforcement layers, analyzing the failure mechanics, and successfully passed the test on the second attempt. This "failure-redesign-success" cycle is the core of aviation R&D capability building.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 5: CERTIFICATION -->
+        <div id="view-cert" class="view-section hidden fade-in">
+            <div class="card p-8 mb-8">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2" data-key="cert_title">Airworthiness Certification</h2>
+                <p class="text-slate-600" data-key="cert_desc">Follows CCAR-25-R4 standards. Includes FAA shadow certification (via ARJ21 heritage/IPA) to validate CAAC's capability.</p>
+                
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div class="bg-blue-50 p-4 rounded text-center border border-blue-100">
+                        <div class="text-xs font-bold text-slate-500 mb-2">Phase 1</div>
+                        <div class="font-bold text-slate-800 text-sm" data-key="c_1">Conceptual Design</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded text-center border border-blue-100">
+                        <div class="text-xs font-bold text-slate-500 mb-2">Phase 2</div>
+                        <div class="font-bold text-slate-800 text-sm" data-key="c_2">Requirements Definition</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded text-center border border-blue-100">
+                        <div class="text-xs font-bold text-slate-500 mb-2">Phase 3</div>
+                        <div class="font-bold text-slate-800 text-sm" data-key="c_3">Compliance Planning</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded text-center border border-blue-100">
+                        <div class="text-xs font-bold text-slate-500 mb-2">Phase 4</div>
+                        <div class="font-bold text-slate-800 text-sm" data-key="c_4">Implementation</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded text-center border border-blue-100">
+                        <div class="text-xs font-bold text-slate-500 mb-2">Phase 5</div>
+                        <div class="font-bold text-slate-800 text-sm" data-key="c_5">Post-Certification</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deep Dive: Certification -->
+            <div class="card p-0">
+                <div class="deep-dive">
+                    <h4 data-key="dd_cert_title">Deep Dive: Natural Icing & The "Three Certificates"</h4>
+                    <p data-key="dd_cert_1">
+                        <strong>Natural Icing Trials:</strong> One of the most dangerous tests. C919 prototypes flew to the Great Lakes region in North America and Xinjiang, China, hunting for specific atmospheric icing conditions. The aircraft must demonstrate it can shed ice from wings and engines and fly safely with ice accretion.
+                    </p>
+                    <p data-key="dd_cert_2">
+                        <strong>The "Three Certificates":</strong>
+                        <br>1. <strong>TC (Type Certificate):</strong> The "Birth Certificate". Proves the design is safe. (Achieved 2022).
+                        <br>2. <strong>PC (Production Certificate):</strong> The "Quality Certificate". Proves the factory can replicate the design perfectly every time. (Achieved).
+                        <br>3. <strong>AC (Airworthiness Certificate):</strong> The "ID Card". Issued to each individual aircraft before delivery.
+                    </p>
+                    <p data-key="dd_cert_3">
+                        <strong>FAA/EASA Recognition:</strong> While C919 has CAAC certification, it aims for EASA (Europe) validation to open international markets. This process is ongoing and involves EASA experts reviewing CAAC's compliance findings. The "Shadow Certification" performed by FAA on the ARJ21 paved the way for the mutual recognition procedures (IPA) used today.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 6: COMPARISON -->
+        <div id="view-comparison" class="view-section hidden fade-in">
+             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <div class="card p-6 lg:col-span-2">
+                    <h3 class="font-bold text-slate-700 mb-4" data-key="comp_radar">Performance Radar</h3>
+                    <div class="chart-wrapper"><canvas id="radarChart"></canvas></div>
+                </div>
+                <div class="card p-6">
+                    <h3 class="font-bold text-slate-700 mb-4" data-key="comp_specs">Key Specs</h3>
+                    <ul class="space-y-4 text-sm text-slate-600">
+                        <li class="flex justify-between border-b pb-2">
+                            <span>MTOW</span>
+                            <span class="font-bold text-slate-800">78.9t (C919) vs 79.0t (A320neo)</span>
+                        </li>
+                        <li class="flex justify-between border-b pb-2">
+                            <span>Range</span>
+                            <span class="font-bold text-slate-800">5555km vs 6500km</span>
+                        </li>
+                        <li class="flex justify-between border-b pb-2">
+                            <span>Fuselage Width</span>
+                            <span class="font-bold text-slate-800">3.96m vs 3.95m</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Deep Dive: Competitive Analysis -->
+            <div class="card p-0">
+                <div class="deep-dive">
+                    <h4 data-key="dd_comp_title">Deep Dive: Why is C919 Heavier?</h4>
+                    <p data-key="dd_comp_1">
+                        Data shows the C919 is slightly heavier than the A320neo in Operating Empty Weight (OEW). This is typical for a manufacturer's first clean-sheet design. To ensure safety margins and pass static tests, engineers often over-design structural strength, adding weight.
+                    </p>
+                    <p data-key="dd_comp_2">
+                        However, the C919 counters this with the <strong>Supercritical Wing</strong> design and the LEAP-1C engine (which has a unique mounting structure compared to the 1A/1B). The wider fuselage (3.96m) allows for slightly wider seats, offering a tangible "comfort advantage" over the 737 MAX, which is notably narrower.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 7: RANGE -->
+        <div id="view-range" class="view-section hidden fade-in">
+             <div class="card p-4 bg-slate-900 flex justify-center items-center relative overflow-hidden mb-8" style="height: 500px;">
+                <canvas id="rangeCanvas" class="z-10"></canvas>
+            </div>
+            
+            <div class="card p-0">
+                <div class="deep-dive">
+                    <h4 data-key="dd_range_title">Deep Dive: Route Network Strategy</h4>
+                    <p data-key="dd_range_1">
+                        The Standard Range (4,075km) perfectly covers China's "Hu Huanyong Line" demographics and connects all major domestic hubs (Beijing, Shanghai, Guangzhou, Chengdu). It effectively replaces the 737/A320 on high-frequency trunk routes.
+                    </p>
+                    <p data-key="dd_range_2">
+                        The Extended Range (5,555km) is strategic for the "Belt and Road" initiative. It puts Singapore, Bangkok, Tokyo, and even parts of the Middle East within direct reach from Chinese hubs. This capability is essential for C919's future export potential to Southeast Asian airlines.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- TRANSLATION DATA ---
+        const translations = {
+            en: {
+                header_title: "C919 Lifecycle Research",
+                header_subtitle: "COMAC C919 Research & Analytics Platform",
+                nav_dashboard: "Dashboard",
+                nav_anatomy: "Anatomy (Pro)",
+                nav_delivery: "Delivery",
+                nav_ops: "Ops & MRO",
+                nav_history: "History",
+                nav_cert: "Certification",
+                nav_comparison: "Comparison",
+                nav_range: "Range Sim",
+                
+                ana_title: "Structural Anatomy & Supply Chain",
+                ana_desc: "Interactive Blueprint: Data Strictly Verified",
+                part_nose_title: "Nose & Radome",
+                part_nose_sup: "Chengdu Aircraft (AVIC)",
+                part_nose_desc: "Includes cockpit frame and radome. Key aerodynamic forming.",
+                part_fwd_title: "Fwd Fuselage",
+                part_fwd_sup: "Hongdu Aviation (AVIC)",
+                part_fwd_desc: "Al-Li alloy sections. Includes forward doors and cargo bay structure.",
+                part_wing_title: "Supercritical Wings",
+                part_wing_sup: "Xi'an Aircraft (AVIC)",
+                part_wing_desc: "Core aerodynamic design. Includes center wing box.",
+                part_eng_title: "Engine (Propulsion)",
+                part_eng_desc: "Model: LEAP-1C. Integrated Propulsion System (IPS). Domestic CJ-1000A under development.",
+                part_lg_title: "Landing Gear",
+                part_lg_desc: "Main and nose landing gear systems. Joint venture production.",
+                part_tail_title: "Aft Fuselage & Tail",
+                part_tail_sup: "Shenyang Aircraft (AVIC)",
+                part_tail_desc: "Vertical & horizontal stabilizers, tail cone structure.",
+                part_apu_title: "APU",
+                part_apu_desc: "Model: HGT750. Provides ground power and emergency air start.",
+                
+                stat_airframe: "Airframe Structure",
+                stat_domestic: "Domestic",
+                stat_avic: "AVIC (Chengdu/Xi'an/Shenyang)",
+                stat_sys: "Systems",
+                stat_global: "Global JV",
+                stat_int: "Integration",
+                stat_prop: "Proprietary",
+
+                dash_order: "Total Orders",
+                dash_order_sub: "Confirmed orders from Big 3",
+                dash_range: "Standard Range",
+                dash_range_sub: "Extended Range: 5,555 km",
+                dash_pax: "Max Passengers",
+                unit_seats: "seats",
+                dash_pax_sub: "Typical 2-class: 158 seats",
+                dash_del: "Delivery Status",
+                dash_del_val: "Ramp-up",
+                dash_del_sub: "Supply chain challenges",
+                intro_title: "The Crown Jewel of Chinese Aviation",
+                intro_text: "The C919 is China's first trunk jetliner developed to international airworthiness standards. It marks the transition of China's aviation industry from \"manufacturing\" to \"creation\". Targeting the duopoly of Boeing 737 and Airbus A320, the C919 aims for \"safer, more economical, comfortable, and eco-friendly\" operations.",
+                tag_al: "Al-Li Alloy",
+                tag_wing: "Supercritical Wing",
+                tag_ima: "IMA Avionics",
+                proj_status: "Project Status",
+                st_rd: "R&D",
+                st_tc: "Certified",
+                st_ops: "Commercial",
+                st_ramp: "Ramp-up",
+                dd_market_title: "Deep Dive: Market Strategy & Order Composition",
+                dd_market_1: "The 1,061+ order figure is largely composed of commitments from Chinese state-owned lessors (ICBC Leasing, CMB Leasing) and the \"Big Three\" airlines (Air China, China Eastern, China Southern). In April 2024, Air China and China Southern each announced confirmed orders for 100 aircraft, signaling a definitive shift from \"supportive intent\" to fleet integration.",
+                dd_market_2: "Strategically, the C919 is priced to compete. While the list price is around $99M (estimated), significantly lower than the A320neo's $110M+, the real value lies in providing a bargaining chip against the Airbus/Boeing duopoly. For the domestic market, it offers a \"security backup\" for capacity.",
+
+                del_title: "Production Ramp-up: The Dawn Challenge",
+                del_desc: "Despite holding over 1,000 orders, C919 deliveries are currently in low-rate production. Compared to Airbus/Boeing's mature 50+ per month rate, C919 faces \"production hell\".",
+                del_bottle_title: "Core Bottlenecks",
+                bot_1_title: "1. Supply Chain Choke Points",
+                risk_high: "High Risk",
+                bot_1_desc: "Key subsystems (Engine, Avionics) rely on JV suppliers. Geopolitics and global shortages (e.g., Titanium) cause instability.",
+                bot_2_title: "2. Production Learning Curve",
+                risk_internal: "Internal",
+                bot_2_desc: "Moving from prototypes to mass production requires refining assembly processes. Early batches face efficiency issues.",
+                del_sol_title: "Solutions",
+                sol_1_title: "Short Term: 2nd Assembly Line",
+                sol_1_desc: "Planning new assembly lines beyond Shanghai Pudong to physically expand capacity.",
+                sol_2_title: "Mid Term: Indigenization (Plan B)",
+                sol_2_desc: "Accelerating certification of CJ-1000A Engine and domestic avionics.",
+                dd_prod_title: "Deep Dive: From \"Handmade\" to \"Assembly Line\"",
+                dd_prod_1: "The first few C919s delivered to China Eastern (B-919A, B-919C) were largely assembled with a high degree of manual intervention and testing. COMAC is currently undergoing the painful transition to a pulsed production line. This involves standardizing the work breakdown structure (WBS) and ensuring parts arrive \"Just-In-Time\".",
+                dd_prod_2: "A critical bottleneck is the LEAP-1C engine availability. CFM International allocates engines based on global demand, and with Boeing/Airbus ramping up, COMAC must compete for slot allocation. This underscores the strategic urgency of the CJ-1000A domestic engine program, which is currently in intensive flight testing on the Y-20 testbed.",
+
+                ops_title: "Operations & MRO Research",
+                ops_desc: "Delivery is just the start. 20 years of MRO is the real commercial test.",
+                op_dispatch: "Dispatch Reliability",
+                op_util: "Daily Utilization",
+                op_load: "Load Factor",
+                op_noise: "Noise Feedback",
+                op_ex: "Excellent",
+                mro_title: "MRO Engineering Challenges",
+                mro_1_title: "1. Spare Parts Network",
+                mro_1_desc: "Unlike mature fleets, C919 spares are centralized. High AOG risk in non-hub airports.",
+                mro_2_title: "2. Tech Manuals & Experience",
+                mro_2_desc: "Manuals need refinement. Maintenance currently relies heavily on COMAC on-site support.",
+                mro_3_title: "3. Composite Repair",
+                mro_3_desc: "Extensive composite usage requires strict environmental controls and expensive equipment for repairs.",
+                dd_ops_title: "Deep Dive: Real-world Pilot & Passenger Feedback",
+                dd_ops_1: "<strong>Pilot Perspective:</strong> Pilots report that the C919's fly-by-wire control laws are stable and precise, comparable to the A320. The \"active side-stick\" feedback mechanism is a notable feature that improves situational awareness compared to passive sticks. However, some minor avionics software bugs require occasional resets on the ground.",
+                dd_ops_2: "<strong>Passenger Perspective:</strong> The \"middle seat width\" (18.5 inches vs standard 18) is a genuine selling point. The cabin noise level (approx. 70dB in cruise) is perceivably quieter than the B737NG. The lighting system and overhead bin space are modern and competitive.",
+
+                hist_title: "15 Years of R&D",
+                h_comm: "Commercial Debut",
+                h_comm_desc: "CES MU9191 Shanghai to Beijing.",
+                h_tc: "Type Certificate (TC)",
+                h_tc_desc: "Awarded by CAAC, validating airworthiness design.",
+                h_ff: "First Flight",
+                h_ff_desc: "Prototype B-001A takes off from Shanghai Pudong.",
+                h_rollout: "Rollout",
+                h_rollout_desc: "First aircraft rolls off the assembly line.",
+                h_comac: "COMAC Founded",
+                h_launch: "Project Launch",
+                dd_rd_title: "Deep Dive: The \"Iron Bird\" & Testing",
+                dd_rd_1: "Before the first flight, COMAC built massive ground test rigs, known as \"Iron Birds\". These rigs physically simulate the hydraulic, electrical, and flight control systems. Thousands of failure modes were tested here.",
+                dd_rd_2: "<strong>Static Strength Test (2010s):</strong> In the first attempt at the ultimate load test (2.5G), a composite wingbox structure failed prematurely. This was a critical setback. The engineering team redesigned the reinforcement layers, analyzing the failure mechanics, and successfully passed the test on the second attempt. This \"failure-redesign-success\" cycle is the core of aviation R&D capability building.",
+
+                cert_title: "Airworthiness Certification",
+                cert_desc: "Follows CCAR-25-R4 standards. Includes FAA shadow certification validation via ARJ21 heritage.",
+                c_1: "Conceptual Design",
+                c_2: "Requirements Definition",
+                c_3: "Compliance Planning",
+                c_4: "Implementation",
+                c_5: "Post-Certification",
+                dd_cert_title: "Deep Dive: Natural Icing & The \"Three Certificates\"",
+                dd_cert_1: "<strong>Natural Icing Trials:</strong> One of the most dangerous tests. C919 prototypes flew to the Great Lakes region in North America and Xinjiang, China, hunting for specific atmospheric icing conditions. The aircraft must demonstrate it can shed ice from wings and engines and fly safely with ice accretion.",
+                dd_cert_2: "<strong>The \"Three Certificates\":</strong> <br>1. <strong>TC (Type Certificate):</strong> The \"Birth Certificate\". Proves the design is safe. (Achieved 2022). <br>2. <strong>PC (Production Certificate):</strong> The \"Quality Certificate\". Proves the factory can replicate the design perfectly every time. <br>3. <strong>AC (Airworthiness Certificate):</strong> The \"ID Card\". Issued to each individual aircraft before delivery.",
+                dd_cert_3: "<strong>FAA/EASA Recognition:</strong> While C919 has CAAC certification, it aims for EASA (Europe) validation to open international markets. This process is ongoing and involves EASA experts reviewing CAAC's compliance findings. The \"Shadow Certification\" performed by FAA on the ARJ21 paved the way for the mutual recognition procedures (IPA) used today.",
+
+                comp_radar: "Performance Radar",
+                comp_specs: "Key Specifications",
+                lbl_range: "Range",
+                lbl_pax: "Capacity",
+                lbl_eff: "Efficiency",
+                lbl_comf: "Comfort",
+                lbl_price: "Price",
+                lbl_shanghai: "Shanghai (PVG)",
+                dd_comp_title: "Deep Dive: Why is C919 Heavier?",
+                dd_comp_1: "Data shows the C919 is slightly heavier than the A320neo in Operating Empty Weight (OEW). This is typical for a manufacturer's first clean-sheet design. To ensure safety margins and pass static tests, engineers often over-design structural strength, adding weight.",
+                dd_comp_2: "However, the C919 counters this with the <strong>Supercritical Wing</strong> design and the LEAP-1C engine (which has a unique mounting structure compared to the 1A/1B). The wider fuselage (3.96m) allows for slightly wider seats, offering a tangible \"comfort advantage\" over the 737 MAX, which is notably narrower.",
+
+                dd_range_title: "Deep Dive: Route Network Strategy",
+                dd_range_1: "The Standard Range (4,075km) perfectly covers China's \"Hu Huanyong Line\" demographics and connects all major domestic hubs (Beijing, Shanghai, Guangzhou, Chengdu). It effectively replaces the 737/A320 on high-frequency trunk routes.",
+                dd_range_2: "The Extended Range (5,555km) is strategic for the \"Belt and Road\" initiative. It puts Singapore, Bangkok, Tokyo, and even parts of the Middle East within direct reach from Chinese hubs. This capability is essential for C919's future export potential to Southeast Asian airlines."
+            },
+            zh: {
+                header_title: "C919 全生命周期研究",
+                header_subtitle: "COMAC C919 研究与分析平台",
+                nav_dashboard: "总览驾驶舱",
+                nav_anatomy: "结构解剖 (Pro)",
+                nav_delivery: "产能与交付",
+                nav_ops: "运营与MRO",
+                nav_history: "研发历程",
+                nav_cert: "适航取证",
+                nav_comparison: "竞品对比",
+                nav_range: "航程模拟",
+
+                ana_title: "C919 结构解剖与供应商全景",
+                ana_desc: "交互式蓝图：数据经严格核实",
+                part_nose_title: "雷达罩与机头 (Nose)",
+                part_nose_sup: "成飞民机 (成都)",
+                part_nose_desc: "包含驾驶舱骨架、雷达罩。采用复杂曲面成型工艺，气动外形的关键部分。",
+                part_fwd_title: "前机身 (Fwd Fuselage)",
+                part_fwd_sup: "洪都航空 (南昌)",
+                part_fwd_desc: "铝锂合金机身段。包含前登机门及前货舱结构。",
+                part_wing_title: "超临界机翼 (Wings)",
+                part_wing_sup: "西飞 (西安)",
+                part_wing_desc: "自主设计的超临界机翼及中翼盒。C919 气动效率的核心来源。",
+                part_eng_title: "发动机 (Engine)",
+                part_eng_desc: "型号：LEAP-1C。美法合资 (GE/Safran)。一体化推进系统。国产替代型号 CJ-1000A 研制中。",
+                part_lg_title: "起落架 (Landing Gear)",
+                part_lg_desc: "主起落架及前起落架系统。由德国利勃海尔与中航起落架公司合资生产。",
+                part_tail_title: "后机身与尾翼 (Tail)",
+                part_tail_sup: "沈飞 (沈阳)",
+                part_tail_desc: "后机身段、垂直尾翼、水平尾翼。包含复杂的尾椎结构。",
+                part_apu_title: "辅助动力 (APU)",
+                part_apu_desc: "型号：HGT750。提供地面电力、空调引气及空中应急电源启动。",
+
+                stat_airframe: "机体结构",
+                stat_domestic: "90%+ 国产",
+                stat_avic: "AVIC (成飞/西飞/沈飞/洪都)",
+                stat_sys: "系统设备",
+                stat_global: "全球合资",
+                stat_int: "总装集成",
+                stat_prop: "100% 自主",
+
+                dash_order: "累计订单",
+                dash_order_sub: "三大航司百架订单落地",
+                dash_range: "标准航程",
+                dash_range_sub: "增程型可达 5,555 km",
+                dash_pax: "最大载客",
+                unit_seats: "座",
+                dash_pax_sub: "典型两舱布局 158 座",
+                dash_del: "交付状态",
+                dash_del_val: "爬坡期",
+                dash_del_sub: "产能提升面临供应链挑战",
+                intro_title: "中国民航工业的“皇冠明珠”",
+                intro_text: "C919 是中国首款按照最新国际适航标准研制的干线民用飞机。它不仅是一架飞机，更是中国航空工业从“制造”向“创造”转型的标志。面对波音 737 和空客 A320 的双寡头垄断，C919 以“更安全、更经济、更舒适、更环保”为设计目标，正逐步走向全球市场。",
+                tag_al: "第三代铝锂合金",
+                tag_wing: "超临界机翼",
+                tag_ima: "综合模块化航电",
+                proj_status: "项目状态",
+                st_rd: "研发完成",
+                st_tc: "适航取证",
+                st_ops: "商业运营",
+                st_ramp: "产能爬坡",
+                dd_market_title: "深度分析：市场策略与订单构成",
+                dd_market_1: "1061+ 的订单量主要由中国国有租赁公司（工银租赁、招银租赁）和“三大航”（国航、东航、南航）构成。2024年4月，国航和南航分别宣布了100架的确认订单，标志着从“意向支持”向“机队整合”的实质性转变。",
+                dd_market_2: "战略上，C919 的定价极具竞争力。虽然预估目录价格约为 0.99 亿美元（显著低于 A320neo 的 1.1 亿美元以上），但其真正价值在于为国内市场提供了对抗波音/空客双寡头的议价筹码和运力“安全备份”。",
+
+                del_title: "产能爬坡：黎明前的攻坚战",
+                del_desc: "尽管手握千架订单，C919 的交付速度目前仍处于低位运行。对比空客/波音月产50+架的成熟体系，C919 正面临“产能地狱”的考验。",
+                del_bottle_title: "交付不顺的三大核心阻力",
+                bot_1_title: "1. 全球供应链“卡脖子”风险",
+                risk_high: "极高风险",
+                bot_1_desc: "C919 的动力、航电等关键子系统依赖欧美合资供应商。受地缘政治及全球供应链紧张（如钛合金短缺）影响，零部件到货率不稳定。",
+                bot_2_title: "2. 生产工艺的“学习曲线”",
+                risk_internal: "内部挑战",
+                bot_2_desc: "从试制几架原型机到批量生产，需要磨合装配工艺。早期批次往往面临装配效率低、返工率高等问题。",
+                del_sol_title: "破局之道与产能规划",
+                sol_1_title: "短期：第二总装线",
+                sol_1_desc: "除了上海浦东祝桥基地的第一总装线，商飞正在规划和建设第二条总装线，物理扩容。",
+                sol_2_title: "中期：国产替代 (Plan B)",
+                sol_2_desc: "加速 CJ-1000A 发动机及国产航电系统的适航验证。",
+                dd_prod_title: "深度分析：从“手工作坊”到“脉动产线”",
+                dd_prod_1: "交付给东航的首批 C919（B-919A, B-919C）在很大程度上是依靠大量人工干预和测试组装完成的。中国商飞目前正在经历向脉动式生产线转型的阵痛期。这涉及到工作分解结构 (WBS) 的标准化以及确保零部件“准时化” (JIT) 到位。",
+                dd_prod_2: "一个关键瓶颈是 LEAP-1C 发动机的供应。CFM 国际根据全球需求分配发动机，随着波音/空客产量的回升，商飞必须竞争配额。这凸显了 CJ-1000A 国产发动机项目的战略紧迫性，该发动机目前正在 Y-20 试飞台上进行密集试飞。",
+
+                ops_title: "运营与MRO研究",
+                ops_desc: "飞机交付只是开始，长达20年的运营维护 (MRO) 才是考验商业成功的关键。",
+                op_dispatch: "签派可靠度",
+                op_util: "日利用率",
+                op_load: "客座率",
+                op_noise: "噪音反馈",
+                op_ex: "优异",
+                mro_title: "维修工程深度研究：痛点与挑战",
+                mro_1_title: "1. 航材保障网络未成熟",
+                mro_1_desc: "成熟机型拥有遍布全球的航材库。C919 目前航材储备主要集中在上海、成都等少数基地。非枢纽机场故障停场 (AOG) 风险较高。",
+                mro_2_title: "2. 技术手册与排故经验",
+                mro_2_desc: "飞机维修手册 (AMM) 在初期往往指引不够详尽。机务人员缺乏经验，目前主要依靠商飞派驻的“保姆式”现场支援。",
+                mro_3_title: "3. 复合材料维修门槛",
+                mro_3_desc: "C919 机身大量使用碳纤维复材。复材损伤的检测（NDT）和修补需要极其严苛的环境（温度/湿度）和昂贵的设备。",
+                dd_ops_title: "深度分析：飞行员与乘客的真实反馈",
+                dd_ops_1: "<strong>飞行员视角：</strong> 飞行员反馈 C919 的电传飞控控制律稳定且精准，操控感与 A320 相似。“主动侧杆”反馈机制是一个显著的亮点，相比被动侧杆提供了更好的态势感知。不过，部分航电软件存在小 Bug，偶尔需要在地面重置系统。",
+                dd_ops_2: "<strong>乘客视角：</strong> “中间座位加宽”（18.5英寸 vs 标准18英寸）是真正的卖点。巡航阶段的客舱噪音（约 70分贝）明显低于波音 737NG，语言交流轻松。情景灯光系统和行李架空间设计现代且具有竞争力。",
+
+                hist_title: "十五年磨一剑：研发历程",
+                h_comm: "商业首航",
+                h_comm_desc: "东航 MU9191 航班从上海虹桥飞抵北京首都。",
+                h_tc: "获颁 TC 证",
+                h_tc_desc: "获得中国民航局颁发的型号合格证，验证设计适航。",
+                h_ff: "成功首飞",
+                h_ff_desc: "原型机 B-001A 在上海浦东机场起飞。",
+                h_rollout: "总装下线",
+                h_rollout_desc: "首架机完成总装，亮相。",
+                h_comac: "中国商飞成立",
+                h_launch: "项目立项",
+                dd_rd_title: "深度分析：“铁鸟”与极限测试",
+                dd_rd_1: "在首飞之前，商飞建造了巨大的地面测试平台，即“铁鸟台”。这些平台物理模拟了液压、电气和飞控系统。成千上万种故障模式在这里进行了测试。",
+                dd_rd_2: "<strong>静力强度试验 (2010年代)：</strong> 在首次尝试极限载荷 (2.5G) 测试时，复合材料翼盒结构发生了提前断裂。这是一次重大的挫折。工程团队重新设计了加强层，分析了失效机理，并在第二次尝试中成功通过。这种“失败-再设计-成功”的循环是建立航空研发能力的核心。",
+
+                cert_title: "适航取证：通往天空的“大考”",
+                cert_desc: "遵循 CCAR-25-R4 标准，历经概念设计、要求确定、计划制定、计划实施、证后管理五大阶段。包括FAA影子审查。",
+                c_1: "概念设计阶段",
+                c_2: "要求确定阶段",
+                c_3: "符合性计划制定",
+                c_4: "计划实施 (试飞)",
+                c_5: "证后管理",
+                dd_cert_title: "深度分析：自然结冰与“三证”齐全",
+                dd_cert_1: "<strong>自然结冰试飞：</strong> 最危险的测试之一。C919 原型机曾远赴北美五大湖区和中国新疆，追逐特定的结冰气象条件。飞机必须证明其机翼和发动机能够有效除冰，并在带冰条件下安全飞行。",
+                dd_cert_2: "<strong>“三证”详解：</strong> <br>1. <strong>TC (型号合格证)：</strong> “准生证”。证明设计是安全的。(2022年获颁)。 <br>2. <strong>PC (生产许可证)：</strong> “准产证”。证明工厂能每次都完美地复刻设计。 <br>3. <strong>AC (适航证)：</strong> “身份证”。每架飞机交付前单独颁发。",
+                dd_cert_3: "<strong>FAA/EASA 认可：</strong> 虽然 C919 拥有 CAAC 认证，但其目标是通过 EASA (欧洲) 的认可验证以打开国际市场。这一过程正在进行中，涉及 EASA 专家审查 CAAC 的合规性调查结果。FAA 对 ARJ21 进行的“影子审查”为如今使用的双边适航实施程序 (IPA) 铺平了道路。",
+
+                comp_radar: "综合性能雷达图",
+                comp_specs: "关键规格",
+                lbl_range: "航程",
+                lbl_pax: "载客量",
+                lbl_eff: "燃油效率",
+                lbl_comf: "舒适度",
+                lbl_price: "价格优势",
+                lbl_shanghai: "上海 (PVG)",
+                dd_comp_title: "深度分析：C919 为什么更重？",
+                dd_comp_1: "数据显示，C919 的使用空重 (OEW) 略高于 A320neo。对于制造商的首个全新设计来说，这很典型。为了确保安全裕度并通过静力测试，工程师往往会过度设计结构强度，从而增加重量。",
+                dd_comp_2: "然而，C919 通过<strong>超临界机翼</strong>设计和 LEAP-1C 发动机（其悬挂结构与 1A/1B 不同，是一体式的）来抵消这一劣势。3.96米的宽机身允许略宽的座椅，提供了比 737 MAX 明显更好的“舒适度优势”。",
+
+                dd_range_title: "深度分析：航线网络战略",
+                dd_range_1: "标准航程 (4,075km) 完美覆盖了中国“胡焕庸线”的人口分布，连接了所有主要国内枢纽（北京、上海、广州、成都）。它有效地在搞频次干线航线上替代了 737/A320。",
+                dd_range_2: "增程型 (5,555km) 对“一带一路”倡议具有战略意义。它将新加坡、曼谷、东京甚至部分中东地区纳入了中国枢纽的直飞范围。这种能力对于 C919 未来出口到东南亚航空公司至关重要。"
+            }
+        };
+
+        let currentLang = 'en';
+
+        // --- LANGUAGE SWITCHER ---
+        function toggleLanguage() {
+            const btn = document.getElementById('langSwitch');
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            
+            if(currentLang === 'zh') {
+                btn.classList.remove('en'); btn.classList.add('zh');
+            } else {
+                btn.classList.remove('zh'); btn.classList.add('en');
+            }
+
+            // Update DOM Elements
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if(translations[currentLang][key]) {
+                    el.innerHTML = translations[currentLang][key]; // Use innerHTML to parse <strong> tags
+                }
+            });
+
+            // Update Charts
+            renderRadar();
+            drawRangeMap();
+        }
+
+        // --- NAV LOGIC ---
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById('view-' + viewId).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-' + viewId).classList.add('active');
+
+            if(viewId === 'range') drawRangeMap();
+            if(viewId === 'comparison') renderRadar();
+        }
+
+        // --- RADAR CHART ---
+        let radarChartInstance = null;
+        function renderRadar() {
+            if(radarChartInstance) radarChartInstance.destroy();
+            const ctxRadar = document.getElementById('radarChart').getContext('2d');
+            const t = translations[currentLang];
+            
+            radarChartInstance = new Chart(ctxRadar, {
+                type: 'radar',
+                data: {
+                    labels: [t.lbl_range, t.lbl_pax, t.lbl_eff, t.lbl_comf, t.lbl_price],
+                    datasets: [
+                        { label: 'C919', data: [85, 88, 90, 95, 95], borderColor: '#004797', backgroundColor: 'rgba(0, 71, 151, 0.2)', borderWidth: 2 },
+                        { label: 'A320neo', data: [95, 92, 95, 90, 80], borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.2)', borderWidth: 2 },
+                        { label: '737 MAX 8', data: [92, 90, 92, 85, 85], borderColor: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.2)', borderWidth: 2 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { suggestedMin: 50, suggestedMax: 100 } } }
+            });
+        }
+
+        // --- RANGE MAP ---
+        function drawRangeMap() {
+            const canvas = document.getElementById('rangeCanvas');
+            if(!canvas.offsetParent) return;
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height, cx = w / 2, cy = h / 2;
+            const t = translations[currentLang];
+
+            ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, w, h);
+            const scale = h / 900; 
+            
+            // Circles
+            ctx.beginPath(); ctx.arc(cx, cy, 407.5 * scale * 0.8, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0, 71, 151, 0.3)'; ctx.fill(); ctx.strokeStyle = '#004797'; ctx.stroke();
+            ctx.beginPath(); ctx.arc(cx, cy, 555.5 * scale * 0.8, 0, Math.PI * 2); ctx.fillStyle = 'rgba(56, 189, 248, 0.1)'; ctx.fill(); ctx.strokeStyle = '#38bdf8'; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
+
+            // Center
+            ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill();
+            ctx.font = '12px sans-serif'; ctx.fillStyle = '#fff'; ctx.fillText(t.lbl_shanghai, cx + 10, cy + 4);
+        }
+
+        // --- INIT ---
+        window.addEventListener('resize', drawRangeMap);
+        switchView('dashboard'); // Default view
+    </script>
+</body>
+</html>
