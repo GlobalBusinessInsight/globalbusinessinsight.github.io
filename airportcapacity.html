@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single Runway Airport Capacity Study - Detailed Analysis</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@500;700&family=Noto+Sans:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- 
+       Design System: "Aviation Analytic Pro"
+       - Primary: Slate (Professionalism)
+       - Accent: Indigo (Data/Tech) & Emerald (Efficiency)
+    -->
+    <style>
+        :root {
+            --font-serif: 'Noto Serif', 'Noto Serif SC', serif;
+            --font-sans: 'Noto Sans', 'Noto Sans SC', sans-serif;
+        }
+        body {
+            font-family: var(--font-sans);
+            background-color: #f8fafc; /* Slate 50 */
+            color: #334155; /* Slate 700 */
+            line-height: 1.6;
+        }
+        h1, h2, h3, h4, .serif {
+            font-family: var(--font-serif);
+        }
+        
+        /* Layout Utilities */
+        .report-container {
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            background-color: #ffffff;
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Chart constraints */
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        /* Navigation Active State */
+        .nav-btn.active {
+            background-color: #2563eb; /* Blue 600 */
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Language Toggle */
+        .lang-toggle {
+            display: flex;
+            background: #cbd5e1;
+            border-radius: 20px;
+            cursor: pointer;
+            position: relative;
+            width: 76px;
+            height: 32px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            user-select: none;
+            transition: background 0.3s;
+        }
+        .lang-toggle:hover {
+            background: #94a3b8;
+        }
+        .lang-toggle::before {
+            content: '';
+            position: absolute;
+            background: white;
+            width: 34px;
+            height: 26px;
+            border-radius: 16px;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+        .lang-toggle.zh::before {
+            transform: translateX(36px);
+        }
+        .lang-toggle span {
+            z-index: 1;
+        }
+        .lang-toggle.en .en-text { color: #0f172a; }
+        .lang-toggle.zh .zh-text { color: #0f172a; }
+        
+        /* Smooth fade for view switching */
+        .animate-fade {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm border-b border-slate-200">
+        <div class="report-container py-3 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
+            <div class="flex items-center w-full md:w-auto justify-between md:justify-start">
+                <div class="flex items-center space-x-3 mr-6">
+                    <div class="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-200">✈</div>
+                    <div class="flex flex-col">
+                        <span class="font-bold text-slate-800 leading-tight" data-key="nav_title">Airport Capacity</span>
+                        <span class="text-[10px] text-slate-500 uppercase tracking-wider">Research Lab</span>
+                    </div>
+                </div>
+                
+                <!-- Language Switcher -->
+                <div class="lang-toggle en" id="langSwitch" onclick="toggleLanguage()">
+                    <span class="en-text">EN</span>
+                    <span class="zh-text">中</span>
+                </div>
+            </div>
+            
+            <div class="flex space-x-1 bg-slate-100 p-1 rounded-lg overflow-x-auto w-full md:w-auto">
+                <button onclick="switchTab('overview')" id="nav-overview" class="nav-btn active flex-1 md:flex-none px-4 py-2 rounded-md text-xs sm:text-sm text-slate-600 transition-all" data-key="tab_overview">Analysis</button>
+                <button onclick="switchTab('bomba')" id="nav-bomba" class="nav-btn flex-1 md:flex-none px-4 py-2 rounded-md text-xs sm:text-sm text-slate-600 transition-all" data-key="tab_mumbai">Mumbai Case</button>
+                <button onclick="switchTab('sfo')" id="nav-sfo" class="nav-btn flex-1 md:flex-none px-4 py-2 rounded-md text-xs sm:text-sm text-slate-600 transition-all" data-key="tab_sfo">SFO Tech</button>
+                <button onclick="switchTab('lab')" id="nav-lab" class="nav-btn flex-1 md:flex-none px-4 py-2 rounded-md text-xs sm:text-sm text-slate-600 transition-all" data-key="tab_lab">Simulation</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="report-container">
+
+        <!-- Header -->
+        <header class="mb-12 text-center">
+            <div class="inline-flex items-center px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full mb-4 border border-indigo-100 shadow-sm" data-key="header_tag">
+                <span class="w-2 h-2 bg-indigo-500 rounded-full mr-2 animate-pulse"></span>
+                In-Depth Technical Report
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight" data-key="header_title">The Physics of Saturation:<br>Single Runway Capacity Limits</h1>
+            <p class="text-slate-600 max-w-3xl mx-auto text-lg leading-relaxed" data-key="header_desc">
+                An investigation into the aerodynamic and operational bottlenecks that define global aviation throughput. 
+                <br>Featuring deep-dives into <span class="text-indigo-700 font-semibold decoration-indigo-200 underline decoration-2 underline-offset-2">Mumbai's extreme optimization</span> and <span class="text-purple-700 font-semibold decoration-purple-200 underline decoration-2 underline-offset-2">SFO's paired approach technology</span>.
+            </p>
+        </header>
+
+        <!-- VIEW: OVERVIEW -->
+        <div id="view-overview" class="view-section block animate-fade">
+            <!-- Key Metrics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card border-l-4 border-l-indigo-500 relative group hover:-translate-y-1 transition-transform">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"/></svg>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-2" data-key="card_1_title">Theoretical Ceiling</div>
+                        <div class="text-4xl font-serif font-bold text-slate-800">~60</div>
+                        <div class="text-sm text-slate-500 font-medium mb-3" data-key="unit_movements">Movements / Hour</div>
+                        <div class="text-xs text-slate-500 leading-relaxed border-t border-slate-100 pt-3" data-key="card_1_desc">
+                            The hard limit defined by radar separation minima (3NM) and average approach speeds (140kts).
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-l-4 border-l-emerald-500 relative group hover:-translate-y-1 transition-transform">
+                    <div class="card-body">
+                        <div class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2" data-key="card_2_title">Mumbai (BOM) Record</div>
+                        <div class="text-4xl font-serif font-bold text-slate-800">1,003</div>
+                        <div class="text-sm text-slate-500 font-medium mb-3" data-key="unit_movements_day">Movements / 24 Hours</div>
+                        <div class="text-xs text-slate-500 leading-relaxed border-t border-slate-100 pt-3" data-key="card_2_desc">
+                            Achieved on a single active runway (27) via "High Speed Exit" compliance and aggressive mixed-mode interleaving.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-l-4 border-l-purple-500 relative group hover:-translate-y-1 transition-transform">
+                    <div class="card-body">
+                        <div class="text-xs font-bold text-purple-600 uppercase tracking-wider mb-2" data-key="card_3_title">SFO Parallel Throughput</div>
+                        <div class="text-4xl font-serif font-bold text-slate-800">60 <span class="text-2xl text-slate-400">vs</span> 30</div>
+                        <div class="text-sm text-slate-500 font-medium mb-3" data-key="unit_vmc_imc">VMC (Clear) vs IMC (Cloudy)</div>
+                        <div class="text-xs text-slate-500 leading-relaxed border-t border-slate-100 pt-3" data-key="card_3_desc">
+                            Capacity halves when clouds drop. SFO's parallel runways are too close (750ft) for standard independent ops.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Comparison Chart -->
+            <div class="card">
+                <div class="card-header flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-800" data-key="chart_title">Benchmarking Global Efficiency</h3>
+                        <p class="text-xs text-slate-500 mt-1" data-key="chart_subtitle">Comparing peak hourly sustained movement rates (Arr+Dep) on constrained runway configurations.</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-wrapper">
+                        <canvas id="globalChart"></canvas>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-6 text-center italic" data-key="chart_note">
+                        * Comparison of "Constrained Operations": Included are single runways (LGW, BOM, SAN, old SZX) and dependent parallel runways (SFO in IMC).
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="font-bold text-lg text-slate-800" data-key="core_title">The Anatomy of a Bottleneck</h3>
+                </div>
+                <div class="card-body grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                    <div>
+                        <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold mr-3">1</div>
+                            <h4 class="font-bold text-slate-800" data-key="constraint_1_title">Wake Turbulence: The Invisible Wall</h4>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-4 text-justify" data-key="constraint_1_desc">
+                            Every aircraft generates powerful counter-rotating vortices from its wingtips—essentially horizontal tornadoes that can flip a smaller trailing aircraft. This is not a bureaucratic rule; it is physics. <br><br>
+                            To survive, a Medium aircraft (like A320) must stay <strong>5 nautical miles</strong> behind a Heavy (like B777). At approach speeds, this creates a mandatory time gap of ~2 minutes where the runway sits empty. Capacity is purely a function of how fast these vortices dissipate.
+                        </p>
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                            <h5 class="text-xs font-bold text-slate-700 uppercase mb-2" data-key="recat_title">Solution: RECAT-EU/US</h5>
+                            <p class="text-xs text-slate-500 leading-relaxed" data-key="recat_desc">
+                                Traditional categories (Heavy/Medium/Light) were too broad. New "Recategorization" standards split aircraft into 6+ tiers (e.g., 'Upper Heavy', 'Lower Heavy'), allowing controllers to safely shave off 0.5-1.0 NM separation in specific pairs, boosting capacity by 5-10%.
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 rounded bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold mr-3">2</div>
+                            <h4 class="font-bold text-slate-800" data-key="constraint_2_title">ROT: The Runway Occupancy Time</h4>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed mb-4 text-justify" data-key="constraint_2_desc">
+                            ROT is the stopwatch measurement from the moment an aircraft crosses the landing threshold until its tail completely clears the runway line. <br><br>
+                            A trailing aircraft cannot be cleared to land (or in some regulations, cross the threshold) until the runway is clear. High ROT is a capacity killer. If pilots miss a "High Speed Exit" and have to taxi to the end, a 50-second routine turns into a 90-second delay, forcing the next arrival to go around.
+                        </p>
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                            <h5 class="text-xs font-bold text-slate-700 uppercase mb-2" data-key="geo_title">Geometry Matters</h5>
+                            <p class="text-xs text-slate-500 leading-relaxed" data-key="geo_desc">
+                                Airports like Mumbai and Gatwick design "Rapid Exit Taxiways" (RETs) angled at 30 degrees, allowing planes to turn off at 50 knots (93 km/h). Standard 90-degree exits require slowing to 10 knots, adding 20+ seconds to ROT.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: MUMBAI (BOM) -->
+        <div id="view-bomba" class="view-section hidden animate-fade">
+            <div class="card border-t-4 border-t-emerald-600">
+                <div class="card-body">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <h2 class="text-2xl font-bold text-slate-900" data-key="bom_title">Case Study: The Mumbai Miracle</h2>
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full mt-2 md:mt-0">Efficiency Level: Extreme</span>
+                    </div>
+                    
+                    <p class="text-slate-700 mb-8 leading-relaxed text-lg" data-key="bom_intro">
+                        Mumbai (BOM) operates in a league of its own. While surrounded by urban density that prevents adding parallel runways, it handles traffic volumes comparable to dual-runway airports like Heathrow. The secret lies in a high-pressure, high-precision operational culture.
+                    </p>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                        <!-- Strategy List -->
+                        <div class="space-y-6">
+                            
+                            <div class="flex">
+                                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-100 text-emerald-600 flex items-center justify-center font-bold text-lg mr-4 border border-slate-200">1</div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800" data-key="strat_1_title">Psychology of "Immediate Exit"</h4>
+                                    <p class="text-sm text-slate-600 mt-2 leading-relaxed" data-key="strat_1_desc">
+                                        In Mumbai, ROT is not just a metric; it's a mandate. Pilots are briefed to apply maximum safe braking upon touchdown. ATC monitors braking performance. If a pilot rolls too long and misses the Rapid Exit Taxiway (N8 or N6), they disrupt the "conveyor belt" and may face an inquiry. The target ROT is a blistering 48-50 seconds.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex">
+                                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-100 text-emerald-600 flex items-center justify-center font-bold text-lg mr-4 border border-slate-200">2</div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800" data-key="strat_2_title">The "Inter-Arrival" Departure</h4>
+                                    <p class="text-sm text-slate-600 mt-2 leading-relaxed" data-key="strat_2_desc">
+                                        Most airports run segregated modes (one runway for arrival, one for departure). BOM runs "Mixed Mode" on a single strip. Controllers insert a departure into the gap between two arrivals. <br>
+                                        <strong>The Sequence:</strong> Arrival 1 touches down -> Departure 1 enters runway immediately -> Arrival 1 clears runway -> Departure 1 takes off -> Arrival 2 crosses threshold. The margin for error is often less than 15 seconds.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex">
+                                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-slate-100 text-emerald-600 flex items-center justify-center font-bold text-lg mr-4 border border-slate-200">3</div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800" data-key="strat_3_title">Homogenizing the Fleet</h4>
+                                    <p class="text-sm text-slate-600 mt-2 leading-relaxed" data-key="strat_3_desc">
+                                        Variance is the enemy of capacity. A slow propeller plane or a private jet acts like a stone in a flowing river. During peak hours (0800-1100, 1800-2200), BOM heavily restricts non-scheduled flights. By ensuring everyone flies at similar approach speeds (approx 140-150kts), ATC can compress gaps to the absolute minimum.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Visual Diagram -->
+                        <div class="flex flex-col space-y-4">
+                            <div class="bg-slate-900 rounded-xl p-6 relative overflow-hidden flex flex-col justify-center h-80 shadow-2xl">
+                                <div class="absolute top-4 left-4 text-white/40 text-xs font-mono tracking-widest" data-key="diag_title">LIVE OPS VISUALIZATION</div>
+                                
+                                <!-- Runway Visual -->
+                                <div class="w-full h-16 bg-slate-700 border-y-2 border-dashed border-slate-500 relative flex items-center mb-10 group cursor-default">
+                                    <span class="text-white/20 text-4xl font-bold ml-4 select-none">27</span>
+                                    
+                                    <!-- Departure Plane -->
+                                    <div class="absolute left-1/3 transition-all duration-1000 transform group-hover:translate-x-32">
+                                        <div class="text-3xl filter drop-shadow-lg animate-pulse">🛫</div>
+                                        <div class="absolute -bottom-6 w-32 text-[10px] text-emerald-400 font-mono" data-key="diag_dep">
+                                            DEPARTURE<br>Rolling (T-0s)
+                                        </div>
+                                    </div>
+
+                                    <!-- Exiting Plane -->
+                                    <div class="absolute right-1/4 -top-8 text-2xl opacity-50 transform rotate-12">
+                                        🛬
+                                    </div>
+                                    <div class="absolute right-10 -top-12 text-[10px] text-slate-400 font-mono text-right leading-tight" data-key="diag_exit">
+                                        PREV ARRIVAL<br>Clearing (T-45s)
+                                    </div>
+                                </div>
+
+                                <!-- Approach Path -->
+                                <div class="w-full h-1 bg-gradient-to-l from-blue-500/50 to-transparent relative mt-2">
+                                    <!-- Arrival Plane -->
+                                    <div class="absolute right-12 -top-4 text-3xl filter drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">🛬</div>
+                                    <div class="absolute right-4 -bottom-8 text-[10px] text-blue-400 font-mono text-right" data-key="diag_arr">
+                                        NEXT ARRIVAL<br>Dist: 3.5 NM<br>Time to Threshold: 90s
+                                    </div>
+                                    
+                                    <!-- Separation Marker -->
+                                    <div class="absolute right-0 top-0 h-full w-32 border-b-2 border-red-500/30"></div>
+                                    <div class="absolute right-16 -top-8 text-[9px] text-red-400/80 uppercase" data-key="diag_sep">Min Separation</div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-xs text-indigo-800 italic text-center" data-key="diag_quote">
+                                "The departure must be rolling before the arrival crosses the 4 mile mark. It's a game of seconds."
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: SFO -->
+        <div id="view-sfo" class="view-section hidden animate-fade">
+            <div class="card border-t-4 border-t-purple-600">
+                <div class="card-body">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <h2 class="text-2xl font-bold text-slate-900" data-key="sfo_title">SFO Tech: Breaking the 2500ft Rule</h2>
+                        <span class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full mt-2 md:mt-0">Tech Level: Advanced</span>
+                    </div>
+
+                    <p class="text-slate-700 mb-8 leading-relaxed text-lg" data-key="sfo_intro">
+                        San Francisco (SFO) presents a unique geometric nightmare: two parallel runways (28L & 28R) separated by only <strong>750 feet (228m)</strong>. Standard FAA safety rules require 4,300ft separation for independent simultaneous instrument approaches. Without special tech, SFO is legally a single-runway airport in bad weather.
+                    </p>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                        <!-- Technical Breakdown -->
+                        <div class="space-y-8">
+                            <div class="relative pl-6 border-l-2 border-purple-200">
+                                <h3 class="font-bold text-purple-900 text-lg mb-2" data-key="prm_title">1. PRM (Precision Runway Monitor)</h3>
+                                <p class="text-sm text-slate-600 leading-relaxed text-justify" data-key="prm_desc">
+                                    Standard airport radar rotates every 4.8 seconds—too slow to detect a blunder at 750ft separation. SFO uses an electronically scanned PRM radar with a <strong>1.0 second update rate</strong>. <br>
+                                    A dedicated "Monitor Controller" watches the "No Transgression Zone" (NTZ) between the runways. They have an override frequency. If a plane twitches toward the NTZ, the controller instantly commands a "Breakout" maneuver to the parallel aircraft.
+                                </p>
+                            </div>
+                            
+                            <div class="relative pl-6 border-l-2 border-purple-200">
+                                <h3 class="font-bold text-purple-900 text-lg mb-2" data-key="soia_title">2. SOIA (Simultaneous Offset Instrument Approach)</h3>
+                                <p class="text-sm text-slate-600 leading-relaxed text-justify" data-key="soia_desc">
+                                    This is the workaround for cloudy days. 28L flies a straight ILS approach. 28R flies an LDA approach offset by 3 degrees. The planes fly in clouds, paired via PRM radar. <br>
+                                    <strong>The Critical Moment:</strong> They must break out of the clouds by ~2,100ft. The 28R pilot <em>must</em> visually see the 28L plane and the runway to continue. If they see it, they side-step to align and land. If the clouds are too low (below 1,600ft), SOIA fails, and the capacity crashes.
+                                </p>
+                            </div>
+
+                            <div class="bg-rose-50 p-5 rounded-lg border border-rose-100">
+                                <h3 class="font-bold text-rose-800 mb-2 text-sm uppercase" data-key="weather_title">The "Marine Layer" Curse</h3>
+                                <p class="text-xs text-rose-700 leading-relaxed" data-key="weather_desc">
+                                    San Francisco's famous fog often sits right at 1,000ft. This is the "kill zone" for operations. It's too low for SOIA visual confirmation, forcing SFO to revert to single-stream arrivals. This reduces arrival capacity from 60 to 30 per hour, triggering the infamous "Ground Delay Programs" that ripple across the entire US network.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Visualization for SFO -->
+                        <div class="bg-slate-900 rounded-xl overflow-hidden shadow-2xl h-96 relative border border-slate-700">
+                            <canvas id="sfoCanvas"></canvas>
+                            
+                            <!-- Legend Overlay -->
+                            <div class="absolute bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur border-t border-slate-700 p-3 flex justify-around text-[10px] text-slate-300">
+                                <div class="flex items-center"><span class="w-3 h-3 bg-blue-500 rounded-full mr-2"></span> <span data-key="legend_28l">28L (Straight ILS)</span></div>
+                                <div class="flex items-center"><span class="w-3 h-3 bg-purple-500 rounded-full mr-2"></span> <span data-key="legend_28r">28R (Offset LDA)</span></div>
+                                <div class="flex items-center"><span class="w-3 h-3 border border-red-500 mr-2"></span> <span data-key="legend_ntz">NTZ (No Go Zone)</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: LAB (Interactive) -->
+        <div id="view-lab" class="view-section hidden animate-fade">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Controls -->
+                <div class="card lg:col-span-1 h-fit">
+                    <div class="card-header bg-slate-50">
+                        <h3 class="font-bold text-slate-700 flex items-center" data-key="lab_params">
+                            <svg class="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                            Simulation Parameters
+                        </h3>
+                    </div>
+                    <div class="card-body space-y-8">
+                        
+                        <div>
+                            <label class="flex justify-between text-sm font-bold text-slate-700 mb-2">
+                                <span data-key="lbl_speed">Approach Speed (Vref)</span>
+                                <span class="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-xs" id="disp-speed">140 kts</span>
+                            </label>
+                            <input type="range" id="in-speed" min="120" max="170" value="140" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                            <p class="text-xs text-slate-500 mt-2 leading-tight" data-key="hint_speed">
+                                Higher speed = less time on final approach, but higher inertia makes it harder to exit the runway quickly.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="flex justify-between text-sm font-bold text-slate-700 mb-2">
+                                <span data-key="lbl_sep">Radar Separation</span>
+                                <span class="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-xs" id="disp-sep">4.0 nm</span>
+                            </label>
+                            <input type="range" id="in-sep" min="2.5" max="6.0" step="0.5" value="4.0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                            <p class="text-xs text-slate-500 mt-2 leading-tight" data-key="hint_sep">
+                                The safety gap. 3NM is standard. 5NM+ required for Heavy aircraft. Reducing this is the holy grail of ATC.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="flex justify-between text-sm font-bold text-slate-700 mb-2">
+                                <span data-key="lbl_rot">Runway Occupancy (ROT)</span>
+                                <span class="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-xs" id="disp-rot">50 s</span>
+                            </label>
+                            <input type="range" id="in-rot" min="40" max="90" value="50" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                            <p class="text-xs text-slate-500 mt-2 leading-tight" data-key="hint_rot">
+                                Time on concrete. Depends on High Speed Exits (RET) availability and pilot discipline.
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="card lg:col-span-2 flex flex-col justify-center items-center bg-white relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+                    
+                    <div class="text-center p-8 w-full max-w-lg">
+                        <div class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-4" data-key="res_header">Theoretical Max Capacity</div>
+                        
+                        <div class="flex items-baseline justify-center mb-6">
+                            <span class="text-7xl font-serif font-bold text-slate-900 tracking-tighter" id="res-cap">--</span>
+                            <span class="ml-3 text-xl text-slate-500 font-medium" data-key="unit_movements">mvts/hr</span>
+                        </div>
+                        
+                        <!-- Visual Bar -->
+                        <div class="w-full h-6 bg-slate-100 rounded-full mb-8 overflow-hidden border border-slate-200 shadow-inner relative">
+                            <!-- Markers -->
+                            <div class="absolute top-0 bottom-0 border-l border-slate-300 z-10 text-[9px] text-slate-400 pl-1 pt-1" style="left: 50%">30 (Std)</div>
+                            <div class="absolute top-0 bottom-0 border-l border-slate-300 z-10 text-[9px] text-slate-400 pl-1 pt-1" style="left: 83%">50 (High)</div>
+                            
+                            <div id="cap-bar" class="h-full bg-gradient-to-r from-blue-400 to-indigo-600 transition-all duration-700 ease-out shadow-lg" style="width: 0%"></div>
+                        </div>
+                        
+                        <div class="p-6 bg-slate-50 rounded-xl border border-slate-200 text-left relative">
+                            <div class="absolute -top-3 left-4 bg-white px-2 text-xs font-bold text-slate-400 border border-slate-200 rounded">AI ANALYSIS</div>
+                            <h4 class="font-bold text-slate-800 mb-2 text-lg" id="res-title">Analysis</h4>
+                            <p class="text-sm text-slate-600 leading-relaxed" id="res-desc">Adjust sliders to simulate.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        // --- Translation Data (FIXED) ---
+        const translations = {
+            en: {
+                nav_title: "Airport Capacity Study",
+                tab_overview: "Analysis",
+                tab_mumbai: "Mumbai Case",
+                tab_sfo: "SFO Tech",
+                tab_lab: "Simulation",
+                header_tag: "In-Depth Technical Report",
+                header_title: "The Physics of Saturation:<br>Single Runway Capacity Limits",
+                header_desc: "An investigation into the aerodynamic and operational bottlenecks that define global aviation throughput. <br>Featuring deep-dives into <span class='text-indigo-700 font-semibold decoration-indigo-200 underline decoration-2 underline-offset-2'>Mumbai's extreme optimization</span> and <span class='text-purple-700 font-semibold decoration-purple-200 underline decoration-2 underline-offset-2'>SFO's paired approach technology</span>.",
+                
+                card_1_title: "Theoretical Ceiling",
+                card_1_desc: "The hard limit defined by radar separation minima (3NM) and average approach speeds (140kts). Pushing beyond this requires ignoring wake turbulence physics.",
+                card_2_title: "Mumbai (BOM) Record",
+                card_2_desc: "Achieved on a single active runway (27) via 'High Speed Exit' compliance and aggressive mixed-mode interleaving.",
+                card_3_title: "SFO Parallel Throughput",
+                card_3_desc: "Capacity halves when clouds drop. SFO's parallel runways are too close (750ft) for standard independent ops, creating a massive vulnerability.",
+                unit_movements: "Movements / Hour",
+                unit_movements_day: "Movements / 24 Hours",
+                unit_vmc_imc: "VMC (Clear) vs IMC (Cloudy)",
+                
+                chart_title: "Benchmarking Global Efficiency",
+                chart_subtitle: "Comparing peak hourly sustained movement rates (Arr+Dep) on constrained runway configurations.",
+                chart_note: "* Comparison of 'Constrained Operations': Included are single runways (LGW, BOM, SAN, old SZX) and dependent parallel runways (SFO in IMC).",
+                
+                core_title: "The Anatomy of a Bottleneck",
+                constraint_1_title: "Wake Turbulence: The Invisible Wall",
+                constraint_1_desc: "Every aircraft generates powerful counter-rotating vortices from its wingtips—essentially horizontal tornadoes that can flip a smaller trailing aircraft. This is not a bureaucratic rule; it is physics. <br><br>To survive, a Medium aircraft (like A320) must stay <strong>5 nautical miles</strong> behind a Heavy (like B777). At approach speeds, this creates a mandatory time gap of ~2 minutes where the runway sits empty. Capacity is purely a function of how fast these vortices dissipate.",
+                recat_title: "Solution: RECAT-EU/US",
+                recat_desc: "Traditional categories (Heavy/Medium/Light) were too broad. New 'Recategorization' standards split aircraft into 6+ tiers (e.g., 'Upper Heavy', 'Lower Heavy'), allowing controllers to safely shave off 0.5-1.0 NM separation in specific pairs, boosting capacity by 5-10%.",
+                
+                constraint_2_title: "ROT: The Runway Occupancy Time",
+                constraint_2_desc: "ROT is the stopwatch measurement from the moment an aircraft crosses the landing threshold until its tail completely clears the runway line. <br><br>A trailing aircraft cannot be cleared to land (or in some regulations, cross the threshold) until the runway is clear. High ROT is a capacity killer. If pilots miss a 'High Speed Exit' and have to taxi to the end, a 50-second routine turns into a 90-second delay, forcing the next arrival to go around.",
+                geo_title: "Geometry Matters",
+                geo_desc: "Airports like Mumbai and Gatwick design 'Rapid Exit Taxiways' (RETs) angled at 30 degrees, allowing planes to turn off at 50 knots (93 km/h). Standard 90-degree exits require slowing to 10 knots, adding 20+ seconds to ROT.",
+
+                bom_title: "Case Study: The Mumbai Miracle",
+                bom_intro: "Mumbai (BOM) operates in a league of its own. While surrounded by urban density that prevents adding parallel runways, it handles traffic volumes comparable to dual-runway airports like Heathrow. The secret lies in a high-pressure, high-precision operational culture.",
+                strat_1_title: "Psychology of 'Immediate Exit'",
+                strat_1_desc: "In Mumbai, ROT is not just a metric; it's a mandate. Pilots are briefed to apply maximum safe braking upon touchdown. ATC monitors braking performance. If a pilot rolls too long and misses the Rapid Exit Taxiway (N8 or N6), they disrupt the 'conveyor belt' and may face an inquiry. The target ROT is a blistering 48-50 seconds.",
+                strat_2_title: "The 'Inter-Arrival' Departure",
+                strat_2_desc: "Most airports run segregated modes (one runway for arrival, one for departure). BOM runs 'Mixed Mode' on a single strip. Controllers insert a departure into the gap between two arrivals. <br><strong>The Sequence:</strong> Arrival 1 touches down -> Departure 1 enters runway immediately -> Arrival 1 clears runway -> Departure 1 takes off -> Arrival 2 crosses threshold. The margin for error is often less than 15 seconds.",
+                strat_3_title: "Homogenizing the Fleet",
+                strat_3_desc: "Variance is the enemy of capacity. A slow propeller plane or a private jet acts like a stone in a flowing river. During peak hours (0800-1100, 1800-2200), BOM heavily restricts non-scheduled flights. By ensuring everyone flies at similar approach speeds (approx 140-150kts), ATC can compress gaps to the absolute minimum.",
+                
+                diag_title: "LIVE OPS VISUALIZATION",
+                diag_dep: "DEPARTURE<br>Rolling (T-0s)",
+                diag_exit: "PREV ARRIVAL<br>Clearing (T-45s)",
+                diag_arr: "NEXT ARRIVAL<br>Dist: 3.5 NM<br>Time to Threshold: 90s",
+                diag_sep: "Min Separation",
+                diag_quote: "\"The departure must be rolling before the arrival crosses the 4 mile mark. It's a game of seconds.\"",
+
+                sfo_title: "SFO Tech: Breaking the 2500ft Rule",
+                sfo_intro: "San Francisco (SFO) presents a unique geometric nightmare: two parallel runways (28L & 28R) separated by only <strong>750 feet (228m)</strong>. Standard FAA safety rules require 4,300ft separation for independent simultaneous instrument approaches. Without special tech, SFO is legally a single-runway airport in bad weather.",
+                prm_title: "1. PRM (Precision Runway Monitor)",
+                prm_desc: "Standard airport radar rotates every 4.8 seconds—too slow to detect a blunder at 750ft separation. SFO uses an electronically scanned PRM radar with a <strong>1.0 second update rate</strong>. <br>A dedicated 'Monitor Controller' watches the 'No Transgression Zone' (NTZ) between the runways. They have an override frequency. If a plane twitches toward the NTZ, the controller instantly commands a 'Breakout' maneuver to the parallel aircraft.",
+                soia_title: "2. SOIA (Simultaneous Offset Instrument Approach)",
+                soia_desc: "This is the workaround for cloudy days. 28L flies a straight ILS approach. 28R flies an LDA approach offset by 3 degrees. The planes fly in clouds, paired via PRM radar. <br><strong>The Critical Moment:</strong> They must break out of the clouds by ~2,100ft. The 28R pilot <em>must</em> visually see the 28L plane and the runway to continue. If they see it, they side-step to align and land. If the clouds are too low (below 1,600ft), SOIA fails, and the capacity crashes.",
+                weather_title: "The 'Marine Layer' Curse",
+                weather_desc: "San Francisco's famous fog often sits right at 1,000ft. This is the 'kill zone' for operations. It's too low for SOIA visual confirmation, forcing SFO to revert to single-stream arrivals. This reduces arrival capacity from 60 to 30 per hour, triggering the infamous 'Ground Delay Programs' that ripple across the entire US network.",
+                legend_28l: "28L (Straight ILS)",
+                legend_28r: "28R (Offset LDA)",
+                legend_ntz: "NTZ (No Go Zone)",
+                sfo_imc: "IMC (Cloudy)",
+                sfo_vmc: "VMC (Clear)",
+                sfo_visual_contact: "Visual Contact Required",
+
+                lab_params: "Simulation Parameters",
+                lbl_speed: "Approach Speed (Vref)",
+                hint_speed: "Higher speed = less time on final approach, but higher inertia makes it harder to exit the runway quickly.",
+                lbl_sep: "Radar Separation",
+                hint_sep: "The safety gap. 3NM is standard. 5NM+ required for Heavy aircraft. Reducing this is the holy grail of ATC.",
+                lbl_rot: "Runway Occupancy (ROT)",
+                hint_rot: "Time on concrete. Depends on High Speed Exits (RET) availability and pilot discipline.",
+                res_header: "Theoretical Max Capacity",
+                
+                lbl_lgw: "Gatwick (LGW)",
+                lbl_bom: "Mumbai (BOM)",
+                lbl_san: "San Diego (SAN)",
+                lbl_szx: "Shenzhen (Old)",
+                lbl_xmn: "Xiamen (XMN)",
+                chart_tooltip: "Movements/Hr"
+            },
+            zh: {
+                nav_title: "机场运力研究室",
+                tab_overview: "核心分析",
+                tab_mumbai: "孟买案例",
+                tab_sfo: "SFO技术解析",
+                tab_lab: "仿真模拟",
+                header_tag: "深度技术报告",
+                header_title: "饱和的物理学：<br>单跑道容量极限研究",
+                header_desc: "深入探讨决定全球航空吞吐量的空气动力学与运行瓶颈。<br>特别聚焦：<span class='text-indigo-700 font-semibold decoration-indigo-200 underline decoration-2 underline-offset-2'>孟买机场的极限优化</span> 与 <span class='text-purple-700 font-semibold decoration-purple-200 underline decoration-2 underline-offset-2'>旧金山机场的配对进近技术</span>。",
+                
+                card_1_title: "理论物理天花板",
+                card_1_desc: "这是由雷达最小间隔 (3NM) 和进近速度 (140kts) 决定的硬性极限。想要突破它，就必须无视尾流物理学。",
+                card_2_title: "孟买 (BOM) 纪录",
+                card_2_desc: "依靠单一主跑道(27)实现。核心手段：强制执行“快速脱离程序”以及激进的混合起降穿插。",
+                card_3_title: "SFO 并行吞吐量",
+                card_3_desc: "云层下降时运力减半。SFO的两条平行跑道间距仅750英尺，无法进行标准的独立平行仪表运行，这是其巨大的软肋。",
+                unit_movements: "架次 / 小时",
+                unit_movements_day: "架次 / 24小时",
+                unit_vmc_imc: "VMC (晴朗) vs IMC (阴云)",
+                
+                chart_title: "全球效率基准对比",
+                chart_subtitle: "受限跑道构型下的高峰小时持续运行架次对比 (进港+离港)。",
+                chart_note: "* “受限运行”包括：单跑道机场 (LGW, BOM, SAN, 旧SZX) 以及受天气限制的平行跑道 (SFO云中运行)。",
+                
+                core_title: "解剖瓶颈",
+                constraint_1_title: "尾流间隔：看不见的墙",
+                constraint_1_desc: "每架飞机都会从翼尖产生强大的反向旋转涡流——这本质上是水平方向的龙卷风，足以掀翻后方的小飞机。这不仅是行政规定，更是物理铁律。<br><br>为了生存，一架中型机 (如A320) 必须保持在重型机 (如B777) 后方 <strong>5海里</strong>。在进近速度下，这会产生约2分钟的强制时间缺口，期间跑道必须闲置。跑道容量本质上取决于这些涡流消散的速度。",
+                recat_title: "解决方案：RECAT (尾流重分类)",
+                recat_desc: "传统的机型分类 (重/中/轻) 过于粗糙。新的 RECAT 标准将飞机细分为 6个以上等级 (如'超重型', '次重型')，允许管制员在特定配对中安全缩减 0.5-1.0 海里间隔，直接提升 5-10% 的容量。",
+                
+                constraint_2_title: "ROT：跑道占用时间",
+                constraint_2_desc: "ROT 是掐表计算的：从飞机越过跑道入口开始，直到其尾部完全越过停止线离开跑道道面。<br><br>后机在跑道净空前，绝对无法获得落地许可（在某些规则中甚至不能越过入口）。高 ROT 是容量杀手。如果飞行员错过了“快速脱离道”被迫滑行到尽头，原本50秒的流程会变成90秒的延误，迫使后机复飞。",
+                geo_title: "几何学很关键",
+                geo_desc: "孟买和盖特威克等机场设计了 30度角的“快速脱离道”(RET)，允许飞机以 50节 (93 km/h) 的速度高速脱离。而标准的 90度垂直出口要求减速至 10节，这会增加 20秒以上的占用时间。",
+
+                bom_title: "案例研究：孟买奇迹",
+                bom_intro: "孟买 (BOM) 属于另一个量级。尽管周围密集的城市建筑阻止了平行跑道的建设，它的吞吐量却比肩希思罗等双跑道机场。秘密在于一种高压、高精度的运行文化。",
+                strat_1_title: "“立即脱离”的心理学",
+                strat_1_desc: "在孟买，ROT 不仅仅是指标，更是铁令。飞行员被告知在接地后必须使用最大安全制动。塔台会监控刹车表现。如果飞行员滑行太远错过了快速脱离口 (N8 或 N6)，就会打断整个“传送带”节奏，并可能面临问询。他们的目标 ROT 是惊人的 48-50 秒。",
+                strat_2_title: "“缝隙中”的离港",
+                strat_2_desc: "大多数机场采用隔离模式（一条落地，一条起飞）。BOM 在单条跑道上运行“混合模式”。管制员会将一架起飞飞机塞进两架落地飞机的缝隙中。<br><strong>极限时序：</strong> 前机接地 -> 起飞飞机立即进跑道 -> 前机脱离 -> 起飞飞机离地 -> 后机越过入口。容错空间往往不足15秒。",
+                strat_3_title: "机队的同质化",
+                strat_3_desc: "差异是容量的敌人。一架慢速螺旋桨飞机或私人喷气机会像激流中的石头一样阻碍交通。在高峰时段 (0800-1100, 1800-2200)，BOM 严格限制非定期航班。通过确保所有飞机以相似速度 (约140-150节) 进近，管制员可以将间隔压缩至物理极限。",
+                
+                diag_title: "实时运行可视化",
+                diag_dep: "离港航班<br>起飞滑跑 (T-0s)",
+                diag_exit: "前序进港<br>正在脱离 (T-45s)",
+                diag_arr: "后序进港<br>距离: 3.5 NM<br>距入口: 90s",
+                diag_sep: "最小间隔红线",
+                diag_quote: "“离港飞机必须在进港飞机飞越4海里点之前开始滑跑。这是一场争分夺秒的游戏。”",
+
+                sfo_title: "SFO技术：突破2500英尺铁律",
+                sfo_intro: "旧金山 (SFO) 面临着独特的几何噩梦：两条平行跑道 (28L & 28R) 间距仅 <strong>750英尺 (228米)</strong>。标准的 FAA 安全规则要求 4300英尺间隔才能进行独立的平行仪表进近。没有特殊技术，SFO 在坏天气下法律上只能算作单跑道机场。",
+                prm_title: "1. PRM (精密跑道监控)",
+                prm_desc: "标准机场雷达每 4.8秒旋转一圈——对于 750英尺的间距来说太慢了，无法及时发现偏差。SFO 使用电子扫描的 PRM 雷达，拥有 <strong>1.0秒的超高更新率</strong>。<br>一名专门的“监控管制员”死死盯着两跑道间的“非侵入区”(NTZ)。如果一架飞机偏向 NTZ，该管制员会立即在超越波道上指令另一架飞机“Breakout”(紧急避让)。",
+                soia_title: "2. SOIA (同时偏移仪表进近)",
+                soia_desc: "这是针对多云天气的变通方案。28L 飞直线的 ILS 进近。28R 飞一个偏移 3度的 LDA 进近。两机在云中通过 PRM 雷达配对飞行。<br><strong>关键时刻：</strong> 它们必须在约 2100英尺高度出云。28R 的飞行员<em>必须</em>目视看到 28L 的飞机和跑道才能继续。如果看到了，他们就修正对正降落。如果云太低 (低于1600英尺)，SOIA 失效，运力崩塌。",
+                weather_title: "“海雾层”诅咒",
+                weather_desc: "旧金山著名的海雾经常正好卡在 1000英尺高度。这是运行的“死亡地带”。因为它太低了，无法满足 SOIA 的目视要求，迫使 SFO 倒退回单流进近。进港容量瞬间从 60 架次/时跌至 30，触发波及全美的地面延误程序 (GDP)。",
+                legend_28l: "28L (直线 ILS)",
+                legend_28r: "28R (偏移 LDA)",
+                legend_ntz: "NTZ (禁区)",
+                sfo_imc: "IMC (阴天)",
+                sfo_vmc: "VMC (晴天)",
+                sfo_visual_contact: "必须目视跑道",
+
+                lab_params: "仿真参数控制台",
+                lbl_speed: "进近速度 (Vref)",
+                hint_speed: "速度越快 = 占用空域时间越短，但惯性更大，更难快速脱离跑道。",
+                lbl_sep: "雷达间隔",
+                hint_sep: "安全红线。标准是3海里。重型机需要5海里以上。缩短这个距离是空管界的圣杯。",
+                lbl_rot: "跑道占用时间 (ROT)",
+                hint_rot: "轮胎在混凝土上的时间。取决于快速脱离道(RET)的设计和飞行员的执行力。",
+                res_header: "理论极限容量",
+                
+                lbl_lgw: "伦敦盖特威克 (LGW)",
+                lbl_bom: "孟买 (BOM)",
+                lbl_san: "圣地亚哥 (SAN)",
+                lbl_szx: "深圳 (旧SZX)",
+                lbl_xmn: "厦门 (XMN)",
+                chart_tooltip: "架次 / 小时"
+            }
+        };
+
+        let currentLang = 'en';
+
+        // --- Language Switcher ---
+        function toggleLanguage() {
+            const btn = document.getElementById('langSwitch');
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            
+            // Toggle UI class
+            if(currentLang === 'zh') {
+                btn.classList.remove('en');
+                btn.classList.add('zh');
+            } else {
+                btn.classList.remove('zh');
+                btn.classList.add('en');
+            }
+
+            // Update DOM text
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if(translations[currentLang][key]) {
+                    el.innerHTML = translations[currentLang][key];
+                }
+            });
+
+            // Update Charts and Visuals
+            updateChartLanguage();
+            drawSFO();
+            updateSimulation(); 
+        }
+
+        // --- Navigation Logic ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.add('hidden');
+            });
+            document.getElementById('view-' + tabId).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('nav-' + tabId).classList.add('active');
+
+            if(tabId === 'sfo') {
+                setTimeout(drawSFO, 100); 
+            }
+        }
+
+        // --- Chart.js: Global Comparison ---
+        let globalChart;
+        function initChart() {
+            const ctxGlobal = document.getElementById('globalChart').getContext('2d');
+            const t = translations[currentLang];
+            
+            Chart.defaults.font.family = "'Noto Sans', 'Noto Sans SC', sans-serif";
+            
+            globalChart = new Chart(ctxGlobal, {
+                type: 'bar',
+                data: {
+                    labels: [t.lbl_lgw, t.lbl_bom, t.lbl_san, t.lbl_szx, t.lbl_xmn],
+                    datasets: [{
+                        label: t.chart_tooltip,
+                        data: [55, 52, 42, 45, 36],
+                        backgroundColor: [
+                            '#3b82f6', // LGW Blue
+                            '#10b981', // BOM Green (Highlight)
+                            '#64748b', // SAN Slate
+                            '#94a3b8',
+                            '#cbd5e1'
+                        ],
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw + ' ' + translations[currentLang].chart_tooltip;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 65,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { size: 11 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 11, weight: '500' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChartLanguage() {
+            if(!globalChart) return;
+            const t = translations[currentLang];
+            globalChart.data.labels = [t.lbl_lgw, t.lbl_bom, t.lbl_san, t.lbl_szx, t.lbl_xmn];
+            globalChart.data.datasets[0].label = t.chart_tooltip;
+            globalChart.update();
+        }
+
+        // --- SFO Canvas Drawing ---
+        function drawSFO() {
+            const canvas = document.getElementById('sfoCanvas');
+            if (!canvas.offsetParent) return; 
+            
+            canvas.width = canvas.parentElement.offsetWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const t = translations[currentLang];
+
+            // Clear
+            ctx.fillStyle = '#0f172a'; // Slate 900
+            ctx.fillRect(0, 0, w, h);
+
+            // Draw Runways (Right side)
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(w - 120, h/2 - 35, 100, 10); // 28L
+            ctx.fillRect(w - 120, h/2 + 25, 100, 10); // 28R
+
+            // 28L Path (Straight)
+            ctx.beginPath();
+            ctx.strokeStyle = '#3b82f6'; // Blue
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#3b82f6';
+            ctx.moveTo(0, h/2 - 30);
+            ctx.lineTo(w - 120, h/2 - 30);
+            ctx.stroke();
+            ctx.shadowBlur = 0; // Reset
+
+            // 28R Path (SOIA Offset)
+            ctx.beginPath();
+            ctx.strokeStyle = '#a855f7'; // Purple
+            ctx.lineWidth = 3;
+            ctx.setLineDash([8, 6]); // Dashed for "In Cloud"
+            ctx.moveTo(0, h/2 + 100); // Start offset lower
+            ctx.lineTo(w - 250, h/2 + 30); // Merge point (Cloud break)
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.setLineDash([]); // Solid for "Visual"
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#a855f7';
+            ctx.moveTo(w - 250, h/2 + 30);
+            ctx.lineTo(w - 120, h/2 + 30);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // NTZ (No Transgression Zone)
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.1)';
+            ctx.fillRect(0, h/2 - 10, w, 20);
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
+            ctx.setLineDash([2, 4]);
+            ctx.beginPath();
+            ctx.moveTo(0, h/2);
+            ctx.lineTo(w, h/2);
+            ctx.stroke();
+
+            // Cloud Layer
+            const gradient = ctx.createLinearGradient(0, 0, w, 0);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
+            gradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.05)');
+            gradient.addColorStop(0.75, 'rgba(255, 255, 255, 0)'); // Breakout point
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, w, h);
+            
+            // Labels
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText(t.sfo_imc.toUpperCase(), 30, 40);
+            ctx.fillText(t.sfo_vmc.toUpperCase(), w - 180, 40);
+            
+            // Breakout Marker
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(w - 250, h/2 + 30, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.font = '10px sans-serif';
+            ctx.fillText(t.sfo_visual_contact, w - 280, h/2 + 55);
+        }
+
+        // --- Simulator Logic ---
+        function updateSimulation() {
+            const speed = parseInt(document.getElementById('in-speed').value);
+            const sep = parseFloat(document.getElementById('in-sep').value);
+            const rot = parseInt(document.getElementById('in-rot').value);
+
+            // Update display
+            document.getElementById('disp-speed').innerText = speed + " kts";
+            document.getElementById('disp-sep').innerText = sep.toFixed(1) + " nm";
+            document.getElementById('disp-rot').innerText = rot + " s";
+
+            // Calculation
+            const sepTime = (sep / speed) * 3600;
+            const constraint = Math.max(sepTime, rot);
+            const effectiveInterval = constraint + 10; // Buffer
+            
+            let capacity = Math.round(3600 / effectiveInterval);
+            if(capacity > 65) capacity = 65;
+
+            // Update UI
+            document.getElementById('res-cap').innerText = capacity;
+            
+            // Logarithmic-ish scaling for bar visualization
+            const minCap = 25;
+            const maxCap = 65;
+            const pct = Math.max(0, Math.min(100, ((capacity - minCap) / (maxCap - minCap)) * 100));
+            
+            const bar = document.getElementById('cap-bar');
+            bar.style.width = pct + "%";
+
+            // Color shift based on capacity
+            if (capacity > 50) {
+                bar.className = "h-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-700 ease-out shadow-lg shadow-emerald-200";
+            } else if (capacity > 38) {
+                bar.className = "h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-700 ease-out shadow-lg shadow-blue-200";
+            } else {
+                bar.className = "h-full bg-gradient-to-r from-amber-400 to-rose-500 transition-all duration-700 ease-out shadow-lg shadow-rose-200";
+            }
+
+            // Analysis Text Localization
+            const titleEl = document.getElementById('res-title');
+            const descEl = document.getElementById('res-desc');
+            const isEn = currentLang === 'en';
+            
+            if (capacity > 50) {
+                titleEl.className = "font-bold text-emerald-700 mb-2 text-lg";
+                titleEl.innerText = isEn ? "Elite Efficiency (BOM/LGW Level)" : "精英级效率 (BOM/LGW水平)";
+                descEl.innerText = isEn 
+                    ? `At ${capacity} movements/hour, you are operating at the bleeding edge. This requires mixed-mode operations and flawless runway discipline. Any hesitation causes a go-around.`
+                    : `以每小时 ${capacity} 架次的速率运行，您正处于极限边缘。这需要混合起降模式和完美的跑道纪律。任何迟疑都会导致复飞。`;
+            } else if (capacity > 38) {
+                titleEl.className = "font-bold text-blue-700 mb-2 text-lg";
+                titleEl.innerText = isEn ? "Standard High Volume" : "标准繁忙水平";
+                descEl.innerText = isEn 
+                    ? "Typical for busy single-runway airports. You are constrained primarily by wake turbulence separation. RECAT implementation could squeeze out 2-3 more slots."
+                    : "繁忙单跑道机场的典型值。主要受限于尾流间隔。实施 RECAT 标准可能挤出 2-3 个额外时刻。";
+            } else {
+                titleEl.className = "font-bold text-rose-700 mb-2 text-lg";
+                titleEl.innerText = isEn ? "Congested / Sub-optimal" : "拥堵 / 低效";
+                descEl.innerText = isEn 
+                    ? "Capacity is severely limited. Causes likely include excessive separation buffers or slow runway exits (high ROT). Expect holding patterns."
+                    : "容量受到严重限制。原因可能是间隔缓冲过大或跑道脱离缓慢 (高 ROT)。预计会出现空中盘旋等待。";
+            }
+        }
+
+        // --- Event Listeners ---
+        window.addEventListener('resize', drawSFO);
+        
+        ['in-speed', 'in-sep', 'in-rot'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateSimulation);
+        });
+
+        // Init
+        window.onload = function() {
+            initChart();
+            updateSimulation();
+            updateChartLanguage(); 
+        };
+
+    </script>
+</body>
+</html>
