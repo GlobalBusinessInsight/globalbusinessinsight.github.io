@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAP 支持服务体系：技术架构与功能蓝图</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Chosen Palette: "Trust & Precision"
+         Background: Slate-50 (Clean, Technical)
+         Primary: Blue-900 (SAP Corporate Authority)
+         Secondary: Sky-600 (Connectivity/Cloud)
+         Accent: Emerald-500 (Success/Resolution)
+    -->
+
+    <!-- Application Structure Plan:
+         Title: SAP Support Services Deep Dive
+         Structure: Sidebar Navigation + Dynamic Content Pane.
+         Sections:
+         1. Evolution (Timeline): From SAPGUI OSS to SAP for Me.
+         2. Backbone Architecture (The "Plumbing"): SAP Router, SNC, HTTPs vs RFC.
+         3. Core Mechanics (Process Flows): SNOTE, Incident Processing, Maintenance Planner.
+         4. Diagnostic Ecosystem (Tools): EWA, ANST, SDCCN.
+         5. Future State (AI): Predictive Support, Cloud ALM integration.
+         
+         Interaction Model:
+         - Clickable architectural layers to reveal protocols.
+         - Steppers to visualize data flows (e.g., EWA data collection).
+         - Tabular comparisons for Legacy vs Modern connectivity.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Architecture: HTML Block Diagram (No SVG). Goal: Show the secure tunnel from Customer -> SAP Router -> SAP Backbone.
+         2. Evolution: Chart.js Mixed Chart. Goal: Visualize the complexity vs automation level over time.
+         3. EWA Process: Vertical Stepper. Goal: Explain the SDCCN -> Backbone -> Report loop.
+         4. SNOTE Logic: Logic Gate Visualization (CSS/HTML). Goal: Show how version/validity checks work.
+         
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+
+    <style>
+        /* Chart Container Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 400px;
+            max-height: 450px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+            border-radius: 20px;
+        }
+
+        /* Interactive Card Styles */
+        .tech-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 4px solid transparent;
+        }
+        .tech-card:hover {
+            transform: translateX(4px);
+            border-left-color: #0284c7; /* Sky-600 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Animation Utilities */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.4s ease-out forwards;
+        }
+
+        /* Connection Line Simulation (CSS) */
+        .connection-line {
+            height: 2px;
+            background: #cbd5e1;
+            position: relative;
+            overflow: hidden;
+        }
+        .connection-packet {
+            position: absolute;
+            top: -2px;
+            left: 0;
+            width: 20px;
+            height: 6px;
+            background: #0ea5e9;
+            border-radius: 4px;
+            animation: flow 2s infinite linear;
+        }
+        @keyframes flow {
+            0% { left: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans h-screen flex overflow-hidden">
+
+    <!-- Mobile Header -->
+    <div class="md:hidden fixed top-0 w-full bg-slate-900 text-white z-50 p-4 flex justify-between items-center shadow-md">
+        <span class="font-bold tracking-wide">SAP Support Tech</span>
+        <button onclick="toggleSidebar()" class="text-white focus:outline-none text-2xl">☰</button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-slate-100 flex-shrink-0 flex flex-col transition-all duration-300 z-40 hidden md:flex" id="sidebar">
+        <div class="p-6 border-b border-slate-800 bg-slate-950">
+            <h1 class="text-lg font-bold uppercase tracking-widest text-blue-400">Support <span class="text-white">Blueprint</span></h1>
+            <p class="text-xs text-slate-500 mt-1">技术架构与功能蓝图</p>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto custom-scroll py-6 space-y-1">
+            <button onclick="loadSection('evolution')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition-colors border-l-4 border-transparent hover:border-blue-500 focus:outline-none active-nav" id="btn-evolution">
+                <span class="mr-3">⏳</span> 演进与全景图
+            </button>
+            <button onclick="loadSection('backbone')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition-colors border-l-4 border-transparent hover:border-blue-500 focus:outline-none" id="btn-backbone">
+                <span class="mr-3">🌐</span> 骨干网架构 (Backbone)
+            </button>
+            <button onclick="loadSection('mechanics')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition-colors border-l-4 border-transparent hover:border-blue-500 focus:outline-none" id="btn-mechanics">
+                <span class="mr-3">⚙️</span> 核心运作机理
+            </button>
+            <button onclick="loadSection('diagnostics')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition-colors border-l-4 border-transparent hover:border-blue-500 focus:outline-none" id="btn-diagnostics">
+                <span class="mr-3">🩺</span> 诊断与监控体系
+            </button>
+            <button onclick="loadSection('future')" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 transition-colors border-l-4 border-transparent hover:border-blue-500 focus:outline-none" id="btn-future">
+                <span class="mr-3">🤖</span> 智能化与未来
+            </button>
+        </nav>
+
+        <div class="p-4 bg-slate-800 text-xs text-slate-400 border-t border-slate-700">
+            <div>Data Structure: JSON</div>
+            <div>Render Engine: Vanilla JS</div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto bg-slate-50 relative pt-16 md:pt-0" id="main-content">
+        <!-- Dynamic Content Injected Here -->
+    </main>
+
+    <script>
+        // --- DATA STORE ---
+        const reportData = {
+            evolution: {
+                title: "SAP 支持服务的代际演进",
+                subtitle: "从 R/3 时代的电话传真到 SAP for Me 的云端集成",
+                intro: "SAP 的支持体系不仅仅是售后服务，它是其软件生命周期的核心组成部分。随着技术架构从 Client-Server 转向 Cloud-Native，支持服务的载体也经历了从物理介质、嵌入式 GUI 到 Web Portal 再到智能化中台的彻底重构。",
+                stages: [
+                    { year: "1.0 时代", name: "SAP R/3 OSS", desc: "基于 SAP GUI 的内嵌 Online Service System。通过 SAP Router 建立点对点连接，工程师直接登录排查。Note 分发依赖手动。", icon: "📠" },
+                    { year: "2.0 时代", name: "Solution Manager", desc: "引入 ALM 理念。SolMan 成为连接客户与 SAP 的网关。EarlyWatch Alert (EWA) 开始普及，实现主动式监控。", icon: "🏢" },
+                    { year: "3.0 时代", name: "Support Launchpad", desc: "基于 Fiori 设计语言的 Web 门户。基于磁贴 (Tile) 的用户体验，聚合了 KB、Incidents 和 Keys。", icon: "🚀" },
+                    { year: "4.0 时代", name: "SAP for Me & Cloud ALM", desc: "语义化、个性化的中央入口。全面集成云产品，引入实时支持 (Expert Chat) 和 AI 预测分析。", icon: "☁️" }
+                ],
+                chartData: {
+                    labels: ['1995 (OSS)', '2005 (SolMan)', '2015 (Launchpad)', '2025 (SAP for Me)'],
+                    complexity: [20, 80, 60, 40], // User Complexity (Going down is better)
+                    automation: [10, 30, 70, 95]  // Automation Level
+                }
+            },
+            backbone: {
+                title: "SAP Support Backbone 骨干网架构",
+                subtitle: "连接客户环境与 SAP 全球支持中心的技术动脉",
+                intro: "Support Backbone 是 SAP 生态系统的核心基础设施。2020 年，SAP 完成了重大的骨干网升级，弃用了传统的 RFC 用户验证，全面转向基于 HTTPS 和技术通信用户 (Technical User) 的高安全架构。",
+                components: [
+                    {
+                        name: "SAP Router",
+                        role: "反向代理与安全网关",
+                        detail: "部署在客户 DMZ 区。使用 NI (Network Interface) 协议。它是唯一暴露公网 IP 的组件，通过 SNC (Secure Network Communications) 加密隧道连接 SAP Walldorf。"
+                    },
+                    {
+                        name: "Connectivity Stack",
+                        role: "通信协议栈",
+                        detail: "旧时代：SAPOSS (RFC Destination) + 通用用户。新时代：HTTPS + 客户端证书/技术用户 (S-User)。确保了数据传输的不可抵赖性。"
+                    },
+                    {
+                        name: "Landscape Data",
+                        role: "系统全景数据同步",
+                        detail: "通过 SLD (System Landscape Directory) 收集系统组件版本，经由 LMDB 同步至 Maintenance Planner，确保补丁依赖关系的准确计算。"
+                    }
+                ]
+            },
+            mechanics: {
+                title: "核心功能运作机理",
+                subtitle: "Note 实施、软件分发与故障处理的技术逻辑",
+                features: [
+                    {
+                        id: "snote",
+                        title: "SNOTE (Note Assistant)",
+                        desc: "自动化代码修复工具。它解析 SAP Note 中的 Correction Instructions (CI)，对比系统当前版本，计算 Delta 并自动实施代码变更。"
+                    },
+                    {
+                        id: "maintenance",
+                        title: "Maintenance Planner",
+                        desc: "云端依赖性计算引擎。在升级 S/4HANA 或打 EHP 包时，它计算所有软件组件的兼容性，并生成 Stack XML 文件供 SUM (Software Update Manager) 使用。"
+                    },
+                    {
+                        id: "incident",
+                        title: "Incident Processing",
+                        desc: "故障单流转机制。支持日志自动上传 (ANST)。当优先级为 'Very High' 时，触发 24x7 全球接力 (Follow-the-sun) 模式。"
+                    }
+                ]
+            },
+            diagnostics: {
+                title: "诊断与监控体系",
+                subtitle: "SDCCN, EWA 与 ANST",
+                intro: "SAP 的支持不仅是被动的，更是基于数据的。系统通过 SDCCN (Service Data Control Center) 框架定期收集性能元数据，发送回 SAP 进行分析。",
+                ewa_steps: [
+                    "1. 数据收集 (SDCCN): 在客户机运行 Function Modules 收集 DB 统计、ST22 Dumps、SM21 日志。",
+                    "2. 数据传输: 通过 'Service' RFC 目标或 HTTPS 发送到 SAP 后端。",
+                    "3. 自动分析: SAP 专家系统对比数万个客户的最佳实践基线。",
+                    "4. 报告生成: 生成红/黄/绿评分的 Word/HTML 报告，推送到 SolMan 或 One Support Launchpad。"
+                ]
+            },
+            future: {
+                title: "智能化未来：AI 与实时支持",
+                subtitle: "从 Ticket 到 Conversation",
+                trends: [
+                    { title: "Expert Chat", desc: "实时连接。绕过 L1 支持，直接与产品专家对话。平均解决时间减少 60%。" },
+                    { title: "Predictive Support", desc: "利用机器学习分析日志模式，在故障发生前通过 Cloud ALM 发出预警。" },
+                    { title: "Automated Translation", desc: "神经机器翻译技术，打破语言障碍，允许即时翻译 SAP Notes 和 Incidents。" }
+                ]
+            }
+        };
+
+        // --- RENDER FUNCTIONS ---
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('fixed');
+            sidebar.classList.toggle('h-full');
+            sidebar.classList.toggle('top-0');
+            sidebar.classList.toggle('left-0');
+        }
+
+        function loadSection(sectionId) {
+            // Update Active State
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'bg-slate-800');
+                btn.classList.add('border-transparent');
+            });
+            document.getElementById(`btn-${sectionId}`).classList.add('border-blue-500', 'bg-slate-800');
+            document.getElementById(`btn-${sectionId}`).classList.remove('border-transparent');
+            
+            // Close mobile sidebar
+            if(window.innerWidth < 768) {
+                toggleSidebar();
+            }
+
+            const contentDiv = document.getElementById('main-content');
+            const data = reportData[sectionId];
+
+            // Common Header
+            let html = `
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-slide-in">
+                    <div class="mb-8 pb-4 border-b border-slate-200">
+                        <h2 class="text-3xl font-bold text-slate-900">${data.title}</h2>
+                        <p class="text-lg text-blue-600 mt-2">${data.subtitle}</p>
+                        ${data.intro ? `<p class="mt-4 text-slate-600 bg-white p-4 rounded shadow-sm border-l-4 border-blue-400">${data.intro}</p>` : ''}
+                    </div>
+            `;
+
+            // Specific Content
+            if (sectionId === 'evolution') html += renderEvolution(data);
+            if (sectionId === 'backbone') html += renderBackbone(data);
+            if (sectionId === 'mechanics') html += renderMechanics(data);
+            if (sectionId === 'diagnostics') html += renderDiagnostics(data);
+            if (sectionId === 'future') html += renderFuture(data);
+
+            html += `</div>`;
+            contentDiv.innerHTML = html;
+
+            // Initialize Charts
+            if (sectionId === 'evolution') initEvolutionChart(data.chartData);
+        }
+
+        // --- SECTION RENDERERS ---
+
+        function renderEvolution(data) {
+            return `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Timeline Cards -->
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-slate-800 mb-4">技术迭代里程碑</h3>
+                        ${data.stages.map((stage, idx) => `
+                            <div class="tech-card bg-white p-4 rounded shadow-sm flex items-start">
+                                <div class="text-3xl mr-4 bg-slate-100 p-2 rounded">${stage.icon}</div>
+                                <div>
+                                    <span class="text-xs font-bold text-blue-500 uppercase tracking-wide">${stage.year}</span>
+                                    <h4 class="font-bold text-slate-800">${stage.name}</h4>
+                                    <p class="text-sm text-slate-600 mt-1">${stage.desc}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <!-- Chart -->
+                    <div class="bg-white p-6 rounded shadow-md flex flex-col">
+                        <h3 class="font-bold text-slate-800 mb-4">用户复杂度 vs 自动化程度</h3>
+                        <div class="chart-container flex-1">
+                            <canvas id="evolutionChart"></canvas>
+                        </div>
+                        <div class="mt-4 text-xs text-slate-500 text-center">
+                            随着架构演进，用户侧的手动配置复杂度降低，后台自动化程度指数级上升。
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBackbone(data) {
+            return `
+                <div class="space-y-8">
+                    <!-- Architecture Diagram -->
+                    <div class="bg-slate-900 p-6 rounded-xl shadow-lg text-white">
+                        <h3 class="text-lg font-bold mb-6 text-center">Support Backbone 数据流全景</h3>
+                        
+                        <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 relative">
+                            <!-- Customer Side -->
+                            <div class="w-full md:w-1/4 bg-slate-800 p-4 rounded border border-slate-700 text-center z-10">
+                                <div class="text-4xl mb-2">🏢</div>
+                                <div class="font-bold">Customer Network</div>
+                                <div class="text-xs text-slate-400 mt-2">SolMan / ABAP System</div>
+                                <div class="mt-2 text-xs bg-slate-700 p-1 rounded">HTTPS / RFC</div>
+                            </div>
+
+                            <!-- Connection Line 1 -->
+                            <div class="w-full md:w-1/4 h-16 flex items-center justify-center relative">
+                                <div class="connection-line w-full">
+                                    <div class="connection-packet"></div>
+                                </div>
+                                <span class="absolute -top-4 text-xs text-slate-400">SNC Encryption</span>
+                            </div>
+
+                            <!-- SAP Router -->
+                            <div class="w-full md:w-1/6 bg-blue-900 p-4 rounded border-2 border-blue-500 text-center z-10 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                                <div class="text-2xl mb-1">🛡️</div>
+                                <div class="font-bold text-sm">SAP Router</div>
+                                <div class="text-xs text-blue-200">DMZ Proxy</div>
+                            </div>
+
+                            <!-- Connection Line 2 -->
+                            <div class="w-full md:w-1/4 h-16 flex items-center justify-center relative">
+                                <div class="connection-line w-full">
+                                    <div class="connection-packet" style="animation-delay: 1s"></div>
+                                </div>
+                                <span class="absolute -top-4 text-xs text-slate-400">Internet (HTTPS)</span>
+                            </div>
+
+                            <!-- SAP Side -->
+                            <div class="w-full md:w-1/4 bg-slate-800 p-4 rounded border border-slate-700 text-center z-10">
+                                <div class="text-4xl mb-2">☁️</div>
+                                <div class="font-bold">SAP Backbone</div>
+                                <div class="text-xs text-slate-400 mt-2">Support Portal / SWDC</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Components Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        ${data.components.map(comp => `
+                            <div class="bg-white p-6 rounded shadow-sm border-t-4 border-blue-500">
+                                <h4 class="font-bold text-lg text-slate-800 mb-2">${comp.name}</h4>
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">${comp.role}</span>
+                                <p class="text-sm text-slate-600 mt-4 leading-relaxed">${comp.detail}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMechanics(data) {
+            return `
+                <div class="grid grid-cols-1 gap-6">
+                    ${data.features.map(feat => `
+                        <div class="bg-white p-6 rounded-lg shadow-sm flex flex-col md:flex-row hover:shadow-md transition-shadow">
+                            <div class="md:w-1/3 border-r border-slate-100 pr-6 mb-4 md:mb-0">
+                                <h3 class="text-xl font-bold text-blue-900">${feat.title}</h3>
+                                <p class="text-sm text-slate-500 mt-2">${feat.desc}</p>
+                            </div>
+                            <div class="md:w-2/3 md:pl-6">
+                                ${getMechanismVisual(feat.id)}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Helper for Mechanics Visuals
+        function getMechanismVisual(type) {
+            if (type === 'snote') {
+                return `
+                    <div class="flex items-center text-xs font-mono space-x-2 overflow-x-auto py-2">
+                        <div class="bg-slate-100 p-2 border rounded text-center min-w-[80px]">Note<br>Download</div>
+                        <div>➡</div>
+                        <div class="bg-amber-50 p-2 border border-amber-200 rounded text-center min-w-[80px]">Validity<br>Check</div>
+                        <div>➡</div>
+                        <div class="bg-blue-50 p-2 border border-blue-200 rounded text-center min-w-[80px]">Dependency<br>Calc</div>
+                        <div>➡</div>
+                        <div class="bg-green-50 p-2 border border-green-200 rounded text-center min-w-[80px]">Code<br>Implementation</div>
+                        <div>➡</div>
+                        <div class="bg-slate-800 text-white p-2 rounded text-center min-w-[80px]">Activation</div>
+                    </div>
+                `;
+            } else if (type === 'maintenance') {
+                return `
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200 text-sm">
+                        <div class="flex justify-between items-center mb-2">
+                            <span>Current State (LMDB)</span>
+                            <span class="text-blue-500 font-bold">+</span>
+                            <span>Target State (S/4HANA 2023)</span>
+                        </div>
+                        <div class="w-full bg-slate-200 h-2 rounded overflow-hidden mb-2">
+                            <div class="bg-blue-500 h-full w-2/3"></div>
+                        </div>
+                        <div class="text-center font-bold text-blue-800">
+                            Output: Stack XML (MP.xml)
+                        </div>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div class="flex justify-between items-center text-sm">
+                        <div class="text-center">
+                            <div class="bg-red-100 text-red-800 p-2 rounded font-bold mb-1">Very High</div>
+                            <div class="text-xs">Customer</div>
+                        </div>
+                        <div class="flex-1 border-t-2 border-dashed border-slate-300 mx-4 relative h-0">
+                            <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-2 text-xs text-slate-500">24x7 Routing</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="bg-blue-100 text-blue-800 p-2 rounded font-bold mb-1">MCC</div>
+                            <div class="text-xs">Mission Control</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderDiagnostics(data) {
+            return `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- EWA Stepper -->
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-xl font-bold mb-6 text-slate-800">EarlyWatch Alert (EWA) 数据流</h3>
+                        <div class="space-y-0">
+                            ${data.ewa_steps.map((step, idx) => `
+                                <div class="flex group">
+                                    <div class="flex flex-col items-center mr-4">
+                                        <div class="w-8 h-8 flex items-center justify-center rounded-full border-2 border-blue-500 bg-white text-blue-500 font-bold group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                            ${idx + 1}
+                                        </div>
+                                        ${idx < data.ewa_steps.length - 1 ? '<div class="w-0.5 h-12 bg-slate-200 my-1"></div>' : ''}
+                                    </div>
+                                    <div class="pb-8 pt-1">
+                                        <p class="text-slate-700 text-sm group-hover:text-blue-800 transition-colors">${step}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Tools Grid -->
+                    <div class="space-y-4">
+                        <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-100">
+                            <h4 class="font-bold text-emerald-800">ANST (Automated Note Search Tool)</h4>
+                            <p class="text-sm text-emerald-700 mt-1">交易代码: ANST。不仅是搜索，它通过 Trace 跟踪 ABAP 执行路径，精准识别哪些标准对象（Function, Class）被调用，并直接匹配相关的 Bug Fix Notes。它是解决“未解释的程序错误”的神器。</p>
+                        </div>
+                        <div class="bg-sky-50 p-4 rounded-lg border border-sky-100">
+                            <h4 class="font-bold text-sky-800">SDCCN (Service Data Control Center)</h4>
+                            <p class="text-sm text-sky-700 mt-1">后台数据收集的总指挥。它管理 'Task'。从传统的 RFC 推送模式，演进为 HTTP 拉取模式，以适应云端安全要求。</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFuture(data) {
+            return `
+                <div class="bg-white p-8 rounded-xl shadow-lg border-t-8 border-indigo-500">
+                    <h3 class="text-2xl font-bold mb-8 text-center text-slate-800">下一代支持服务特征</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        ${data.trends.map(trend => `
+                            <div class="text-center p-4 hover:bg-slate-50 rounded transition-colors">
+                                <div class="h-16 w-16 mx-auto bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-2xl mb-4">
+                                    ${trend.title === 'Expert Chat' ? '💬' : trend.title === 'Predictive Support' ? '🔮' : '🌐'}
+                                </div>
+                                <h4 class="font-bold text-slate-800 mb-2">${trend.title}</h4>
+                                <p class="text-sm text-slate-600">${trend.desc}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                        <p class="text-xs text-slate-400">Integration Target: SAP Cloud ALM for Implementation & Operations</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- CHART INITIALIZATION ---
+        
+        let evolutionChartInstance = null;
+
+        function initEvolutionChart(chartData) {
+            const ctx = document.getElementById('evolutionChart');
+            if(!ctx) return;
+            
+            if(evolutionChartInstance) evolutionChartInstance.destroy();
+
+            evolutionChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [
+                        {
+                            label: '用户手动复杂度',
+                            data: chartData.complexity,
+                            type: 'line',
+                            borderColor: '#ef4444',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: '后台自动化程度',
+                            data: chartData.automation,
+                            backgroundColor: '#3b82f6',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: '复杂度 (低优)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: '自动化 %' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSection('evolution');
+        });
+
+    </script>
+</body>
+</html>
