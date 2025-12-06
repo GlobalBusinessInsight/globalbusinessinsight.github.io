@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025 China-US Aviation Profitability Pro v4.0</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js (via cdnjs for stability) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <!-- Plotly.js (via cdnjs for stability) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- Google Fonts -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background-color: #f1f5f9; /* Slate 100 */
+            color: #0f172a; /* Slate 900 */
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Form Controls */
+        .input-group label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 2px;
+            display: block;
+        }
+        
+        .input-group input[type="number"], .input-group select {
+            width: 100%;
+            padding: 4px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #334155;
+            transition: all 0.2s;
+            background-color: #fff;
+        }
+
+        .input-group input:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .input-group input:disabled {
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* Range Slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #2563eb;
+        }
+
+        /* Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .kpi-value { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Layout Utilities */
+        .panel-header {
+            padding: 0.75rem 1rem;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-title { font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase; }
+        
+        /* Language Switcher */
+        .lang-switch {
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #334155;
+            color: #94a3b8;
+            padding: 3px;
+            border-radius: 6px;
+            display: flex;
+            cursor: pointer;
+            border: 1px solid #475569;
+        }
+        .lang-option {
+            padding: 2px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .lang-active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- Top Navigation Bar -->
+    <header class="relative bg-slate-900 text-white shadow-lg z-20 flex-none h-14 flex items-center justify-between px-6 border-b border-slate-700">
+        <!-- Left: Branding -->
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 w-8 h-8 rounded flex items-center justify-center font-bold text-sm shadow-md">Pro</div>
+            <div>
+                <h1 class="font-bold text-sm tracking-wide leading-tight" data-i18n="appTitle">中美航线收益精算系统</h1>
+                <div class="text-[10px] text-slate-400">Route Profitability Model v4.0</div>
+            </div>
+        </div>
+        
+        <!-- Center: Logo (1/3 size roughly corresponds to 24px height in this context) -->
+        <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <img src="https://globalbusinessinsight.github.io/picture/inossem_logo.svg" alt="Logo" style="height: 24px; opacity: 0.95;">
+        </div>
+        
+        <!-- Right: Controls -->
+        <div class="flex items-center space-x-6">
+            <!-- Global Macro Variables -->
+            <div class="flex items-center bg-slate-800 rounded px-3 py-1 border border-slate-700">
+                <label class="text-[10px] text-slate-400 mr-2 font-bold" data-i18n="lblExch">USD/CNY 汇率</label>
+                <input type="number" id="global-exch" value="7.28" step="0.01" class="w-14 bg-transparent text-right font-mono font-bold text-green-400 border-none focus:ring-0 p-0 text-sm" onchange="updateFuelFromUSD()">
+            </div>
+            
+            <div class="flex items-center bg-slate-800 rounded px-3 py-1 border border-slate-700">
+                <label class="text-[10px] text-slate-400 mr-2 font-bold" data-i18n="lblOil">国际油价 (Brent USD)</label>
+                <input type="number" id="global-oil" value="78" step="1" class="w-12 bg-transparent text-right font-mono font-bold text-yellow-400 border-none focus:ring-0 p-0 text-sm" onchange="updateFuelFromUSD()">
+                <span class="text-[10px] text-slate-500 ml-1">/bbl</span>
+            </div>
+
+            <!-- Language Switcher -->
+            <div class="lang-switch" onclick="toggleLanguage()">
+                <span id="lang-cn" class="lang-option lang-active">CN</span>
+                <span id="lang-en" class="lang-option">EN</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="flex flex-grow overflow-hidden">
+        
+        <!-- LEFT SIDEBAR: INPUT PARAMETERS -->
+        <aside class="w-[420px] bg-white border-r border-slate-200 flex flex-col z-10 flex-none shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+            <div class="panel-header">
+                <span class="panel-title" data-i18n="secParams">参数配置 (Parameters)</span>
+                <button onclick="resetDefaults()" class="text-[10px] text-blue-600 hover:underline cursor-pointer font-medium" data-i18n="btnReset">重置默认值</button>
+            </div>
+            
+            <div class="flex-grow overflow-y-auto custom-scroll p-4 space-y-6">
+                
+                <!-- Group 1: Route & Ops -->
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-slate-900 border-l-4 border-blue-500 pl-2" data-i18n="secOps">1. 航线与运营 (Operations)</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="col-span-2 input-group">
+                            <label data-i18n="lblRoute">航线预设</label>
+                            <select id="sel-route" onchange="updateRouteParams()">
+                                <option value="PEK-LAX">PEK (Beijing) - LAX (Los Angeles)</option>
+                                <option value="PEK-JFK">PEK (Beijing) - JFK (New York)</option>
+                                <option value="PVG-SFO">PVG (Shanghai) - SFO (San Francisco)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label data-i18n="lblTime">飞行时间 (小时)</label>
+                            <input type="number" id="in-time" value="12.5" step="0.1" oninput="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label data-i18n="lblDist">航程距离 (km)</label>
+                            <input type="number" id="in-dist" value="10000" disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group 2: Revenue -->
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-slate-900 border-l-4 border-green-500 pl-2" data-i18n="secRev">2. 收益结构 (Revenue)</h3>
+                    
+                    <!-- First Class -->
+                    <div class="bg-slate-50 p-2 rounded border border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold text-slate-700"><span data-i18n="lblClassF">头等舱 (F)</span> - 8 <span data-i18n="lblSeats">座</span></span>
+                            <span id="txt-lf-f" class="text-[10px] font-mono text-slate-500">LF: 60%</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="input-group">
+                                <label data-i18n="lblPrice">票价 (含税)</label>
+                                <input type="number" id="in-price-f" value="85000" step="1000" oninput="calculate()">
+                            </div>
+                            <div class="input-group flex flex-col justify-end">
+                                <input type="range" id="in-lf-f" min="0" max="100" value="60" oninput="calculate()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Business Class -->
+                    <div class="bg-slate-50 p-2 rounded border border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold text-slate-700"><span data-i18n="lblClassC">公务舱 (C)</span> - 42 <span data-i18n="lblSeats">座</span></span>
+                            <span id="txt-lf-c" class="text-[10px] font-mono text-slate-500">LF: 75%</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="input-group">
+                                <label data-i18n="lblPrice">票价 (含税)</label>
+                                <input type="number" id="in-price-c" value="32000" step="500" oninput="calculate()">
+                            </div>
+                            <div class="input-group flex flex-col justify-end">
+                                <input type="range" id="in-lf-c" min="0" max="100" value="75" oninput="calculate()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Economy Class -->
+                    <div class="bg-slate-50 p-2 rounded border border-slate-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold text-slate-700"><span data-i18n="lblClassY">经济舱 (Y)</span> - 261 <span data-i18n="lblSeats">座</span></span>
+                            <span id="txt-lf-y" class="text-[10px] font-mono text-slate-500">LF: 88%</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="input-group">
+                                <label data-i18n="lblPrice">票价 (含税)</label>
+                                <input type="number" id="in-price-y" value="6500" step="100" oninput="calculate()">
+                            </div>
+                            <div class="input-group flex flex-col justify-end">
+                                <input type="range" id="in-lf-y" min="0" max="100" value="88" oninput="calculate()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cargo -->
+                    <div class="grid grid-cols-2 gap-3 pt-2">
+                        <div class="input-group">
+                            <label data-i18n="lblCargoLoad">腹舱载货 (吨)</label>
+                            <input type="number" id="in-cargo-load" value="12" step="0.5" oninput="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label data-i18n="lblCargoYield">货运费率 (CNY/kg)</label>
+                            <input type="number" id="in-cargo-yield" value="28" step="1" oninput="calculate()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group 3: Costs -->
+                <div class="space-y-3 pb-6">
+                    <h3 class="text-xs font-bold text-slate-900 border-l-4 border-red-500 pl-2" data-i18n="secCost">3. 成本因子 (Costs)</h3>
+                    
+                    <div class="bg-red-50 p-3 rounded border border-red-100 space-y-2">
+                        <div class="flex justify-between">
+                            <label class="text-[10px] font-bold text-red-800" data-i18n="lblFuelEst">航油成本估算</label>
+                            <span class="text-[10px] text-red-600" id="fuel-calc-info">Based on Real-time Rate</span>
+                        </div>
+                        <div class="input-group">
+                            <label data-i18n="lblFuelPrice">航油综合价格 (CNY/吨)</label>
+                            <input type="number" id="in-fuel-price-cny" value="7200" step="10" oninput="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label data-i18n="lblFuelBurn">小时耗油 (吨/h) - B77W</label>
+                            <input type="number" id="in-fuel-burn" value="7.5" step="0.1" oninput="calculate()">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="input-group">
+                            <label data-i18n="lblFees">起降/航路费 (CNY)</label>
+                            <input type="number" id="in-fees" value="160000" step="1000" oninput="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label data-i18n="lblOwn">飞机日租/折旧 (CNY)</label>
+                            <input type="number" id="in-ownership" value="180000" step="1000" oninput="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label data-i18n="lblCrew">机组小时费 (CNY)</label>
+                            <input type="number" id="in-crew-cost" value="6500" step="100" oninput="calculate()">
+                        </div>
+                        <div class="input-group">
+                            <label data-i18n="lblMaint">维修小时费 (PBH)</label>
+                            <input type="number" id="in-maint" value="8500" step="100" oninput="calculate()">
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label data-i18n="lblOverhead">其他运营杂费 %</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="range" id="in-overhead" min="5" max="25" value="12" oninput="calculate()">
+                            <span id="txt-overhead" class="text-xs font-mono w-8">12%</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+        <!-- RIGHT MAIN DASHBOARD -->
+        <main class="flex-grow bg-slate-50 flex flex-col min-w-0">
+            
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-4 gap-4 p-4 border-b border-slate-200 bg-white">
+                <!-- Profit -->
+                <div class="p-3 rounded border border-slate-100 shadow-sm bg-gradient-to-br from-white to-slate-50 relative overflow-hidden">
+                    <div class="text-[10px] uppercase text-slate-400 font-bold tracking-wider" data-i18n="kpiProfit">预估单班净利润 (Net Profit)</div>
+                    <div class="text-2xl font-bold mt-1 kpi-value" id="kpi-profit">--</div>
+                    <div class="text-xs mt-1 font-medium flex items-center" id="kpi-status">--</div>
+                    <div class="absolute right-0 top-0 h-full w-1 bg-slate-200" id="profit-bar-indicator"></div>
+                </div>
+
+                <!-- Margin -->
+                <div class="p-3 rounded border border-slate-100 shadow-sm bg-white">
+                    <div class="text-[10px] uppercase text-slate-400 font-bold tracking-wider" data-i18n="kpiMargin">利润率 (Margin)</div>
+                    <div class="text-2xl font-bold mt-1 kpi-value text-slate-700" id="kpi-margin">--</div>
+                    <div class="w-full bg-slate-100 h-1.5 mt-2 rounded-full overflow-hidden">
+                        <div id="progress-margin" class="h-full bg-slate-400" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Breakeven -->
+                <div class="p-3 rounded border border-slate-100 shadow-sm bg-white">
+                    <div class="text-[10px] uppercase text-slate-400 font-bold tracking-wider" data-i18n="kpiBe">盈亏平衡客座率 (BE LF)</div>
+                    <div class="text-2xl font-bold mt-1 kpi-value text-orange-600" id="kpi-be">--</div>
+                    <div class="text-[10px] text-slate-400 mt-1"><span data-i18n="lblCurrLF">当前综合客座率</span>: <span class="text-slate-600 font-bold" id="kpi-lf-curr">--</span></div>
+                </div>
+
+                <!-- RASK/CASK -->
+                <div class="p-3 rounded border border-slate-100 shadow-sm bg-white flex flex-col justify-center space-y-2">
+                    <div class="flex justify-between items-baseline border-b border-dashed border-slate-200 pb-1">
+                        <span class="text-[10px] font-bold text-slate-500" data-i18n="kpiRask">RASK (收)</span>
+                        <span class="text-sm font-bold kpi-value text-indigo-600" id="kpi-rask">--</span>
+                    </div>
+                    <div class="flex justify-between items-baseline">
+                        <span class="text-[10px] font-bold text-slate-500" data-i18n="kpiCask">CASK (支)</span>
+                        <span class="text-sm font-bold kpi-value text-red-600" id="kpi-cask">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization Area -->
+            <div class="flex-grow p-4 overflow-y-auto custom-scroll space-y-4">
+                
+                <!-- Chart 1: Waterfall P&L -->
+                <div class="bg-white p-4 rounded shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-sm font-bold text-slate-700" data-i18n="chartWfTitle">收益与成本构成全景瀑布图</h3>
+                        <div class="text-[10px] text-slate-400" data-i18n="chartUnit">单位: 万元 (CNY)</div>
+                    </div>
+                    <!-- Fixed height container for Plotly -->
+                    <div id="waterfall-chart" style="width: 100%; height: 350px;"></div>
+                </div>
+
+                <!-- Row 2: Charts -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Breakeven Chart -->
+                    <div class="bg-white p-4 rounded shadow-sm border border-slate-200 h-[300px] flex flex-col">
+                        <h3 class="text-sm font-bold text-slate-700 mb-2" data-i18n="chartBeTitle">盈亏平衡敏感性分析</h3>
+                        <div class="flex-grow relative">
+                            <canvas id="beChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Cost Donut -->
+                    <div class="bg-white p-4 rounded shadow-sm border border-slate-200 h-[300px] flex flex-col">
+                        <h3 class="text-sm font-bold text-slate-700 mb-2" data-i18n="chartCostTitle">成本结构分布</h3>
+                        <div class="flex-grow relative flex justify-center">
+                            <canvas id="costChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center py-4 text-[10px] text-slate-400">
+                    <span data-i18n="footer">© 2025 航空经济研究组 | 仅供模拟分析使用</span>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        // --- Translations ---
+        const I18N = {
+            zh: {
+                appTitle: "中美航线收益精算系统",
+                lblExch: "USD/CNY 汇率",
+                lblOil: "国际油价 (Brent USD)",
+                secParams: "参数配置",
+                btnReset: "重置默认值",
+                secOps: "1. 航线与运营",
+                lblRoute: "航线预设",
+                lblTime: "飞行时间 (小时)",
+                lblDist: "航程距离 (km)",
+                secRev: "2. 收益结构",
+                lblClassF: "头等舱 (F)",
+                lblClassC: "公务舱 (C)",
+                lblClassY: "经济舱 (Y)",
+                lblSeats: "座",
+                lblPrice: "票价 (含税)",
+                lblCargoLoad: "腹舱载货 (吨)",
+                lblCargoYield: "货运费率 (CNY/kg)",
+                secCost: "3. 成本因子",
+                lblFuelEst: "航油成本估算",
+                lblFuelPrice: "航油综合价格 (CNY/吨)",
+                lblFuelBurn: "小时耗油 (吨/h)",
+                lblFees: "起降/航路费 (CNY)",
+                lblOwn: "飞机日租/折旧 (CNY)",
+                lblCrew: "机组小时费 (CNY)",
+                lblMaint: "维修小时费 (PBH)",
+                lblOverhead: "其他运营杂费 %",
+                kpiProfit: "预估单班净利润",
+                kpiMargin: "利润率",
+                kpiBe: "盈亏平衡客座率",
+                lblCurrLF: "当前综合客座率",
+                kpiRask: "RASK (收)",
+                kpiCask: "CASK (支)",
+                chartWfTitle: "收益与成本构成全景瀑布图",
+                chartUnit: "单位: 万元 (CNY)",
+                chartBeTitle: "盈亏平衡敏感性分析",
+                chartCostTitle: "成本结构分布",
+                footer: "© 2025 航空经济研究组 | 仅供模拟分析使用",
+                statusProfit: "盈利",
+                statusLoss: "亏损",
+                wfLabels: ["头等舱", "公务舱", "经济舱", "货运", "总收入", "燃油", "机组", "维修", "费用", "租金", "杂费", "净利润"],
+                beSeries: ["总成本", "总收入"],
+                beAxisX: "客座率 (%)",
+                costLabels: ['燃油', '机组', '维修', '费税', '租金', '杂费']
+            },
+            en: {
+                appTitle: "China-US Route Profitability Model",
+                lblExch: "USD/CNY Rate",
+                lblOil: "Brent Oil (USD)",
+                secParams: "Parameters",
+                btnReset: "Reset Defaults",
+                secOps: "1. Operations",
+                lblRoute: "Route Preset",
+                lblTime: "Flight Time (Hrs)",
+                lblDist: "Distance (km)",
+                secRev: "2. Revenue Structure",
+                lblClassF: "First (F)",
+                lblClassC: "Business (C)",
+                lblClassY: "Economy (Y)",
+                lblSeats: "Seats",
+                lblPrice: "Price (Tax Inc.)",
+                lblCargoLoad: "Cargo Load (Tons)",
+                lblCargoYield: "Cargo Yield (CNY/kg)",
+                secCost: "3. Cost Factors",
+                lblFuelEst: "Fuel Cost Est.",
+                lblFuelPrice: "Jet Fuel Price (CNY/Ton)",
+                lblFuelBurn: "Burn Rate (Ton/Hr)",
+                lblFees: "Fees/Landing (CNY)",
+                lblOwn: "Ownership/Lease (CNY)",
+                lblCrew: "Crew Cost/Hr (CNY)",
+                lblMaint: "Maint Cost/Hr (CNY)",
+                lblOverhead: "Overheads %",
+                kpiProfit: "Est. Net Profit",
+                kpiMargin: "Profit Margin",
+                kpiBe: "Breakeven L.F.",
+                lblCurrLF: "Current Load Factor",
+                kpiRask: "RASK (Rev)",
+                kpiCask: "CASK (Cost)",
+                chartWfTitle: "Revenue & Cost Waterfall Analysis",
+                chartUnit: "Unit: 10k CNY",
+                chartBeTitle: "Breakeven Sensitivity",
+                chartCostTitle: "Cost Structure",
+                footer: "© 2025 Aviation Econ Group | Simulation Only",
+                statusProfit: "PROFIT",
+                statusLoss: "LOSS",
+                wfLabels: ["First", "Business", "Economy", "Cargo", "Total Rev", "Fuel", "Crew", "Maint", "Fees", "Rent", "Overhead", "Net Profit"],
+                beSeries: ["Total Cost", "Total Revenue"],
+                beAxisX: "Load Factor (%)",
+                costLabels: ['Fuel', 'Crew', 'Maint', 'Fees', 'Rent', 'Overhead']
+            }
+        };
+
+        // --- Configuration & Constants ---
+        const ROUTES = {
+            'PEK-LAX': { dist: 10000, time: 12.5, fees: 160000 },
+            'PEK-JFK': { dist: 11000, time: 14.5, fees: 180000 },
+            'PVG-SFO': { dist: 9900, time: 11.5, fees: 155000 }
+        };
+
+        const AIRCRAFT = {
+            seatsF: 8,
+            seatsC: 42,
+            seatsY: 261,
+            totalSeats: 311
+        };
+
+        let currentLang = 'zh';
+        let charts = {}; // Store Chart.js instances
+
+        // --- Utility Functions ---
+        const $ = id => document.getElementById(id);
+        const formatMoney = val => '¥' + Math.round(val).toLocaleString();
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            
+            // Update Toggle UI
+            $('lang-cn').className = `lang-option ${currentLang === 'zh' ? 'lang-active' : ''}`;
+            $('lang-en').className = `lang-option ${currentLang === 'en' ? 'lang-active' : ''}`;
+            
+            // Update Static Text
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (I18N[currentLang][key]) {
+                    el.innerText = I18N[currentLang][key];
+                }
+            });
+
+            // Re-calculate to update Dynamic Charts & KPIs
+            calculate();
+        }
+        
+        // --- Core Logic: Exchange Rate to Fuel Price ---
+        function updateFuelFromUSD() {
+            const exch = parseFloat($('global-exch').value);
+            const oilPrice = parseFloat($('global-oil').value); // Crude
+            
+            // Logic: Jet Fuel Crack Spread ~ $18 + Crude, 1 Ton ~ 7.9 Barrels, 5% Overhead
+            const jetPriceUSD = oilPrice + 18; 
+            const priceCNY = jetPriceUSD * 7.9 * exch * 1.05; 
+            
+            $('in-fuel-price-cny').value = Math.round(priceCNY);
+            calculate();
+        }
+
+        function updateRouteParams() {
+            const route = $('sel-route').value;
+            const data = ROUTES[route];
+            $('in-time').value = data.time;
+            $('in-dist').value = data.dist;
+            $('in-fees').value = data.fees;
+            calculate();
+        }
+
+        function resetDefaults() {
+            $('global-exch').value = 7.28;
+            $('global-oil').value = 78;
+            
+            $('in-price-f').value = 85000; $('in-lf-f').value = 60;
+            $('in-price-c').value = 32000; $('in-lf-c').value = 75;
+            $('in-price-y').value = 6500;  $('in-lf-y').value = 88;
+            
+            $('in-cargo-load').value = 12; $('in-cargo-yield').value = 28;
+            
+            $('in-fuel-burn').value = 7.5;
+            $('in-crew-cost').value = 6500;
+            $('in-maint').value = 8500;
+            $('in-ownership').value = 180000;
+            $('in-overhead').value = 12;
+            
+            // Manually set without triggering double calc
+            const route = $('sel-route').value;
+            const data = ROUTES[route];
+            $('in-time').value = data.time;
+            $('in-dist').value = data.dist;
+            $('in-fees').value = data.fees;
+            
+            updateFuelFromUSD(); // Triggers final calc
+        }
+
+        // --- Main Calculation ---
+        function calculate() {
+            // Safety check for Chart.js
+            if (typeof Chart === 'undefined') {
+                console.warn("Chart.js not loaded yet");
+                return;
+            }
+
+            const L = I18N[currentLang]; // Short alias for current language strings
+
+            // 1. Get Inputs
+            const time = parseFloat($('in-time').value) || 0;
+            const dist = parseFloat($('in-dist').value) || 0;
+            const overheadPct = parseFloat($('in-overhead').value) / 100 || 0;
+            
+            // Update slider labels
+            $('txt-lf-f').innerText = "LF: " + $('in-lf-f').value + "%";
+            $('txt-lf-c').innerText = "LF: " + $('in-lf-c').value + "%";
+            $('txt-lf-y').innerText = "LF: " + $('in-lf-y').value + "%";
+            $('txt-overhead').innerText = $('in-overhead').value + "%";
+
+            // Revenue
+            const rF = AIRCRAFT.seatsF * ($('in-lf-f').value/100) * parseFloat($('in-price-f').value);
+            const rC = AIRCRAFT.seatsC * ($('in-lf-c').value/100) * parseFloat($('in-price-c').value);
+            const rY = AIRCRAFT.seatsY * ($('in-lf-y').value/100) * parseFloat($('in-price-y').value);
+            const rCargo = parseFloat($('in-cargo-load').value) * 1000 * parseFloat($('in-cargo-yield').value);
+            const totalRev = rF + rC + rY + rCargo;
+
+            // Costs
+            const cFuel = parseFloat($('in-fuel-burn').value) * time * parseFloat($('in-fuel-price-cny').value);
+            const cCrew = parseFloat($('in-crew-cost').value) * time;
+            const cMaint = parseFloat($('in-maint').value) * time;
+            const cFees = parseFloat($('in-fees').value);
+            const cOwn = parseFloat($('in-ownership').value);
+            
+            const cDirect = cFuel + cCrew + cMaint + cFees + cOwn;
+            const cOver = cDirect * overheadPct;
+            const totalCost = cDirect + cOver;
+
+            // Profit & Metrics
+            const profit = totalRev - totalCost;
+            const margin = (profit / totalRev) * 100;
+            const ask = AIRCRAFT.totalSeats * dist;
+            const rask = totalRev / ask;
+            const cask = totalCost / ask;
+
+            // Breakeven Logic
+            const maxPaxRev = (AIRCRAFT.seatsF * parseFloat($('in-price-f').value)) +
+                              (AIRCRAFT.seatsC * parseFloat($('in-price-c').value)) +
+                              (AIRCRAFT.seatsY * parseFloat($('in-price-y').value));
+            const costForPax = totalCost - rCargo;
+            const beLF = (costForPax / maxPaxRev) * 100;
+            
+            // Current Pax Load
+            const currPax = (AIRCRAFT.seatsF * ($('in-lf-f').value/100)) + 
+                            (AIRCRAFT.seatsC * ($('in-lf-c').value/100)) + 
+                            (AIRCRAFT.seatsY * ($('in-lf-y').value/100));
+            const currLF = (currPax / AIRCRAFT.totalSeats) * 100;
+
+            // --- Update UI ---
+            const kpiProfit = $('kpi-profit');
+            kpiProfit.innerText = formatMoney(profit);
+            kpiProfit.className = `text-2xl font-bold mt-1 kpi-value ${profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+            
+            const kpiStatus = $('kpi-status');
+            kpiStatus.innerHTML = profit >= 0 ? 
+                `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px]">${L.statusProfit}</span>` : 
+                `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-[10px]">${L.statusLoss}</span>`;
+            
+            $('profit-bar-indicator').className = `absolute right-0 top-0 h-full w-1 ${profit >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}`;
+            
+            $('kpi-margin').innerText = margin.toFixed(1) + "%";
+            $('progress-margin').className = `h-full ${profit >= 0 ? 'bg-emerald-500' : 'bg-rose-500'}`;
+            $('progress-margin').style.width = Math.min(Math.abs(margin), 100) + "%";
+
+            $('kpi-be').innerText = beLF.toFixed(1) + "%";
+            $('kpi-lf-curr').innerText = currLF.toFixed(1) + "%";
+            $('kpi-rask').innerText = rask.toFixed(2);
+            $('kpi-cask').innerText = cask.toFixed(2);
+
+            // Render Charts
+            renderWaterfall(rF, rC, rY, rCargo, cFuel, cCrew, cMaint, cFees, cOwn, cOver, profit, L);
+            renderBreakeven(totalCost, rCargo, maxPaxRev, currLF, L);
+            renderCostDonut(cFuel, cCrew, cMaint, cFees, cOwn, cOver, L);
+        }
+
+        // --- Chart Renderers ---
+        function renderWaterfall(rF, rC, rY, rCargo, cFuel, cCrew, cMaint, cFees, cOwn, cOver, profit, L) {
+            // Safety check for Plotly
+            if (typeof Plotly === 'undefined') return;
+
+            const data = [{
+                type: "waterfall",
+                orientation: "v",
+                measure: ["relative", "relative", "relative", "relative", "total", "relative", "relative", "relative", "relative", "relative", "relative", "total"],
+                x: L.wfLabels,
+                textposition: "outside",
+                text: [
+                    (rF/10000).toFixed(0), (rC/10000).toFixed(0), (rY/10000).toFixed(0), (rCargo/10000).toFixed(0), ((rF+rC+rY+rCargo)/10000).toFixed(0),
+                    "-"+(cFuel/10000).toFixed(0), "-"+(cCrew/10000).toFixed(0), "-"+(cMaint/10000).toFixed(0), 
+                    "-"+(cFees/10000).toFixed(0), "-"+(cOwn/10000).toFixed(0), "-"+(cOver/10000).toFixed(0), (profit/10000).toFixed(0)
+                ],
+                y: [rF, rC, rY, rCargo, 0, -cFuel, -cCrew, -cMaint, -cFees, -cOwn, -cOver, 0],
+                connector: { line: { color: "#94a3b8" } },
+                increasing: { marker: { color: "#10b981" } }, 
+                decreasing: { marker: { color: "#f43f5e" } }, 
+                totals: { marker: { color: "#3b82f6" } }
+            }];
+
+            const layout = {
+                autosize: true,
+                margin: { l: 40, r: 20, t: 20, b: 30 },
+                yaxis: { title: currentLang === 'zh' ? "金额 (万元)" : "Amt (10k CNY)", tickformat: ".2s" },
+                font: { family: 'Noto Sans SC', size: 10 },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)'
+            };
+            
+            Plotly.react('waterfall-chart', data, layout, { displayModeBar: false, responsive: true });
+        }
+
+        function renderBreakeven(totalCost, cargoRev, maxPaxRev, currLF, L) {
+            const ctx = document.getElementById('beChart').getContext('2d');
+            const points = [0, 20, 40, 60, 80, 100];
+            const costData = points.map(() => totalCost);
+            const revData = points.map(lf => (maxPaxRev * (lf/100)) + cargoRev);
+
+            if (charts.be) charts.be.destroy();
+
+            charts.be = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: points,
+                    datasets: [
+                        { label: L.beSeries[0], data: costData, borderColor: '#f43f5e', borderWidth: 2, pointRadius: 0, borderDash: [5, 5] },
+                        { label: L.beSeries[1], data: revData, borderColor: '#10b981', borderWidth: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', align: 'end' }, tooltip: { mode: 'index', intersect: false } },
+                    scales: {
+                        y: { 
+                            ticks: { 
+                                callback: v => currentLang === 'zh' ? (v/10000).toFixed(0) + '万' : (v/1000).toFixed(0) + 'k'
+                            }, 
+                            grid: { color: '#f1f5f9' } 
+                        },
+                        x: { title: { display: true, text: L.beAxisX }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderCostDonut(cFuel, cCrew, cMaint, cFees, cOwn, cOver, L) {
+            const ctx = document.getElementById('costChart').getContext('2d');
+            if (charts.cost) charts.cost.destroy();
+
+            charts.cost = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: L.costLabels,
+                    datasets: [{
+                        data: [cFuel, cCrew, cMaint, cFees, cOwn, cOver],
+                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#3b82f6', '#6366f1', '#94a3b8'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: {size: 10} } } },
+                    cutout: '60%'
+                }
+            });
+        }
+
+        // --- Init ---
+        window.onload = function() {
+            // Check if libraries loaded
+            if (typeof Chart !== 'undefined') {
+                resetDefaults();
+            } else {
+                // Retry once after 1s if CDN is slow
+                setTimeout(() => {
+                    if (typeof Chart !== 'undefined') resetDefaults();
+                }, 1000);
+            }
+        };
+        
+        window.addEventListener('resize', () => {
+            if (charts.be) charts.be.resize();
+            if (charts.cost) charts.cost.resize();
+            if (typeof Plotly !== 'undefined') Plotly.relayout('waterfall-chart', { autosize: true });
+        });
+    </script>
+</body>
+</html>
