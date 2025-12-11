@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUSINESS | Risen Energy Analysis - The Journal Style</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 引入类似WSJ的衬线字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Libre+Franklin:wght@300;400;600&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --wsj-black: #222222;
+            --wsj-grey: #555555;
+            --wsj-light-grey: #EBEBEB;
+            --wsj-border: #d7d7d7;
+            --risen-orange: #F58220; /* 东方日升品牌色近似 */
+            --risen-blue: #005FAB;
+            --bg-paper: #F8F8F8;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'Times New Roman', serif;
+            color: var(--wsj-black);
+            background-color: #fff;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 报头样式 */
+        .wsj-header {
+            border-bottom: 1px solid var(--wsj-black);
+            padding-bottom: 2px;
+            margin-bottom: 2px;
+        }
+        
+        .section-tag {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            color: var(--wsj-grey);
+            letter-spacing: 0.05em;
+        }
+
+        /* 标题体系 */
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 2.2rem; /* 移动端适配 */
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+        }
+        @media (min-width: 768px) {
+            h1 { font-size: 2.8rem; }
+        }
+        
+        h2 {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 300;
+            font-size: 1.1rem;
+            color: var(--wsj-grey);
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+        h3 {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--wsj-black);
+            padding-bottom: 0.25rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        /* 侧边栏/快讯风格 */
+        .sidebar-box {
+            border-top: 4px solid var(--wsj-black);
+            border-bottom: 1px solid var(--wsj-border);
+            padding: 1.25rem 0;
+            background-color: #fcfcfc;
+        }
+        .market-data-label {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .market-data-value {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--wsj-black);
+        }
+
+        /* 正文首字下沉 */
+        .drop-cap::first-letter {
+            float: left;
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            line-height: 0.8;
+            padding-right: 0.5rem;
+            padding-top: 0.2rem;
+            font-weight: 700;
+            color: var(--risen-orange);
+        }
+
+        /* 列表样式 */
+        .wsj-list li {
+            position: relative;
+            padding-left: 1rem;
+            margin-bottom: 0.5rem;
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.9rem;
+        }
+        .wsj-list li::before {
+            content: "■";
+            color: var(--risen-orange);
+            font-size: 0.6rem;
+            position: absolute;
+            left: 0;
+            top: 0.4rem;
+        }
+
+        /* 图表容器 */
+        .chart-wrapper {
+            background-color: #fff;
+            border: 1px solid var(--wsj-border);
+            padding: 1rem;
+            margin: 2rem 0;
+        }
+        .chart-canvas-container {
+            position: relative;
+            height: 300px; /* 强制高度，解决布局抖动 */
+            width: 100%;
+        }
+        .chart-title {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        /* 区域深潜卡片 */
+        .region-card {
+            border: 1px solid var(--wsj-border);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            background-color: #fff;
+        }
+        .region-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+        .region-title {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--risen-blue);
+            font-size: 0.9rem;
+            flex-grow: 1;
+        }
+        .region-tag {
+            font-size: 0.7rem;
+            background-color: #eee;
+            padding: 2px 6px;
+            color: #555;
+            font-family: sans-serif;
+        }
+
+        /* 运营模式图示卡片 */
+        .ops-card {
+            background: #fff;
+            border-left: 4px solid var(--risen-blue);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* 图片容器 */
+        .img-container {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            background-color: #eee;
+        }
+        .img-caption {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.5rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.5rem;
+        }
+
+        /* 重点引言 */
+        .pull-quote {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--risen-orange);
+            border-top: 1px solid var(--wsj-black);
+            border-bottom: 1px solid var(--wsj-black);
+            padding: 1.5rem 0;
+            margin: 2rem 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <div class="max-w-6xl mx-auto px-4 py-3 border-b border-black flex justify-between items-center bg-white sticky top-0 z-50">
+        <div class="text-xs font-sans font-bold tracking-widest text-gray-500">ENERGY & TECH</div>
+        <div class="font-serif font-black text-xl md:text-2xl tracking-tight">THE JOURNAL.</div>
+        <div class="text-xs font-sans text-gray-500">Dec 2025</div>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Main Content (Left 8 cols) -->
+        <div class="lg:col-span-8">
+            <article>
+                <div class="mb-4">
+                    <span class="section-tag text-[#F58220]">Clean Energy</span>
+                </div>
+                <h1>东方日升：穿越周期的光伏长跑者</h1>
+                <h2>在光伏行业残酷的“内卷”与价格战中，这家老牌组件巨头押注异质结（HJT）技术与储能双赛道，试图在全球市场寻找新的增长极。</h2>
+                
+                <div class="flex items-center text-xs font-sans text-gray-500 mb-6 border-b border-gray-200 pb-4">
+                    <span class="font-bold text-black mr-2">By Risen Research Unit</span>
+                    <span>|</span>
+                    <span class="ml-2">Updated Dec. 2025</span>
+                </div>
+
+                <!-- 场景图 -->
+                <div class="img-container">
+                    <img src="https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/A371/production/_103414814_p06j807r.jpg.webp" class="w-full h-auto object-cover" alt="Risen Solar Project Australia">
+                    <div class="img-caption">东方日升在澳洲投建的大型光伏电站项目，不仅提供组件，更深度参与项目开发与运营。 / Source: BBC</div>
+                </div>
+
+                <p class="drop-cap mb-6 text-lg">
+                    在宁波宁海的工厂里，机械臂正在以毫秒级的速度组装最新的异质结（HJT）太阳能电池板。对于东方日升（Risen Energy, 300118.SZ）而言，这些闪着深蓝色光芒的板材不仅是产品，更是其在光伏行业新一轮技术迭代中生存与突围的赌注。
+                </p>
+
+                <p class="mb-6">
+                    作为全球光伏组件出货量常年稳居前十的巨头，东方日升正面临行业最寒冷的冬天——产业链价格暴跌、产能过剩。然而，凭借<strong>70%以上的海外高占比</strong>和对下一代电池技术的激进投入，这家企业正在构建一道独特的护城河。
+                </p>
+
+                <!-- Chart: Revenue Trend -->
+                <div class="chart-wrapper">
+                    <div class="chart-title">营收结构：海外驱动 (Revenue Breakdown)</div>
+                    <div class="chart-canvas-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-2 font-sans text-right">Source: Corporate Annual Reports</div>
+                </div>
+
+                <h3>核心战略：押注 HJT 异质结</h3>
+                <p class="mb-4">
+                    当大多数同行还在P型向N型TOPCon技术过渡时，东方日升选择了技术难度更高、但潜力更大的<strong>HJT（异质结）</strong>路线。
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="border-t-2 border-black pt-2">
+                        <h4 class="font-sans font-bold text-sm mb-2 text-[#F58220]">1. 伏曦 (Hyper-ion) 系列</h4>
+                        <ul class="wsj-list">
+                            <li><strong>技术壁垒：</strong> 采用超薄硅片（<100μm）和低银含浆料，大幅降低HJT成本。</li>
+                            <li><strong>效率：</strong> 功率突破700W+，转换效率超23.9%，专攻高端分布式和大型地面电站。</li>
+                            <li><strong>碳足迹：</strong> <400 kg CO2/kWc，极低的碳排放使其在欧洲高端市场极具竞争力。</li>
+                        </ul>
+                    </div>
+                    <div class="border-t-2 border-black pt-2">
+                        <h4 class="font-sans font-bold text-sm mb-2 text-[#F58220]">2. BIPV (光伏建筑一体化)</h4>
+                        <ul class="wsj-list">
+                            <li><strong>超能顶/超能瓦：</strong> 针对工商业屋顶开发的建材化光伏产品。</li>
+                            <li><strong>应用场景：</strong> 避开标准组件的价格红海，切入高毛利的绿色建筑市场。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="pull-quote">
+                    “在光伏行业，技术迭代不是选择题，而是生存题。东方日升对异质结的坚持，是为了在下一个十年不被淘汰。”
+                </div>
+
+                <h3>全球版图：深度透视 (Deep Dive)</h3>
+                <p class="mb-4">
+                    东方日升的全球化不仅是“卖产品”，更是“造血”与“输血”的结合。其海外布局呈现出明显的<strong>“制造+服务+投资”</strong>三位一体特征。
+                </p>
+
+                <!-- 欧洲板块 -->
+                <div class="region-card">
+                    <div class="region-header">
+                        <span class="text-2xl mr-2">🇪🇺</span>
+                        <div class="region-title">欧洲 (Europe)</div>
+                        <span class="region-tag">核心利润仓</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h5 class="font-bold text-xs text-gray-500 uppercase mb-1">市场策略</h5>
+                            <p class="text-sm text-gray-700">
+                                <strong>碳足迹红利：</strong> 利用HJT组件的低碳属性（法国碳足迹认证），在法国、意大利等对环保要求极高的市场获得溢价。
+                                <br><strong>分销网络：</strong> 在西班牙、波兰建立了强大的分销商网络，主攻户用和工商业屋顶（DG市场）。
+                            </p>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-xs text-gray-500 uppercase mb-1">关键数据</h5>
+                            <p class="text-sm text-gray-700">
+                                <strong>HJT出货：</strong> 2024年在Intersolar Europe上斩获大量HJT订单。<br>
+                                <strong>优势：</strong> 700W+高功率组件在大型地面电站中能显著降低BOS成本。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 拉美板块 -->
+                <div class="region-card">
+                    <div class="region-header">
+                        <span class="text-2xl mr-2">🇧🇷</span>
+                        <div class="region-title">拉美 (Latin America)</div>
+                        <span class="region-tag">分销之王</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h5 class="font-bold text-xs text-gray-500 uppercase mb-1">市场策略</h5>
+                            <p class="text-sm text-gray-700">
+                                <strong>巴西主战场：</strong> 巴西是东方日升全球最大的单一分销市场之一。根据Greener报告，东方日升常年位居巴西组件进口量前三。
+                                <br><strong>产品策略：</strong> 主推高性价比的大尺寸PERC和TOPCon组件，满足当地对初始投资成本敏感的需求。
+                            </p>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-xs text-gray-500 uppercase mb-1">关键数据</h5>
+                            <p class="text-sm text-gray-700">
+                                <strong>市场份额：</strong> 在巴西分销市场份额曾高达15-20%。<br>
+                                <strong>客户：</strong> 深度绑定当地大型分销商（如Aldo Solar等）。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 亚太板块 -->
+                <div class="region-card">
+                    <div class="region-header">
+                        <span class="text-2xl mr-2">🇦🇺</span>
+                        <div class="region-title">亚太 (Asia Pacific)</div>
+                        <span class="region-tag">投建营一体化</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h5 class="font-bold text-xs text-gray-500 uppercase mb-1">市场策略</h5>
+                            <p class="text-sm text-gray-700">
+                                <strong>澳大利亚模式：</strong> 不同于单纯卖组件，东方日升在澳洲拥有完整的开发团队，自投、自建、自持大型光伏电站（Solar Farms）。
+                                <br><strong>储能协同：</strong> 在澳洲大力推广光储结合项目，利用储能解决并网消纳问题。
+                            </p>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-xs text-gray-500 uppercase mb-1">标志性项目</h5>
+                            <p class="text-sm text-gray-700">
+                                <strong>Merredin Solar Farm (132MW)：</strong> 西澳最大的光伏电站之一，已并网运营。<br>
+                                <strong>Yarranlea Solar Farm (121MW)：</strong> 位于昆士兰，展示了其全生命周期开发能力。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- 东南亚/美洲板块 -->
+                 <div class="region-card">
+                    <div class="region-header">
+                        <span class="text-2xl mr-2">🏭</span>
+                        <div class="region-title">制造与美洲 (Manufacturing & Americas)</div>
+                        <span class="region-tag">战略支点</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h5 class="font-bold text-xs text-gray-500 uppercase mb-1">马来西亚基地</h5>
+                            <p class="text-sm text-gray-700">
+                                <strong>产能：</strong> 拥有年产3GW电池片+3GW组件的产能。
+                                <br><strong>战略意义：</strong> 是向美国市场出口的“安全阀”，规避部分贸易壁垒。虽然美国关税政策多变，但东南亚产能仍是全球化布局的关键棋子。
+                            </p>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-xs text-gray-500 uppercase mb-1">美国市场</h5>
+                            <p class="text-sm text-gray-700">
+                                <strong>储能突破：</strong> 东方日升旗下“双一力储能”在美国市场表现优异，签署了多个百兆瓦级的储能订单，成功打入美国电力公司供应链。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 全球运营架构分析 -->
+                <h3>全球运营：中枢与触角 (Global Operations)</h3>
+                <p class="mb-4">
+                    东方日升构建了一套<strong>“总部大脑+区域触角”</strong>的矩阵式管理体系，以平衡全球标准与本地灵活性的矛盾。
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- 架构 -->
+                    <div class="ops-card">
+                        <h4 class="font-bold text-sm text-[#005FAB] uppercase mb-2">1. 组织架构</h4>
+                        <p class="text-xs text-gray-700">
+                            <strong>1+N 模式：</strong> 宁波总部（1）作为决策、研发和制造中枢；全球23个营销服务中心（N）作为触角。
+                            <br><br>
+                            <strong>双线汇报：</strong> 海外区域负责人（Country Manager）既向国际营销总部汇报业绩，也向当地合规部门汇报风险，确保决策效率与风控平衡。
+                        </p>
+                    </div>
+
+                    <!-- 模式 -->
+                    <div class="ops-card">
+                        <h4 class="font-bold text-sm text-[#005FAB] uppercase mb-2">2. 运营模式</h4>
+                        <p class="text-xs text-gray-700">
+                            <strong>Glocalization（全球本土化）：</strong> 在澳洲和欧洲等成熟市场，团队本土化率极高。例如澳洲团队不仅负责销售，还具备独立的电网接入（Grid Connection）认证能力，解决了外资企业最头疼的并网难题。
+                        </p>
+                    </div>
+
+                    <!-- 流程 -->
+                    <div class="ops-card">
+                        <h4 class="font-bold text-sm text-[#005FAB] uppercase mb-2">3. 流程管控</h4>
+                        <p class="text-xs text-gray-700">
+                            <strong>数字化协同：</strong> 利用SAP/ERP系统打通马来西亚工厂与中国总部的数据孤岛。
+                            <br><br>
+                            <strong>供应链响应：</strong> 实施“全球虚拟库存”管理，根据欧美澳各地的即时订单，动态调配中国和东南亚产能，最小化关税风险和物流成本。
+                        </p>
+                    </div>
+                </div>
+
+                <h3>第二曲线：光储融合</h3>
+                <p class="mb-4">
+                    为了平滑光伏周期的剧烈波动，东方日升大力发展<strong>储能业务（Energy Storage）</strong>。其子公司“双一力储能”已成为全球储能系统集成商的有力竞争者。
+                </p>
+                <div class="bg-gray-50 p-6 border-l-4 border-[#F58220] mb-8">
+                    <h4 class="font-sans font-bold text-lg mb-2">储能战略 (ESS Strategy)</h4>
+                    <p class="text-sm text-gray-700 mb-2">
+                        <strong>“光储一体化”</strong>是核心逻辑。利用光伏组件积累的全球几千家B端客户（EPC、开发商），直接搭售工商业储能柜和大储系统。
+                    </p>
+                    <div class="text-xs font-sans text-gray-500 mt-2 pt-2 border-t border-gray-200">
+                        <strong>核心产品：</strong> 液冷储能电池柜、户用储能系统。北美和欧洲是主要出货地。
+                    </div>
+                </div>
+
+            </article>
+        </div>
+
+        <!-- Sidebar (Right 4 cols) -->
+        <div class="lg:col-span-4 space-y-8">
+            
+            <!-- Key Stats Box -->
+            <div class="sidebar-box">
+                <h4 class="font-sans font-bold text-xs tracking-widest mb-4 border-b border-gray-300 pb-2">MARKET DATA (2024 Est.)</h4>
+                
+                <div class="mb-4">
+                    <div class="market-data-label">年度营收 (Revenue)</div>
+                    <div class="market-data-value">353 <span class="text-sm font-normal text-gray-500">亿 RMB</span></div>
+                    <div class="text-xs text-red-600 font-bold font-sans">▼ 周期承压</div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="market-data-label">海外收入占比</div>
+                    <div class="market-data-value text-[#F58220]">~70%</div>
+                    <div class="text-xs text-gray-500">高度国际化</div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="market-data-label">组件出货排名</div>
+                    <div class="market-data-value text-[#005FAB]">Global Top 10</div>
+                </div>
+            </div>
+
+            <!-- Technology Stack -->
+            <div class="sidebar-box">
+                <h4 class="font-sans font-bold text-xs tracking-widest mb-4 border-b border-gray-300 pb-2">TECHNOLOGY STACK</h4>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h5 class="font-bold text-sm text-gray-900">Heterojunction (HJT)</h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-[#F58220] h-1.5 rounded-full" style="width: 90%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">下一代电池技术，转换效率高，衰减低。</p>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-sm text-gray-900">TOPCon</h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-[#005FAB] h-1.5 rounded-full" style="width: 60%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">当前主流技术，性价比高。</p>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-sm text-gray-900">BIPV (Building Integrated)</h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-gray-500 h-1.5 rounded-full" style="width: 30%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">建筑光伏一体化，差异化竞争。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Risk Watch -->
+            <div class="sidebar-box">
+                <h4 class="font-sans font-bold text-xs tracking-widest mb-4 border-b border-gray-300 pb-2">RISK WATCH</h4>
+                <ul class="wsj-list text-sm text-gray-700">
+                    <li><strong>贸易壁垒：</strong> 美国对东南亚四国光伏的双反调查及关税风险。</li>
+                    <li><strong>价格内卷：</strong> 产业链价格处于低位，挤压制造端利润。</li>
+                    <li><strong>技术路线：</strong> HJT降本速度是否能跑赢TOPCon的规模效应。</li>
+                </ul>
+            </div>
+
+            <!-- Insight Box -->
+            <div class="bg-[#FFF8F0] p-4 border-t-2 border-[#F58220]">
+                <h4 class="font-sans font-bold text-sm text-[#F58220] mb-2">THE JOURNAL 观察</h4>
+                <p class="text-sm font-serif italic leading-relaxed text-gray-800">
+                    “东方日升不仅是一家组件制造商，更像是一个灵活的能源资产配置者。在光伏寒冬中，其高比例的海外市场和储能业务，成为了御寒的棉衣。”
+                </p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-300 mt-12 py-8 bg-white">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0">
+                <div class="font-serif font-bold text-xl">THE JOURNAL.</div>
+                <div class="text-xs text-gray-500 font-sans mt-1">Copyright © 2025 Dow Jones & Company, Inc. All Rights Reserved.</div>
+            </div>
+            <div class="text-xs text-gray-400 font-sans">
+                Powered by Clean Energy Insight Unit
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Chart.js Configuration for WSJ Style
+        Chart.defaults.font.family = "'Libre Franklin', sans-serif";
+        Chart.defaults.color = '#333';
+        
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['2020', '2021', '2022', '2023', '2024(E)'],
+                datasets: [
+                    {
+                        label: '海外营收 (Overseas)',
+                        data: [100, 120, 180, 240, 250], // 示意数据
+                        backgroundColor: '#F58220',
+                        stack: 'Stack 0'
+                    },
+                    {
+                        label: '国内营收 (Domestic)',
+                        data: [60, 68, 114, 113, 103], // 示意数据
+                        backgroundColor: '#d7d7d7',
+                        stack: 'Stack 0'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // 允许Canvas填满容器
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } },
+                    tooltip: {
+                        backgroundColor: '#fff',
+                        titleColor: '#000',
+                        bodyColor: '#000',
+                        borderColor: '#ccc',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        stacked: true,
+                        grid: {
+                            color: '#eee',
+                            borderDash: [2, 2]
+                        },
+                        title: { display: true, text: 'RMB Billion' }
+                    },
+                    x: {
+                        stacked: true,
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
