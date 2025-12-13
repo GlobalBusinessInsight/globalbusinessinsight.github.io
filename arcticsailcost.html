@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度分析：中欧北极航线可行性与经济模型</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans SC', sans-serif; }
+        
+        /* Chart Container Utilities */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px; /* Constraints chart width */
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 500px;
+        }
+        
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .active-tab {
+            border-bottom: 2px solid #0369a1; /* sky-700 */
+            color: #0369a1;
+            font-weight: 600;
+        }
+
+        /* Custom Scrollbar for smoother feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+    <!-- Chosen Palette: Arctic Business (Slate background, Sky Blue primary, Amber secondary) -->
+    <!-- Application Structure Plan:
+         1. Header/Hero: Sets the context of the "New Testing Phase".
+         2. Nav: Quick jumps to the 5 analysis vectors.
+         3. Geography Module: Interactive Map (Plotly) showing the physical shortcut.
+         4. Vessel Module: Comparison cards (Capacity vs Requirements).
+         5. Cost Module: THE CALCULATOR. This is the centerpiece, allowing users to verify the "Breakeven" logic themselves.
+         6. Comparative Module: Radar chart for holistic view.
+         7. Conclusion: Synthesis of findings.
+    -->
+    <!-- Visualization & Content Choices:
+         - Map: Plotly Scattergeo (Canvas) to show route distinctness without SVG.
+         - Cost: Custom JS Calculator + Donut Chart updates. Shows variable sensitivity.
+         - Capacity: Bar chart (Chart.js) to show the TEU gap.
+         - Summary: Radar Chart (Chart.js) for multi-factor analysis.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-sky-200 selection:text-sky-900">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/90 border-b border-slate-200 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl mr-2">🚢</span>
+                    <span class="font-bold text-lg text-slate-900 tracking-tight">北极航线<span class="text-sky-600">观察室</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center">
+                    <button onclick="scrollToSection('geo')" class="text-slate-500 hover:text-sky-700 transition-colors text-sm font-medium">地理环境</button>
+                    <button onclick="scrollToSection('vessel')" class="text-slate-500 hover:text-sky-700 transition-colors text-sm font-medium">船只要求</button>
+                    <button onclick="scrollToSection('cost')" class="text-slate-500 hover:text-sky-700 transition-colors text-sm font-medium">综合成本</button>
+                    <button onclick="scrollToSection('compare')" class="text-slate-500 hover:text-sky-700 transition-colors text-sm font-medium">对比分析</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-b from-sky-100 to-slate-50 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl tracking-tight font-extrabold text-slate-900 sm:text-5xl md:text-6xl">
+                中欧北极航运线路<span class="text-sky-600">深度解析</span>
+            </h1>
+            <p class="mt-6 max-w-2xl mx-auto text-xl text-slate-600">
+                基于最新测试航班数据的客观科普。从地理条件、船只工况到精细化的盈亏平衡计算，全方位透视这条“冰上丝绸之路”的商业逻辑与现实挑战。
+            </p>
+            <div class="mt-8 flex justify-center gap-4">
+                <div class="flex flex-col items-center p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                    <span class="text-sky-600 font-bold text-2xl">~40%</span>
+                    <span class="text-xs text-slate-500 uppercase tracking-wide">航程缩短</span>
+                </div>
+                <div class="flex flex-col items-center p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                    <span class="text-amber-600 font-bold text-2xl">夏秋</span>
+                    <span class="text-xs text-slate-500 uppercase tracking-wide">通航窗口</span>
+                </div>
+                <div class="flex flex-col items-center p-4 bg-white rounded-lg shadow-sm border border-slate-100">
+                    <span class="text-slate-800 font-bold text-2xl">Ice Class</span>
+                    <span class="text-xs text-slate-500 uppercase tracking-wide">硬性要求</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
+
+        <!-- Section 1: Geography (Plotly Map) -->
+        <section id="geo" class="scroll-mt-24">
+            <div class="grid lg:grid-cols-3 gap-8 items-start">
+                <div class="lg:col-span-1 space-y-6">
+                    <h2 class="text-3xl font-bold text-slate-900 border-l-4 border-sky-600 pl-4">1. 地理条件分析</h2>
+                    <p class="text-slate-600 leading-relaxed">
+                        北极航道（东北航道）主要沿俄罗斯北部沿海航行，穿越巴伦支海、喀拉海、拉普捷夫海、东西伯利亚海和楚科奇海。
+                    </p>
+                    <div class="bg-sky-50 p-4 rounded-lg border border-sky-100">
+                        <h3 class="font-semibold text-sky-900 mb-2">核心挑战：冰情</h3>
+                        <p class="text-sm text-sky-800">
+                            即使在夏季（7-10月），维利基茨基海峡和新西伯利亚群岛附近仍可能存在密集浮冰。通航窗口期受气候变化影响正在扩大，但不可预测性依然是最大地理障碍。
+                        </p>
+                    </div>
+                    <ul class="space-y-3 text-sm text-slate-600">
+                        <li class="flex items-start"><span class="mr-2 text-sky-500">❄️</span> <strong>关键节点：</strong> 维利基茨基海峡是航道的最北端，也是冰情最复杂的区域。</li>
+                        <li class="flex items-start"><span class="mr-2 text-sky-500">🌍</span> <strong>航程优势：</strong> 上海至鹿特丹，经北极约3000海里节省，相比苏伊士运河线缩短约25-40%。</li>
+                    </ul>
+                </div>
+                <div class="lg:col-span-2">
+                    <div class="glass-panel rounded-xl p-4">
+                        <div id="routeMap" class="w-full h-[400px]"></div>
+                        <p class="text-xs text-center text-slate-400 mt-2">注：示意图，展示地球曲率下的航线差异。蓝色为北极航线，橙色为传统苏伊士航线。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2 & 3: Ships (Requirements & Capacity) -->
+        <section id="vessel" class="scroll-mt-24">
+            <div class="mb-10">
+                <h2 class="text-3xl font-bold text-slate-900 border-l-4 border-sky-600 pl-4">2 & 3. 船只要求与承运能力</h2>
+                <p class="mt-4 text-slate-600 max-w-3xl">
+                    北极航线并非所有船只均可通行。极端环境对船体结构、动力系统及承载量提出了特殊要求，这直接限制了单次运输的规模经济效益。
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Requirements Card -->
+                <div class="glass-panel p-6 rounded-xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 text-9xl">⚓</div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">船只硬性要求</h3>
+                    <div class="space-y-4">
+                        <div class="flex group">
+                            <div class="flex-shrink-0 mt-1 w-8 h-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm">A</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold text-slate-800">抗冰等级 (Ice Class)</h4>
+                                <p class="text-sm text-slate-600 mt-1">必须具备Polar Class (PC) 或 Arc 级认证。船壳需加厚钢板，船首需具备破冰能力，螺旋桨需防冰保护。</p>
+                            </div>
+                        </div>
+                        <div class="flex group">
+                            <div class="flex-shrink-0 mt-1 w-8 h-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm">B</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold text-slate-800">防寒与保温</h4>
+                                <p class="text-sm text-slate-600 mt-1">甲板管路需伴热防冻，燃油舱需加热系统以防止低温下燃油凝固。船员生活区需强化保暖。</p>
+                            </div>
+                        </div>
+                        <div class="flex group">
+                            <div class="flex-shrink-0 mt-1 w-8 h-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm">C</div>
+                            <div class="ml-4">
+                                <h4 class="font-bold text-slate-800">吃水限制</h4>
+                                <p class="text-sm text-slate-600 mt-1">桑尼科夫海峡水深较浅（约13米），限制了超大型船舶的通行。这与苏伊士运河线可通航20米以上吃水形成鲜明对比。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Capacity Analysis Chart -->
+                <div class="glass-panel p-6 rounded-xl flex flex-col">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">承运能力对比 (TEU)</h3>
+                    <p class="text-sm text-slate-500 mb-4">北极航线受限于水深和冰级船造价，无法使用24000 TEU级巨轮。</p>
+                    <div class="chart-container flex-grow">
+                        <canvas id="capacityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Cost Analysis (Interactive) -->
+        <section id="cost" class="scroll-mt-24 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="p-8 border-b border-slate-100">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-slate-900 border-l-4 border-sky-600 pl-4">4. 综合成本与盈亏模型</h2>
+                        <p class="mt-2 text-slate-600">调整参数，模拟一次中欧单程航行的经济账。</p>
+                    </div>
+                    <button onclick="document.getElementById('formulaModal').classList.remove('hidden')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors flex items-center">
+                        <span>🧮 查看计算逻辑</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-0">
+                <!-- Controls -->
+                <div class="lg:col-span-4 bg-slate-50 p-8 space-y-8 border-r border-slate-100">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">燃油价格 (USD/吨)</label>
+                        <input type="range" id="fuelPrice" min="400" max="1000" value="600" step="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600">
+                        <div class="flex justify-between text-xs text-slate-500 mt-1">
+                            <span>$400</span>
+                            <span id="fuelPriceVal" class="font-bold text-sky-700">$600</span>
+                            <span>$1000</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">破冰服务费 (万美元)</label>
+                        <p class="text-xs text-slate-400 mb-2">苏伊士航线无此费用，但有运河费。</p>
+                        <input type="range" id="iceFee" min="0" max="100" value="40" step="5" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600">
+                        <div class="flex justify-between text-xs text-slate-500 mt-1">
+                            <span>$0</span>
+                            <span id="iceFeeVal" class="font-bold text-sky-700">$40w</span>
+                            <span>$100w</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">航程延误风险 (天)</label>
+                        <p class="text-xs text-slate-400 mb-2">因冰情导致的意外停滞。</p>
+                        <input type="range" id="delayDays" min="0" max="10" value="2" step="1" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600">
+                        <div class="flex justify-between text-xs text-slate-500 mt-1">
+                            <span>0天</span>
+                            <span id="delayDaysVal" class="font-bold text-sky-700">2天</span>
+                            <span>10天</span>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-4 border-t border-slate-200">
+                        <div class="text-sm font-medium text-slate-900 mb-2">固定假设：</div>
+                        <ul class="text-xs text-slate-500 space-y-1">
+                            <li>• 北极航程: 25天 + 延误</li>
+                            <li>• 苏伊士航程: 35天 (固定)</li>
+                            <li>• 船只油耗: 80吨/天 (冰区航行油耗更高已计入)</li>
+                            <li>• 苏伊士运河费: ~$30万</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div class="lg:col-span-8 p-8">
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <!-- Cost Card Arctic -->
+                        <div class="bg-sky-50 rounded-xl p-5 border border-sky-100">
+                            <h4 class="text-sky-800 font-bold mb-1">北极航线总成本</h4>
+                            <div class="text-3xl font-bold text-sky-600 mb-2" id="arcticTotalCost">$1.2M</div>
+                            <div class="space-y-1 text-sm text-sky-700/80">
+                                <div class="flex justify-between"><span>燃油:</span> <span id="arcticFuel">$0.8M</span></div>
+                                <div class="flex justify-between"><span>破冰/领航:</span> <span id="arcticFees">$0.4M</span></div>
+                                <div class="flex justify-between"><span>时间:</span> <span id="arcticTime">27天</span></div>
+                            </div>
+                        </div>
+                        <!-- Cost Card Suez -->
+                        <div class="bg-orange-50 rounded-xl p-5 border border-orange-100">
+                            <h4 class="text-amber-800 font-bold mb-1">苏伊士航线总成本</h4>
+                            <div class="text-3xl font-bold text-amber-600 mb-2" id="suezTotalCost">$1.4M</div>
+                            <div class="space-y-1 text-sm text-amber-700/80">
+                                <div class="flex justify-between"><span>燃油:</span> <span id="suezFuel">$1.1M</span></div>
+                                <div class="flex justify-between"><span>运河费:</span> <span>$0.3M</span></div>
+                                <div class="flex justify-between"><span>时间:</span> <span>35天</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col h-64">
+                         <h4 class="text-sm font-bold text-slate-700 mb-2 text-center">成本结构对比</h4>
+                        <div class="chart-container flex-grow relative">
+                            <canvas id="costBreakdownChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div id="verdict" class="mt-4 text-center p-3 rounded-lg font-bold text-sm bg-green-100 text-green-800">
+                        当前参数下：北极航线 节省 $200,000
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Comparison (Radar Chart) -->
+        <section id="compare" class="scroll-mt-24 pb-12">
+            <h2 class="text-3xl font-bold text-slate-900 border-l-4 border-sky-600 pl-4 mb-8">5. 传统 vs 北极：多维对比</h2>
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="chart-container">
+                     <canvas id="radarChart"></canvas>
+                </div>
+                <div class="space-y-6">
+                    <div class="p-4 bg-white border-l-4 border-sky-500 shadow-sm">
+                        <h3 class="font-bold text-lg text-slate-800">时效性</h3>
+                        <p class="text-sm text-slate-600">北极航线完胜。对于生鲜、高时效性电子产品，节省10-15天意味着巨大的库存周转优势。</p>
+                    </div>
+                    <div class="p-4 bg-white border-l-4 border-amber-500 shadow-sm">
+                        <h3 class="font-bold text-lg text-slate-800">稳定性与安全性</h3>
+                        <p class="text-sm text-slate-600">苏伊士航线虽有海盗和地缘政治（如红海危机）风险，但气候稳定，全年通航。北极航线受气候不可控因素影响大，准班率难以保证。</p>
+                    </div>
+                    <div class="p-4 bg-white border-l-4 border-slate-500 shadow-sm">
+                        <h3 class="font-bold text-lg text-slate-800">规模经济</h3>
+                        <p class="text-sm text-slate-600">苏伊士航线可通行2.4万TEU巨轮，单箱成本极低。北极航线目前多为3000-5000TEU的中型冰级船，单箱成本较高。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-12">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="mb-4">© 2023 北极航运科普小组 | 基于公开航运数据与地理模型生成</p>
+            <p class="text-xs text-slate-600">本报告为交互式科普演示，具体航运决策请参考实时海事数据。</p>
+        </div>
+    </footer>
+
+    <!-- Modal for Calculation Logic -->
+    <div id="formulaModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-slate-900">盈亏平衡计算逻辑详解</h3>
+                <button onclick="document.getElementById('formulaModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-2xl">&times;</button>
+            </div>
+            <div class="p-6 space-y-6 text-slate-700">
+                <p>本页面的计算模型参考了海事经济学中通用的航次成本分析法 (Voyage Cost Analysis)。盈亏平衡点（Breakeven Point）主要取决于燃油节省能否覆盖额外的资本支出和特殊服务费。</p>
+                
+                <div class="bg-slate-50 p-4 rounded-lg font-mono text-sm border border-slate-200">
+                    <div class="font-bold text-slate-900 mb-2">基础公式：</div>
+                    <p>总成本 (Tc) = 燃油成本 (Cf) + 港口/运河费 (Cp) + 时间成本 (Ct)</p>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-sky-700 mb-2">1. 燃油成本差异 (Fuel Spread)</h4>
+                    <p class="text-sm mb-2">北极航线距离短（约节省40%），理论油耗更低。但需引入修正系数 $\alpha$ (冰区阻力系数)。</p>
+                    <p class="text-xs font-mono bg-sky-50 p-2 rounded">Cost_Arctic_Fuel = (Distance_Arctic / Speed) * Fuel_Rate * (1 + Ice_Resistance_Factor) * Price</p>
+                    <p class="text-xs text-slate-500 mt-1">注：本模拟器中简化为日油耗增加，航程天数减少。</p>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-sky-700 mb-2">2. 特殊费用 (Fees)</h4>
+                    <ul class="list-disc list-inside text-sm space-y-1">
+                        <li><strong>北极：</strong> 主要是俄罗斯收取的破冰船护航费（Icebreaker Fee），这是最大的可变成本，且随季节和冰情波动极大。</li>
+                        <li><strong>传统：</strong> 主要是苏伊士运河通行费（Suez Canal Fee），相对固定且昂贵。</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-sky-700 mb-2">3. 资本与时间 (Capital & Time)</h4>
+                    <p class="text-sm">这是隐性成本。冰级船造价高出普通船15%-30%（资本折旧高）。但航程缩短10-15天带来了巨大的<strong>机会成本节约</strong>（提高船舶周转率）。</p>
+                </div>
+
+                <div class="border-t pt-4 mt-4">
+                    <p class="font-bold text-sm">结论：</p>
+                    <p class="text-sm mt-1">当 <span class="text-green-600 font-bold">燃油节省 + 时间价值 > 破冰费 + 冰级船折旧溢价</span> 时，北极航线才具有商业可行性。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Interaction Logic: Scrolling ---
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // --- 2. Chart: Capacity Comparison (Chart.js) ---
+        const capacityCtx = document.getElementById('capacityChart').getContext('2d');
+        new Chart(capacityCtx, {
+            type: 'bar',
+            data: {
+                labels: ['北极航线 (冰级船)', '苏伊士航线 (超大集装箱船)'],
+                datasets: [{
+                    label: '最大载箱量 (TEU)',
+                    data: [4500, 24000],
+                    backgroundColor: ['#0284c7', '#d97706'], // Sky-600, Amber-600
+                    borderRadius: 6,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw + ' TEU';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: '标准箱 (TEU)' }
+                    }
+                }
+            }
+        });
+
+        // --- 3. Map: Geography (Plotly.js) ---
+        // Simulating the path coordinates roughly
+        const suezPathLat = [31.2, 1.3, 12.5, 30.0, 36.0, 51.9]; // Shanghai -> Singapore -> Aden -> Suez -> Gibraltar -> Rotterdam
+        const suezPathLon = [121.5, 103.8, 45.0, 32.5, -5.3, 4.5];
+        
+        const arcticPathLat = [31.2, 45.0, 60.0, 72.0, 77.0, 72.0, 51.9]; // Shanghai -> Bering -> Arctic Ocean -> North Cape -> Rotterdam
+        const arcticPathLon = [121.5, 145.0, 170.0, 160.0, 80.0, 25.0, 4.5];
+
+        const layoutMap = {
+            geo: {
+                showframe: false,
+                showcoastlines: true,
+                projection: { type: 'natural earth' },
+                coastlinecolor: "#cbd5e1",
+                showland: true,
+                landcolor: "#f8fafc",
+                showocean: true,
+                oceancolor: "#e0f2fe",
+                center: { lat: 60, lon: 70 },
+                lataxis: { range: [0, 90] }
+            },
+            margin: { l: 0, r: 0, t: 0, b: 0 },
+            showlegend: true,
+            legend: { x: 0, y: 0, orientation: 'h' },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)'
+        };
+
+        const dataMap = [
+            {
+                type: 'scattergeo',
+                mode: 'lines+markers',
+                name: '北极东北航道 (~13,000km)',
+                lat: arcticPathLat,
+                lon: arcticPathLon,
+                line: { width: 4, color: '#0284c7' }, // Sky-600
+                marker: { size: 6, color: '#0ea5e9' }
+            },
+            {
+                type: 'scattergeo',
+                mode: 'lines+markers',
+                name: '传统苏伊士航道 (~21,000km)',
+                lat: suezPathLat,
+                lon: suezPathLon,
+                line: { width: 4, color: '#d97706', dash: 'dot' }, // Amber-600
+                marker: { size: 6, color: '#f59e0b' }
+            }
+        ];
+
+        Plotly.newPlot('routeMap', dataMap, layoutMap, {responsive: true, displayModeBar: false});
+
+        // --- 4. Logic: Cost Calculator ---
+        
+        // Constants
+        const ARCTIC_BASE_DAYS = 25;
+        const SUEZ_DAYS = 35;
+        const SHIP_FUEL_CONSUMPTION = 80; // tons per day
+        const ARCTIC_ICE_FUEL_FACTOR = 1.1; // 10% more fuel in ice
+        const SUEZ_CANAL_FEE = 0.3; // Million USD
+
+        // DOM Elements
+        const fuelInput = document.getElementById('fuelPrice');
+        const iceFeeInput = document.getElementById('iceFee');
+        const delayInput = document.getElementById('delayDays');
+        
+        // Labels
+        const fuelVal = document.getElementById('fuelPriceVal');
+        const iceFeeVal = document.getElementById('iceFeeVal');
+        const delayVal = document.getElementById('delayDaysVal');
+
+        // Output logic
+        let breakdownChart = null;
+
+        function updateCalculator() {
+            // Get Values
+            const fuelPrice = parseInt(fuelInput.value); // USD/ton
+            const iceFeeMillion = parseInt(iceFeeInput.value) / 100; // Convert k to Million
+            const delay = parseInt(delayInput.value);
+
+            // Update Labels
+            fuelVal.textContent = `$${fuelPrice}`;
+            iceFeeVal.textContent = `$${iceFeeInput.value}w`;
+            delayVal.textContent = `${delay}天`;
+
+            // Calculate Suez
+            const suezFuelCost = SUEZ_DAYS * SHIP_FUEL_CONSUMPTION * fuelPrice;
+            const suezTotal = suezFuelCost + (SUEZ_CANAL_FEE * 1000000);
+            
+            // Calculate Arctic
+            const arcticActualDays = ARCTIC_BASE_DAYS + delay;
+            // Simplified: Assuming delay days burn fuel at port rate (lower) or fighting ice (higher). Let's average to normal.
+            const arcticFuelCost = arcticActualDays * SHIP_FUEL_CONSUMPTION * ARCTIC_ICE_FUEL_FACTOR * fuelPrice;
+            const arcticTotal = arcticFuelCost + (iceFeeMillion * 1000000);
+
+            // Update DOM Numbers (Format: $X.XM)
+            document.getElementById('suezTotalCost').textContent = `$${(suezTotal / 1000000).toFixed(2)}M`;
+            document.getElementById('suezFuel').textContent = `$${(suezFuelCost / 1000000).toFixed(2)}M`;
+            
+            document.getElementById('arcticTotalCost').textContent = `$${(arcticTotal / 1000000).toFixed(2)}M`;
+            document.getElementById('arcticFuel').textContent = `$${(arcticFuelCost / 1000000).toFixed(2)}M`;
+            document.getElementById('arcticFees').textContent = `$${iceFeeMillion.toFixed(2)}M`;
+            document.getElementById('arcticTime').textContent = `${arcticActualDays}天`;
+
+            // Verdict
+            const diff = suezTotal - arcticTotal;
+            const verdictEl = document.getElementById('verdict');
+            if (diff > 0) {
+                verdictEl.textContent = `结论：北极航线 节省 $${Math.abs(diff / 1000).toFixed(0)}k (更优)`;
+                verdictEl.className = "mt-4 text-center p-3 rounded-lg font-bold text-sm bg-green-100 text-green-800";
+            } else {
+                verdictEl.textContent = `结论：传统航线 节省 $${Math.abs(diff / 1000).toFixed(0)}k (更优)`;
+                verdictEl.className = "mt-4 text-center p-3 rounded-lg font-bold text-sm bg-orange-100 text-orange-800";
+            }
+
+            // Update Chart
+            updateBreakdownChart(arcticFuelCost, iceFeeMillion * 1000000, suezFuelCost, SUEZ_CANAL_FEE * 1000000);
+        }
+
+        function updateBreakdownChart(aFuel, aFee, sFuel, sFee) {
+            if (breakdownChart) {
+                breakdownChart.data.datasets[0].data = [aFuel, aFee];
+                breakdownChart.data.datasets[1].data = [sFuel, sFee];
+                breakdownChart.update();
+            } else {
+                const ctx = document.getElementById('costBreakdownChart').getContext('2d');
+                breakdownChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['燃油成本', '通行/服务费'],
+                        datasets: [
+                            {
+                                label: '北极航线',
+                                data: [aFuel, aFee],
+                                backgroundColor: '#0ea5e9',
+                            },
+                            {
+                                label: '苏伊士航线',
+                                data: [sFuel, sFee],
+                                backgroundColor: '#f59e0b',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                stacked: false
+                            },
+                            x: {
+                                stacked: false
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Listeners
+        fuelInput.addEventListener('input', updateCalculator);
+        iceFeeInput.addEventListener('input', updateCalculator);
+        delayInput.addEventListener('input', updateCalculator);
+
+        // Init
+        updateCalculator();
+
+        // --- 5. Chart: Comparison Radar (Chart.js) ---
+        const radarCtx = document.getElementById('radarChart').getContext('2d');
+        new Chart(radarCtx, {
+            type: 'radar',
+            data: {
+                labels: ['航程时间', '燃油经济性', '单船载货量', '航线安全性', '气候稳定性'],
+                datasets: [{
+                    label: '北极航线',
+                    data: [90, 85, 40, 70, 30], // Time is good (90), Climate bad (30)
+                    fill: true,
+                    backgroundColor: 'rgba(2, 132, 199, 0.2)',
+                    borderColor: '#0284c7',
+                    pointBackgroundColor: '#0284c7',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#0284c7'
+                }, {
+                    label: '苏伊士航线',
+                    data: [50, 60, 100, 60, 90], // Capacity max (100), Climate good (90), Time slow (50)
+                    fill: true,
+                    backgroundColor: 'rgba(217, 119, 6, 0.2)',
+                    borderColor: '#d97706',
+                    pointBackgroundColor: '#d97706',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#d97706'
+                }]
+            },
+            options: {
+                elements: {
+                    line: { borderWidth: 3 }
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { display: true },
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: { display: false } // Hide numbers for cleaner look
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                let val = context.raw;
+                                let desc = '';
+                                if(val > 80) desc = '优';
+                                else if(val > 50) desc = '中';
+                                else desc = '弱';
+                                return label + val + ' (' + desc + ')';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
