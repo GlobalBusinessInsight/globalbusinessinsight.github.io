@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUSINESS | Anhui Heli Global Analysis - The Journal Style</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 引入类似WSJ的衬线字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Libre+Franklin:wght@300;400;600&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --wsj-black: #222222;
+            --wsj-grey: #555555;
+            --wsj-light-grey: #EBEBEB;
+            --wsj-border: #d7d7d7;
+            --heli-red: #E60012; /* 合力红 */
+            --heli-dark: #231F20; /* 工业黑 */
+            --heli-grey: #808080;
+            --bg-paper: #F8F8F8;
+            --alert-yellow: #B45309;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'Times New Roman', serif;
+            color: var(--wsj-black);
+            background-color: #fff;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 报头样式 */
+        .wsj-header {
+            border-bottom: 1px solid var(--wsj-black);
+            padding-bottom: 2px;
+            margin-bottom: 2px;
+        }
+        
+        .section-tag {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            color: var(--wsj-grey);
+            letter-spacing: 0.05em;
+        }
+
+        /* 标题体系 */
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 2.2rem;
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+        }
+        @media (min-width: 768px) {
+            h1 { font-size: 2.8rem; }
+        }
+        
+        h2 {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 300;
+            font-size: 1.1rem;
+            color: var(--wsj-grey);
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+        h3 {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--wsj-black);
+            padding-bottom: 0.25rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        /* 侧边栏/快讯风格 */
+        .sidebar-box {
+            border-top: 4px solid var(--wsj-black);
+            border-bottom: 1px solid var(--wsj-border);
+            padding: 1.25rem 0;
+            background-color: #fcfcfc;
+        }
+        .market-data-label {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .market-data-value {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--wsj-black);
+        }
+
+        /* 正文首字下沉 */
+        .drop-cap::first-letter {
+            float: left;
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            line-height: 0.8;
+            padding-right: 0.5rem;
+            padding-top: 0.2rem;
+            font-weight: 700;
+            color: var(--heli-red);
+        }
+
+        /* 列表样式 */
+        .wsj-list li {
+            position: relative;
+            padding-left: 1rem;
+            margin-bottom: 0.5rem;
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.9rem;
+        }
+        .wsj-list li::before {
+            content: "■";
+            color: var(--heli-red);
+            font-size: 0.6rem;
+            position: absolute;
+            left: 0;
+            top: 0.4rem;
+        }
+
+        /* 图表容器 */
+        .chart-wrapper {
+            background-color: #fff;
+            border: 1px solid var(--wsj-border);
+            padding: 1rem;
+            margin: 2rem 0;
+        }
+        .chart-canvas-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .chart-title {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        /* 区域/对标卡片 */
+        .bench-card {
+            border: 1px solid var(--wsj-border);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            background-color: #fff;
+            transition: all 0.3s;
+        }
+        .bench-card:hover {
+            border-color: var(--heli-red);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .bench-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+        .bench-title {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--heli-red);
+            font-size: 0.9rem;
+            flex-grow: 1;
+        }
+
+        /* 运营模式图示卡片 */
+        .ops-card {
+            background: #fff;
+            border-left: 4px solid var(--heli-dark);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        /* 核心概览卡片 (New) */
+        .intro-card {
+            background: #fff;
+            border-top: 3px solid var(--heli-red);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* 图片容器 */
+        .img-container {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            background-color: #eee;
+        }
+        .img-caption {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.5rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.5rem;
+        }
+
+        /* 重点引言 */
+        .pull-quote {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--heli-red);
+            border-top: 1px solid var(--wsj-black);
+            border-bottom: 1px solid var(--wsj-black);
+            padding: 1.5rem 0;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        /* 风险警示 */
+        .risk-alert {
+            background-color: #FFF8F0;
+            border-left: 4px solid var(--alert-yellow);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* 管理细节列表 */
+        .mgmt-detail dt {
+            font-weight: bold;
+            color: var(--heli-red);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+        .mgmt-detail dd {
+            font-size: 0.85rem;
+            color: #4b5563;
+            margin-left: 0;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <div class="max-w-6xl mx-auto px-4 py-3 border-b border-black flex justify-between items-center bg-white sticky top-0 z-50">
+        <div class="text-xs font-sans font-bold tracking-widest text-gray-500">INDUSTRIAL & LOGISTICS</div>
+        <div class="font-serif font-black text-xl md:text-2xl tracking-tight">THE JOURNAL.</div>
+        <div class="text-xs font-sans text-gray-500">Dec 2025</div>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Main Content (Left 8 cols) -->
+        <div class="lg:col-span-8">
+            <article>
+                <div class="mb-4">
+                    <span class="section-tag text-[#E60012]">Manufacturing</span>
+                </div>
+                <h1>合力叉车：大象的轻盈转身</h1>
+                <h2>这家拥有67年历史的中国国企，正试图甩掉“传统制造”的标签，通过“锂电化”和“全球五大中心”战略，在丰田和凯傲的领地里寻找缝隙。</h2>
+                
+                <div class="flex items-center text-xs font-sans text-gray-500 mb-6 border-b border-gray-200 pb-4">
+                    <span class="font-bold text-black mr-2">By Machinery Desk</span>
+                    <span>|</span>
+                    <span class="ml-2">Updated Dec. 2025</span>
+                </div>
+
+                <!-- 场景图 -->
+                <div class="img-container">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiFQWNv4l3jMBnTFJBoslYxVfa-v3pCKXjmQ&s" alt="合力叉车欧洲中心" class="w-full h-auto object-cover">
+                    <div class="img-caption">合力在法国的欧洲中心（HELI Europe），标志着其从“卖产品”向“卖服务”的转型，是其全球化管理的中枢节点之一。 / Source: HELI Europe</div>
+                </div>
+
+                <p class="drop-cap mb-6 text-lg">
+                    在安徽合肥的装配线上，一台台涂装鲜红的叉车正在下线。它们不再是冒着黑烟的内燃机巨兽，而是静音、零排放的锂电智能设备。安徽合力（600761.SH）连续34年蝉联中国叉车行业第一，但在全球舞台上，它正面临从“出口大户”向“跨国公司”的惊险一跃。
+                </p>
+
+                <!-- 新增：公司全景扫描 -->
+                <h3>公司全景：战略与基因 (Corporate Profile)</h3>
+                <p class="mb-4">
+                    作为中国工业车辆行业的“长子”，合力不只是一家工厂，而是一个庞大的工业生态系统。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div class="intro-card">
+                        <h4 class="font-bold text-sm text-gray-800 mb-2 uppercase">核心战略</h4>
+                        <p class="text-sm text-gray-600">
+                            <strong>目标：</strong> 跻身“世界五强”。<br>
+                            <strong>路径：</strong> 实施“国际化2.0”，即从单纯的产品出口转向品牌、资本、管理的全方位输出。坚持“高端化、智能化、绿色化”转型。
+                        </p>
+                    </div>
+                    <div class="intro-card">
+                        <h4 class="font-bold text-sm text-gray-800 mb-2 uppercase">技术基因</h4>
+                        <p class="text-sm text-gray-600">
+                            <strong>全产业链：</strong> 不同于组装厂，合力拥有极高的自制率。从变速箱、油缸、转向桥到电机，核心零部件均实现自研自产，这赋予了其极强的成本控制力和供应链韧性。
+                        </p>
+                    </div>
+                    <div class="intro-card">
+                        <h4 class="font-bold text-sm text-gray-800 mb-2 uppercase">产品矩阵</h4>
+                        <p class="text-sm text-gray-600">
+                            覆盖1-46吨全系列。
+                            <ul class="list-disc pl-4 mt-1">
+                                <li><strong>主力：</strong> K2、G3系列高端锂电叉车。</li>
+                                <li><strong>前沿：</strong> FICS车队管理系统、AGV无人驾驶车辆、氢燃料电池叉车。</li>
+                            </ul>
+                        </p>
+                    </div>
+                    <div class="intro-card">
+                        <h4 class="font-bold text-sm text-gray-800 mb-2 uppercase">组织特色</h4>
+                        <p class="text-sm text-gray-600">
+                            <strong>国企底色+市场化机制：</strong> 拥有67年历史的省属国企，近年来通过职业经理人制度和股权激励，激发了内部活力，展现出“大象起舞”的灵活性。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Chart: Revenue Comparison -->
+                <div class="chart-wrapper">
+                    <div class="chart-title">全球叉车巨头对标：营收与海外占比 (2024/25 Est.)</div>
+                    <div class="chart-canvas-container">
+                        <canvas id="benchChart"></canvas>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-2 font-sans text-right">Source: Corporate Annual Reports, MMH Rankings</div>
+                </div>
+
+                <h3>全球布局：“5+X”的棋局</h3>
+                <p class="mb-4">
+                    合力的全球化不再是游击战，而是阵地战。其核心战略是**“5+X”**：在海外建立5大海外中心（欧洲、东南亚、北美、中东、欧亚）和X个全球代理。
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="border-t-2 border-black pt-2">
+                        <h4 class="font-sans font-bold text-sm mb-2 text-[#E60012]">1. 欧洲中心 (France/Germany)</h4>
+                        <ul class="wsj-list">
+                            <li><strong>据点：</strong> 法国亚眠 (HELI Europe)。</li>
+                            <li><strong>功能：</strong> 零配件中心+整机展示。意在缩短欧洲客户的维修响应时间，解决“中国制造服务差”的痛点。</li>
+                            <li><strong>挑战：</strong> 欧洲客户对品牌忠诚度极高（偏好Linde、Jungheinrich），合力仍被视为“高性价比”的替代品。</li>
+                        </ul>
+                    </div>
+                    <div class="border-t-2 border-black pt-2">
+                        <h4 class="font-sans font-bold text-sm mb-2 text-[#E60012]">2. 北美中心 (USA)</h4>
+                        <ul class="wsj-list">
+                            <li><strong>据点：</strong> 亚特兰大 (HELI America)。</li>
+                            <li><strong>策略：</strong> 避开与丰田、由利（Hyster-Yale）的正面交锋，主攻**Class III（仓储车）**和**锂电平衡重叉车**。</li>
+                            <li><strong>风险：</strong> “双反”关税和301条款是悬在头顶的达摩克利斯之剑。</li>
+                        </ul>
+                    </div>
+                    <div class="border-t-2 border-black pt-2">
+                        <h4 class="font-sans font-bold text-sm mb-2 text-[#E60012]">3. 东南亚 (Thailand)</h4>
+                        <ul class="wsj-list">
+                            <li><strong>据点：</strong> 曼谷。</li>
+                            <li><strong>意义：</strong> 最大的海外增长极。跟随中国制造业（如轮胎、光伏）出海，提供配套物流设备。</li>
+                            <li><strong>趋势：</strong> 未来可能的**海外制造基地**首选地，以规避原产地规则。</li>
+                        </ul>
+                    </div>
+                    <div class="border-t-2 border-black pt-2">
+                        <h4 class="font-sans font-bold text-sm mb-2 text-[#E60012]">4. 代理网络 (Dealer Network)</h4>
+                        <ul class="wsj-list">
+                            <li><strong>规模：</strong> 全球150多个国家，800多家代理商。</li>
+                            <li><strong>隐忧：</strong> 对代理商掌控力弱。相比丰田的直营体系，合力的服务质量高度依赖当地代理商的良莠不齐。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 新增：全球运营管理章节 -->
+                <h3>全球运营：中枢与末梢的连接 (Global Management)</h3>
+                <p class="mb-4">
+                    如何让合肥的“大脑”指挥全球的“四肢”？合力构建了一套<strong>“总部管控+本土响应”</strong>的混合管理体系，试图解决跨国经营中的“即时性”与“一致性”难题。
+                </p>
+
+                <div class="grid grid-cols-1 gap-6 mb-8">
+                    <!-- 1. 数字化脐带 -->
+                    <div class="ops-card">
+                        <h4 class="font-bold text-base text-[#231F20] uppercase mb-3 flex items-center">
+                            <span class="mr-2 text-[#E60012]">●</span> 数字化中枢 (Digital Core)
+                        </h4>
+                        <dl class="mgmt-detail">
+                            <dt>SAP全球统一：</dt>
+                            <dd>打通了总部与海外中心的SAP系统。无论是法国的库存，还是美国的订单，合肥总部都能实时可见。这解决了过去“海外库存黑箱”的问题。</dd>
+                            <dt>DMS代理商系统：</dt>
+                            <dd>建立全球经销商管理系统（DMS），让800多家代理商在线下单、查询排产进度，实现了“制造端”与“销售端”的信息同频。</dd>
+                        </dl>
+                    </div>
+
+                    <!-- 2. 配件与服务 -->
+                    <div class="ops-card">
+                        <h4 class="font-bold text-base text-[#231F20] uppercase mb-3 flex items-center">
+                            <span class="mr-2 text-[#E60012]">●</span> 服务响应 (Service Response)
+                        </h4>
+                        <dl class="mgmt-detail">
+                            <dt>GSIS服务平台：</dt>
+                            <dd>推出了全球服务信息系统（Global Service Information System）。海外维修工可以通过iPad查询每一台叉车的BOM（物料清单）和维修手册，大幅降低了维修门槛。</dd>
+                            <dt>配件前置仓：</dt>
+                            <dd>在“5大海外中心”建立了配件总仓。承诺欧洲区域24小时配件送达，北美区域48小时送达。这是为了打破“中国叉车坏了修不好”的刻板印象。</dd>
+                        </dl>
+                    </div>
+
+                    <!-- 3. 组织与人 -->
+                    <div class="ops-card">
+                        <h4 class="font-bold text-base text-[#231F20] uppercase mb-3 flex items-center">
+                            <span class="mr-2 text-[#E60012]">●</span> 人员管控 (Talent Mgmt)
+                        </h4>
+                        <dl class="mgmt-detail">
+                            <dt>“铁三角”外派：</dt>
+                            <dd>核心海外中心均采用“中方管理层+本地化执行层”模式。通常外派“销售总监+服务经理+财务总监”这一铁三角，确保战略落地和资金安全。</dd>
+                            <dt>反向研发：</dt>
+                            <dd>建立了“海外需求-总部研发”的闭环。例如，针对欧洲人身材高大的特点，欧洲中心反馈数据，总部改进驾驶室空间设计。这种“听得见炮火”的机制，让产品更接地气。</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <h3>核心对标：差距与追赶 (Benchmarking)</h3>
+                <p class="mb-4">
+                    在世界工业车辆排行榜（MMH Top 20）中，合力位居全球第7。但前面是难以逾越的“两座大山”。
+                </p>
+
+                <!-- 对标卡片：Toyota -->
+                <div class="bench-card">
+                    <div class="bench-header">
+                        <div class="bench-title">VS. 丰田自动织机 (Toyota Industries)</div>
+                        <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 font-bold">行业霸主</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold uppercase">Toyota 优势</p>
+                            <p class="text-sm text-gray-700">精益生产（TPS）带来的极致可靠性；全球密不透风的直营+经销网络；全生命周期服务收入占比高。</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold uppercase">合力 差距</p>
+                            <p class="text-sm text-gray-700"><strong>品牌溢价低：</strong> 同规格产品价格仅为丰田的70%-80%。<br><strong>后市场薄弱：</strong> 卖车赚钱，修车和租赁赚不到钱（后市场收入占比远低于丰田）。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 对标卡片：Hangcha -->
+                <div class="bench-card">
+                    <div class="bench-header">
+                        <div class="bench-title">VS. 杭叉集团 (Hangcha Group)</div>
+                        <span class="text-xs bg-gray-100 text-gray-800 px-2 py-1 font-bold">国内宿敌</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold uppercase">杭叉 特点</p>
+                            <p class="text-sm text-gray-700">民企机制灵活，反应速度快；在新能源专用电池（如宁德时代合作）布局上极其激进。</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold uppercase">合力 应对</p>
+                            <p class="text-sm text-gray-700">依托国企的资源整合能力（零部件联动），打造更完整的产业链（变速箱、油缸自制），但在市场灵活性上略显不足。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pull-quote">
+                    “合力的全球化必须跨越‘性价比陷阱’。如果只能卖便宜货，在供应链重构和关税壁垒的今天，路会越走越窄。”
+                </div>
+
+                <h3>技术突围：锂电与氢能的豪赌</h3>
+                <p class="mb-4">
+                    为了弯道超车，合力押注了**“新能源化”**。
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="ops-card">
+                        <h4 class="font-bold text-sm text-[#E60012] uppercase mb-2">1. 锂电替代 (Li-ion Shift)</h4>
+                        <p class="text-xs text-gray-700">
+                            这是中国企业的集体优势。合力推出了<strong>K2、G3</strong>系列高端锂电叉车，利用中国成熟的电池供应链（宁德时代、亿纬锂能），在欧洲市场对传统燃油叉车发起降维打击。
+                        </p>
+                    </div>
+                    <div class="ops-card">
+                        <h4 class="font-bold text-sm text-[#E60012] uppercase mb-2">2. 智能物流 (AGV/FICS)</h4>
+                        <p class="text-xs text-gray-700">
+                            不仅造车，还造系统。合力推出了<strong>FICS车队管理系统</strong>和AGV无人叉车，试图从“设备商”转型为“智能物流方案商”。但这一领域面临海康机器人、极智嘉等科技公司的跨界竞争。
+                        </p>
+                    </div>
+                </div>
+
+                <h3>困境与风险：硬币的另一面</h3>
+                <div class="risk-alert">
+                    <h4 class="font-bold text-sm text-[#B45309] mb-2 uppercase">Risk Watch: Critical Issues</h4>
+                    <ul class="wsj-list text-sm text-gray-800">
+                        <li><strong>贸易壁垒：</strong> 欧美对中国产电动汽车的关税壁垒，极有可能蔓延至电动工业车辆。合力目前缺乏海外产能（Assembly Plants），抗风险能力较弱。</li>
+                        <li><strong>代理商忠诚度：</strong> 在海外，很多代理商同时代理多个品牌。在售后利润丰厚时，代理商倾向于推销利润更高的欧美品牌配件，导致合力后市场渗透难。</li>
+                        <li><strong>汇率波动：</strong> 海外营收占比提升至35%+，人民币汇率波动对净利润的影响日益显著。</li>
+                    </ul>
+                </div>
+
+                <h3>未来战略：从“出口”到“出海”</h3>
+                <p class="mb-4">
+                    面对未来，合力提出了**“国际化向深”**的战略。
+                </p>
+                <ul class="wsj-list mb-8">
+                    <li><strong>海外建厂：</strong> 必须在东南亚或墨西哥建立整机组装厂，以规避关税并缩短交付周期。</li>
+                    <li><strong>融资租赁：</strong> 模仿丰田金融，在海外推广叉车租赁业务，降低客户使用门槛，锁定长期服务收入。</li>
+                    <li><strong>品牌向上：</strong> 通过参加CeMAT等顶级展会，以及在高端制造业（如汽车、航空）的标杆案例，提升品牌档次。</li>
+                </ul>
+
+            </article>
+        </div>
+
+        <!-- Sidebar (Right 4 cols) -->
+        <div class="lg:col-span-4 space-y-8">
+            
+            <!-- Key Stats Box -->
+            <div class="sidebar-box">
+                <h4 class="font-sans font-bold text-xs tracking-widest mb-4 border-b border-gray-300 pb-2">MARKET DATA (2025 Est.)</h4>
+                
+                <div class="mb-4">
+                    <div class="market-data-label">年度营收 (Revenue)</div>
+                    <div class="market-data-value">195 <span class="text-sm font-normal text-gray-500">亿 RMB</span></div>
+                    <div class="text-xs text-gray-600 font-bold font-sans">稳健增长</div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="market-data-label">海外营收占比</div>
+                    <div class="market-data-value text-[#E60012]">~38%</div>
+                    <div class="text-xs text-gray-500">目标 50%</div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="market-data-label">全球工业车辆排名</div>
+                    <div class="market-data-value text-[#231F20]">No. 7</div>
+                    <div class="text-xs text-gray-500">MMH Ranking</div>
+                </div>
+            </div>
+
+            <!-- Product Mix -->
+            <div class="sidebar-box">
+                <h4 class="font-sans font-bold text-xs tracking-widest mb-4 border-b border-gray-300 pb-2">PRODUCT MIX</h4>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h5 class="font-bold text-sm text-gray-900">I-III类 (电动平衡重/仓储)</h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-[#E60012] h-1.5 rounded-full" style="width: 55%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">占比提升，增长主力。</p>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-sm text-gray-900">IV-V类 (内燃机)</h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-gray-600 h-1.5 rounded-full" style="width: 40%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">传统优势，现金流来源，但市场萎缩。</p>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-sm text-gray-900">零部件 & 后市场</h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-gray-400 h-1.5 rounded-full" style="width: 5%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">主要短板，潜力巨大。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insight Box -->
+            <div class="bg-[#F0F4F8] p-4 border-t-2 border-[#E60012]">
+                <h4 class="font-sans font-bold text-sm text-[#E60012] mb-2">WSJ 观察</h4>
+                <p class="text-sm font-serif italic leading-relaxed text-gray-800">
+                    “合力是一头正在学跳舞的大象。国企的稳健让它在周期低谷中活了下来，但要成为全球舞池的主角，它必须学会更灵活的舞步——不仅是制造，更是服务与品牌。”
+                </p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-300 mt-12 py-8 bg-white">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0">
+                <div class="font-serif font-bold text-xl">THE JOURNAL.</div>
+                <div class="text-xs text-gray-500 font-sans mt-1">Copyright © 2025 Dow Jones & Company, Inc. All Rights Reserved.</div>
+            </div>
+            <div class="text-xs text-gray-400 font-sans">
+                Powered by Industrial Insight Unit
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Chart.js Configuration for WSJ Style
+        Chart.defaults.font.family = "'Libre Franklin', sans-serif";
+        Chart.defaults.color = '#333';
+        
+        const ctx = document.getElementById('benchChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['丰田 (Toyota)', '凯傲 (Kion)', '永恒力 (Jungheinrich)', '合力 (Heli)', '杭叉 (Hangcha)'],
+                datasets: [
+                    {
+                        label: '营收规模 (Est. USD Billion)',
+                        data: [17.5, 12.0, 5.5, 2.7, 2.5], // 2024/25估算数据
+                        backgroundColor: (ctx) => {
+                            const index = ctx.dataIndex;
+                            return index === 3 ? '#E60012' : '#ccc'; // Highlight Heli
+                        },
+                        yAxisID: 'y',
+                        barPercentage: 0.6
+                    },
+                    {
+                        label: '海外营收占比 (%)',
+                        data: [70, 80, 85, 38, 35], // 估算数据
+                        backgroundColor: '#231F20',
+                        yAxisID: 'y1',
+                        type: 'line',
+                        borderColor: '#231F20',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#fff',
+                        pointRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // 允许Canvas填满容器
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } },
+                    tooltip: {
+                        backgroundColor: '#fff',
+                        titleColor: '#000',
+                        bodyColor: '#000',
+                        borderColor: '#ccc',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        position: 'left',
+                        grid: {
+                            color: '#eee',
+                            borderDash: [2, 2]
+                        },
+                        title: { display: true, text: 'Revenue ($B)' }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        max: 100,
+                        grid: { display: false },
+                        title: { display: true, text: 'Intl Share (%)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
