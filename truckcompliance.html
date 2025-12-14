@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物流运输合规性悖论与统一大市场分析报告</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Industrial Calm -->
+    <!-- Background: Warm Neutral/Slate (bg-slate-50) -->
+    <!-- Cards: White (bg-white) -->
+    <!-- Primary Text: Slate-800 -->
+    <!-- Accents: Transport Blue (blue-600) for UI, Amber-500 for Warnings, Emerald-500 for Compliance -->
+    
+    <style>
+        /* Custom styles for chart containers to ensure responsiveness and constraints */
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            max-height: 400px;
+            margin: 0 auto;
+        }
+        
+        /* Truck Component Visualization Styling (CSS Shapes instead of SVG) */
+        .component-box {
+            transition: all 0.3s ease;
+        }
+        .component-box.active {
+            border-color: #2563EB;
+            background-color: #EFF6FF;
+        }
+        .status-badge {
+            transition: all 0.3s ease;
+        }
+        
+        /* Layout Utilities */
+        .section-card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-top: 4px solid transparent;
+        }
+        
+        .section-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .border-t-blue { border-top-color: #2563EB; }
+        .border-t-amber { border-top-color: #F59E0B; }
+        .border-t-slate { border-top-color: #64748B; }
+
+        /* Custom Scrollbar for cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+
+    <!-- Application Structure Plan:
+         1. Header: Report Title & Context ("Unified National Market").
+         2. The "Paradox Simulator": An interactive module where users combine the 3 legally compliant parts (Tractor, Trailer, Container) to see the "Illegal" result. This directly addresses the prompt's core observation.
+         3. Analysis Dashboard:
+            - Chart 1: Visualizing the gap between individual compliance and system compliance.
+            - Chart 2: Market Friction Analysis (Impact on cost/efficiency).
+         4. Strategic Insight: Textual analysis connecting this phenomenon to the need for a "Unified National Market".
+         5. Footer: Summary.
+         
+         Rational: This structure moves from the concrete "Micro" problem (the vehicle) to the abstract "Macro" solution (policy), aiding user understanding.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Interactive Truck Builder: Uses CSS blocks to represent parts. Goal: To prove the prompt's hypothesis interactively. No SVG used.
+         2. Bar Chart (Chart.js): Comparison of "Theoretical Limit" vs "Actual Combined Limit". Goal: Quantify the compliance gap.
+         3. Doughnut Chart (Chart.js): Sources of Non-Compliance. Goal: Show that administrative fragmentation is a key cause.
+         4. Layout: Dashboard grid.
+    -->
+    
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Navigation / Header -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <span class="text-2xl font-bold text-slate-800 tracking-tight">Logistics<span class="text-blue-600">Insight</span></span>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="#" onclick="switchTab('simulation')" class="nav-link border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium active-tab" data-target="simulation">合规性悖论模拟</a>
+                        <a href="#" onclick="switchTab('analysis')" class="nav-link border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-target="analysis">数据与影响分析</a>
+                        <a href="#" onclick="switchTab('solution')" class="nav-link border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" data-target="solution">统一大市场视点</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">报告源：行业观察</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Header Section -->
+        <div class="mb-8 text-center sm:text-left">
+            <h1 class="text-3xl font-bold text-slate-900">物流运输合规性悖论</h1>
+            <p class="mt-2 text-lg text-slate-600">
+                “6轴牵引头是合规的，拖挂平板是合规的，集装箱也是合规的，但三者加在一起就有可能不合规。”
+                <br>
+                <span class="text-sm text-slate-500">本应用旨在解析这一行业现象，并探讨“统一大市场”在解决此类制度性摩擦中的作用。</span>
+            </p>
+        </div>
+
+        <!-- TAB 1: SIMULATION (Interactive Paradox) -->
+        <div id="simulation-view" class="tab-content block animate-fade-in">
+            <div class="section-card border-t-blue">
+                <div class="mb-6">
+                    <h2 class="text-xl font-bold text-slate-800">交互演示：合规组件的“违规”组合</h2>
+                    <p class="text-slate-600 mt-2">
+                        请点击下方各个组件进行合规性检查，尝试组装一辆完整的运输车辆。观察当所有单体组件都合规时，整体系统会发生什么。
+                    </p>
+                </div>
+
+                <!-- Simulation Area -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                    
+                    <!-- Controls -->
+                    <div class="col-span-1 space-y-4">
+                        <!-- Component 1: Tractor -->
+                        <div class="p-4 border rounded-lg component-box cursor-pointer hover:shadow-md" id="comp-tractor" onclick="toggleComponent('tractor')">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-bold text-slate-700">1. 6轴牵引头</h3>
+                                <span id="status-tractor" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-200 text-slate-600">未检查</span>
+                            </div>
+                            <div class="text-sm text-slate-500">
+                                <p>GB1589 标准</p>
+                                <p>单体状态：<span class="text-green-600 font-semibold">独立合规</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Component 2: Trailer -->
+                        <div class="p-4 border rounded-lg component-box cursor-pointer hover:shadow-md" id="comp-trailer" onclick="toggleComponent('trailer')">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-bold text-slate-700">2. 拖挂平板</h3>
+                                <span id="status-trailer" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-200 text-slate-600">未检查</span>
+                            </div>
+                            <div class="text-sm text-slate-500">
+                                <p>通用型平板半挂车</p>
+                                <p>单体状态：<span class="text-green-600 font-semibold">独立合规</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Component 3: Container -->
+                        <div class="p-4 border rounded-lg component-box cursor-pointer hover:shadow-md" id="comp-container" onclick="toggleComponent('container')">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-bold text-slate-700">3. 标准集装箱</h3>
+                                <span id="status-container" class="px-2 py-0.5 rounded text-xs font-bold bg-slate-200 text-slate-600">未检查</span>
+                            </div>
+                            <div class="text-sm text-slate-500">
+                                <p>40英尺高箱 / 国际标准</p>
+                                <p>单体状态：<span class="text-green-600 font-semibold">独立合规</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Feedback Area -->
+                    <div class="col-span-1 lg:col-span-2 bg-slate-100 rounded-xl p-6 flex flex-col justify-center items-center min-h-[300px] relative overflow-hidden">
+                        
+                        <!-- Visual Truck Representation (CSS Blocks) -->
+                        <div class="flex items-end space-x-1 relative z-10 scale-75 sm:scale-100 transform transition-all duration-500" id="truck-assembly">
+                            
+                            <!-- Tractor Visual -->
+                            <div id="vis-tractor" class="opacity-30 transition-all duration-500 flex flex-col items-end">
+                                <div class="w-20 h-24 bg-slate-700 rounded-tl-lg rounded-tr-md relative">
+                                    <div class="absolute top-2 right-0 w-12 h-10 bg-blue-200 rounded-l-sm"></div> <!-- Window -->
+                                </div>
+                                <div class="flex space-x-1 -mt-4">
+                                    <div class="w-8 h-8 bg-slate-800 rounded-full border-2 border-slate-400"></div>
+                                    <div class="w-8 h-8 bg-slate-800 rounded-full border-2 border-slate-400"></div>
+                                </div>
+                            </div>
+
+                            <!-- Connection -->
+                            <div class="w-4 h-2 bg-slate-400 self-end mb-6 opacity-30" id="vis-link"></div>
+
+                            <!-- Trailer & Container Visual -->
+                            <div class="relative">
+                                <!-- Container -->
+                                <div id="vis-container" class="opacity-30 transition-all duration-500 w-64 h-24 bg-blue-600 border-2 border-blue-800 mb-1 flex items-center justify-center text-white font-bold text-xs shadow-lg relative bottom-3 left-2">
+                                    CONTAINER
+                                </div>
+                                <!-- Trailer Bed -->
+                                <div id="vis-trailer" class="opacity-30 transition-all duration-500">
+                                    <div class="w-72 h-3 bg-slate-500 rounded-sm"></div>
+                                    <div class="flex space-x-2 mt-[-6px] ml-40">
+                                        <div class="w-8 h-8 bg-slate-800 rounded-full border-2 border-slate-400"></div>
+                                        <div class="w-8 h-8 bg-slate-800 rounded-full border-2 border-slate-400"></div>
+                                        <div class="w-8 h-8 bg-slate-800 rounded-full border-2 border-slate-400"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Result Display -->
+                        <div id="result-overlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center hidden z-20">
+                            <div class="text-center p-6 max-w-md">
+                                <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold">!</div>
+                                <h3 class="text-2xl font-bold text-slate-800 mb-2">组合违规警告</h3>
+                                <p class="text-slate-600 mb-4">
+                                    虽然牵引头、挂车和集装箱单独均符合各自标准，但组合后的<strong class="text-red-600">总长度/轴荷分布</strong>超出了GB1589-2016对铰接列车的整体限制。
+                                </p>
+                                <div class="bg-slate-50 p-3 rounded text-sm text-left border-l-4 border-red-500">
+                                    <p><strong>冲突点：</strong> 标准40尺集装箱 + 通用平板挂车 + 长轴距牵引头往往导致整车长度超过17.1米或转弯半径不达标。</p>
+                                </div>
+                                <button onclick="resetSimulation()" class="mt-6 px-6 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 transition">重置模拟</button>
+                            </div>
+                        </div>
+
+                        <div id="success-overlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center hidden z-20">
+                            <div class="text-center p-6 max-w-md">
+                                <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold">✓</div>
+                                <h3 class="text-2xl font-bold text-slate-800 mb-2">组件检查通过</h3>
+                                <p class="text-slate-600">
+                                    请继续添加组件以查看整体效果。
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Takeaways Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="section-card border-t-amber">
+                    <h3 class="font-bold text-lg text-slate-800 mb-3">现实痛点</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <span class="text-amber-500 mr-2 text-xl">•</span>
+                            <span class="text-slate-600 text-sm"><strong>执法标准不一：</strong> A省判定合规放行，B省判定超长罚款。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-amber-500 mr-2 text-xl">•</span>
+                            <span class="text-slate-600 text-sm"><strong>标准脱节：</strong> 车辆制造标准（工信部）、道路行驶标准（公安部/交通部）与集装箱国际标准之间存在衔接空隙。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-amber-500 mr-2 text-xl">•</span>
+                            <span class="text-slate-600 text-sm"><strong>改装乱象：</strong> 司机为规避“合规悖论”，被迫非法私自改装（如切割大梁）。</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="section-card border-t-slate">
+                    <h3 class="font-bold text-lg text-slate-800 mb-3">为何需要统一大市场？</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        这种“合规+合规=违规”的现象，典型地反映了<strong>市场分割</strong>和<strong>规则碎片化</strong>。统一大市场的核心不仅是消除地方保护，更是要<strong>统一基础制度规则</strong>。如果不解决顶层标准的互认与协调，物流成本将居高不下，直接影响双循环效率。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: ANALYSIS (Charts) -->
+        <div id="analysis-view" class="tab-content hidden animate-fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Chart 1: The Gap -->
+                <div class="section-card">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold text-slate-800">标准间的“真空地带”</h3>
+                        <p class="text-xs text-slate-500">模拟数据：不同组合下的合规边界分析</p>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="complianceGapChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-sm text-slate-600 bg-slate-50 p-3 rounded">
+                        <p><strong>分析：</strong> 红色区域代表了即便所有组件持有合格证，组合后依然超出的尺寸范围。这是政策制定层面的几何死角。</p>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Cause Breakdown -->
+                <div class="section-card">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold text-slate-800">导致“组合违规”的主要因素归因</h3>
+                        <p class="text-xs text-slate-500">基于行业现象的归因分析</p>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="causeChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-sm text-slate-600 bg-slate-50 p-3 rounded">
+                        <p><strong>洞察：</strong> “标准不统一”与“各省执法差异”占据了主导地位。这正是统一大市场政策重点打击的对象。</p>
+                    </div>
+                </div>
+
+                <!-- Impact Table -->
+                <div class="section-card col-span-1 lg:col-span-2">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4">制度性摩擦对物流成本的影响</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">情景</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">直接成本</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">隐性成本</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">统一大市场效应</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-slate-200 text-sm">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-900">现状：跨省运输</td>
+                                    <td class="px-6 py-4 text-slate-600">频繁罚款、卸货转运费</td>
+                                    <td class="px-6 py-4 text-slate-600">时效不确定、车辆改装风险、寻租空间</td>
+                                    <td class="px-6 py-4 text-red-500 font-semibold">负面</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-slate-900">理想：规则统一</td>
+                                    <td class="px-6 py-4 text-slate-600">标准化过路费、燃油</td>
+                                    <td class="px-6 py-4 text-slate-600">合规确定性高、周转率提升</td>
+                                    <td class="px-6 py-4 text-green-600 font-semibold">成本降低 15-20%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 3: SOLUTION (Text & Strategy) -->
+        <div id="solution-view" class="tab-content hidden animate-fade-in">
+            <div class="max-w-4xl mx-auto space-y-6">
+                
+                <div class="bg-blue-600 rounded-xl p-8 text-white shadow-lg">
+                    <h2 class="text-2xl font-bold mb-4">统一大市场的破局之道</h2>
+                    <p class="text-blue-100 text-lg">
+                        要解决“6轴+平板+集装箱”的合规悖论，不能仅靠单一部门修修补补，必须上升到国家统一大市场的战略高度。
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl mb-4">1</div>
+                        <h3 class="font-bold text-slate-800 text-lg mb-2">标准体系互认</h3>
+                        <p class="text-slate-600">
+                            建立跨部门（工信、公安、交通）的联合标准委员会。确保车辆生产公告与路政执法标准的一致性。如果集装箱尺寸不可变，则必须修订挂车与牵引头的组合长度限制。
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl mb-4">2</div>
+                        <h3 class="font-bold text-slate-800 text-lg mb-2">执法尺度统一</h3>
+                        <p class="text-slate-600">
+                            消除地方性执法差异。在全国范围内统一“合规”的定义，禁止各省设立隐形门槛或差异化处罚标准。一张通行证，全国畅行。
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl mb-4">3</div>
+                        <h3 class="font-bold text-slate-800 text-lg mb-2">专用模块化车型推广</h3>
+                        <p class="text-slate-600">
+                            鼓励发展中置轴挂车等更适合标准集装箱运输的专用车型，逐步淘汰适应性差的通用平板，通过市场手段引导装备升级。
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl mb-4">4</div>
+                        <h3 class="font-bold text-slate-800 text-lg mb-2">数据驱动监管</h3>
+                        <p class="text-slate-600">
+                            利用物联网技术，从源头（发货地）判定合规性。一旦装载完毕判定合规，沿途不再重复检查罚款，彻底解决“哪里查哪里不一样”的问题。
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script>
+        // State Management
+        const state = {
+            components: {
+                tractor: false,
+                trailer: false,
+                container: false
+            },
+            currentTab: 'simulation'
+        };
+
+        // Navigation Logic
+        function switchTab(tabId) {
+            // Update State
+            state.currentTab = tabId;
+            
+            // UI Update - Navigation Links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.dataset.target === tabId) {
+                    link.classList.add('border-blue-500', 'text-slate-900', 'active-tab');
+                    link.classList.remove('border-transparent', 'text-slate-500');
+                } else {
+                    link.classList.remove('border-blue-500', 'text-slate-900', 'active-tab');
+                    link.classList.add('border-transparent', 'text-slate-500');
+                }
+            });
+
+            // UI Update - Content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                if (content.id === `${tabId}-view`) {
+                    content.classList.remove('hidden');
+                } else {
+                    content.classList.add('hidden');
+                }
+            });
+
+            // Trigger chart resize if entering analysis tab
+            if (tabId === 'analysis') {
+                setTimeout(() => {
+                    initCharts();
+                }, 100);
+            }
+        }
+
+        // Simulation Logic
+        function toggleComponent(type) {
+            state.components[type] = !state.components[type];
+            const isActive = state.components[type];
+            
+            // Update Card UI
+            const card = document.getElementById(`comp-${type}`);
+            const badge = document.getElementById(`status-${type}`);
+            
+            if (isActive) {
+                card.classList.add('active', 'border-blue-500', 'bg-blue-50');
+                badge.classList.remove('bg-slate-200', 'text-slate-600');
+                badge.classList.add('bg-green-100', 'text-green-700');
+                badge.innerText = "已加载";
+            } else {
+                card.classList.remove('active', 'border-blue-500', 'bg-blue-50');
+                badge.classList.add('bg-slate-200', 'text-slate-600');
+                badge.classList.remove('bg-green-100', 'text-green-700');
+                badge.innerText = "未检查";
+            }
+
+            // Update Visualization
+            updateVisuals();
+        }
+
+        function updateVisuals() {
+            const tractorVis = document.getElementById('vis-tractor');
+            const trailerVis = document.getElementById('vis-trailer');
+            const containerVis = document.getElementById('vis-container');
+            const linkVis = document.getElementById('vis-link');
+            
+            tractorVis.style.opacity = state.components.tractor ? '1' : '0.3';
+            trailerVis.style.opacity = state.components.trailer ? '1' : '0.3';
+            linkVis.style.opacity = (state.components.tractor && state.components.trailer) ? '1' : '0.3';
+            
+            // Container logic: Only visible properly if trailer exists, otherwise just ghosted
+            if (state.components.container && state.components.trailer) {
+                containerVis.style.opacity = '1';
+                containerVis.style.transform = 'translateY(0)';
+            } else if (state.components.container) {
+                containerVis.style.opacity = '0.3';
+                containerVis.style.transform = 'translateY(20px)';
+            } else {
+                containerVis.style.opacity = '0';
+            }
+
+            // Check for Paradox
+            checkParadox();
+        }
+
+        function checkParadox() {
+            const { tractor, trailer, container } = state.components;
+            const resultOverlay = document.getElementById('result-overlay');
+            
+            if (tractor && trailer && container) {
+                // All selected: Trigger Paradox Warning
+                setTimeout(() => {
+                    resultOverlay.classList.remove('hidden');
+                }, 500);
+            } else {
+                resultOverlay.classList.add('hidden');
+            }
+        }
+
+        function resetSimulation() {
+            state.components = { tractor: false, trailer: false, container: false };
+            
+            // Reset UI classes
+            ['tractor', 'trailer', 'container'].forEach(type => {
+                const card = document.getElementById(`comp-${type}`);
+                const badge = document.getElementById(`status-${type}`);
+                card.classList.remove('active', 'border-blue-500', 'bg-blue-50');
+                badge.classList.add('bg-slate-200', 'text-slate-600');
+                badge.classList.remove('bg-green-100', 'text-green-700');
+                badge.innerText = "未检查";
+            });
+
+            updateVisuals();
+            document.getElementById('result-overlay').classList.add('hidden');
+        }
+
+        // Chart Initialization (Lazy Load pattern)
+        let chartsInitialized = false;
+
+        function initCharts() {
+            if (chartsInitialized) return;
+            chartsInitialized = true;
+
+            // Chart 1: Compliance Gap
+            const ctxGap = document.getElementById('complianceGapChart').getContext('2d');
+            new Chart(ctxGap, {
+                type: 'bar',
+                data: {
+                    labels: ['牵引头单独', '挂车单独', '集装箱单独', '三者组合'],
+                    datasets: [{
+                        label: '长度合规上限 (米)',
+                        data: [12, 13.75, 12.2, 17.1], // Hypothetical limits based on GB1589
+                        backgroundColor: '#94a3b8',
+                        order: 2
+                    }, {
+                        label: '实际物理长度 (米)',
+                        data: [7, 13, 12.2, 18.5], // The combo exceeds limit
+                        backgroundColor: ['#10b981', '#10b981', '#10b981', '#ef4444'], // Green then Red
+                        order: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.raw + 'm';
+                                }
+                            }
+                        },
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: '长度 (米)' } }
+                    }
+                }
+            });
+
+            // Chart 2: Cause Breakdown
+            const ctxCause = document.getElementById('causeChart').getContext('2d');
+            new Chart(ctxCause, {
+                type: 'doughnut',
+                data: {
+                    labels: ['标准不衔接', '执法标准差异', '车辆改装问题', '其他因素'],
+                    datasets: [{
+                        data: [45, 30, 15, 10],
+                        backgroundColor: [
+                            '#3b82f6', // Blue
+                            '#f59e0b', // Amber
+                            '#ef4444', // Red
+                            '#cbd5e1'  // Slate
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' },
+                        title: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Animation Utility
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add fade-in animation class to styles
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in {
+                    animation: fadeIn 0.5s ease-out forwards;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+
+    </script>
+</body>
+</html>
