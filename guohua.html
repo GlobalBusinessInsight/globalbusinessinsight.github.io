@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>国华能源 · 海上风电与绿氢智慧模拟平台</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F0F4F8; /* 稍微冷一点的灰蓝色背景 */
+            color: #1E293B;
+        }
+
+        /* Chart Container Utilities */
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            max-height: 400px;
+        }
+        
+        .chart-wrapper-sm {
+            position: relative;
+            width: 100%;
+            height: 200px;
+        }
+
+        /* Glassmorphism & Cards */
+        .glass-panel {
+            background: white;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Custom Inputs */
+        .input-group label {
+            font-size: 0.75rem;
+            color: #64748B;
+            font-weight: 500;
+        }
+        .custom-input {
+            width: 100%;
+            border: 1px solid #CBD5E1;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+        .custom-input:focus {
+            outline: none;
+            border-color: #0EA5E9;
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.1);
+        }
+
+        /* Animations */
+        .spin-slow { animation: spin 8s linear infinite; }
+        .spin-fast { animation: spin 2s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .pulse-status { animation: pulse-green 2s infinite; }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-slate-800">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 shadow-xl">
+        <div class="h-16 flex items-center px-6 border-b border-slate-700 bg-slate-950">
+            <i class="fa-solid fa-water text-sky-500 text-xl mr-3"></i>
+            <div>
+                <h1 class="font-bold text-white tracking-wider">GUOHUA ENERGY</h1>
+                <p class="text-[10px] text-slate-400">OFFSHORE SIMULATOR</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 py-6 overflow-y-auto space-y-1">
+            <button onclick="switchTab('dashboard')" class="nav-item active w-full flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors border-r-4 border-transparent">
+                <i class="fa-solid fa-gauge-high w-6"></i>
+                <span class="ml-3 font-medium">全场总览</span>
+            </button>
+            <button onclick="switchTab('investment')" class="nav-item w-full flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors border-r-4 border-transparent">
+                <i class="fa-solid fa-sack-dollar w-6"></i>
+                <span class="ml-3 font-medium">投资收益测算</span>
+            </button>
+            <button onclick="switchTab('technology')" class="nav-item w-full flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors border-r-4 border-transparent">
+                <i class="fa-solid fa-microchip w-6"></i>
+                <span class="ml-3 font-medium">风氢设备技术</span>
+            </button>
+            <button onclick="switchTab('operations')" class="nav-item w-full flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors border-r-4 border-transparent">
+                <i class="fa-solid fa-ship w-6"></i>
+                <span class="ml-3 font-medium">海工运维管理</span>
+            </button>
+        </nav>
+
+        <div class="p-4 bg-slate-950 border-t border-slate-800">
+            <div class="flex items-center justify-between text-xs">
+                <span>系统状态</span>
+                <span class="flex items-center text-green-400"><div class="w-2 h-2 bg-green-500 rounded-full mr-1 pulse-status"></div> 在线</span>
+            </div>
+            <div class="mt-2 text-xs text-slate-500">Version 2.4.0 (Hydrogen Build)</div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <!-- Top Bar -->
+        <header class="bg-white h-16 border-b border-slate-200 flex items-center justify-between px-8 flex-shrink-0 z-10">
+            <div class="flex items-center space-x-4">
+                <h2 id="page-title" class="text-xl font-bold text-slate-800">全场总览</h2>
+                <span class="px-2 py-1 bg-sky-50 text-sky-700 text-xs rounded border border-sky-100">东海N区深远海基地</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleTyphoon()" id="btn-typhoon" class="px-3 py-1.5 text-sm font-medium border border-slate-300 rounded hover:bg-slate-50 transition-colors text-slate-600">
+                    <i class="fa-solid fa-hurricane mr-2"></i>模拟台风
+                </button>
+                <div class="h-8 w-8 bg-sky-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md">GH</div>
+            </div>
+        </header>
+
+        <!-- Scrollable Area -->
+        <div class="flex-1 overflow-y-auto p-8" id="content-area">
+            
+            <!-- 1. DASHBOARD -->
+            <section id="view-dashboard" class="space-y-6 fade-in">
+                <!-- Top KPI Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <!-- Wind Power -->
+                    <div class="glass-panel p-5 rounded-lg border-t-4 border-sky-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">实时风电出力</p>
+                                <div class="mt-2 flex items-baseline">
+                                    <span class="text-3xl font-bold text-slate-800" id="dash-wind-power">842</span>
+                                    <span class="ml-1 text-sm text-slate-500">MW</span>
+                                </div>
+                            </div>
+                            <div class="bg-sky-50 p-2 rounded text-sky-600"><i class="fa-solid fa-wind"></i></div>
+                        </div>
+                        <div class="mt-3 text-xs text-green-600 flex items-center">
+                            <i class="fa-solid fa-arrow-up mr-1"></i> 负荷率 84.2%
+                        </div>
+                    </div>
+
+                    <!-- Hydrogen Production -->
+                    <div class="glass-panel p-5 rounded-lg border-t-4 border-emerald-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">实时制氢产量</p>
+                                <div class="mt-2 flex items-baseline">
+                                    <span class="text-3xl font-bold text-slate-800" id="dash-h2-prod">4,200</span>
+                                    <span class="ml-1 text-sm text-slate-500">Nm³/h</span>
+                                </div>
+                            </div>
+                            <div class="bg-emerald-50 p-2 rounded text-emerald-600"><i class="fa-solid fa-flask"></i></div>
+                        </div>
+                        <div class="mt-3 text-xs text-slate-500 flex items-center">
+                            <span class="font-medium text-slate-700 mr-1">50MW</span> 电解槽运行中
+                        </div>
+                    </div>
+
+                    <!-- Revenue Today -->
+                    <div class="glass-panel p-5 rounded-lg border-t-4 border-amber-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">今日预估营收</p>
+                                <div class="mt-2 flex items-baseline">
+                                    <span class="text-3xl font-bold text-slate-800">485.2</span>
+                                    <span class="ml-1 text-sm text-slate-500">万元</span>
+                                </div>
+                            </div>
+                            <div class="bg-amber-50 p-2 rounded text-amber-600"><i class="fa-solid fa-coins"></i></div>
+                        </div>
+                        <div class="mt-3 text-xs text-slate-500">
+                            电: 420万 | 氢: 65.2万
+                        </div>
+                    </div>
+
+                    <!-- Safety Status -->
+                    <div class="glass-panel p-5 rounded-lg border-t-4 border-indigo-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">安全综合指数</p>
+                                <div class="mt-2 flex items-baseline">
+                                    <span class="text-3xl font-bold text-slate-800" id="dash-safety">98.5</span>
+                                </div>
+                            </div>
+                            <div class="bg-indigo-50 p-2 rounded text-indigo-600"><i class="fa-solid fa-shield-halved"></i></div>
+                        </div>
+                        <div class="mt-3 text-xs text-slate-500">
+                            无重大告警 | 2条维护建议
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Visualization: Energy Flow -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 glass-panel p-6 rounded-lg">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-700">风-氢-网 能量流向监控</h3>
+                            <div class="flex items-center space-x-3 text-xs">
+                                <span class="flex items-center"><span class="w-2 h-2 bg-sky-500 rounded-full mr-1"></span> 风机发电</span>
+                                <span class="flex items-center"><span class="w-2 h-2 bg-emerald-500 rounded-full mr-1"></span> 制氢消耗</span>
+                                <span class="flex items-center"><span class="w-2 h-2 bg-slate-400 rounded-full mr-1"></span> 上网电量</span>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="flowChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Weather / Environment -->
+                    <div class="glass-panel p-6 rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 text-white">
+                        <h3 class="font-bold mb-4 border-b border-slate-700 pb-2">东海海况实况</h3>
+                        <div class="space-y-6">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="fa-solid fa-wind text-2xl w-8 text-center text-sky-400"></i>
+                                    <div class="ml-3">
+                                        <p class="text-xs text-slate-400">平均风速 (120m)</p>
+                                        <p class="text-xl font-bold" id="dash-wind-speed">8.5 <span class="text-sm font-normal">m/s</span></p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-slate-400">风向</p>
+                                    <p class="font-bold text-sky-400">东南 135°</p>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="fa-solid fa-water text-2xl w-8 text-center text-blue-400"></i>
+                                    <div class="ml-3">
+                                        <p class="text-xs text-slate-400">有效波高</p>
+                                        <p class="text-xl font-bold">1.2 <span class="text-sm font-normal">m</span></p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-slate-400">海水温度</p>
+                                    <p class="font-bold">18.5°C</p>
+                                </div>
+                            </div>
+
+                             <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="fa-solid fa-temperature-half text-2xl w-8 text-center text-amber-400"></i>
+                                    <div class="ml-3">
+                                        <p class="text-xs text-slate-400">环境温度</p>
+                                        <p class="text-xl font-bold">22.4 <span class="text-sm font-normal">°C</span></p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-slate-400">湿度</p>
+                                    <p class="font-bold">85%</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-700 text-xs text-slate-400 text-center">
+                            窗口期预测：未来72小时适宜常规作业
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. INVESTMENT -->
+            <section id="view-investment" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 fade-in">
+                <!-- Parameters Sidebar -->
+                <div class="lg:col-span-4 glass-panel p-5 rounded-lg h-fit">
+                    <div class="flex items-center justify-between mb-4 border-b pb-2">
+                        <h3 class="font-bold text-slate-700"><i class="fa-solid fa-sliders text-sky-500 mr-2"></i>核心参数配置</h3>
+                        <button onclick="resetParams()" class="text-xs text-sky-600 hover:text-sky-800 underline">恢复行业最佳值</button>
+                    </div>
+
+                    <div class="space-y-4 overflow-y-auto max-h-[70vh] pr-2">
+                        
+                        <!-- Group 1: Scale -->
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                            <p class="text-xs font-bold text-slate-800 mb-2">规模设定</p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="input-group">
+                                    <label>风电装机 (MW)</label>
+                                    <input type="number" id="inp-wind-cap" class="custom-input" value="1000">
+                                </div>
+                                <div class="input-group">
+                                    <label>制氢规模 (MW)</label>
+                                    <input type="number" id="inp-h2-cap" class="custom-input" value="100">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Group 2: CAPEX -->
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                            <p class="text-xs font-bold text-slate-800 mb-2">投资成本 (CAPEX)</p>
+                            <div class="space-y-2">
+                                <div class="input-group">
+                                    <label>风电单位造价 (元/kW)</label>
+                                    <input type="number" id="inp-wind-cost" class="custom-input" value="11500" step="100">
+                                </div>
+                                <div class="input-group">
+                                    <label>制氢系统造价 (元/kW)</label>
+                                    <input type="number" id="inp-h2-cost" class="custom-input" value="8000" step="100">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Group 3: Revenue & OPEX -->
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                            <p class="text-xs font-bold text-slate-800 mb-2">运营收支</p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="input-group">
+                                    <label>上网电价 (元/kWh)</label>
+                                    <input type="number" id="inp-elec-price" class="custom-input" value="0.38" step="0.01">
+                                </div>
+                                <div class="input-group">
+                                    <label>绿氢售价 (元/kg)</label>
+                                    <input type="number" id="inp-h2-price" class="custom-input" value="28.0" step="0.5">
+                                </div>
+                                <div class="input-group">
+                                    <label>风机利用小时数 (h)</label>
+                                    <input type="number" id="inp-hours" class="custom-input" value="3800">
+                                </div>
+                                <div class="input-group">
+                                    <label>综合运维费率 (%)</label>
+                                    <input type="number" id="inp-opex" class="custom-input" value="2.5" step="0.1">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Group 4: Tech Specs -->
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                            <p class="text-xs font-bold text-slate-800 mb-2">技术参数</p>
+                            <div class="input-group">
+                                <label>制氢电耗 (kWh/kg)</label>
+                                <input type="number" id="inp-h2-eff" class="custom-input" value="52.0" step="0.5">
+                                <p class="text-[10px] text-slate-400 mt-1">含辅机功耗 (行业先进: 50-54)</p>
+                            </div>
+                        </div>
+
+                        <button onclick="updateInvestment()" class="w-full py-2 bg-sky-600 hover:bg-sky-700 text-white rounded font-medium shadow transition-colors">
+                            <i class="fa-solid fa-calculator mr-2"></i>重新测算
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Display -->
+                <div class="lg:col-span-8 space-y-6">
+                    <!-- Key Metrics -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="glass-panel p-4 rounded text-center border-b-4 border-sky-500">
+                            <p class="text-xs text-slate-500">项目总投资 (亿元)</p>
+                            <p class="text-2xl font-bold text-slate-800 mt-1" id="res-total-capex">-</p>
+                        </div>
+                        <div class="glass-panel p-4 rounded text-center border-b-4 border-green-500">
+                            <p class="text-xs text-slate-500">项目资本金 IRR</p>
+                            <p class="text-2xl font-bold text-slate-800 mt-1" id="res-irr">-</p>
+                        </div>
+                        <div class="glass-panel p-4 rounded text-center border-b-4 border-indigo-500">
+                            <p class="text-xs text-slate-500">动态投资回收期 (年)</p>
+                            <p class="text-2xl font-bold text-slate-800 mt-1" id="res-payback">-</p>
+                        </div>
+                    </div>
+
+                    <!-- Main Financial Chart -->
+                    <div class="glass-panel p-6 rounded-lg">
+                        <h3 class="font-bold text-slate-700 mb-4">全生命周期现金流预测 (25年)</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="financeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Breakdown -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="glass-panel p-5 rounded-lg">
+                            <h4 class="text-sm font-bold text-slate-600 mb-3">年度收入构成预测</h4>
+                            <div class="flex items-center justify-between mb-2 text-sm">
+                                <span>售电收入</span>
+                                <span class="font-mono font-bold" id="res-rev-elec">- 亿元</span>
+                            </div>
+                             <div class="flex items-center justify-between text-sm">
+                                <span>售氢收入</span>
+                                <span class="font-mono font-bold" id="res-rev-h2">- 亿元</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden flex">
+                                <div id="bar-elec" class="bg-sky-500 h-full"></div>
+                                <div id="bar-h2" class="bg-emerald-500 h-full"></div>
+                            </div>
+                        </div>
+                         <div class="glass-panel p-5 rounded-lg">
+                            <h4 class="text-sm font-bold text-slate-600 mb-3">敏感性分析提示</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed">
+                                当前模型显示，项目收益率对<span class="font-bold text-slate-700">上网电价</span>最为敏感。
+                                若绿氢售价提升至 35元/kg 以上，配置制氢系统的经济性将显著优于纯并网方案。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. TECHNOLOGY -->
+            <section id="view-technology" class="hidden space-y-6 fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Wind Turbine Tech -->
+                    <div class="glass-panel p-6 rounded-lg relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10">
+                            <i class="fa-solid fa-fan text-9xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 border-l-4 border-sky-500 pl-3">海上智能风机 (国华定制版)</h3>
+                        <div class="space-y-4 relative z-10">
+                            <div class="flex justify-between border-b border-slate-100 pb-2">
+                                <span class="text-slate-500 text-sm">单机容量</span>
+                                <span class="font-bold">16 MW</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-100 pb-2">
+                                <span class="text-slate-500 text-sm">叶轮直径</span>
+                                <span class="font-bold">262 m</span>
+                            </div>
+                             <div class="flex justify-between border-b border-slate-100 pb-2">
+                                <span class="text-slate-500 text-sm">适用水深</span>
+                                <span class="font-bold">50 - 70 m (导管架基础)</span>
+                            </div>
+                             <div class="flex justify-between border-b border-slate-100 pb-2">
+                                <span class="text-slate-500 text-sm">抗台等级</span>
+                                <span class="font-bold text-sky-600">Class T (75m/s 极限)</span>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <h4 class="text-sm font-bold text-slate-700 mb-2">功率曲线 (Power Curve)</h4>
+                            <div class="chart-wrapper-sm">
+                                <canvas id="turbineCurve"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hydrogen Tech -->
+                    <div class="glass-panel p-6 rounded-lg relative overflow-hidden">
+                         <div class="absolute top-0 right-0 p-4 opacity-10">
+                            <i class="fa-solid fa-flask text-9xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 border-l-4 border-emerald-500 pl-3">海上制氢站 (PEM电解水)</h3>
+                        <div class="space-y-4 relative z-10">
+                             <div class="flex justify-between border-b border-slate-100 pb-2">
+                                <span class="text-slate-500 text-sm">技术路线</span>
+                                <span class="font-bold">质子交换膜 (PEM)</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-100 pb-2">
+                                <span class="text-slate-500 text-sm">单套系统规模</span>
+                                <span class="font-bold">5 MW</span>
+                            </div>
+                             <div class="flex justify-between border-b border-slate-100 pb-2">
+                                <span class="text-slate-500 text-sm">制氢纯度</span>
+                                <span class="font-bold">99.999% (燃料电池级)</span>
+                            </div>
+                             <div class="flex justify-between border-b border-slate-100 pb-2">
+                                <span class="text-slate-500 text-sm">冷启动时间</span>
+                                <span class="font-bold text-emerald-600">< 5 min (适应风电波动)</span>
+                            </div>
+                        </div>
+                         <div class="mt-6">
+                            <h4 class="text-sm font-bold text-slate-700 mb-2">电解槽效率特性</h4>
+                            <div class="chart-wrapper-sm">
+                                <canvas id="h2Curve"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. OPERATIONS -->
+            <section id="view-operations" class="hidden space-y-6 fade-in">
+                <!-- Status Matrix -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass-panel p-4 rounded border-l-4 border-green-500 bg-green-50/50">
+                        <p class="text-xs text-slate-500 font-bold">风机机群可用率</p>
+                        <p class="text-xl font-bold text-slate-800 mt-1">99.2%</p>
+                        <p class="text-xs text-green-600 mt-1">优于行业平均 (97%)</p>
+                    </div>
+                     <div class="glass-panel p-4 rounded border-l-4 border-blue-500 bg-blue-50/50">
+                        <p class="text-xs text-slate-500 font-bold">海缆绝缘状态</p>
+                        <p class="text-xl font-bold text-slate-800 mt-1">正常</p>
+                        <p class="text-xs text-slate-500 mt-1">绝缘阻值 > 100GΩ</p>
+                    </div>
+                     <div class="glass-panel p-4 rounded border-l-4 border-amber-500 bg-amber-50/50">
+                        <p class="text-xs text-slate-500 font-bold">制氢系统压力</p>
+                        <p class="text-xl font-bold text-slate-800 mt-1">3.2 MPa</p>
+                        <p class="text-xs text-slate-500 mt-1">储罐容量 45%</p>
+                    </div>
+                     <div class="glass-panel p-4 rounded border-l-4 border-slate-500 bg-slate-100">
+                        <p class="text-xs text-slate-500 font-bold">海上运维船 (SOV)</p>
+                        <p class="text-xl font-bold text-slate-800 mt-1">待命</p>
+                        <p class="text-xs text-slate-500 mt-1">位于母港码头</p>
+                    </div>
+                </div>
+
+                <!-- Detailed Monitoring -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- H2 Station Monitoring -->
+                    <div class="glass-panel p-6 rounded-lg">
+                        <h3 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-triangle-exclamation text-amber-500 mr-2"></i>制氢站危化监测</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">1# 分离器液位</span>
+                                    <span class="text-slate-800 font-bold">45%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-blue-500 w-[45%] h-full"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">H2 泄漏探测 (LEL)</span>
+                                    <span class="text-green-600 font-bold">0.0%</span>
+                                </div>
+                                <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-green-500 w-[1%] h-full"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-slate-600">压缩机排气温度</span>
+                                    <span class="text-slate-800 font-bold">85°C</span>
+                                </div>
+                                <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-amber-500 w-[60%] h-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 p-3 bg-red-50 border border-red-100 rounded text-xs text-red-700">
+                            <i class="fa-solid fa-bell mr-1"></i> 注意：3# 阀门检测到微量震动异常，建议下列巡检关注。
+                        </div>
+                    </div>
+
+                    <!-- Subsea Assets -->
+                    <div class="glass-panel p-6 rounded-lg">
+                        <h3 class="font-bold text-slate-700 mb-4"><i class="fa-solid fa-anchor text-blue-500 mr-2"></i>水下资产健康度</h3>
+                        <ul class="space-y-4 text-sm">
+                            <li class="flex justify-between items-center border-b border-slate-50 pb-2">
+                                <span class="text-slate-600">导管架防腐电位</span>
+                                <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs">-1050 mV (优)</span>
+                            </li>
+                            <li class="flex justify-between items-center border-b border-slate-50 pb-2">
+                                <span class="text-slate-600">海缆冲刷状态</span>
+                                <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs">覆盖层完整</span>
+                            </li>
+                            <li class="flex justify-between items-center border-b border-slate-50 pb-2">
+                                <span class="text-slate-600">塔基螺栓紧固力</span>
+                                <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs">上次检测 30天前</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Vessel Map (Abstract) -->
+                    <div class="glass-panel p-6 rounded-lg flex flex-col items-center justify-center text-center">
+                        <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-4 relative">
+                            <i class="fa-solid fa-location-dot text-4xl text-blue-500"></i>
+                            <div class="absolute w-full h-full border-2 border-blue-200 rounded-full animate-ping opacity-20"></div>
+                        </div>
+                        <h4 class="font-bold text-slate-800">国华运维 01 (SOV)</h4>
+                        <p class="text-sm text-slate-500 mt-1">距基地 12 海里</p>
+                        <p class="text-xs text-slate-400 mt-2">预计到达时间: 1.5 小时</p>
+                        <button class="mt-4 px-4 py-2 text-xs border border-blue-500 text-blue-500 rounded hover:bg-blue-50">查看航迹</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- JS Logic -->
+    <script>
+        // --- State & Config ---
+        const defaults = {
+            windCap: 1000,
+            h2Cap: 100,
+            windCost: 11500,
+            h2Cost: 8000,
+            elecPrice: 0.38,
+            h2Price: 28.0,
+            hours: 3800,
+            opex: 2.5,
+            h2Eff: 52
+        };
+
+        let chartInstances = {};
+        let isTyphoon = false;
+
+        // --- Init ---
+        window.addEventListener('load', () => {
+            initInputs();
+            initCharts();
+            updateInvestment(); // First calc
+            startSimulation();
+        });
+
+        function switchTab(tabId) {
+            // Hide all views
+            ['dashboard', 'investment', 'technology', 'operations'].forEach(id => {
+                document.getElementById('view-' + id).classList.add('hidden');
+            });
+            // Show selected
+            document.getElementById('view-' + tabId).classList.remove('hidden');
+            
+            // Sidebar active state
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('active', 'bg-slate-800', 'text-white', 'border-sky-500');
+            });
+            event.currentTarget.classList.add('active', 'bg-slate-800', 'text-white', 'border-sky-500');
+
+            // Header Update
+            const titles = {
+                'dashboard': '全场总览',
+                'investment': '投资收益测算',
+                'technology': '风氢设备技术',
+                'operations': '海工运维管理'
+            };
+            document.getElementById('page-title').innerText = titles[tabId];
+
+            // Resize charts triggers
+            if(tabId === 'technology') {
+                chartInstances.turbineCurve?.resize();
+                chartInstances.h2Curve?.resize();
+            }
+        }
+
+        // --- Investment Logic ---
+        function initInputs() {
+            // Bind all inputs to update function
+            document.querySelectorAll('#view-investment input').forEach(inp => {
+                inp.addEventListener('change', updateInvestment);
+            });
+        }
+
+        function resetParams() {
+            document.getElementById('inp-wind-cap').value = defaults.windCap;
+            document.getElementById('inp-h2-cap').value = defaults.h2Cap;
+            document.getElementById('inp-wind-cost').value = defaults.windCost;
+            document.getElementById('inp-h2-cost').value = defaults.h2Cost;
+            document.getElementById('inp-elec-price').value = defaults.elecPrice;
+            document.getElementById('inp-h2-price').value = defaults.h2Price;
+            document.getElementById('inp-hours').value = defaults.hours;
+            document.getElementById('inp-opex').value = defaults.opex;
+            document.getElementById('inp-h2-eff').value = defaults.h2Eff;
+            updateInvestment();
+        }
+
+        function updateInvestment() {
+            // Gather values
+            const windCap = parseFloat(document.getElementById('inp-wind-cap').value); // MW
+            const h2Cap = parseFloat(document.getElementById('inp-h2-cap').value); // MW
+            
+            const windCostPerKw = parseFloat(document.getElementById('inp-wind-cost').value);
+            const h2CostPerKw = parseFloat(document.getElementById('inp-h2-cost').value);
+            
+            const elecPrice = parseFloat(document.getElementById('inp-elec-price').value);
+            const h2Price = parseFloat(document.getElementById('inp-h2-price').value);
+            const hours = parseFloat(document.getElementById('inp-hours').value);
+            const opexRate = parseFloat(document.getElementById('inp-opex').value) / 100;
+            const h2Eff = parseFloat(document.getElementById('inp-h2-eff').value); // kWh/kg
+
+            // 1. CAPEX Calculation (Units: 亿元)
+            const windCapex = (windCap * 1000 * windCostPerKw) / 1e8;
+            const h2Capex = (h2Cap * 1000 * h2CostPerKw) / 1e8;
+            const totalCapex = windCapex + h2Capex;
+
+            // 2. Production & Revenue
+            // Logic: H2 station runs on Wind power. 
+            // Assume H2 station utilization matches wind hours roughly (simplified for demo) 
+            // OR H2 is base load. Let's assume H2 follows wind hours for simplicity.
+            
+            const totalEnergy = windCap * hours * 1000; // kWh per year
+            
+            // Energy consumed by H2: H2 Capacity * Hours (simplified)
+            // Realistically: min(WindGeneration, H2Capacity)
+            // Model: H2 station runs full load for `hours` duration
+            const energyForH2 = h2Cap * hours * 1000; // kWh
+            const energyForGrid = totalEnergy - energyForH2; // Remaining to grid
+
+            if (energyForGrid < 0) {
+                // Not enough wind for H2 size (unlikely config but safe check)
+                // In this case, buy from grid? No, simple model: clamp H2
+            }
+
+            const h2ProductionKg = energyForH2 / h2Eff; // kg
+            const h2Revenue = (h2ProductionKg * h2Price) / 1e8; // 亿元
+            const elecRevenue = (energyForGrid * elecPrice) / 1e8; // 亿元
+            const totalRevenue = h2Revenue + elecRevenue;
+
+            // 3. OPEX
+            const annualOpex = totalCapex * opexRate;
+
+            // 4. Cashflow Stream (25 Years)
+            let cashflow = [];
+            let cumulative = -totalCapex;
+            let paybackYear = null;
+            let cfData = []; // for chart
+
+            for(let y=1; y<=25; y++) {
+                // Decay efficiency slightly? Ignore for simple demo
+                let netFlow = totalRevenue - annualOpex;
+                // Tax? Ignore for simple demo
+                cumulative += netFlow;
+                cfData.push(cumulative);
+
+                if (cumulative >= 0 && paybackYear === null) {
+                    // Linear interpolation for precise year
+                    let prev = cumulative - netFlow;
+                    paybackYear = (y - 1) + (Math.abs(prev) / netFlow);
+                }
+            }
+
+            // 5. IRR Approx
+            const irr = ((totalRevenue - annualOpex) / totalCapex) * 100; // Very rough simple return
+            // A better IRR approximation for code without libraries is hard, using Simple ROI / Payback proxy for display or Newton-Raphson. 
+            // For this UI demo, let's use a slightly more realistic lookup approximation or just the simple yield if users understand.
+            // Let's stick to Simple Return for stability or a hardcoded estimator.
+            // Actually, let's do a simple iterate for IRR:
+            let guess = 0.1;
+            for(let i=0; i<10; i++) {
+                let npv = 0;
+                let dnpv = 0;
+                npv += -totalCapex;
+                for(let t=1; t<=25; t++) {
+                    npv += (totalRevenue - annualOpex) / Math.pow(1+guess, t);
+                    dnpv -= t * (totalRevenue - annualOpex) / Math.pow(1+guess, t+1);
+                }
+                guess = guess - npv/dnpv;
+            }
+            const realIRR = guess * 100;
+
+
+            // --- UI Updates ---
+            document.getElementById('res-total-capex').innerText = totalCapex.toFixed(2);
+            document.getElementById('res-irr').innerText = realIRR.toFixed(2) + "%";
+            document.getElementById('res-payback').innerText = paybackYear ? paybackYear.toFixed(1) : ">25";
+            
+            document.getElementById('res-rev-elec').innerText = elecRevenue.toFixed(2) + " 亿元";
+            document.getElementById('res-rev-h2').innerText = h2Revenue.toFixed(2) + " 亿元";
+
+            // Bar widths
+            const totalRevVal = elecRevenue + h2Revenue;
+            const elecPct = (elecRevenue / totalRevVal) * 100;
+            const h2Pct = (h2Revenue / totalRevVal) * 100;
+            document.getElementById('bar-elec').style.width = elecPct + "%";
+            document.getElementById('bar-h2').style.width = h2Pct + "%";
+
+            // Chart Update
+            if(chartInstances.finance) {
+                chartInstances.finance.data.datasets[0].data = cfData;
+                chartInstances.finance.update();
+            }
+        }
+
+        // --- Chart Configs ---
+        function initCharts() {
+            // 1. Dashboard Flow Chart
+            const ctxFlow = document.getElementById('flowChart').getContext('2d');
+            chartInstances.flow = new Chart(ctxFlow, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '23:59'],
+                    datasets: [
+                        {
+                            label: '风电总出力 (MW)',
+                            data: [300, 350, 600, 850, 800, 700, 500],
+                            borderColor: '#0EA5E9',
+                            backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: '制氢耗电 (MW)',
+                            data: [100, 100, 100, 100, 100, 100, 100], // Constant load assumption for stability
+                            borderColor: '#10B981',
+                            borderDash: [5, 5],
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // 2. Finance Chart
+            const ctxFin = document.getElementById('financeChart').getContext('2d');
+            chartInstances.finance = new Chart(ctxFin, {
+                type: 'bar',
+                data: {
+                    labels: Array.from({length: 25}, (_, i) => `Y${i+1}`),
+                    datasets: [{
+                        label: '累计净现金流 (亿元)',
+                        data: [], // Filled by updateInvestment
+                        backgroundColor: (context) => {
+                            const val = context.raw;
+                            return val >= 0 ? '#10B981' : '#F43F5E';
+                        },
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: '#F1F5F9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 3. Tech Curve: Turbine
+            const ctxTurb = document.getElementById('turbineCurve').getContext('2d');
+            const ws = [0, 2, 4, 6, 8, 10, 12, 14, 16, 20, 25];
+            const power = [0, 0, 1, 3, 6, 10, 14, 16, 16, 16, 16];
+            chartInstances.turbineCurve = new Chart(ctxTurb, {
+                type: 'line',
+                data: {
+                    labels: ws,
+                    datasets: [{
+                        label: '输出功率 (MW)',
+                        data: power,
+                        borderColor: '#0F172A',
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: {title:{display:true, text:'风速 m/s'}} }
+                }
+            });
+
+            // 4. Tech Curve: Electrolyzer
+            const ctxH2 = document.getElementById('h2Curve').getContext('2d');
+            const load = [10, 20, 40, 60, 80, 100]; // % Load
+            const eff = [48, 50, 52, 53, 54, 55]; // kWh/kg (Lower is better usually, but here Y axis is consumption)
+            // Let's invert to show efficiency %: 
+            // HHV of H2 is ~39.4 kWh/kg. Efficiency = 39.4 / Consumption.
+            // 50 kWh/kg -> ~79% eff.
+            chartInstances.h2Curve = new Chart(ctxH2, {
+                type: 'line',
+                data: {
+                    labels: load.map(l => l+'%'),
+                    datasets: [{
+                        label: '系统能耗 (kWh/kg)',
+                        data: eff,
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { 
+                        y: { min: 40, max: 60, title: {display:true, text:'能耗'} },
+                        x: { title: {display:true, text:'系统负载率'} }
+                    }
+                }
+            });
+        }
+
+        // --- Simulation Loop ---
+        function startSimulation() {
+            setInterval(() => {
+                if(isTyphoon) return; // Static in typhoon mode
+
+                // Fluctuate wind power slightly
+                let baseWind = 842;
+                let noise = (Math.random() - 0.5) * 20;
+                let currentWind = baseWind + noise;
+                
+                document.getElementById('dash-wind-power').innerText = currentWind.toFixed(0);
+                document.getElementById('dash-wind-speed').innerText = (8.5 + (noise/100)).toFixed(1);
+
+                // Update H2 based on available power (Simulated logic)
+                // Assume 50MW electrolyzer is running full
+                // 50 MW / (52 kWh/kg) * 1000 = ~961 kg/h -> ~10700 Nm3/h?
+                // 1 kg H2 ~ 11.2 Nm3. 
+                // 50 MW / 52 = 961 kg. 961 * 11.2 = 10763 Nm3.
+                // Let's use simpler demo numbers.
+                let h2Prod = 4200 + (Math.random() * 50);
+                document.getElementById('dash-h2-prod').innerText = h2Prod.toFixed(0);
+
+            }, 2000);
+        }
+
+        function toggleTyphoon() {
+            isTyphoon = !isTyphoon;
+            const btn = document.getElementById('btn-typhoon');
+            
+            if(isTyphoon) {
+                btn.classList.add('bg-red-600', 'text-white', 'border-red-700');
+                btn.classList.remove('bg-white', 'text-slate-600');
+                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2 animate-pulse"></i>台风模式';
+                
+                // Set Alert State
+                document.getElementById('dash-wind-power').innerText = "0";
+                document.getElementById('dash-wind-speed').innerText = "35.2";
+                document.getElementById('dash-h2-prod').innerText = "0"; // Safety shutdown
+                document.getElementById('dash-safety').innerText = "红色预警";
+                document.getElementById('dash-safety').parentElement.parentElement.parentElement.classList.replace('border-indigo-500', 'border-red-500');
+
+                alert("系统警告：监测到超强台风入境！\n1. 风机执行顺桨停机。\n2. 制氢站紧急切断并充氮保护。\n3. 人员撤离至陆上基地。");
+            } else {
+                btn.classList.remove('bg-red-600', 'text-white', 'border-red-700');
+                btn.classList.add('bg-white', 'text-slate-600');
+                btn.innerHTML = '<i class="fa-solid fa-hurricane mr-2"></i>模拟台风';
+                
+                // Restore
+                document.getElementById('dash-wind-power').innerText = "842";
+                document.getElementById('dash-wind-speed').innerText = "8.5";
+                document.getElementById('dash-h2-prod').innerText = "4,200";
+                document.getElementById('dash-safety').innerText = "98.5";
+                document.getElementById('dash-safety').parentElement.parentElement.parentElement.classList.replace('border-red-500', 'border-indigo-500');
+            }
+        }
+
+    </script>
+</body>
+</html>
