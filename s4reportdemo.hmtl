@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S/4HANA 供应链全景看板 - Inossem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #0f172a;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; 
+        }
+
+        /* 16:9 Aspect Ratio Container */
+        #app-container {
+            position: relative;
+            background-color: #f8fafc;
+            width: 100%;
+            max-width: 177.78vh;
+            height: 56.25vw;
+            max-height: 100vh;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow: hidden;
+            padding: 1.5rem 2rem;
+            position: relative;
+            background-color: #f1f5f9;
+        }
+
+        /* Navigation Styles */
+        .nav-btn {
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+        }
+        .nav-btn:hover { opacity: 1; }
+        .nav-btn.active {
+            opacity: 1;
+            color: #ffffff;
+            font-weight: 700;
+            border-bottom: 3px solid #60a5fa;
+        }
+
+        /* Animation */
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Cost Traceability Styles */
+        .trace-container { display: flex; justify-content: space-between; align-items: center; height: 100%; position: relative; padding: 0 10px; }
+        .trace-column { display: flex; flex-direction: column; justify-content: center; gap: 10px; height: 100%; z-index: 2; width: 28%; position: relative; }
+        .trace-node { background: white; border: 1px solid #e2e8f0; border-left: 4px solid #cbd5e1; border-radius: 6px; padding: 10px; width: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; transition: all 0.3s; }
+        .trace-node:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .trace-node.final { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: white; border: none; padding: 20px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3); }
+        .node-label { font-size: 0.7rem; color: #64748b; margin-bottom: 2px; text-transform: uppercase; }
+        .trace-node.final .node-label { color: #bfdbfe; }
+        .node-value { font-size: 1.1rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; justify-content: space-between;}
+        .trace-node.final .node-value { color: white; font-size: 1.8rem; }
+        .node-meta { font-size: 0.75rem; color: #94a3b8; margin-top: 2px; display: flex; justify-content: space-between; }
+        .trace-node.final .node-meta { color: #dbeafe; }
+
+        /* Custom Slider */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #e2e8f0; border-radius: 2px; }
+
+        /* Table Highlight */
+        .selected-row { background-color: #eff6ff !important; border-left: 4px solid #3b82f6; }
+    </style>
+</head>
+<body>
+
+    <!-- App Container -->
+    <div id="app-container">
+        
+        <!-- Header -->
+        <header class="bg-white px-8 py-3 flex justify-between items-center shadow-sm z-10 shrink-0 h-14 border-b border-slate-200">
+            <div class="flex items-center gap-3">
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">未来科技电子 <span class="text-slate-400 font-normal">| 供应链运营看板</span></h1>
+            </div>
+            <div class="flex items-center gap-4 text-sm text-slate-500">
+                <div class="flex items-center bg-slate-100 rounded-full px-3 py-1">
+                    <span class="mr-2 text-slate-400">会计期间:</span>
+                    <select class="bg-transparent font-medium text-slate-700 focus:outline-none cursor-pointer">
+                        <option>2023-Q4</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content -->
+        <main id="content-container" class="content-area">
+            <!-- Content injected via JS -->
+        </main>
+
+        <!-- Footer / Navigation -->
+        <footer class="bg-blue-900 text-white shrink-0 h-20 flex items-center justify-between px-8 relative z-20 shadow-[0_-5px_15px_rgba(0,0,0,0.1)]">
+            <div class="flex space-x-6 items-center w-5/12">
+                <button class="nav-btn active text-sm font-medium tracking-wider py-2" data-tab="overview">经营概览</button>
+                <button class="nav-btn text-sm font-medium tracking-wider py-2" data-tab="sales">销售 (SD)</button>
+                <button class="nav-btn text-sm font-medium tracking-wider py-2" data-tab="inventory">库存 (MM)</button>
+            </div>
+            <div class="absolute left-1/2 transform -translate-x-1/2 bottom-0 h-full flex items-center justify-center bg-blue-900 px-6">
+                <img src="https://globalbusinessinsight.github.io/picture/inossem_logo.svg" alt="Inossem Logo" class="h-8 w-auto hover:opacity-90 transition-opacity">
+            </div>
+            <div class="flex space-x-6 items-center justify-end w-5/12">
+                <button class="nav-btn text-sm font-medium tracking-wider py-2" data-tab="procurement">采购 (PUR)</button>
+                <button class="nav-btn text-sm font-medium tracking-wider py-2 text-yellow-300 hover:text-yellow-100" data-tab="costing">成本模拟 (CO)</button>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Data ---
+        const state = { 
+            currentTab: 'overview', 
+            charts: {},
+            activeMaterialId: 'M001', // For Procurement View
+            simulation: { intelRate: 0, compliance: 98.3 }
+        };
+
+        const appData = {
+            kpis: {
+                revenue: { value: "1.24亿", label: "营收 (Revenue)", change: "+12.5%", trend: "up" },
+                margin: { value: "28.4%", label: "毛利 (Margin)", change: "-1.2%", trend: "down" },
+                inventory: { value: "4,500万", label: "库存 (Inventory)", change: "+8.3%", trend: "up" },
+                turnover: { value: "4.2", label: "周转率 (Turnover)", change: "-0.3", trend: "down" }
+            },
+            overviewTrend: {
+                labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                revenue: [850, 920, 980, 1050, 990, 1100, 1150, 1080, 1200, 1280, 1350, 1420],
+                inventory: [320, 310, 330, 340, 360, 400, 410, 420, 430, 450, 460, 480]
+            },
+            sales: {
+                indicators: [
+                    { label: "总营收 (Revenue)", value: "¥ 1.24 亿", sub: "YOY +12.5%", color: "text-blue-600" },
+                    { label: "总毛利 (Gross Margin)", value: "¥ 3,521 万", sub: "Margin 28.4%", color: "text-emerald-600" },
+                    { label: "销售费用 (Selling Exp)", value: "¥ 1,850 万", sub: "Ratio 14.9%", color: "text-orange-500" }
+                ],
+                regionData: { labels: ['华东', '华南', '华北', '海外'], revenue: [4200, 3800, 1500, 2900], margin: [1260, 950, 300, 1010], expense: [500, 600, 350, 400] },
+                productData: { labels: ['消费电子', '计算设备', 'IoT组件', '配件'], revenue: [5580, 3720, 1860, 1240], margin: [1100, 1200, 800, 420], expense: [900, 500, 250, 200] },
+                benchmarking: { companies: ['FutureTech', '雷霆科技', '蓝芯电子'], metrics: { growth: [12.5, 18.2, 8.5], margin: [28.4, 31.0, 24.5], expenseRatio: [14.9, 12.0, 18.0] } }
+            },
+            inventory: {
+                stockStatus: { labels: ['原材料', '半成品', '产成品', '备件'], unrestricted: [800, 400, 600, 100], quality: [50, 20, 30, 5], blocked: [20, 10, 5, 0] },
+                aging: [ { range: '0-30 天', value: 65, color: '#22c55e' }, { range: '31-90 天', value: 20, color: '#3b82f6' }, { range: '91-180 天', value: 10, color: '#f59e0b' }, { range: '> 180 天', value: 5, color: '#ef4444' } ]
+            },
+            // UPDATED PROCUREMENT DATA (With Inventory instead of AP)
+            procurement: {
+                materials: [
+                    { 
+                        id: 'M001', name: 'IC Chipset i7', category: 'Semicon', supplierCount: 2, avgPrice: 1200, 
+                        inventoryVal: 650000, inventoryQty: 540,
+                        suppliers: [
+                            { name: 'Intel Corp', price: 1220, quality: 99.5, delivery: 98, stockShare: 450000 },
+                            { name: 'AMD Inc', price: 1150, quality: 96.0, delivery: 92, stockShare: 200000 }
+                        ]
+                    },
+                    { 
+                        id: 'M002', name: 'OLED Display 14"', category: 'Screen', supplierCount: 3, avgPrice: 800, 
+                        inventoryVal: 420000, inventoryQty: 525,
+                        suppliers: [
+                            { name: 'Samsung', price: 820, quality: 99.0, delivery: 95, stockShare: 250000 },
+                            { name: 'LG Display', price: 790, quality: 97.5, delivery: 90, stockShare: 120000 },
+                            { name: 'BOE', price: 750, quality: 95.0, delivery: 88, stockShare: 50000 }
+                        ]
+                    },
+                    { 
+                        id: 'M003', name: 'Li-Ion Battery', category: 'Power', supplierCount: 2, avgPrice: 150, 
+                        inventoryVal: 180000, inventoryQty: 1200,
+                        suppliers: [
+                            { name: 'CATL', price: 155, quality: 99.8, delivery: 99, stockShare: 150000 },
+                            { name: 'BYD', price: 145, quality: 98.5, delivery: 96, stockShare: 30000 }
+                        ]
+                    },
+                    { 
+                        id: 'M004', name: 'Alum. Chassis', category: 'Mech', supplierCount: 4, avgPrice: 200, 
+                        inventoryVal: 95000, inventoryQty: 475,
+                        suppliers: [
+                            { name: 'Foxconn', price: 210, quality: 99.0, delivery: 95, stockShare: 50000 },
+                            { name: 'Catcher', price: 205, quality: 98.0, delivery: 94, stockShare: 30000 },
+                            { name: 'Local A', price: 180, quality: 92.0, delivery: 85, stockShare: 10000 },
+                            { name: 'Local B', price: 175, quality: 90.0, delivery: 80, stockShare: 5000 }
+                        ]
+                    },
+                    { 
+                        id: 'M005', name: 'DDR5 Memory 16G', category: 'Memory', supplierCount: 2, avgPrice: 350, 
+                        inventoryVal: 280000, inventoryQty: 800,
+                        suppliers: [
+                            { name: 'Samsung', price: 360, quality: 99.9, delivery: 97, stockShare: 200000 },
+                            { name: 'Micron', price: 340, quality: 99.0, delivery: 96, stockShare: 80000 }
+                        ]
+                    }
+                ]
+            },
+            costing: {
+                productName: "FG-1002 UltraBook Pro X1",
+                baseItems: { intel: 1200, oled: 800, chassis: 800, assembly: 800, testing: 400, overhead: 500 }
+            }
+        };
+
+        // --- Logic: Cost Calculation ---
+        function calculateCost() {
+            const base = appData.costing.baseItems;
+            const intelCost = base.intel * (1 + state.simulation.intelRate / 100);
+            const materialCost = intelCost + base.oled + base.chassis;
+            const laborCost = base.assembly + base.testing;
+            const overheadCost = base.overhead;
+            const productionCost = materialCost + laborCost + overheadCost;
+            const effectiveCost = productionCost / (state.simulation.compliance / 100);
+            const yieldLoss = effectiveCost - productionCost;
+            return {
+                intel: intelCost, material: materialCost, labor: laborCost, overhead: overheadCost, yieldLoss: yieldLoss, total: effectiveCost,
+                breakdown: [ { label: '直接材料', value: materialCost, color: '#3b82f6' }, { label: '直接人工', value: laborCost, color: '#f59e0b' }, { label: '制造费用', value: overheadCost, color: '#64748b' }, { label: '质量损耗', value: yieldLoss, color: '#ef4444' } ]
+            };
+        }
+
+        // --- Render Functions ---
+
+        function getOverviewHTML() {
+            return `<div class="grid grid-cols-4 gap-6 h-full animate-fade-in"><div class="col-span-1 flex flex-col gap-4 h-full">${Object.values(appData.kpis).map(kpi => `<div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex-1 flex flex-col justify-center"><div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">${kpi.label}</div><div class="flex items-baseline justify-between"><div class="text-3xl font-bold text-slate-800">${kpi.value}</div><div class="text-sm font-medium ${kpi.trend.includes('up') ? 'text-green-600' : 'text-red-500'}">${kpi.change}</div></div></div>`).join('')}</div><div class="col-span-3 bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex flex-col h-full"><div class="flex justify-between items-center mb-2"><h3 class="text-lg font-bold text-slate-800">营收与库存趋势</h3><span class="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded">Source: ACDOCA</span></div><div class="flex-1 w-full min-h-0 relative"><canvas id="overviewChart"></canvas></div></div></div>`;
+        }
+
+        function getSalesHTML() {
+            return `<div class="flex flex-col h-full gap-6 animate-fade-in"><div class="grid grid-cols-3 gap-6 h-[20%] shrink-0">${appData.sales.indicators.map(ind => `<div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center relative overflow-hidden"><div class="absolute left-0 top-0 h-full w-1 bg-slate-200"></div><div class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">${ind.label}</div><div class="text-2xl lg:text-3xl font-extrabold text-slate-800 mb-1">${ind.value}</div><div class="text-xs font-medium ${ind.color}">${ind.sub}</div></div>`).join('')}</div><div class="grid grid-cols-3 gap-6 h-[80%] min-h-0"><div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex flex-col"><h3 class="text-sm font-bold text-slate-800 mb-2">按区域</h3><div class="flex-1 w-full min-h-0 relative"><canvas id="salesRegionChart"></canvas></div></div><div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex flex-col"><h3 class="text-sm font-bold text-slate-800 mb-2">按产品系列</h3><div class="flex-1 w-full min-h-0 relative"><canvas id="salesProductChart"></canvas></div></div><div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex flex-col relative bg-slate-50/50"><div class="flex justify-between items-start mb-2"><h3 class="text-sm font-bold text-slate-800">竞对标杆</h3><span class="text-[10px] text-blue-600 border border-blue-200 px-1 rounded bg-white">Public Data</span></div><div class="flex-1 w-full min-h-0 relative"><canvas id="salesBenchmarkChart"></canvas></div><div class="mt-2 flex justify-center gap-3 text-[10px] text-slate-500"><span class="flex items-center"><span class="w-2 h-2 bg-blue-600 mr-1 rounded-sm"></span>营收</span><span class="flex items-center"><span class="w-2 h-2 bg-emerald-500 mr-1 rounded-sm"></span>毛利</span><span class="flex items-center"><span class="w-2 h-2 bg-orange-400 mr-1 rounded-sm"></span>费用</span></div></div></div></div>`;
+        }
+
+        // --- UPDATED: Procurement View ---
+        function getProcurementHTML() {
+            const activeMat = appData.procurement.materials.find(m => m.id === state.activeMaterialId) || appData.procurement.materials[0];
+
+            return `
+                <div class="grid grid-cols-5 gap-6 h-full animate-fade-in">
+                    
+                    <!-- Left: Material List Table (3/5 width) -->
+                    <div class="col-span-3 bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col overflow-hidden">
+                        <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                            <h3 class="text-lg font-bold text-slate-800">核心物料采购监控 (Key Materials)</h3>
+                            <span class="text-xs text-slate-500">点击行查看供应商详情</span>
+                        </div>
+                        <div class="flex-1 overflow-auto custom-scroll">
+                            <table class="w-full text-sm text-left text-slate-600">
+                                <thead class="text-xs text-slate-400 uppercase bg-white sticky top-0 border-b border-slate-100">
+                                    <tr>
+                                        <th class="px-6 py-3">物料名称 (Material)</th>
+                                        <th class="px-4 py-3 text-center">供货源</th>
+                                        <th class="px-4 py-3 text-right">均价</th>
+                                        <th class="px-4 py-3 text-center">质量/交付</th>
+                                        <th class="px-6 py-3 text-right">当前库存 (Stock)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${appData.procurement.materials.map(m => `
+                                        <tr class="border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors ${m.id === state.activeMaterialId ? 'selected-row' : ''}" 
+                                            onclick="selectMaterial('${m.id}')">
+                                            <td class="px-6 py-4 font-medium text-slate-800">${m.name} <div class="text-[10px] text-slate-400 font-normal">${m.category}</div></td>
+                                            <td class="px-4 py-4 text-center"><span class="bg-blue-100 text-blue-700 py-1 px-2 rounded-full text-xs font-bold">${m.supplierCount}</span></td>
+                                            <td class="px-4 py-4 text-right">¥${m.avgPrice}</td>
+                                            <td class="px-4 py-4 text-center">
+                                                <div class="flex justify-center gap-1 text-[10px]">
+                                                    <span class="bg-emerald-100 text-emerald-700 px-1 rounded">Q:99%</span>
+                                                    <span class="bg-orange-100 text-orange-700 px-1 rounded">D:96%</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                <div class="font-medium text-slate-800">¥${(m.inventoryVal/10000).toFixed(1)}万</div>
+                                                <div class="text-xs text-slate-400">${m.inventoryQty} Units</div>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Right: Supplier Detail Analysis (2/5 width) -->
+                    <div class="col-span-2 flex flex-col gap-6">
+                        
+                        <!-- Top Chart: Price vs Qual/Deliv -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex-1 flex flex-col min-h-0">
+                            <h3 class="text-sm font-bold text-slate-800 mb-2 border-b border-slate-100 pb-2">供应商综合对比: <span class="text-blue-600">${activeMat.name}</span></h3>
+                            <div class="flex-1 w-full min-h-0 relative">
+                                <canvas id="procSupplierChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Chart: Inventory Distribution (was AP) -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 h-[40%] flex flex-col">
+                            <h3 class="text-sm font-bold text-slate-800 mb-2">库存来源分布 (Stock Source Breakdown)</h3>
+                            <div class="flex-1 w-full min-h-0 relative">
+                                <canvas id="procStockChart"></canvas>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+        }
+
+        function getCostingHTML() {
+            const calc = calculateCost();
+            const intelColor = state.simulation.intelRate > 0 ? 'text-red-600' : (state.simulation.intelRate < 0 ? 'text-green-600' : 'text-slate-900');
+            const totalColor = (state.simulation.intelRate > 0 || state.simulation.compliance < 98.3) ? 'text-red-100' : 'text-white';
+            return `<div class="grid grid-cols-3 gap-6 h-full animate-fade-in"><div class="col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col overflow-hidden relative"><div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50"><h3 class="text-lg font-bold text-slate-800">成本还原追溯图 (Traceability)</h3><div class="text-xs font-mono bg-blue-100 text-blue-700 px-2 py-1 rounded">Model: ${appData.costing.productName}</div></div><div class="flex-1 relative bg-slate-50/30 p-4"><div class="absolute top-1/2 left-[28%] w-[8%] h-[2px] bg-slate-300"></div><div class="absolute top-1/2 right-[28%] w-[8%] h-[2px] bg-slate-300"></div><div class="trace-container"><div class="trace-column"><div class="text-xs font-bold text-slate-400 uppercase">原始投入</div><div class="trace-node" style="border-left-color: #3b82f6;"><div class="node-label flex justify-between"><span>Intel Chipset</span>${state.simulation.intelRate !== 0 ? `<span class="text-xs font-bold ${intelColor}">${state.simulation.intelRate > 0 ? '+' : ''}${state.simulation.intelRate}%</span>` : ''}</div><div class="node-value ${intelColor}"><span>¥${Math.round(calc.intel)}</span></div></div><div class="trace-node" style="border-left-color: #3b82f6;"><div class="node-label">OLED Screen</div><div class="node-value">¥${appData.costing.baseItems.oled}</div></div><div class="trace-node" style="border-left-color: #f59e0b;"><div class="node-label">Assembly Labor</div><div class="node-value">¥${appData.costing.baseItems.assembly}</div></div></div><div class="trace-column"><div class="text-xs font-bold text-slate-400 uppercase">构成</div><div class="trace-node" style="border-left-color: #3b82f6;"><div class="node-label">直接材料</div><div class="node-value">¥${Math.round(calc.material)}</div></div><div class="trace-node" style="border-left-color: #f59e0b;"><div class="node-label">直接人工</div><div class="node-value">¥${Math.round(calc.labor)}</div></div><div class="trace-node" style="border-left-color: #ef4444; opacity: ${calc.yieldLoss > 1 ? 1 : 0.5};"><div class="node-label text-red-500">质量损耗 (Yield Loss)</div><div class="node-value text-red-600">¥${Math.round(calc.yieldLoss)}</div></div></div><div class="trace-column"><div class="trace-node final"><div class="node-label">实际单件成本</div><div class="node-value ${totalColor}">¥ ${Math.round(calc.total).toLocaleString()}</div><div class="node-meta"><span>标准: ¥4500</span><span class="${calc.total > 4500 ? 'text-red-200' : 'text-green-200'}">${((calc.total - 4500)/45).toFixed(1)}% Var</span></div></div></div></div></div></div><div class="flex flex-col gap-4 h-full"><div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100"><h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center"><span class="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>模拟实验室</h3><div class="mb-5"><div class="flex justify-between text-sm mb-2"><span class="text-slate-600">Intel 采购价浮动</span><span class="font-bold text-blue-600" id="intel-val-disp">${state.simulation.intelRate > 0 ? '+' : ''}${state.simulation.intelRate}%</span></div><input type="range" min="-20" max="20" step="1" value="${state.simulation.intelRate}" id="sim-intel" class="w-full"></div><div><div class="flex justify-between text-sm mb-2"><span class="text-slate-600">产品合规率 (Yield)</span><span class="font-bold text-blue-600" id="comp-val-disp">${state.simulation.compliance}%</span></div><input type="range" min="85" max="100" step="0.1" value="${state.simulation.compliance}" id="sim-comp" class="w-full"></div></div><div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex-1 flex flex-col min-h-0"><h3 class="text-sm font-bold text-slate-800 mb-2">成本构成</h3><div class="flex-1 w-full min-h-0 relative"><canvas id="costBreakdownChart"></canvas></div></div></div></div>`;
+        }
+
+        function getInventoryHTML() { return `<div class="grid grid-cols-3 gap-6 h-full animate-fade-in"><div class="col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col"><h3 class="text-lg font-bold text-slate-800 mb-4">库存结构</h3><div class="flex-1 w-full min-h-0 relative"><canvas id="invStackChart"></canvas></div></div><div class="col-span-1 bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col"><h3 class="text-lg font-bold text-slate-800 mb-4">库龄分析</h3><div class="space-y-4 flex-1 overflow-y-auto pr-2 custom-scroll">${appData.inventory.aging.map(item => `<div><div class="flex justify-between text-sm mb-1 text-slate-600"><span>${item.range}</span><span class="font-bold">${item.value}%</span></div><div class="w-full bg-slate-100 rounded-full h-2"><div class="h-2 rounded-full" style="width: ${item.value}%; background-color: ${item.color}"></div></div></div>`).join('')}</div></div></div>`; }
+
+        // --- Chart Rendering ---
+        
+        function renderOverviewChart(ctx) { new Chart(ctx, { type: 'bar', data: { labels: appData.overviewTrend.labels, datasets: [{ label: '营收 (10k)', data: appData.overviewTrend.revenue, backgroundColor: '#3b82f6', borderRadius: 4 }, { label: '库存 (10k)', data: appData.overviewTrend.inventory, type: 'line', borderColor: '#ef4444', borderWidth: 3, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } } } }); }
+        
+        function renderSalesCharts(ctxReg, ctxProd, ctxBench) {
+            const sharedOpts = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: {size: 10} } } }, barPercentage: 0.7 };
+            const colors = { rev: '#2563eb', mar: '#10b981', exp: '#fb923c' };
+            new Chart(ctxReg, { type: 'bar', data: { labels: appData.sales.regionData.labels, datasets: [{ label: '营收', data: appData.sales.regionData.revenue, backgroundColor: colors.rev, borderRadius: 2 }, { label: '毛利', data: appData.sales.regionData.margin, backgroundColor: colors.mar, borderRadius: 2 }, { label: '费用', data: appData.sales.regionData.expense, backgroundColor: colors.exp, borderRadius: 2 }] }, options: sharedOpts });
+            new Chart(ctxProd, { type: 'bar', data: { labels: appData.sales.productData.labels, datasets: [{ label: '营收', data: appData.sales.productData.revenue, backgroundColor: colors.rev, borderRadius: 2 }, { label: '毛利', data: appData.sales.productData.margin, backgroundColor: colors.mar, borderRadius: 2 }, { label: '费用', data: appData.sales.productData.expense, backgroundColor: colors.exp, borderRadius: 2 }] }, options: sharedOpts });
+            new Chart(ctxBench, { type: 'bar', data: { labels: appData.sales.benchmarking.companies, datasets: [{ label: '营收增速 %', data: appData.sales.benchmarking.metrics.growth, backgroundColor: colors.rev, borderRadius: 2 }, { label: '毛利率 %', data: appData.sales.benchmarking.metrics.margin, backgroundColor: colors.mar, borderRadius: 2 }, { label: '费用率 %', data: appData.sales.benchmarking.metrics.expenseRatio, backgroundColor: colors.exp, borderRadius: 2 }] }, options: { ...sharedOpts, scales: { ...sharedOpts.scales, y: { beginAtZero: true, grid: { color: '#f1f5f9' }, title: {display: true, text: '%'} } } } });
+        }
+        function renderInventoryCharts(ctx) { new Chart(ctx, { type: 'bar', data: { labels: appData.inventory.stockStatus.labels, datasets: [{ label: '可用', data: appData.inventory.stockStatus.unrestricted, backgroundColor: '#22c55e' }, { label: '质检', data: appData.inventory.stockStatus.quality, backgroundColor: '#f59e0b' }, { label: '冻结', data: appData.inventory.stockStatus.blocked, backgroundColor: '#ef4444' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } } }); }
+        function renderCostChart(ctx) { const calc = calculateCost(); state.charts.cost = new Chart(ctx, { type: 'doughnut', data: { labels: calc.breakdown.map(i => i.label), datasets: [{ data: calc.breakdown.map(i => i.value), backgroundColor: calc.breakdown.map(i => i.color), borderWidth: 0, hoverOffset: 5 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '60%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: {size: 10} } } } } }); }
+
+        // --- NEW: Procurement Charts (Stock Version) ---
+        function renderProcurementCharts(ctxSupplier, ctxStock) {
+            const mat = appData.procurement.materials.find(m => m.id === state.activeMaterialId) || appData.procurement.materials[0];
+            const suppliers = mat.suppliers;
+
+            // 1. Comparison Chart (Mixed: Price Bar + Line Quality/Delivery)
+            new Chart(ctxSupplier, {
+                type: 'bar',
+                data: {
+                    labels: suppliers.map(s => s.name),
+                    datasets: [
+                        { label: '采购单价 (Price)', data: suppliers.map(s => s.price), backgroundColor: '#3b82f6', yAxisID: 'y', order: 2, borderRadius: 4 },
+                        { label: '质量评分', data: suppliers.map(s => s.quality), borderColor: '#10b981', type: 'line', yAxisID: 'y1', order: 1, pointStyle: 'circle', pointRadius: 5, pointBackgroundColor: '#10b981' },
+                        { label: '交付准时率', data: suppliers.map(s => s.delivery), borderColor: '#f59e0b', type: 'line', yAxisID: 'y1', order: 1, pointStyle: 'rect', pointRadius: 5, pointBackgroundColor: '#f59e0b' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: {boxWidth: 10} } },
+                    scales: {
+                        y: { position: 'left', title: {display: true, text: '价格 (RMB)'}, grid: {color: '#f1f5f9'} },
+                        y1: { position: 'right', min: 80, max: 100, title: {display: true, text: '得分 (%)'}, grid: {display: false} },
+                        x: { grid: {display: false} }
+                    }
+                }
+            });
+
+            // 2. Stock Source Pie Chart
+            new Chart(ctxStock, {
+                type: 'doughnut',
+                data: {
+                    labels: suppliers.map(s => s.name),
+                    datasets: [{
+                        data: suppliers.map(s => s.stockShare),
+                        backgroundColor: ['#3b82f6', '#0ea5e9', '#6366f1', '#cbd5e1'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '60%',
+                    plugins: { 
+                        legend: { position: 'right', labels: {boxWidth: 10, font: {size: 10}} },
+                        title: { display: true, text: `总库存: ¥${(mat.inventoryVal/10000).toFixed(1)}w`, position: 'bottom' },
+                         tooltip: { 
+                            callbacks: {
+                                label: (ctx) => ` ${ctx.label}: ¥${ctx.raw} (${Math.round(ctx.raw/mat.inventoryVal*100)}%)`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Interaction Logic ---
+        
+        // Expose function globally for HTML onclick
+        window.selectMaterial = function(id) {
+            state.activeMaterialId = id;
+            renderContent('procurement'); // Re-render to update charts and table selection
+        };
+
+        function renderContent(tabId) {
+            const container = document.getElementById('content-container');
+            // Cleanup
+            if (state.charts.cost) state.charts.cost.destroy();
+
+            if (tabId === 'overview') { container.innerHTML = getOverviewHTML(); setTimeout(() => renderOverviewChart(document.getElementById('overviewChart')), 50); }
+            else if (tabId === 'sales') { 
+                container.innerHTML = getSalesHTML(); 
+                setTimeout(() => renderSalesCharts(document.getElementById('salesRegionChart'), document.getElementById('salesProductChart'), document.getElementById('salesBenchmarkChart')), 50); 
+            }
+            else if (tabId === 'inventory') { container.innerHTML = getInventoryHTML(); setTimeout(() => renderInventoryCharts(document.getElementById('invStackChart')), 50); }
+            else if (tabId === 'procurement') { 
+                container.innerHTML = getProcurementHTML(); 
+                setTimeout(() => renderProcurementCharts(document.getElementById('procSupplierChart'), document.getElementById('procStockChart')), 50); 
+            }
+            else if (tabId === 'costing') {
+                container.innerHTML = getCostingHTML();
+                const intelInput = document.getElementById('sim-intel');
+                const compInput = document.getElementById('sim-comp');
+                const handleUpdate = () => {
+                    state.simulation.intelRate = parseInt(intelInput.value);
+                    state.simulation.compliance = parseFloat(compInput.value);
+                    renderContent('costing');
+                    setTimeout(() => { if(document.getElementById('sim-intel')) document.getElementById('sim-intel').focus(); }, 0);
+                };
+                intelInput.addEventListener('change', handleUpdate);
+                compInput.addEventListener('change', handleUpdate);
+                setTimeout(() => renderCostChart(document.getElementById('costBreakdownChart')), 50);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const navBtns = document.querySelectorAll('.nav-btn');
+            navBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    navBtns.forEach(b => b.classList.remove('active', 'text-yellow-300'));
+                    btn.classList.add('active');
+                    if(btn.dataset.tab === 'costing') btn.classList.add('text-yellow-300');
+                    renderContent(btn.dataset.tab);
+                });
+            });
+            renderContent('overview');
+        });
+    </script>
+</body>
+</html>
