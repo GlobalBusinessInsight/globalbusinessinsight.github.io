@@ -1,0 +1,520 @@
+<!-- Chosen Palette: Official Red (#C8102E) & Ink Black (Serif/Solemn) -->
+<!-- Application Structure Plan:
+    1.  **Layout**: "Internal Reference" (内参) style layout. Left sidebar for Timeline navigation, Right main area for the "Report Card".
+    2.  **Section - Policy Evolution (Main Focus)**:
+        * Interactive Year List: Users select a policy cycle (e.g., 2015 Policy Year).
+        * Detail View: Structured into four quadrants:
+            * 【会议部署】(The Order): What was said.
+            * 【执行实况】(The Reality): What happened.
+            * 【一致性分析】(The Match): What worked.
+            * 【差异与归因】(The Divergence): Why it differed.
+    3.  **Visuals**:
+        * Use of "Wenwu Lines" (Military-Civil lines) for separation.
+        * Background texture simulating paper.
+        * Font: Noto Serif SC (Songti) for all headers to mimic printed newspapers.
+-->
+<!-- Visualization & Content Choices:
+    * **Logic**: The user explicitly requested a year-by-year breakdown of similarities and differences.
+    * **Presentation**: Instead of a simple chart, we use a "Dossier" format for each year.
+-->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中央经济工作会议：指令与落实深度复盘（2014-2024）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --official-red: #C8102E; /* China Red */
+            --ink-black: #1F2937;
+            --paper-bg: #FCFDFD; /* Very subtle off-white */
+            --border-red: #8B0000;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--paper-bg);
+            color: #333;
+            background-image: linear-gradient(#F5F5F5 1px, transparent 1px), linear-gradient(90deg, #F5F5F5 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Typography: The Soul of the Newspaper Style */
+        .font-song {
+            font-family: 'Noto Serif SC', 'SimSun', 'Songti SC', serif;
+        }
+        
+        h1, h2, h3, h4, .header-text {
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        /* Layout Components */
+        .red-header-bar {
+            background-color: var(--official-red);
+            color: white;
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            letter-spacing: 0.1em;
+            display: inline-block;
+        }
+
+        .wenwu-line {
+            border-top: 4px solid var(--official-red);
+            border-bottom: 1px solid var(--official-red);
+            height: 8px; /* Gap between lines */
+            margin: 1.5rem 0;
+        }
+
+        .section-box {
+            border: 1px solid #E5E7EB;
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Timeline Sidebar */
+        .timeline-item {
+            border-left: 3px solid #E5E7EB;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .timeline-item:hover {
+            background-color: #FEF2F2;
+        }
+        .timeline-item.active {
+            border-left: 5px solid var(--official-red);
+            background-color: #FEF2F2;
+        }
+        .timeline-item.active h4 {
+            color: var(--official-red);
+            font-weight: 900;
+        }
+
+        /* Analysis Cards */
+        .analysis-card {
+            background-color: #F9FAFB;
+            border: 1px solid #D1D5DB;
+            padding: 1.5rem;
+        }
+        .analysis-card h5 {
+            color: var(--official-red);
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px dashed #D1D5DB;
+            padding-bottom: 0.25rem;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Masthead -->
+    <header class="bg-white pt-8 pb-4 border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-end">
+            <div>
+                <h1 class="text-4xl md:text-5xl font-black text-[#C8102E] tracking-tight leading-none font-song">
+                    政策执行效能深度复盘
+                </h1>
+                <p class="mt-2 text-gray-600 font-song text-lg tracking-widest">
+                    中央经济工作会议指令与落实情况对照分析（2014-2024）
+                </p>
+            </div>
+            <div class="mt-4 md:mt-0 text-right">
+                <div class="inline-block bg-[#1F2937] text-white text-xs px-2 py-1 font-bold mb-1">内部参考资料风格</div>
+                <p class="text-sm font-song font-bold text-gray-800">数据来源：历年会议通稿、政府工作报告、统计局数据</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Introduction -->
+        <div class="section-box">
+            <h2 class="text-2xl font-bold text-gray-900 font-song mb-4">引言：顶层设计与基层纹理的摩擦</h2>
+            <div class="columns-1 md:columns-2 gap-8 text-justify">
+                <p class="text-gray-700 leading-relaxed mb-4">
+                    中央经济工作会议是观察中国经济政策风向的“定盘星”。然而，从“定调”到“落地”，中间隔着复杂的传导机制。通过对过去十年（2014-2023年召开会议，指导2015-2024年工作）的逐年复盘，我们发现政策执行存在三种典型形态：<strong>完全共振</strong>（如2016年供给侧改革）、<strong>超调执行</strong>（如2021年运动式减碳与监管）、以及<strong>被迫转向</strong>（如2019年因疫情中断既定部署）。
+                </p>
+                <p class="text-gray-700 leading-relaxed">
+                    本报告旨在通过精细化的比对，揭示每一年度的核心指令在次年是“如期落地”还是“发生偏离”，并深度剖析产生这种差异的内外部动因，为预判未来政策路径提供参照。
+                </p>
+            </div>
+        </div>
+
+        <!-- Wenwu Line Separator -->
+        <div class="wenwu-line"></div>
+
+        <!-- Main Interactive Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Sidebar: Year Selector -->
+            <div class="lg:col-span-3">
+                <div class="bg-white border border-gray-200 shadow-sm sticky top-32">
+                    <div class="bg-[#C8102E] text-white p-3 font-bold font-song text-center text-lg">
+                        年度索引
+                    </div>
+                    <div class="h-[600px] overflow-y-auto" id="timeline-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Content: The Dossier -->
+            <div class="lg:col-span-9">
+                <div id="dossier-content" class="bg-white border border-gray-200 shadow-lg p-8 min-h-[600px] relative">
+                    
+                    <!-- Watermark -->
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-9xl text-gray-100 font-song font-black select-none z-0 rotate-[-15deg]">
+                        深度复盘
+                    </div>
+
+                    <!-- Header of the Dossier -->
+                    <div class="relative z-10 border-b-2 border-red-700 pb-4 mb-6 flex justify-between items-center">
+                        <div>
+                            <span class="bg-gray-100 text-gray-600 px-2 py-1 text-xs font-bold mb-2 block w-max">会议召开年份：<span id="conf-year">2014</span></span>
+                            <h2 class="text-3xl font-bold text-[#C8102E] font-song" id="policy-year-title">2015年：经济发展新常态</h2>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-5xl font-black text-gray-200 font-serif" id="year-display">2015</div>
+                        </div>
+                    </div>
+
+                    <!-- Comparison Grid -->
+                    <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <!-- Directive -->
+                        <div class="border-t-4 border-[#C8102E] bg-red-50 p-5">
+                            <h3 class="text-xl font-bold text-[#C8102E] font-song mb-3">【会议核心指令】</h3>
+                            <ul class="list-disc pl-5 space-y-2 text-sm text-gray-800" id="directive-list">
+                                <!-- JS -->
+                            </ul>
+                        </div>
+                        <!-- Execution -->
+                        <div class="border-t-4 border-gray-800 bg-gray-50 p-5">
+                            <h3 class="text-xl font-bold text-gray-800 font-song mb-3">【次年执行实况】</h3>
+                            <ul class="list-disc pl-5 space-y-2 text-sm text-gray-800" id="execution-list">
+                                <!-- JS -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Analysis Section -->
+                    <div class="relative z-10">
+                        <div class="flex items-center mb-4">
+                            <div class="h-6 w-1 bg-[#C8102E] mr-3"></div>
+                            <h3 class="text-2xl font-bold text-gray-900 font-song">异同点深度剖析</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Matches -->
+                            <div class="analysis-card">
+                                <h5 class="font-song">✅ 高度一致点</h5>
+                                <p class="text-sm text-gray-700 leading-relaxed text-justify" id="match-text">
+                                    此处分析相同的点。
+                                </p>
+                            </div>
+                            <!-- Differences -->
+                            <div class="analysis-card bg-yellow-50 border-yellow-200">
+                                <h5 class="font-song text-yellow-800 border-yellow-300">⚠️ 主要偏差/差异</h5>
+                                <p class="text-sm text-gray-700 leading-relaxed text-justify" id="diff-text">
+                                    此处分析差异的点。
+                                </p>
+                            </div>
+                            <!-- Reason -->
+                            <div class="analysis-card bg-red-50 border-red-200">
+                                <h5 class="font-song text-red-800 border-red-300">🔍 差异原因归因</h5>
+                                <p class="text-sm text-gray-700 leading-relaxed text-justify font-bold" id="reason-text">
+                                    此处分析原因。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-gray-500 text-sm font-song border-t border-gray-300 pt-6">
+            <p>本报告仅供政策研究参考，不构成投资建议。</p>
+            <p class="mt-1">Canvas Data Analysis Team • 2024</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // --- DATA: The core of this analysis ---
+        const yearlyData = [
+            {
+                confYear: "2014年底会议",
+                policyYear: "2015年",
+                title: "经济发展新常态",
+                yearDisplay: "2015",
+                directives: [
+                    "核心词：**新常态**。认识、适应、引领新常态。",
+                    "努力保持经济运行在合理区间（稳增长）。",
+                    "把转方式调结构放到更加重要位置。"
+                ],
+                executions: [
+                    "股市遭遇剧烈波动（股灾），汇率改革引发贬值压力。",
+                    "GDP增速破7（6.9%），创25年新低。",
+                    "房地产库存高企，投资增速大幅下滑。"
+                ],
+                match: "决策层对于经济增速换挡（从高速到中高速）有充分心理准备，未进行强力的大水漫灌，保持了定力。",
+                diff: "金融市场的波动性远超预期；房地产下行压力大于预期，导致年底不得不提出更激进的去库存政策。",
+                reason: "金融自由化步伐（杠杆牛）与监管能力不匹配；前期刺激政策的后遗症集中显现。"
+            },
+            {
+                confYear: "2015年底会议",
+                policyYear: "2016年",
+                title: "供给侧结构性改革",
+                yearDisplay: "2016",
+                directives: [
+                    "五大任务：**三去一降一补**（去产能、去库存、去杠杆、降成本、补短板）。",
+                    "化解房地产库存，鼓励农民进城购房。",
+                    "扩大有效供给。"
+                ],
+                executions: [
+                    "钢铁、煤炭去产能目标超额完成，大宗商品价格大涨。",
+                    "棚改货币化（PSL）推动三四线去库存效果显著。",
+                    "一线及热点二线城市房价暴涨，出现“恐慌性购房”。"
+                ],
+                match: "去产能行政执行力极强，过剩行业利润显著修复。",
+                diff: "“去库存”演变成了“加杠杆”和“涨价潮”。本意是消化三四线库存，结果引爆了一二线资产泡沫。",
+                reason: "货币宽松（信贷扩张）与去库存政策叠加；居民部门杠杆率快速上升，资金脱实向虚。"
+            },
+            {
+                confYear: "2016年底会议",
+                policyYear: "2017年",
+                title: "深化供给侧改革与防风险",
+                yearDisplay: "2017",
+                directives: [
+                    "**房子是用来住的、不是用来炒的**（首次提出）。",
+                    "把防控金融风险放到更加重要的位置。",
+                    "着力振兴实体经济。"
+                ],
+                executions: [
+                    "金融监管风暴开启（郭树清上任），打击影子银行、通道业务。",
+                    "房地产调控史上最严，限购限贷全面铺开。",
+                    "GDP增速意外回升至6.8%（全球复苏共振）。"
+                ],
+                match: "金融防风险得到坚决执行，M2增速创历史新低；房住不炒成为铁律。",
+                diff: "实体经济融资成本显著上升，部分中小企业流动性承压。",
+                reason: "顶层设计对于“金融空转”的零容忍；全球经济同步复苏掩盖了国内紧缩的副作用。"
+            },
+            {
+                confYear: "2017年底会议",
+                policyYear: "2018年",
+                title: "三大攻坚战",
+                yearDisplay: "2018",
+                directives: [
+                    "打好**防范化解重大风险、精准脱贫、污染防治**三大攻坚战。",
+                    "重点是防控金融风险（打破刚兑）。"
+                ],
+                executions: [
+                    "上半年：资管新规落地，去杠杆导致信用违约潮（P2P暴雷，民企债违约）。",
+                    "下半年：中美贸易战爆发，政策被迫由“去杠杆”转向“稳杠杆”。",
+                    "提出“六稳”以应对外部冲击。"
+                ],
+                match: "环保和脱贫攻坚战推进顺利；金融去杠杆初期执行坚决。",
+                diff: "政策基调出现180度大转弯（从紧缩到维稳）。",
+                reason: "**外部黑天鹅**：中美贸易战爆发打乱了国内去杠杆的节奏；内部“一刀切”去杠杆导致民企信用崩塌。"
+            },
+            {
+                confYear: "2018年底会议",
+                policyYear: "2019年",
+                title: "六稳与逆周期调节",
+                yearDisplay: "2019",
+                directives: [
+                    "**六稳**：稳就业、稳金融、稳外贸、稳外资、稳投资、稳预期。",
+                    "实施更大规模的减税降费。",
+                    "强化逆周期调节。"
+                ],
+                executions: [
+                    "实施了2万亿规模的减税降费（增值税改革）。",
+                    "经济逐季下行，GDP最终保6（6.0%）。",
+                    "包商银行事件打破同业刚兑。"
+                ],
+                match: "减税降费落实到位；外贸在贸易战背景下表现出韧性。",
+                diff: "企业获得感与宏观数据存在温差，投资意愿依然低迷。",
+                reason: "结构性减速压力叠加贸易战不确定性，企业进入“观望期”；减税效应被需求疲软部分抵消。"
+            },
+            {
+                confYear: "2019年底会议",
+                policyYear: "2020年",
+                title: "稳字当头（被疫情打断）",
+                yearDisplay: "2020",
+                directives: [
+                    "全面建成小康社会和“十三五”规划收官。",
+                    "稳字当头，坚持新发展理念。"
+                ],
+                executions: [
+                    "**新冠疫情爆发**，一季度GDP负增长（-6.8%）。",
+                    "政策全面转向抗疫与救助：发行特别国债，提高赤字率。",
+                    "下半年出口超预期爆发，成为全球唯一正增长主要经济体。"
+                ],
+                match: "无（不可抗力导致原定计划完全重构）。",
+                diff: "除了脱贫攻坚目标完成外，宏观运行轨迹完全脱离年初设想。",
+                reason: "**历史级黑天鹅**：新冠疫情导致全球经济停摆，中国采取了极为特殊的战时经济政策。"
+            },
+            {
+                confYear: "2020年底会议",
+                policyYear: "2021年",
+                title: "反垄断与资本无序扩张",
+                yearDisplay: "2021",
+                directives: [
+                    "**强化反垄断和防止资本无序扩张**。",
+                    "解决好大城市住房突出问题。",
+                    "做好碳达峰、碳中和工作。"
+                ],
+                executions: [
+                    "互联网平台监管重拳出击（阿里罚款、滴滴下架）。",
+                    "“双减”政策落地，教培行业巨震。",
+                    "房地产“三道红线”导致恒大等房企暴雷。",
+                    "出现“运动式减碳”（拉闸限电）。"
+                ],
+                match: "监管政策执行力度空前，甚至超额完成（造成了收缩效应）。",
+                diff: "多部门密集出台收缩性政策，形成了“合成谬误”，导致经济下行压力骤增。",
+                reason: "各部门在执行过程中层层加码；对政策叠加后的宏观紧缩效应预判不足。"
+            },
+            {
+                confYear: "2021年底会议",
+                policyYear: "2022年",
+                title: "三重压力与稳增长",
+                yearDisplay: "2022",
+                directives: [
+                    "正视困难：**需求收缩、供给冲击、预期转弱**。",
+                    "政策发力适当靠前，稳字当头。"
+                ],
+                executions: [
+                    "**奥密克戎疫情**导致上海封城，二季度经济几近停摆。",
+                    "房地产危机持续蔓延，断供潮出现。",
+                    "全年GDP增长3.0%，大幅低于5.5%左右的目标。"
+                ],
+                match: "基建投资确实发力了（支撑了底盘）。",
+                diff: "疫情防控（动态清零）与经济发展目标的平衡被打破，经济活动受限。",
+                reason: "**疫情反复**：病毒变异导致防控成本急剧上升，挤压了正常的经济活动空间。"
+            },
+            {
+                confYear: "2022年底会议",
+                policyYear: "2023年",
+                title: "扩大内需与信心修复",
+                yearDisplay: "2023",
+                directives: [
+                    "**大力提振市场信心**。",
+                    "把恢复和扩大消费摆在优先位置。",
+                    "支持平台企业在引领发展、创造就业、国际竞争中大显身手。"
+                ],
+                executions: [
+                    "平稳度过疫情过峰期，实现了5.2%的增长。",
+                    "出现“疤痕效应”，居民预防性储蓄增加，消费降级。",
+                    "物价持续低迷（CPI/PPI双弱），各类资产价格下跌。"
+                ],
+                match: "平台经济监管常态化，不再有新罚单；服务消费（旅游餐饮）反弹。",
+                diff: "信心修复远慢于预期，“报复性消费”未持续，反而出现了“报复性存钱”。",
+                reason: "**资产负债表衰退**：居民和企业在收入预期不稳时，优先选择还债而非消费/投资。"
+            },
+            {
+                confYear: "2023年底会议",
+                policyYear: "2024年",
+                title: "新质生产力与以进促稳",
+                yearDisplay: "2024",
+                directives: [
+                    "以科技创新引领现代化产业体系建设（**新质生产力**）。",
+                    "先立后破。",
+                    "多出有利于稳预期、稳增长、稳就业的政策。"
+                ],
+                executions: [
+                    "“新三样”（电动车、锂电、光伏）出口强劲，制造业投资高增。",
+                    "房地产依然拖累严重，量价齐跌。",
+                    "宏观数据（GDP）尚可，微观体感（就业、收入）偏冷，温差极大。"
+                ],
+                match: "产业升级战略成功，高技术制造业成为新引擎。",
+                diff: "新旧动能转换期，新动能体量尚不足以完全对冲旧动能（地产）的衰退。",
+                reason: "**供需失衡**：政策重生产、轻分配/消费。产能扩张迅速，但国内有效需求不足，导致内卷和通缩压力。"
+            }
+        ];
+
+        // --- RENDER LOGIC ---
+        const timelineContainer = document.getElementById('timeline-container');
+        const dossierContent = document.getElementById('dossier-content');
+
+        // Elements to update
+        const elConfYear = document.getElementById('conf-year');
+        const elTitle = document.getElementById('policy-year-title');
+        const elYearDisplay = document.getElementById('year-display');
+        const elDirectiveList = document.getElementById('directive-list');
+        const elExecutionList = document.getElementById('execution-list');
+        const elMatchText = document.getElementById('match-text');
+        const elDiffText = document.getElementById('diff-text');
+        const elReasonText = document.getElementById('reason-text');
+
+        function renderTimeline() {
+            yearlyData.forEach((item, index) => {
+                const div = document.createElement('div');
+                // Make the first item active by default
+                const activeClass = index === 0 ? 'active' : '';
+                div.className = `timeline-item ${activeClass}`;
+                div.innerHTML = `
+                    <h4 class="text-gray-800 font-bold text-lg font-song mb-1">${item.policyYear}</h4>
+                    <p class="text-xs text-gray-500">${item.title}</p>
+                `;
+                div.onclick = () => loadDossier(index, div);
+                timelineContainer.appendChild(div);
+            });
+        }
+
+        function loadDossier(index, clickedDiv) {
+            const data = yearlyData[index];
+
+            // Update Active State
+            document.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
+            clickedDiv.classList.add('active');
+
+            // Animate Content (Fade in)
+            dossierContent.style.opacity = '0';
+            setTimeout(() => {
+                // Update Text
+                elConfYear.textContent = data.confYear;
+                elTitle.textContent = data.policyYear + "： " + data.title;
+                elYearDisplay.textContent = data.yearDisplay;
+
+                // Update Lists (Convert MD bold to HTML bold)
+                elDirectiveList.innerHTML = data.directives.map(d => `<li>${formatText(d)}</li>`).join('');
+                elExecutionList.innerHTML = data.executions.map(d => `<li>${formatText(d)}</li>`).join('');
+
+                elMatchText.innerHTML = formatText(data.match);
+                elDiffText.innerHTML = formatText(data.diff);
+                elReasonText.innerHTML = formatText(data.reason);
+
+                dossierContent.style.opacity = '1';
+            }, 200);
+        }
+
+        // Helper to parse simple markdown bold (**text**)
+        function formatText(text) {
+            return text.replace(/\*\*(.*?)\*\*/g, '<span class="text-[#C8102E] font-bold">$1</span>');
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTimeline();
+            // Load first year initially
+            loadDossier(0, timelineContainer.firstElementChild);
+            dossierContent.style.transition = 'opacity 0.3s ease-in-out';
+        });
+
+    </script>
+</body>
+</html>
