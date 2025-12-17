@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUSINESS | XCMG Global Analysis - The Journal Style</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 引入类似WSJ的衬线字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Libre+Franklin:wght@300;400;600&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --wsj-black: #222222;
+            --wsj-grey: #555555;
+            --wsj-light-grey: #EBEBEB;
+            --wsj-border: #d7d7d7;
+            --xcmg-gold: #FFC90E; /* 徐工金 */
+            --xcmg-blue: #004990; /* 徐工蓝 */
+            --xcmg-dark: #1A1A1A;
+            --bg-paper: #F8F8F8;
+            --alert-red: #C53030;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'Times New Roman', serif;
+            color: var(--wsj-black);
+            background-color: #fff;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 报头样式 */
+        .wsj-header {
+            border-bottom: 1px solid var(--wsj-black);
+            padding-bottom: 2px;
+            margin-bottom: 2px;
+        }
+        
+        .section-tag {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            color: var(--wsj-grey);
+            letter-spacing: 0.05em;
+        }
+
+        /* 标题体系 */
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 2.2rem;
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+        }
+        @media (min-width: 768px) {
+            h1 { font-size: 2.8rem; }
+        }
+        
+        h2 {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 300;
+            font-size: 1.1rem;
+            color: var(--wsj-grey);
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+        h3 {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--wsj-black);
+            padding-bottom: 0.25rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        /* 侧边栏/快讯风格 */
+        .sidebar-box {
+            border-top: 4px solid var(--wsj-black);
+            border-bottom: 1px solid var(--wsj-border);
+            padding: 1.25rem 0;
+            background-color: #fcfcfc;
+        }
+        .market-data-label {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .market-data-value {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--wsj-black);
+        }
+
+        /* 正文首字下沉 */
+        .drop-cap::first-letter {
+            float: left;
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            line-height: 0.8;
+            padding-right: 0.5rem;
+            padding-top: 0.2rem;
+            font-weight: 700;
+            color: var(--xcmg-gold);
+        }
+
+        /* 列表样式 */
+        .wsj-list li {
+            position: relative;
+            padding-left: 1rem;
+            margin-bottom: 0.5rem;
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.9rem;
+        }
+        .wsj-list li::before {
+            content: "■";
+            color: var(--xcmg-blue);
+            font-size: 0.6rem;
+            position: absolute;
+            left: 0;
+            top: 0.4rem;
+        }
+
+        /* 图表容器 */
+        .chart-wrapper {
+            background-color: #fff;
+            border: 1px solid var(--wsj-border);
+            padding: 1rem;
+            margin: 2rem 0;
+        }
+        .chart-canvas-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .chart-title {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        /* 核心概览卡片 */
+        .intro-card {
+            background: #fff;
+            border-top: 3px solid var(--xcmg-gold);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* 项目/区域卡片 */
+        .project-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            padding: 0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .project-card:hover {
+            border-color: var(--xcmg-gold);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+        }
+        .project-header {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+        .project-body {
+            padding: 1rem;
+        }
+
+        /* 核心能力卡片 */
+        .core-card {
+            background: #fff;
+            border-left: 4px solid var(--xcmg-blue);
+            padding: 1.25rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            height: 100%;
+        }
+
+        /* 图片容器 */
+        .img-container {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 0;
+            background-color: #eee;
+            height: 180px;
+        }
+        .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .project-card:hover .img-container img {
+            transform: scale(1.05);
+        }
+        .main-img-container {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            background-color: #eee;
+            min-height: 250px;
+        }
+        .img-caption {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.5rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.5rem;
+        }
+
+        /* 重点引言 */
+        .pull-quote {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--xcmg-blue);
+            border-top: 1px solid var(--wsj-black);
+            border-bottom: 1px solid var(--wsj-black);
+            padding: 1.5rem 0;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        /* 风险警示 */
+        .risk-alert {
+            background-color: #FFF5F5;
+            border-left: 4px solid var(--alert-red);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* 组织架构卡片 */
+        .org-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-top: 4px solid var(--xcmg-gold);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <div class="max-w-6xl mx-auto px-4 py-3 border-b border-black flex justify-between items-center bg-white sticky top-0 z-50">
+        <div class="text-xs font-sans font-bold tracking-widest text-gray-500">HEAVY MACHINERY & EQUIPMENT</div>
+        <div class="font-serif font-black text-xl md:text-2xl tracking-tight">THE JOURNAL.</div>
+        <div class="text-xs font-sans text-gray-500">Dec 2025</div>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Main Content (Left 8 cols) -->
+        <div class="lg:col-span-8">
+            <article>
+                <div class="mb-4">
+                    <span class="section-tag text-[#FFC90E]">Global Manufacturing</span>
+                </div>
+                <h1>徐工集团：大国重器的全球突围</h1>
+                <h2>从“中国第一”到“世界前三”，这家老牌国企通过激进的“混改”和“本土化”战略，正在改写由卡特彼勒和小松统治的全球工程机械版图。</h2>
+                
+                <div class="flex items-center text-xs font-sans text-gray-500 mb-6 border-b border-gray-200 pb-4">
+                    <span class="font-bold text-black mr-2">By Machinery Analysis Desk</span>
+                    <span>|</span>
+                    <span class="ml-2">Updated Dec. 2025</span>
+                </div>
+
+                <!-- 场景图 -->
+                <div class="main-img-container">
+                    <img src="https://www.xcmg.com/upload/images/2023/06/06/0708d96bddd745a8a78b261086ccd3b2.jpg" alt="" class="w-full h-auto object-cover">
+                    <div class="img-caption">徐工集团的起重机在全球各地的超级工程中作业，其标志性的“工程黄”已成为中国制造的名片。 / Source: XCMG Official</div>
+                </div>
+
+                <p class="drop-cap mb-6 text-lg">
+                    在江苏徐州，每一台下线的起重机都承载着一个野心：不仅仅是做中国的徐工，而是要做世界的徐工。
+                </p>
+
+                <p class="mb-6">
+                    作为中国工程机械行业的“长子”，徐工集团（XCMG）曾面临体制僵化和市场饱和的双重困境。然而，通过2020年完成的百亿级混合所有制改革（Mixed-ownership Reform），这头大象学会了跳舞。如今，徐工的海外收入占比已逼近50%大关，其起重机、压路机等核心产品销量稳居全球第一。在卡特彼勒（Caterpillar）和小松（Komatsu）的传统领地，徐工正以惊人的速度攻城略地。
+                </p>
+
+                <!-- 核心概览 -->
+                <h3>战略全景：珠峰登顶 (Strategy Overview)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div class="intro-card">
+                        <h4 class="font-bold text-sm text-gray-800 mb-2 uppercase">战略目标</h4>
+                        <p class="text-sm text-gray-600">
+                            <strong>“珠峰登顶”：</strong> 稳居全球前三，冲击前二。
+                            <br><strong>核心策略：</strong> 高端化、智能化、绿色化、服务化、国际化（“五化”转型）。
+                        </p>
+                    </div>
+                    <div class="intro-card">
+                        <h4 class="font-bold text-sm text-gray-800 mb-2 uppercase">技术基因</h4>
+                        <p class="text-sm text-gray-600">
+                            <strong>“三高一可”：</strong> 高可靠性、高附加值、高技术含量、大吨位。拥有全球最大的4000吨级履带起重机技术。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Chart: Revenue Comparison -->
+                <div class="chart-wrapper">
+                    <div class="chart-title">全球工程机械三巨头对比 (2024 Est.)</div>
+                    <div class="chart-canvas-container">
+                        <canvas id="benchChart"></canvas>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-2 font-sans text-right">Source: KHL Yellow Table & Annual Reports</div>
+                </div>
+
+                <h3>全球布局：从出口到扎根 (Global Footprint)</h3>
+                <p class="mb-4">
+                    徐工的全球化经历了从“借船出海”到“造船出海”，再到“落地生根”的质变。其布局策略是：发达国家做高端，新兴市场做规模。
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- 区域 1: 欧洲 -->
+                    <div class="project-card">
+                        <div class="img-container">
+                            <!-- Updated Image: Schwing -->
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQE59_4B7qfzMKYFN6WNBztR7sKKHOW2jypOQ&s" alt="">
+                        </div>
+                        <div class="project-header">
+                            <h4 class="font-bold text-[#004990]">1. 欧洲：施维英 (Schwing)</h4>
+                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded mt-1 inline-block">技术源头</span>
+                        </div>
+                        <div class="project-body text-sm text-gray-700">
+                            <strong>并购案例：</strong> 收购德国施维英（混凝土机械鼻祖）。<br>
+                            <strong>战略意义：</strong> 获得了顶级的液压和控制技术，反哺国内产品；同时利用施维英的全球网络，打入欧美高端市场。
+                        </div>
+                    </div>
+
+                    <!-- 区域 2: 巴西 -->
+                    <div class="project-card">
+                        <div class="img-container">
+                            <!-- Updated Image: Brazil -->
+                            <img src="https://www.xcmg.com/upload/images/2023/04/19/5770e9c6153b4fe79865aed83946aae3.jpg" alt="">
+                        </div>
+                        <div class="project-header">
+                            <h4 class="font-bold text-[#004990]">2. 巴西：全能基地</h4>
+                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded mt-1 inline-block">海外桥头堡</span>
+                        </div>
+                        <div class="project-body text-sm text-gray-700">
+                            <strong>模式：</strong> “绿地投资”建厂（包索工厂）。<br>
+                            <strong>成就：</strong> 获得巴西银行制造认证（Finame），享受当地优惠贷款政策。徐工巴西不仅服务当地，还辐射整个拉美，是徐工最成功的海外制造基地。
+                        </div>
+                    </div>
+
+                    <!-- 区域 3: 东南亚/中亚 -->
+                    <div class="project-card">
+                        <div class="img-container">
+                            <!-- Updated Image: Asia/Africa -->
+                            <img src="https://www.xcmg.com/upload/images/2023/09/15/e7f6813107b14dcb8f898d490965d2a9.jpg" alt="">
+                        </div>
+                        <div class="project-header">
+                            <h4 class="font-bold text-[#004990]">3. 亚非拉：“一带一路”</h4>
+                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded mt-1 inline-block">规模引擎</span>
+                        </div>
+                        <div class="project-body text-sm text-gray-700">
+                            <strong>策略：</strong> 伴随中国基建央企出海。在印尼镍矿、非洲铁路等项目中，徐工设备占据统治地位。
+                        </div>
+                    </div>
+
+                     <!-- 区域 4: 北美 -->
+                     <div class="project-card">
+                        <div class="img-container">
+                            <!-- Updated Image: Mexico -->
+                            <img src="https://cdn.10100.com/content/20251113/1595512c-a4d1-4d84-aa0d-de59c0692fd6.png?x-oss-process=style/wmlogo" alt="">
+                        </div>
+                        <div class="project-header">
+                            <h4 class="font-bold text-[#004990]">4. 北美：高端破局</h4>
+                            <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded mt-1 inline-block">攻坚战</span>
+                        </div>
+                        <div class="project-body text-sm text-gray-700">
+                            <strong>动作：</strong> 建立美国研发中心，针对北美习惯开发适应性产品。尽管面临关税挑战，但通过墨西哥工厂布局等方式寻求突破。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 新增：组织与运营 -->
+                <h3>组织与运营：1+14+N 的全球脑 (Operations)</h3>
+                <p class="mb-4">
+                    管理全球业务，徐工采用了一套高度集权与充分授权相结合的模式。
+                </p>
+                <div class="grid grid-cols-1 gap-4 mb-8">
+                    <div class="org-card">
+                        <h4 class="font-bold text-sm text-[#004990] mb-2 uppercase">全球管控架构</h4>
+                        <ul class="wsj-list text-sm text-gray-700">
+                            <li><strong>1个全球运营总部：</strong> 位于徐州，负责战略、财务、研发的总控。</li>
+                            <li><strong>14个海外大区：</strong> 按照地理位置划分（如亚太区、南美区、欧洲区），拥有区域内的定价权和渠道管理权。</li>
+                            <li><strong>N个KD工厂与研发中心：</strong> 在德国、美国、印度、巴西等地设立研发中心，实现“日不落”研发体系。</li>
+                        </ul>
+                    </div>
+                    <div class="org-card" style="border-top-color: #FFC90E;">
+                        <h4 class="font-bold text-sm text-[#004990] mb-2 uppercase">混改赋能</h4>
+                        <p class="text-sm text-gray-700">
+                            <strong>骨干持股：</strong> 混改后，核心骨干持股，极大地激发了全员的“狼性”。这解决了传统国企“出工不出力”的顽疾，使徐工在海外市场的反应速度甚至超过了民企对手三一重工。
+                        </p>
+                    </div>
+                </div>
+
+
+                <h3>核心对标：巨人的博弈 (Benchmarking)</h3>
+                <p class="mb-4">
+                    将徐工置于全球坐标系中，其竞争对手主要分为两类：全球霸主与国内宿敌。
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div class="core-card">
+                        <h4 class="font-bold text-sm text-[#004990] mb-2">VS. 卡特彼勒 (Caterpillar)</h4>
+                        <p class="text-xs text-gray-600">
+                            <strong>差距：</strong> 品牌溢价、后市场服务收入占比、全球代理商网络的稳固度。<br>
+                            <strong>追赶：</strong> 徐工在起重机等细分领域已在性能上接近，但在全生命周期价值（TCO）上仍有提升空间。
+                        </p>
+                    </div>
+                    <div class="core-card border-l-4 border-yellow-500">
+                        <h4 class="font-bold text-sm text-[#B45309] mb-2">VS. 三一重工 (Sany)</h4>
+                        <p class="text-xs text-gray-600">
+                            <strong>差异：</strong> 三一更擅长挖掘机和混凝土机械，营销更激进；徐工的优势在于起重机、路面机械等成套设备，产品线更全，底蕴更深。
+                        </p>
+                    </div>
+                </div>
+
+                <h3>挑战与风险：风浪中的巨轮</h3>
+                <div class="risk-alert">
+                    <h4 class="font-bold text-sm text-[#C53030] mb-2 uppercase">Risk Watch</h4>
+                    <ul class="wsj-list text-sm text-gray-800">
+                        <li><strong>贸易保护：</strong> 欧美针对中国制造的关税壁垒是最大不确定性。</li>
+                        <li><strong>国内周期：</strong> 尽管海外高增长，但国内房地产下行带来的拖累依然沉重。</li>
+                        <li><strong>汇率波动：</strong> 海外资产庞大，汇率波动对报表影响显著。</li>
+                    </ul>
+                </div>
+
+                <div class="pull-quote">
+                    “徐工的全球化，是中国重工装备从‘大’到‘强’的缩影。它证明了国企通过机制改革，同样能在完全竞争的全球市场上与顶级巨头掰手腕。”
+                </div>
+
+            </article>
+        </div>
+
+        <!-- Sidebar (Right 4 cols) -->
+        <div class="lg:col-span-4 space-y-8">
+            
+            <!-- Key Stats Box -->
+            <div class="sidebar-box">
+                <h4 class="font-sans font-bold text-xs tracking-widest mb-4 border-b border-gray-300 pb-2">MARKET DATA (2025 Est.)</h4>
+                
+                <div class="mb-4">
+                    <div class="market-data-label">年度营收 (Revenue)</div>
+                    <div class="market-data-value">985 <span class="text-sm font-normal text-gray-500">亿 RMB</span></div>
+                    <div class="text-xs text-gray-600 font-bold font-sans">Listed Co.</div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="market-data-label">海外营收占比</div>
+                    <div class="market-data-value text-[#FFC90E]">~45%</div>
+                    <div class="text-xs text-gray-500">Target: 50%</div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="market-data-label">起重机份额</div>
+                    <div class="market-data-value text-[#004990]">Global No.1</div>
+                    <div class="text-xs text-gray-500">移动起重机</div>
+                </div>
+            </div>
+
+            <!-- Product Breakdown -->
+            <div class="sidebar-box">
+                <h4 class="font-sans font-bold text-xs tracking-widest mb-4 border-b border-gray-300 pb-2">REVENUE MIX</h4>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h5 class="font-bold text-sm text-gray-900 flex justify-between">
+                            <span>起重机械</span>
+                            <span>30%</span>
+                        </h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-[#004990] h-1.5 rounded-full" style="width: 30%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-sm text-gray-900 flex justify-between">
+                            <span>土方机械</span>
+                            <span>28%</span>
+                        </h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-[#FFC90E] h-1.5 rounded-full" style="width: 28%"></div>
+                        </div>
+                    </div>
+                     <div>
+                        <h5 class="font-bold text-sm text-gray-900 flex justify-between">
+                            <span>混凝土机械</span>
+                            <span>15%</span>
+                        </h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-gray-500 h-1.5 rounded-full" style="width: 15%"></div>
+                        </div>
+                    </div>
+                     <div>
+                        <h5 class="font-bold text-sm text-gray-900 flex justify-between">
+                            <span>新兴板块 (高机/矿机)</span>
+                            <span>27%</span>
+                        </h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-green-600 h-1.5 rounded-full" style="width: 27%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insight Box -->
+            <div class="bg-[#FFFBEB] p-4 border-t-2 border-[#FFC90E]">
+                <h4 class="font-sans font-bold text-sm text-[#B45309] mb-2">PoV 观察</h4>
+                <p class="text-sm font-serif italic leading-relaxed text-gray-800">
+                    “徐工的混改是其全球化的催化剂。通过释放体制活力，这家老国企展现出了惊人的海外适应力。但要在欧美高端市场真正站稳脚跟，徐工还需要补上‘软实力’这一课——不仅仅是产品好，服务和品牌更要硬。”
+                </p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-300 mt-12 py-8 bg-white">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0">
+                <div class="font-serif font-bold text-xl">THE JOURNAL.</div>
+                <div class="text-xs text-gray-500 font-sans mt-1">Copyright © 2025 Dow Jones & Company, Inc. All Rights Reserved.</div>
+            </div>
+            <div class="text-xs text-gray-400 font-sans">
+                Powered by Industrial Insight Unit
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Chart.js Configuration for WSJ Style
+        Chart.defaults.font.family = "'Libre Franklin', sans-serif";
+        Chart.defaults.color = '#333';
+        
+        const ctx = document.getElementById('benchChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Caterpillar', 'Komatsu', 'XCMG', 'Sany', 'John Deere'],
+                datasets: [
+                    {
+                        label: 'Total Revenue ($B)',
+                        data: [67, 25, 13.5, 11, 10], // Est. Data
+                        backgroundColor: (ctx) => {
+                            return ctx.dataIndex === 2 ? '#FFC90E' : '#ccc'; // Highlight XCMG
+                        },
+                        yAxisID: 'y',
+                        barPercentage: 0.6
+                    },
+                    {
+                        label: 'Overseas %',
+                        data: [60, 85, 45, 48, 40],
+                        backgroundColor: '#004990',
+                        yAxisID: 'y1',
+                        type: 'line',
+                        borderColor: '#004990',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#fff',
+                        pointRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // 允许Canvas填满容器
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } },
+                    tooltip: {
+                        backgroundColor: '#fff',
+                        titleColor: '#000',
+                        bodyColor: '#000',
+                        borderColor: '#ccc',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        position: 'left',
+                        grid: {
+                            color: '#eee',
+                            borderDash: [2, 2]
+                        },
+                        title: { display: true, text: 'Revenue ($B)' }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        max: 100,
+                        grid: { display: false },
+                        title: { display: true, text: 'Intl Share (%)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
