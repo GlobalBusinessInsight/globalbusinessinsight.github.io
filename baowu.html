@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUSINESS | China Baowu Global Analysis - The Journal Style</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 引入类似WSJ的衬线字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Libre+Franklin:wght@300;400;600&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --wsj-black: #222222;
+            --wsj-grey: #555555;
+            --wsj-light-grey: #EBEBEB;
+            --wsj-border: #d7d7d7;
+            --baowu-blue: #00589C; /* 宝武蓝 */
+            --baowu-dark: #003366;
+            --steel-grey: #718096;
+            --green-steel: #2E8B57; /* 绿色钢铁 */
+            --bg-paper: #F8F8F8;
+            --alert-red: #C53030;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'Times New Roman', serif;
+            color: var(--wsj-black);
+            background-color: #fff;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 报头样式 */
+        .wsj-header {
+            border-bottom: 1px solid var(--wsj-black);
+            padding-bottom: 2px;
+            margin-bottom: 2px;
+        }
+        
+        .section-tag {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            color: var(--wsj-grey);
+            letter-spacing: 0.05em;
+        }
+
+        /* 标题体系 */
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 2.2rem;
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+        }
+        @media (min-width: 768px) {
+            h1 { font-size: 2.8rem; }
+        }
+        
+        h2 {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 300;
+            font-size: 1.1rem;
+            color: var(--wsj-grey);
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+        h3 {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--wsj-black);
+            padding-bottom: 0.25rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        /* 侧边栏/快讯风格 */
+        .sidebar-box {
+            border-top: 4px solid var(--wsj-black);
+            border-bottom: 1px solid var(--wsj-border);
+            padding: 1.25rem 0;
+            background-color: #fcfcfc;
+        }
+        .market-data-label {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .market-data-value {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--wsj-black);
+        }
+
+        /* 正文首字下沉 */
+        .drop-cap::first-letter {
+            float: left;
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            line-height: 0.8;
+            padding-right: 0.5rem;
+            padding-top: 0.2rem;
+            font-weight: 700;
+            color: var(--baowu-blue);
+        }
+
+        /* 列表样式 */
+        .wsj-list li {
+            position: relative;
+            padding-left: 1rem;
+            margin-bottom: 0.5rem;
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.9rem;
+        }
+        .wsj-list li::before {
+            content: "■";
+            color: var(--baowu-blue);
+            font-size: 0.6rem;
+            position: absolute;
+            left: 0;
+            top: 0.4rem;
+        }
+
+        /* 图表容器 */
+        .chart-wrapper {
+            background-color: #fff;
+            border: 1px solid var(--wsj-border);
+            padding: 1rem;
+            margin: 2rem 0;
+        }
+        .chart-canvas-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .chart-title {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        /* 核心概览卡片 */
+        .intro-card {
+            background: #fff;
+            border-top: 3px solid var(--baowu-blue);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* 项目/区域卡片 */
+        .project-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            padding: 0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .project-card:hover {
+            border-color: var(--baowu-blue);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+        }
+        .project-header {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+        .project-body {
+            padding: 1rem;
+        }
+
+        /* 核心能力卡片 */
+        .core-card {
+            background: #fff;
+            border-left: 4px solid var(--green-steel);
+            padding: 1.25rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            height: 100%;
+        }
+        
+        /* 组织架构卡片 (New) */
+        .org-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--baowu-dark);
+        }
+        .org-title {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--baowu-dark);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        /* 图片容器 */
+        .img-container {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 0;
+            background-color: #eee;
+            height: 180px;
+        }
+        .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .project-card:hover .img-container img {
+            transform: scale(1.05);
+        }
+        .main-img-container {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            background-color: #eee;
+        }
+        .img-caption {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.5rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.5rem;
+        }
+
+        /* 重点引言 */
+        .pull-quote {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--baowu-blue);
+            border-top: 1px solid var(--wsj-black);
+            border-bottom: 1px solid var(--wsj-black);
+            padding: 1.5rem 0;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        /* 风险警示 */
+        .risk-alert {
+            background-color: #FFF5F5;
+            border-left: 4px solid var(--alert-red);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <div class="max-w-6xl mx-auto px-4 py-3 border-b border-black flex justify-between items-center bg-white sticky top-0 z-50">
+        <div class="text-xs font-sans font-bold tracking-widest text-gray-500">HEAVY INDUSTRY & MATERIALS</div>
+        <div class="font-serif font-black text-xl md:text-2xl tracking-tight">THE JOURNAL.</div>
+        <div class="text-xs font-sans text-gray-500">Dec 2025</div>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Main Content (Left 8 cols) -->
+        <div class="lg:col-span-8">
+            <article>
+                <div class="mb-4">
+                    <span class="section-tag text-[#00589C]">Global Steel</span>
+                </div>
+                <h1>中国宝武：钢铁航母的绿色远征</h1>
+                <h2>全球最大的钢铁制造商正在进行一场史无前例的“双重转型”：从“中国第一”向“全球第一”跨越，从“碳排放大户”向“绿色低碳冶金”领跑者蜕变。</h2>
+                
+                <div class="flex items-center text-xs font-sans text-gray-500 mb-6 border-b border-gray-200 pb-4">
+                    <span class="font-bold text-black mr-2">By Steel Industry Desk</span>
+                    <span>|</span>
+                    <span class="ml-2">Updated Dec. 2025</span>
+                </div>
+
+                <!-- 场景图 -->
+                <div class="main-img-container">
+                    <!-- Updated Image: Zero Carbon Factory -->
+                    <img src="https://res.baowugroup.com/media/mater/d7d8ee7d40e1407c93d1d8623abfe210.jpg?token=9A1D36086AF7DC1803D58DF6881D60AB7097C96F" alt="Baowu Green Steel Factory" class="w-full h-auto object-cover">
+                    <div class="img-caption">宝武集团在湛江的零碳示范工厂，代表了全球钢铁工业向氢能冶金转型的最前沿探索。 / Source: Baowu Official</div>
+                </div>
+
+                <p class="drop-cap mb-6 text-lg">
+                    当全球钢铁行业在2024-2025年陷入“寒冬”时，中国宝武（China Baowu）依然是一艘无法被忽视的巨轮。年产粗钢超过1.3亿吨，连续数年稳居全球第一，其体量超过了第二名安赛乐米塔尔（ArcelorMittal）的一倍。
+                </p>
+
+                <p class="mb-6">
+                    但这艘航母正面临前所未有的挑战：国内需求见顶，海外贸易壁垒（如CBAM）高筑。董事长胡望明提出了“四化”（高端化、智能化、绿色化、高效化）战略，并将**“国际化”**视为破局的关键。这一次，宝武不再满足于仅仅在国内兼并重组，而是要在中东沙漠和西非丛林中，重建全球钢铁的供应链逻辑。
+                </p>
+
+                <!-- 核心概览 -->
+                <h3>战略蓝图：1345规划 (Strategic Roadmap)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div class="intro-card">
+                        <h4 class="font-bold text-sm text-gray-800 mb-2 uppercase">愿景 2035</h4>
+                        <p class="text-sm text-gray-600">
+                            成为全球钢铁及先进材料业引领者。目标是海外营收占比达到**15%**（目前约10%），实现“全球全体系”布局。
+                        </p>
+                    </div>
+                    <div class="intro-card">
+                        <h4 class="font-bold text-sm text-gray-800 mb-2 uppercase">绿色宣言</h4>
+                        <p class="text-sm text-gray-600">
+                            <strong>2035年</strong>力争减碳30%，<strong>2050年</strong>力争碳中和。这比国家目标（2060）提前了10年，显示了其技术自信与压力。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Chart: Output Comparison -->
+                <div class="chart-wrapper">
+                    <div class="chart-title">全球钢铁巨头粗钢产量对比 (2024)</div>
+                    <div class="chart-canvas-container">
+                        <canvas id="outputChart"></canvas>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-2 font-sans text-right">Source: World Steel Association</div>
+                </div>
+
+                <h3>全球布局：两翼齐飞</h3>
+                <p class="mb-4">
+                    宝武的全球化布局呈现出清晰的“资源+市场”双轮驱动特征：上游控资源（非洲/澳洲），下游建工厂（中东/东南亚）。
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- 项目 1: 几内亚 -->
+                    <div class="project-card">
+                        <div class="img-container">
+                            <!-- Updated Image: Simandou -->
+                            <img src="https://wcsglobal.com/cn/wp-content/uploads/2021/07/17D.1.jpg" alt="">
+                        </div>
+                        <div class="project-header">
+                            <h4 class="font-bold text-[#00589C]">1. 西芒杜铁矿 (Simandou)</h4>
+                            <span class="text-xs bg-gray-200 px-2 py-1 rounded mt-1 inline-block">资源生命线</span>
+                        </div>
+                        <div class="project-body text-sm text-gray-700">
+                            <strong>地点：</strong> 几内亚。<br>
+                            <strong>战略意义：</strong> 全球最大的未开发高品位铁矿。宝武牵头的中方联合体与力拓合作开发，旨在打破对澳矿的依赖，掌握铁矿石定价权。这是宝武全球化拼图中最后一块、也是最重的一块拼图。
+                        </div>
+                    </div>
+
+                    <!-- 项目 2: 沙特厚板厂 -->
+                    <div class="project-card">
+                        <div class="img-container">
+                            <!-- Updated Image: Saudi Plate Plant -->
+                            <img src="https://statics.nengyuanjie.net/2023/0505/20230505090048597.png" alt="">
+                        </div>
+                        <div class="project-header">
+                            <h4 class="font-bold text-[#00589C]">2. 沙特绿色厚板厂</h4>
+                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded mt-1 inline-block">绿地投资</span>
+                        </div>
+                        <div class="project-body text-sm text-gray-700">
+                            <strong>合作伙伴：</strong> 沙特阿美 (Aramco)、PIF。<br>
+                            <strong>技术核心：</strong> 全球首家绿色低碳全流程厚板工厂，采用“竖炉+电炉”工艺。这标志着中国钢铁技术标准（特别是绿色冶金）首次成体系输出到高端市场。
+                        </div>
+                    </div>
+                </div>
+
+                <h3>技术：绿色钢铁的定义者</h3>
+                <p class="mb-4">
+                    在“碳关税”时代，技术不是锦上添花，而是入场券。宝武正在从“规模引领”转向“技术引领”。
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div class="core-card">
+                        <h4 class="font-bold text-sm text-[#2E8B57] mb-2">HyCROF</h4>
+                        <p class="text-xs text-gray-600">
+                            富氢碳循环氧气高炉技术。在不彻底废弃现有高炉资产的前提下，实现大幅减碳，是中国特色的低碳路径。
+                        </p>
+                    </div>
+                    <div class="core-card border-l-4 border-blue-500">
+                        <h4 class="font-bold text-sm text-[#00589C] mb-2">氢基竖炉</h4>
+                        <p class="text-xs text-gray-600">
+                            在湛江建设的百万吨级氢基竖炉，直接对标欧洲顶级钢企，探索“零碳钢铁”的终极形态。
+                        </p>
+                    </div>
+                    <div class="core-card border-l-4 border-gray-500">
+                        <h4 class="font-bold text-sm text-gray-700 mb-2">智慧制造</h4>
+                        <p class="text-xs text-gray-600">
+                            “一键炼钢”、“黑灯工厂”。通过宝信软件，将5G、AI引入钢铁生产，并将这套数字化标准输出到海外项目。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 新增：全球治理与运营 -->
+                <h3>组织与运营：全球管控的神经系统 (Organization & Operations)</h3>
+                <p class="mb-4">
+                    宝武如何管理这艘万亿级航母？答案在于其独特的**“一基五元”**业务组合与**“三级管控”**架构，实现了从简单的生产型企业向国有资本投资公司的转型。
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="org-card">
+                        <h4 class="org-title">业务板块：一基五元</h4>
+                        <ul class="wsj-list text-sm text-gray-700">
+                            <li><strong>一基 (One Base)：</strong> 钢铁制造业。以宝钢股份、中南钢铁等为核心，保持全球规模第一。</li>
+                            <li><strong>五元 (Five Elements)：</strong>
+                                <ul class="pl-4 mt-1 space-y-1 text-gray-600">
+                                    <li>• <strong>新材料：</strong> 铝、镁、碳纤维等。</li>
+                                    <li>• <strong>智慧服务：</strong> 宝信软件、欧冶云商（钢铁电商）。</li>
+                                    <li>• <strong>资源环境：</strong> 宝武资源（全球找矿）、宝武环科。</li>
+                                    <li>• <strong>产业园区：</strong> 存量土地开发。</li>
+                                    <li>• <strong>产业金融：</strong> 华宝投资，赋能实体。</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="org-card">
+                        <h4 class="org-title">全球管控：三级架构</h4>
+                        <p class="text-sm text-gray-700 mb-3">
+                            宝武在海外设立了<strong>美洲、欧洲、大洋洲</strong>等区域总部，形成了“总部-区域-项目”的穿透式管理。
+                        </p>
+                        <div class="flex flex-col gap-2 text-xs">
+                            <div class="bg-gray-100 p-2 border-l-4 border-[#003366]">
+                                <strong>战略中心 (HQ)：</strong> 上海总部负责定战略、管资本、配资源。
+                            </div>
+                            <div class="bg-gray-100 p-2 border-l-4 border-[#00589C]">
+                                <strong>利润中心 (Subsidiaries)：</strong> 宝钢股份等子公司负责全球市场竞争与盈利。
+                            </div>
+                            <div class="bg-gray-100 p-2 border-l-4 border-[#718096]">
+                                <strong>成本中心 (Plants)：</strong> 全球各大生产基地专注于极致效率与降本。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>挑战与风险：风暴眼</h3>
+                <div class="risk-alert">
+                    <h4 class="font-bold text-sm text-[#C53030] mb-2 uppercase">Risk Watch</h4>
+                    <ul class="wsj-list text-sm text-gray-800">
+                        <li><strong>CBAM (碳关税)：</strong> 欧盟碳边境调节机制将对中国钢铁出口造成直接冲击。宝武必须加速碳足迹认证和绿色产品开发。</li>
+                        <li><strong>地缘政治：</strong> 海外资源（尤其是几内亚、澳洲）的供应链安全始终面临地缘政治博弈的阴影。</li>
+                        <li><strong>行业寒冬：</strong> 2024-2025年，全球钢铁需求疲软，国内产能过剩严重，导致企业利润大幅下滑，现金流承压，考验其全球扩张的财务韧性。</li>
+                    </ul>
+                </div>
+
+                <div class="pull-quote">
+                    “宝武的全球化不是简单的产能转移，而是一次基于‘碳逻辑’的产业链重构。未来的钢铁霸主，必然是绿色技术的霸主。”
+                </div>
+
+            </article>
+        </div>
+
+        <!-- Sidebar (Right 4 cols) -->
+        <div class="lg:col-span-4 space-y-8">
+            
+            <!-- Key Stats Box -->
+            <div class="sidebar-box">
+                <h4 class="font-sans font-bold text-xs tracking-widest mb-4 border-b border-gray-300 pb-2">MARKET DATA (2024/25)</h4>
+                
+                <div class="mb-4">
+                    <div class="market-data-label">年度营收 (Revenue)</div>
+                    <div class="market-data-value">11,129 <span class="text-sm font-normal text-gray-500">亿 RMB</span></div>
+                    <div class="text-xs text-gray-600 font-bold font-sans">Fortune 500: Top 50</div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="market-data-label">粗钢产量 (Output)</div>
+                    <div class="market-data-value text-[#00589C]">1.3 <span class="text-sm font-normal text-gray-500">亿吨</span></div>
+                    <div class="text-xs text-gray-500">全球 No.1</div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="market-data-label">研发投入</div>
+                    <div class="market-data-value text-[#2E8B57]">~5%</div>
+                    <div class="text-xs text-gray-500">致力于2035年达到此比例</div>
+                </div>
+            </div>
+
+            <!-- Competitor Comparison -->
+            <div class="sidebar-box">
+                <h4 class="font-sans font-bold text-xs tracking-widest mb-4 border-b border-gray-300 pb-2">BENCHMARKING</h4>
+                <p class="text-xs text-gray-600 mb-3">与全球第二大钢企 ArcelorMittal 对比</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h5 class="font-bold text-sm text-gray-900 flex justify-between">
+                            <span>宝武 (Baowu)</span>
+                            <span>130 Mt</span>
+                        </h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-[#00589C] h-1.5 rounded-full" style="width: 100%"></div>
+                        </div>
+                        <p class="text-[10px] text-gray-500 mt-1">立足中国，辐射全球。全产业链整合能力强。</p>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-sm text-gray-900 flex justify-between">
+                            <span>安赛乐米塔尔</span>
+                            <span>58 Mt</span>
+                        </h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-[#F59E0B] h-1.5 rounded-full" style="width: 45%"></div>
+                        </div>
+                        <p class="text-[10px] text-gray-500 mt-1">全球化布局更均衡，欧美市场占有率高，盈利能力较强。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insight Box -->
+            <div class="bg-[#EBF8FF] p-4 border-t-2 border-[#00589C]">
+                <h4 class="font-sans font-bold text-sm text-[#00589C] mb-2">PoV 观察</h4>
+                <p class="text-sm font-serif italic leading-relaxed text-gray-800">
+                    “宝武正在从‘大’走向‘伟大’的途中。这个过程不仅需要资本的勇气，更需要技术的智慧。在绿色钢铁的赛道上，它有机会第一次与西方巨头站在同一起跑线上。”
+                </p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-300 mt-12 py-8 bg-white">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0">
+                <div class="font-serif font-bold text-xl">THE JOURNAL.</div>
+                <div class="text-xs text-gray-500 font-sans mt-1">Copyright © 2025 Dow Jones & Company, Inc. All Rights Reserved.</div>
+            </div>
+            <div class="text-xs text-gray-400 font-sans">
+                Powered by Steel Industry Insight Unit
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Chart.js Configuration for WSJ Style
+        Chart.defaults.font.family = "'Libre Franklin', sans-serif";
+        Chart.defaults.color = '#333';
+        
+        const ctx = document.getElementById('outputChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['宝武 (Baowu)', 'ArcelorMittal', '鞍钢 (Ansteel)', 'Nippon Steel', 'POSCO'],
+                datasets: [{
+                    label: '粗钢产量 (百万吨)',
+                    data: [130.8, 58.1, 55.9, 44.4, 38.6], // 2023/24数据
+                    backgroundColor: [
+                        '#00589C', // 宝武蓝
+                        '#999', 
+                        '#999', 
+                        '#999', 
+                        '#999'
+                    ],
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#fff',
+                        titleColor: '#000',
+                        bodyColor: '#000',
+                        borderColor: '#ccc',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#eee',
+                            borderDash: [2, 2]
+                        },
+                        title: { display: true, text: 'Million Tonnes' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
