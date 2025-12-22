@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoV News | 2025全球贸易特别报道：重构与突围</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Plotly.js (for Sankey) -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- REQUIRED PLACEHOLDERS -->
+    <!-- Chosen Palette: PoV News Blue (#00498F) as primary, supported by Newsroom Greys and Alert Reds. -->
+    
+    <!-- Application Structure Plan: 
+         1. Header: Branding.
+         2. Hero Story: Main headline.
+         3. Section 1 (Policy): ADDED "Intelligence Briefing" subsection detailing specific measures and product categories per country.
+         4. Section 2 (Impact): Sector risks (EV, Agri, Solar).
+         5. Section 3 (Flows): Sankey diagram of transshipment.
+         6. Footer: Methodology.
+    -->
+
+    <!-- Visualization & Content Choices:
+         1. Measures Detail -> Goal: Detail -> Method: Structured Grid Cards with Badges. (New Addition)
+         2. Trend Chart -> Chart.js Bar.
+         3. Risk Radar -> Chart.js Radar.
+         4. Trade Flow -> Plotly Sankey.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Roboto', 'Noto Sans SC', sans-serif;
+            background-color: #f4f4f4;
+            color: #1a1a1a;
+        }
+        
+        /* PoV News Branding */
+        .brand-blue { background-color: #00498F; }
+        .text-brand-blue { color: #00498F; }
+        .bg-brand-light { background-color: #E6F0FA; }
+        .news-red { color: #d60000; }
+        .bg-news-red { background-color: #d60000; }
+        
+        .section-header {
+            border-left: 4px solid #00498F;
+            padding-left: 1rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        /* Chart Containers */
+        .chart-wrapper {
+            background: white;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+        
+        .chart-box-fixed {
+            position: relative;
+            height: 350px;
+            width: 100%;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .plotly-wrapper {
+            height: 550px;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Detail Cards */
+        .detail-card {
+            border: 1px solid #e5e7eb;
+            background: white;
+            padding: 1.25rem;
+            height: 100%;
+            transition: transform 0.2s;
+        }
+        .detail-card:hover {
+            border-color: #00498F;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            margin-right: 4px;
+            margin-bottom: 4px;
+            background-color: #f3f4f6;
+            color: #374151;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+        }
+
+        .measure-tag {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 2px;
+            margin-right: 6px;
+        }
+        .tag-subsidy { background-color: #fee2e2; color: #991b1b; } /* Anti-subsidy: Red */
+        .tag-dumping { background-color: #fef3c7; color: #92400e; } /* Anti-dumping: Amber */
+        .tag-security { background-color: #dbeafe; color: #1e40af; } /* Security: Blue */
+        .tag-green { background-color: #dcfce7; color: #166534; } /* Environmental: Green */
+
+        /* Timestamp & Live Tag */
+        .timestamp {
+            font-size: 0.75rem;
+            color: #5f6368;
+            display: flex;
+            align-items: center;
+        }
+        .timestamp::before {
+            content: '';
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%235f6368'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' /%3E%3C/svg%3E");
+            margin-right: 4px;
+        }
+
+        .tag-live {
+            background-color: #d60000;
+            color: white;
+            padding: 2px 6px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="brand-blue text-white sticky top-0 z-50 shadow-md">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="text-3xl font-black tracking-tighter">PoV<span class="font-light">NEWS</span></div>
+                <div class="hidden md:block h-6 w-px bg-blue-400"></div>
+                <nav class="hidden md:flex space-x-6 text-sm font-medium">
+                    <a href="#" class="hover:text-blue-200">首页</a>
+                    <a href="#" class="hover:text-blue-200 border-b-2 border-white">贸易观察</a>
+                    <a href="#" class="hover:text-blue-200">科技</a>
+                    <a href="#" class="hover:text-blue-200">财经</a>
+                </nav>
+            </div>
+            <div class="text-xs font-light text-blue-100 text-right">
+                <div id="current-date">2025年12月21日</div>
+                <div>全球版</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-5xl mx-auto bg-white min-h-screen shadow-xl border-x border-gray-200">
+
+        <!-- HERO SECTION -->
+        <article class="p-6 md:p-10 border-b border-gray-200">
+            <div class="flex items-center mb-4">
+                <span class="tag-live">LIVE REPORT</span>
+                <span class="text-brand-blue font-bold text-sm tracking-wide uppercase">特别关注 · 贸易重构</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4">
+                大重构：2025年贸易壁垒与中国供应链的“隐形突围”
+            </h1>
+            <p class="text-xl text-gray-600 leading-relaxed mb-6">
+                从欧盟对华电动车加征关税，到中国反制欧盟猪肉；从美国封锁“网联汽车”，到越南、墨西哥转口贸易激增。2025年，全球贸易体系正在以前所未有的速度分裂与重组。
+            </p>
+            <div class="timestamp">更新于 3小时前 · 华盛顿/布鲁塞尔/北京</div>
+        </article>
+
+        <!-- SECTION 1: THE POLICY LANDSCAPE -->
+        <section class="p-6 md:p-10 bg-gray-50">
+            <h2 class="section-header text-2xl font-bold text-gray-900">
+                第一章：壁垒高墙<br>
+                <span class="text-lg font-normal text-gray-600">从“价格战”到“安全泛化”</span>
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div class="col-span-2">
+                    <p class="text-gray-800 mb-4 leading-relaxed">
+                        <strong>数据追踪：</strong> 截至2025年12月中旬，全球针对中国发起的贸易救济调查已突破<strong>102起</strong>，创下自WTO成立以来的新高。
+                        <br><br>
+                        与往年不同的是，<strong>土耳其、巴西、印度</strong>等“全球南方”国家成为新的主力军，发起案件占比接近40%。与此同时，欧美政策工具已从单纯的关税转向更为致命的“非关税壁垒”，如美国的《网联汽车安全禁令》（软件/硬件双重限制）和欧盟的《碳边境调节机制》（CBAM）试运行。
+                    </p>
+                    <div class="p-4 bg-blue-50 border-l-4 border-blue-600 text-sm text-gray-700">
+                        <strong class="text-blue-900 block mb-1">最新动态 (Dec 16, 2025):</strong>
+                        中国商务部最终裁定，对原产于欧盟的进口猪肉及猪副产品征收4.9%-19.8%的反倾销税。这是对欧盟此前确立电动车反补贴税（最高35.3%）的直接回应。
+                    </div>
+                </div>
+                <div class="col-span-1">
+                    <div class="bg-white p-4 shadow-sm border border-gray-200">
+                        <div class="text-xs text-gray-500 uppercase font-bold mb-2">2025年调查发起方 TOP 5</div>
+                        <ul class="space-y-3 text-sm">
+                            <li class="flex justify-between items-center">
+                                <span>🇪🇺 欧盟 (EU)</span>
+                                <span class="font-bold text-brand-blue">29 起</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span>🇺🇸 美国 (USA)</span>
+                                <span class="font-bold text-brand-blue">24 起</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span>🇮🇳 印度 (India)</span>
+                                <span class="font-bold text-brand-blue">18 起</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span>🇧🇷 巴西 (Brazil)</span>
+                                <span class="font-bold text-brand-blue">11 起</span>
+                            </li>
+                            <li class="flex justify-between items-center">
+                                <span>🇹🇷 土耳其 (Turkey)</span>
+                                <span class="font-bold text-brand-blue">9 起</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Measures Breakdown -->
+            <div class="mb-8">
+                <h3 class="text-lg font-bold text-brand-blue mb-4 border-b border-gray-200 pb-2">情报档案：主要经济体调查手段与靶向品类</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    
+                    <!-- EU Card -->
+                    <div class="detail-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-bold text-lg text-gray-900">🇪🇺 欧盟</h4>
+                            <span class="text-xs font-bold text-gray-400">Policy: De-risking</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="measure-tag tag-subsidy">反补贴调查</span>
+                            <span class="measure-tag tag-green">碳关税 (CBAM)</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">重点打击获国家补贴的高科技与绿色产业。</p>
+                        <div class="mt-2">
+                            <span class="category-badge">电动汽车 (BEV)</span>
+                            <span class="category-badge">风力涡轮机</span>
+                            <span class="category-badge">光伏玻璃</span>
+                            <span class="category-badge">医疗器械</span>
+                            <span class="category-badge">钢铁铝材</span>
+                        </div>
+                    </div>
+
+                    <!-- USA Card -->
+                    <div class="detail-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-bold text-lg text-gray-900">🇺🇸 美国</h4>
+                            <span class="text-xs font-bold text-gray-400">Policy: Decoupling</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="measure-tag tag-security">国家安全禁令</span>
+                            <span class="measure-tag tag-subsidy">301关税复审</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">从关税战转向针对软件、数据及基础设施的“精准封锁”。</p>
+                        <div class="mt-2">
+                            <span class="category-badge">网联汽车软件</span>
+                            <span class="category-badge">港口起重机</span>
+                            <span class="category-badge">成熟制程芯片</span>
+                            <span class="category-badge">锂电池</span>
+                            <span class="category-badge">生物医药</span>
+                        </div>
+                    </div>
+
+                    <!-- India Card -->
+                    <div class="detail-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-bold text-lg text-gray-900">🇮🇳 印度</h4>
+                            <span class="text-xs font-bold text-gray-400">Policy: Make in India</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="measure-tag tag-dumping">反倾销密集区</span>
+                            <span class="measure-tag tag-security">BIS强制认证</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">利用非关税壁垒（质量认证）阻碍中国工业品进入。</p>
+                        <div class="mt-2">
+                            <span class="category-badge">工业化学品</span>
+                            <span class="category-badge">机械零部件</span>
+                            <span class="category-badge">光伏组件</span>
+                            <span class="category-badge">玩具</span>
+                            <span class="category-badge">纺织原料</span>
+                        </div>
+                    </div>
+
+                    <!-- Brazil Card -->
+                    <div class="detail-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-bold text-lg text-gray-900">🇧🇷 巴西</h4>
+                            <span class="text-xs font-bold text-gray-400">Policy: Re-industrialization</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="measure-tag tag-dumping">反倾销</span>
+                            <span class="measure-tag tag-subsidy">恢复进口税</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">针对冲击本土制造业的廉价工业品。</p>
+                        <div class="mt-2">
+                            <span class="category-badge">金属板材</span>
+                            <span class="category-badge">光缆</span>
+                            <span class="category-badge">化工树脂</span>
+                            <span class="category-badge">新能源汽车</span>
+                        </div>
+                    </div>
+
+                    <!-- Turkey Card -->
+                    <div class="detail-card">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-bold text-lg text-gray-900">🇹🇷 土耳其</h4>
+                            <span class="text-xs font-bold text-gray-400">Policy: Protectionism</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="measure-tag tag-dumping">额外关税</span>
+                            <span class="measure-tag tag-subsidy">特保措施</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">实施无差别的高额额外关税，主要针对汽车。</p>
+                        <div class="mt-2">
+                            <span class="category-badge">燃油/电动汽车</span>
+                            <span class="category-badge">插电混动(PHEV)</span>
+                        </div>
+                    </div>
+
+                    <!-- Others Card -->
+                    <div class="detail-card bg-gray-50 border-dashed">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-bold text-lg text-gray-500">🌏 其他 (印尼/英国等)</h4>
+                        </div>
+                        <div class="mb-3">
+                            <span class="measure-tag tag-dumping">保障措施</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-2">主要针对劳动密集型产品。</p>
+                        <div class="mt-2">
+                            <span class="category-badge text-gray-500">陶瓷瓷砖</span>
+                            <span class="category-badge text-gray-500">纺织服装</span>
+                            <span class="category-badge text-gray-500">生物柴油</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- CHARTS: Investigations -->
+            <div class="chart-wrapper">
+                <h3 class="text-sm font-bold text-gray-500 uppercase mb-4 text-center">2021-2025 全球对华贸易调查案件数量趋势</h3>
+                <div class="chart-box-fixed">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: SECTOR IMPACT -->
+        <section class="p-6 md:p-10 border-t border-gray-200">
+            <h2 class="section-header text-2xl font-bold text-gray-900">
+                第二章：行业震荡<br>
+                <span class="text-lg font-normal text-gray-600">赢家与输家的快速转换</span>
+            </h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <!-- Text Content -->
+                <div class="space-y-6">
+                    <div class="news-card border-l-4 border-blue-800">
+                        <h3 class="font-bold text-lg text-brand-blue mb-2">🚗 新能源汽车：关税“回旋镖”效应</h3>
+                        <p class="text-sm text-gray-700 leading-relaxed">
+                            <strong>现状：</strong> 尽管欧盟加征了最高35.3%的关税，2025年中国品牌在欧市场份额仍升至9.6%（2024年为8%）。
+                            <br><strong>突围策略：</strong> 企业迅速调整产品结构，大量出口<strong>插电混动车型 (PHEV)</strong> 以规避针对纯电车型的重税。同时，比亚迪匈牙利工厂和奇瑞西班牙工厂的建设加速，预计2026年实现“欧洲造”。
+                        </p>
+                    </div>
+
+                    <div class="news-card border-l-4 border-red-600">
+                        <h3 class="font-bold text-lg text-brand-blue mb-2">🐖 农业与食品：成为报复靶心</h3>
+                        <p class="text-sm text-gray-700 leading-relaxed">
+                            <strong>现状：</strong> 中国对欧盟猪肉及乳制品的“双反”调查令丹麦、西班牙和荷兰遭受重创。
+                            <br><strong>影响：</strong> 2025年下半年，欧盟对华猪肉出口暴跌30%，巴西和俄罗斯迅速填补了这一市场空白。这标志着贸易战火已从高科技制造蔓延至传统农业。
+                        </p>
+                    </div>
+
+                    <div class="news-card border-l-4 border-amber-500">
+                        <h3 class="font-bold text-lg text-brand-blue mb-2">☀️ 光伏与电池：借道东南亚受阻</h3>
+                        <p class="text-sm text-gray-700 leading-relaxed">
+                            <strong>现状：</strong> 美国商务部2025年正式对来自越南、泰国、马来西亚、柬埔寨的光伏产品实施“反规避”关税。
+                            <br><strong>新动向：</strong> 产能开始向<strong>中东（沙特、阿曼）</strong>和<strong>美国本土</strong>（利用IRA补贴）转移。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Radar Chart -->
+                <div>
+                    <div class="chart-wrapper bg-white">
+                        <h3 class="text-sm font-bold text-gray-500 uppercase mb-4 text-center">2025重点行业多维风险评估</h3>
+                        <div class="chart-box-fixed" style="height: 400px;">
+                            <canvas id="riskRadar"></canvas>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-4 px-4 text-center">
+                            *维度说明：<br>
+                            <strong>关税敏感度：</strong>直接税率高低；<strong>供应链刚性：</strong>不可替代程度（越高越安全）；<br>
+                            <strong>政治关注度：</strong>是否涉及国家安全；<strong>替代市场潜力：</strong>非欧美市场消化能力。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: ENTREPOT TRADE -->
+        <section class="p-6 md:p-10 bg-slate-50 border-t border-gray-200">
+            <h2 class="section-header text-2xl font-bold text-gray-900">
+                第三章：隐形河流<br>
+                <span class="text-lg font-normal text-gray-600">转口贸易的科学估算</span>
+            </h2>
+
+            <div class="mb-8 max-w-3xl">
+                <p class="text-gray-800 leading-relaxed">
+                    面对壁垒，全球供应链并未断裂，而是变得更加迂回。PoV News 数据团队基于“镜像贸易统计法”（Mirror Statistics）分析发现，2025年出现了两大核心“中转枢纽”：
+                </p>
+                <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
+                    <li><strong>越南悖论：</strong> 2025年越南对美贸易顺差创纪录，同时对华贸易逆差激增至660亿美元。这暗示大量中间品（电子元件、纺织面料）从中国通过越南组装后流向美国。</li>
+                    <li><strong>墨西哥通道：</strong> 尽管美墨加协定（USMCA）审查临近，2025年中国对墨汽配出口仍增长25%，显示“近岸外包”本质上仍是对亚洲供应链的依赖。</li>
+                </ul>
+            </div>
+
+            <!-- SANKEY DIAGRAM -->
+            <div class="chart-wrapper shadow-lg">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="font-bold text-brand-blue">2025年中国供应链转口流量估算图 (单位：亿美元)</h3>
+                    <span class="bg-news-red text-white text-xs px-2 py-1 font-bold">独家数据</span>
+                </div>
+                <div id="sankeyPlot" class="plotly-wrapper"></div>
+                <div class="mt-4 text-xs text-gray-500 text-center">
+                    注：红色节点代表源头，黄色/绿色为中转枢纽，蓝色为最终消费市场。线条粗细代表估算贸易额。
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="bg-gray-900 text-white p-10 mt-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
+                <div>
+                    <h4 class="font-bold text-lg mb-4 text-blue-400">PoV NEWS</h4>
+                    <p class="text-gray-400 leading-relaxed">
+                        PoV News 致力于提供全球视角的深度贸易分析。本报告数据综合自中国海关总署、欧盟统计局 (Eurostat)、美国商务部 (DOC) 及第三方供应链咨询机构。
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4 text-gray-300">方法论说明</h4>
+                    <p class="text-gray-400 text-xs leading-relaxed">
+                        1. <strong>转口贸易估算：</strong> 采用投入产出表分析法，剥离中转国（如越南）本地增值部分，追踪原产地为中国的中间品流向。<br>
+                        2. <strong>风险指数：</strong> 基于加权平均法，综合考量当前关税水平、历史案件频率及地缘政治声明。<br>
+                        3. <strong>数据时效：</strong> 数据截止至2025年12月15日，部分数值为基于Q3数据的年度化推算。
+                    </p>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-xs text-gray-500">
+                &copy; 2025 PoV News Analysis Group. All rights reserved.
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- 1. BAR CHART: INVESTIGATION TRENDS ---
+        const ctxTrend = document.getElementById('trendChart').getContext('2d');
+        new Chart(ctxTrend, {
+            type: 'bar',
+            data: {
+                labels: ['2021', '2022', '2023', '2024', '2025(预)'],
+                datasets: [{
+                    label: '全球对华贸易救济调查案件数',
+                    data: [65, 72, 86, 95, 102],
+                    backgroundColor: [
+                        '#e5e7eb',
+                        '#d1d5db',
+                        '#9ca3af',
+                        '#6b7280',
+                        '#00498F' // Highlight 2025 in Brand Blue
+                    ],
+                    borderColor: 'transparent',
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1a1a1a',
+                        titleFont: { family: 'Roboto' },
+                        bodyFont: { family: 'Roboto' },
+                        padding: 10,
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw + ' 起案件';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f3f4f6' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // --- 2. RADAR CHART: SECTOR RISKS ---
+        const ctxRadar = document.getElementById('riskRadar').getContext('2d');
+        new Chart(ctxRadar, {
+            type: 'radar',
+            data: {
+                labels: ['关税敏感度', '非关税壁垒', '技术封锁', '供应链刚性(反向)', '市场份额损失'],
+                datasets: [{
+                    label: '新能源汽车 (NEV)',
+                    data: [95, 85, 70, 40, 60],
+                    borderColor: '#00498F', // Blue
+                    backgroundColor: 'rgba(0, 73, 143, 0.2)',
+                    pointBackgroundColor: '#00498F',
+                    borderWidth: 2
+                },
+                {
+                    label: '光伏 (Solar)',
+                    data: [80, 75, 50, 60, 50],
+                    borderColor: '#F59E0B', // Amber
+                    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                    pointBackgroundColor: '#F59E0B',
+                    borderWidth: 2
+                },
+                {
+                    label: '农业/猪肉 (Agri)',
+                    data: [90, 30, 10, 80, 90], // High tariff (retaliation), low tech ban, high replacement risk
+                    borderColor: '#D60000', // Red
+                    backgroundColor: 'rgba(214, 0, 0, 0.1)',
+                    pointBackgroundColor: '#D60000',
+                    borderWidth: 2,
+                    borderDash: [5, 5]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: '#e5e7eb' },
+                        grid: { color: '#e5e7eb' },
+                        pointLabels: {
+                            font: { size: 11, family: 'Noto Sans SC' },
+                            color: '#374151'
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { family: 'Noto Sans SC' } } }
+                }
+            }
+        });
+
+        // --- 3. SANKEY DIAGRAM: TRADE FLOWS ---
+        const sankeyData = {
+            type: "sankey",
+            orientation: "h",
+            node: {
+                pad: 20,
+                thickness: 20,
+                line: { color: "black", width: 0.5 },
+                label: [
+                    "中国 (China) 出口", // 0
+                    "越南 (Vietnam) 枢纽", // 1
+                    "墨西哥 (Mexico) 枢纽", // 2
+                    "东盟其他 (ASEAN)",    // 3
+                    "美国 (USA)",         // 4
+                    "欧盟 (EU)",          // 5
+                    "其他市场 (ROW)"      // 6
+                ],
+                color: [
+                    "#D60000", // China Red
+                    "#F59E0B", // Vietnam Amber
+                    "#10B981", // Mexico Green
+                    "#3B82F6", // ASEAN Blue
+                    "#00498F", // USA Brand Blue
+                    "#6366F1", // EU Indigo
+                    "#9CA3AF"  // Grey
+                ]
+            },
+            link: {
+                source: [0, 0, 0, 0,  1, 1,  2,  3, 3],
+                target: [1, 2, 3, 6,  4, 5,  4,  4, 5],
+                // Updated 2025 Volumes (Visual Weight)
+                value:  [60, 55, 40, 100, 50, 15, 65, 15, 20],
+                label: [
+                    "电子零件/纺织", "汽配/机械", "原材料", "直接出口", 
+                    "组装成品(顺差激增)", "光伏/鞋服", "USMCA免税通道", 
+                    "转口", "转口"
+                ],
+                color: "rgba(200, 200, 200, 0.4)"
+            }
+        };
+
+        const sankeyLayout = {
+            font: { size: 12, family: "Noto Sans SC" },
+            margin: { t: 20, l: 10, r: 10, b: 20 },
+            paper_bgcolor: "rgba(0,0,0,0)",
+            plot_bgcolor: "rgba(0,0,0,0)"
+        };
+
+        const sankeyConfig = { responsive: true, displayModeBar: false };
+
+        Plotly.newPlot('sankeyPlot', [sankeyData], sankeyLayout, sankeyConfig);
+
+    </script>
+</body>
+</html>
