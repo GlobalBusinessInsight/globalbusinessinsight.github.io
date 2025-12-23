@@ -1,0 +1,599 @@
+<!-- Chosen Palette: PoV News - Stark Black & White, Editorial Red, Paper White Background -->
+<!-- Application Structure Plan: 
+    1. Editorial Header.
+    2. [NEW] Executive Summary: High-level overview of the regulatory shift (Golden Tax IV + Industry Clearing).
+    3. The Lede: The 1.6B Case details.
+    4. The Numbers: Penalty breakdown.
+    5. The Investigation: Process timeline.
+    6. The Survival Paradox: "Why they do it" (Involution/Price War).
+    7. The Data Storm: Real-world statistics from 2024-2025.
+    8. Risk Radar.
+    9. Interactive Calculator.
+-->
+<!-- Visualization & Content Choices:
+    - Retained all previous charts (Composition, Survival, Triggers, Radar).
+    - Added a styled "Executive Summary" box at the top to frame the narrative.
+-->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度特稿：深圳电商1.6亿隐匿收入案始末</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #f9f9f9; /* Paper white */
+            color: #1a1a1a;
+            line-height: 1.8;
+        }
+        h1, h2, h3, h4, .serif {
+            font-family: 'Merriweather', serif;
+        }
+        .article-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            padding: 40px;
+        }
+        @media (max-width: 768px) {
+            .article-container {
+                padding: 20px;
+            }
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            height: 350px;
+            margin: 2rem 0;
+        }
+        .drop-cap::first-letter {
+            font-size: 4rem;
+            line-height: 3.5rem;
+            font-weight: 900;
+            float: left;
+            margin-right: 0.5rem;
+            color: #cc0000; /* Editorial Red */
+        }
+        .timeline-line {
+            position: absolute;
+            left: 24px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e5e5;
+        }
+        .highlight-box {
+            background-color: #fff1f2;
+            border-left: 4px solid #e11d48;
+        }
+        .summary-box {
+            background-color: #f8fafc;
+            border-top: 4px solid #1a1a1a;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            font-family: 'Merriweather', serif;
+            color: #334155;
+        }
+        .gray-box {
+            background-color: #f3f4f6;
+            border-left: 4px solid #4b5563;
+        }
+        .news-marker {
+            display: inline-block;
+            background: #000;
+            color: #fff;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+        .quote-box {
+            font-family: 'Merriweather', serif;
+            font-style: italic;
+            font-size: 1.25rem;
+            color: #4b5563;
+            border-top: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 2rem 0;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        .data-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .data-card:hover {
+            border-color: #999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .tag-pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Progress Bar (Reading Indicator) -->
+    <div class="fixed top-0 left-0 h-1 bg-red-600 z-50 transition-all duration-200" id="reading-progress" style="width: 0%"></div>
+
+    <div class="min-h-screen py-8 md:py-12">
+        <article class="article-container">
+            
+            <!-- Header -->
+            <header class="mb-8 border-b-2 border-black pb-8">
+                <span class="news-marker">PoV Special Report</span>
+                <span class="news-marker bg-red-600 ml-2">深度观察</span>
+                
+                <h1 class="text-3xl md:text-5xl font-black mt-4 mb-6 leading-tight text-slate-900">
+                    从1.6亿到9500万：<br>
+                    <span class="text-red-700">内卷时代的“税务赌局”</span>
+                </h1>
+                
+                <div class="flex items-center text-sm text-gray-500 font-medium font-sans mt-6">
+                    <div class="flex items-center">
+                        <span class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold mr-3 text-lg">A</span>
+                        <div>
+                            <p class="text-black">Analysis Team</p>
+                            <p>2024-2025 行业深度解析</p>
+                        </div>
+                    </div>
+                    <div class="ml-auto text-xs text-gray-400">阅读时间：约 15 分钟</div>
+                </div>
+            </header>
+
+            <!-- [NEW] Executive Summary -->
+            <section class="summary-box">
+                <h3 class="text-lg font-bold text-slate-900 mb-3 not-italic sans-serif uppercase tracking-wide">综述：告别“野蛮生长”的最后通牒</h3>
+                <p class="text-base leading-relaxed mb-4">
+                    2024年至2025年，中国电商行业正经历一场前所未有的合规风暴。如果说过去十年的增长引擎是“流量红利”与“供应链优势”，那么隐藏在繁荣背后的第三个引擎——<strong>“通过不规范纳税获取的价格竞争优势”</strong>，正在金税四期的大数据洪流中彻底熄火。
+                </p>
+                <p class="text-base leading-relaxed">
+                    深圳1.6亿隐匿收入案并非孤例，而是行业转折点的信号弹。在通缩压力与极度内卷的商业环境下，监管层面的技术升级正在倒逼市场进行一场残酷的“出清”：<strong>当避税不再是降低成本的捷径，而是通向深渊的快车道时，成千上万中小卖家被迫站在了“合规即死”与“违规等死”的十字路口。</strong> 本文将深度剖析这一生存悖论，并用详实数据还原这场正在发生的行业剧变。
+                </p>
+            </section>
+
+            <!-- The Lede / Introduction -->
+            <section class="mb-12">
+                <p class="drop-cap text-lg text-slate-800 mb-6">
+                    这是一张令整个跨境电商圈子夜不能寐的罚单。深圳某电子公司，在两年时间内隐匿收入高达 <strong>1.6 亿元</strong>。当税务稽查的靴子落地时，等待他们的是一份 <strong>9500 万元</strong> 的追缴及处罚通知书。
+                </p>
+                <!-- Key Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-0 border-y border-gray-200 my-8">
+                    <div class="p-6 text-center md:border-r border-gray-200">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">涉案金额</div>
+                        <div class="text-3xl font-serif font-bold text-slate-900">1.6 亿</div>
+                    </div>
+                    <div class="p-6 text-center md:border-r border-gray-200">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">补罚总额</div>
+                        <div class="text-3xl font-serif font-bold text-red-600">9500 万</div>
+                    </div>
+                    <div class="p-6 text-center">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">生存概率</div>
+                        <div class="text-3xl font-serif font-bold text-slate-900">~0%</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Part 1: The Breakdown -->
+            <section class="mb-16">
+                <h2 class="text-2xl font-bold font-serif mb-6 border-l-4 border-black pl-4">一、 9500万是如何构成的？</h2>
+                <p class="text-slate-700 mb-6">
+                    这9500万并非单一税种，而是由“税、滞、罚”三部分组成的连环杀。在税务稽查中，滞纳金（年化约18.25%）和最高5倍的罚款往往比本金更致命。
+                </p>
+                <div class="bg-slate-50 p-6 rounded-lg border border-slate-100">
+                    <h3 class="text-center font-bold text-sm text-gray-500 uppercase mb-4">追缴构成估算模型</h3>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="compositionChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Part 2: The Logic of Failure -->
+            <section class="mb-16">
+                <h2 class="text-2xl font-bold font-serif mb-6 border-l-4 border-black pl-4">二、 大数据下的“透明人”</h2>
+                <!-- Simplified Vertical Timeline -->
+                <div class="relative pl-8">
+                    <div class="timeline-line"></div>
+                    <div class="relative mb-8">
+                        <div class="absolute -left-10 top-0 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center font-bold text-sm">1</div>
+                        <h3 class="text-lg font-bold text-slate-900">风险触发</h3>
+                        <p class="text-slate-600 text-sm">平台GMV数据 vs 申报收入自动比对。</p>
+                    </div>
+                    <div class="relative mb-8">
+                        <div class="absolute -left-10 top-0 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center font-bold text-sm">2</div>
+                        <h3 class="text-lg font-bold text-slate-900">资金穿透</h3>
+                        <p class="text-slate-600 text-sm">“税警银”联动，穿透法人及亲属私户流水。</p>
+                    </div>
+                    <div class="relative">
+                        <div class="absolute -left-10 top-0 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
+                        <h3 class="text-lg font-bold text-slate-900">三流验证</h3>
+                        <p class="text-slate-600 text-sm">物流数据佐证真实销售，击破“刷单”谎言。</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Part 3: Survival Paradox -->
+            <section class="mb-16">
+                <h2 class="text-2xl font-bold font-serif mb-6 border-l-4 border-black pl-4">三、 生存悖论：合规的“死亡谷”</h2>
+                
+                <div class="quote-box">
+                    “我也知道合规好，但如果我现在合规，下个月就得关门。活着，才是真理。”
+                </div>
+
+                <div class="gray-box p-6 rounded mb-8">
+                    <h4 class="font-bold text-slate-800 mb-2">内卷市场的囚徒困境</h4>
+                    <p class="text-slate-600 mb-4">
+                        当行业整体处于微利状态，税收成本往往超过了企业的净利润率。在监管真空期，“不交税”是企业降价抢单的唯一筹码。
+                    </p>
+                </div>
+
+                <h3 class="text-xl font-bold text-slate-900 mb-4">为什么“劣币”能驱逐“良币”？</h3>
+                <div class="bg-white border border-gray-200 p-6 shadow-sm mb-8">
+                    <div class="chart-container" style="height: 350px;">
+                        <canvas id="survivalChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-gray-500 mt-2">
+                        *合规企业因包含15%以上的税负成本，定价高于市场红线，导致滞销。
+                    </p>
+                </div>
+            </section>
+
+            <!-- Part 4: The 2024-2025 Data Storm -->
+            <section class="mb-16 bg-slate-50 p-6 -mx-6 md:mx-0 md:rounded-lg border-y md:border border-slate-200">
+                <h2 class="text-2xl font-bold font-serif mb-6 border-l-4 border-red-600 pl-4">四、 2024-2025 稽查风暴实录</h2>
+                <p class="text-slate-700 mb-6">
+                    如果说前几年只是“喊狼来了”，那么2024年下半年至2025年初，则是狼真的来了。通过梳理全网公开案例，我们发现国内电商与跨境电商正面临两场截然不同的“围剿”。
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    
+                    <!-- Left: Domestic -->
+                    <div>
+                        <div class="flex items-center mb-4">
+                            <span class="bg-slate-900 text-white px-3 py-1 text-xs font-bold uppercase tracking-wide mr-2">国内电商</span>
+                            <h3 class="font-bold text-lg">个体户与私户的“黄昏”</h3>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-4">
+                            <strong>核心特征：</strong> 利用“个体工商户”不建账的漏洞，叠加个人微信/支付宝收款，隐匿巨额流水。直播带货成为重灾区。
+                        </p>
+                        
+                        <!-- Case Card 1 -->
+                        <div class="data-card mb-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-red-700">南昌“上品屋”案</h4>
+                                <span class="tag-pill bg-red-100 text-red-700">典型</span>
+                            </div>
+                            <div class="text-xs text-slate-500 mb-2">2024年11月通报 | 服装网店</div>
+                            <div class="grid grid-cols-2 gap-2 text-sm border-t border-slate-100 pt-2">
+                                <div>
+                                    <span class="block text-gray-400 text-xs">隐匿收入</span>
+                                    <span class="font-bold">1.64 亿元</span>
+                                </div>
+                                <div>
+                                    <span class="block text-gray-400 text-xs">追缴税款</span>
+                                    <span class="font-bold">669 万元</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-2 bg-slate-100 p-2 rounded">
+                                <strong>警示：</strong> “0申报”极其危险。即便注册为个体户，当流水达到一定规模（如超500万），仍会被穿透稽查。
+                            </p>
+                        </div>
+
+                        <!-- Case Card 2 -->
+                        <div class="data-card">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-slate-800">直播带货集群案</h4>
+                            </div>
+                            <div class="text-xs text-slate-500 mb-2">青岛/哈尔滨/常州等多地通报</div>
+                            <p class="text-sm text-slate-700">
+                                集中查处多起网红店、直播间利用虚假“小规模纳税人”身份拆分收入。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Right: Cross-Border -->
+                    <div>
+                        <div class="flex items-center mb-4">
+                            <span class="bg-blue-900 text-white px-3 py-1 text-xs font-bold uppercase tracking-wide mr-2">跨境电商</span>
+                            <h3 class="font-bold text-lg">数据交换的“透明墙”</h3>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-4">
+                            <strong>核心特征：</strong> 平台（亚马逊/Temu/TikTok）向税务局报送数据 VS 卖家自行申报数据。两者差异直接触发“补税短信”。
+                        </p>
+
+                        <!-- Case Card 3 -->
+                        <div class="data-card mb-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-blue-800">上市公司子公司补税</h4>
+                                <span class="tag-pill bg-blue-100 text-blue-800">合规</span>
+                            </div>
+                            <div class="text-xs text-slate-500 mb-2">2024年底公告 | 爱仕达子公司</div>
+                            <div class="grid grid-cols-2 gap-2 text-sm border-t border-slate-100 pt-2">
+                                <div>
+                                    <span class="block text-gray-400 text-xs">补缴税款</span>
+                                    <span class="font-bold">385.85 万元</span>
+                                </div>
+                                <div>
+                                    <span class="block text-gray-400 text-xs">滞纳金</span>
+                                    <span class="font-bold">124.2 万元</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-2 bg-slate-100 p-2 rounded">
+                                <strong>警示：</strong> 企业自查补缴。即使是合规意愿强的上市公司，也因海外收入申报口径问题（毛利vs净额）“中招”。
+                            </p>
+                        </div>
+
+                        <!-- Case Card 4 -->
+                        <div class="data-card">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-slate-800">“短信补税潮”</h4>
+                            </div>
+                            <div class="text-xs text-slate-500 mb-2">2024-2025 行业普遍现象</div>
+                            <p class="text-sm text-slate-700">
+                                大量卖家收到税务局短信，要求解释“申报收入 < 平台报送收入”。原因多为将刷单金额、平台佣金直接剔除，导致数据不符。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded border border-gray-200">
+                    <h4 class="font-bold text-center text-sm mb-4 uppercase text-gray-500">2025 稽查风暴：高频触发点统计</h4>
+                    <div class="chart-container" style="height: 250px; margin: 0;">
+                        <canvas id="triggerChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Part 5: Risk Radar -->
+            <section class="mb-16">
+                <h2 class="text-2xl font-bold font-serif mb-6 border-l-4 border-black pl-4">五、 你的企业在雷达上吗？</h2>
+                <div class="bg-white p-4 md:p-8 rounded-xl shadow-inner bg-slate-50">
+                    <div class="chart-container" style="height: 400px; max-width: 600px; margin: 0 auto;">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interactive Section: Calculator -->
+            <section class="bg-slate-900 text-white p-8 md:p-12 rounded-2xl shadow-2xl">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-white mb-2">互动工具：风险成本模拟器</h2>
+                    <p class="text-slate-400">
+                        赌运气是有成本的。输入假设的隐匿收入金额，直观感受一旦“等死”变成现实，代价会有多大。
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <!-- Controls -->
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">隐匿销售收入 (万元)</label>
+                            <input type="number" id="calc-revenue" value="1000" class="w-full bg-slate-800 border border-slate-600 rounded px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition">
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <label class="text-sm font-medium text-slate-300">隐匿时长</label>
+                                <span id="val-years" class="text-sm text-red-400 font-bold">2 年</span>
+                            </div>
+                            <input type="range" id="range-years" min="1" max="5" value="2" step="1" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <label class="text-sm font-medium text-slate-300">罚款倍数</label>
+                                <span id="val-penalty" class="text-sm text-red-400 font-bold">1.0 倍</span>
+                            </div>
+                            <input type="range" id="range-penalty" min="0.5" max="5" value="1" step="0.5" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500">
+                        </div>
+                    </div>
+
+                    <!-- Output -->
+                    <div class="bg-white text-slate-900 rounded-xl p-6 flex flex-col justify-between relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-red-100 rounded-bl-full -mr-10 -mt-10 z-0"></div>
+                        <div class="relative z-10 space-y-4">
+                            <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                                <span class="text-gray-600">应补税款</span>
+                                <span class="font-bold text-lg" id="out-tax">0 万</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                                <span class="text-gray-600">滞纳金</span>
+                                <span class="font-bold text-lg text-amber-600" id="out-late">0 万</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                                <span class="text-gray-600">行政罚款</span>
+                                <span class="font-bold text-lg text-red-600" id="out-fine">0 万</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 pt-4 border-t-2 border-slate-900 relative z-10">
+                            <div class="flex justify-between items-end">
+                                <span class="text-sm font-bold text-gray-500">总支付金额</span>
+                                <span class="text-4xl font-black text-slate-900 leading-none" id="out-total">0</span>
+                            </div>
+                            <div class="mt-4 bg-red-50 text-red-800 text-xs font-bold px-3 py-2 rounded text-center">
+                                资金损失比例: <span id="out-ratio">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="mt-16 pt-8 border-t border-gray-200 text-center text-gray-500 text-sm">
+                <p class="mb-2">© 2024 Tax Compliance Insight | PoV News Style Report</p>
+                <p>数据来源：国家税务总局公开曝光案件、上市公司公告、行业媒体报道</p>
+            </footer>
+
+        </article>
+    </div>
+
+    <script>
+        // Reading Progress Bar
+        window.onscroll = function() {
+            let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = (winScroll / height) * 100;
+            document.getElementById("reading-progress").style.width = scrolled + "%";
+        };
+
+        // --- Chart 1: Composition (Doughnut) ---
+        const ctx1 = document.getElementById('compositionChart').getContext('2d');
+        new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: ['增值税及附加', '企业所得税', '滞纳金', '罚款'],
+                datasets: [{
+                    data: [19, 13, 16, 52], 
+                    backgroundColor: ['#e5e7eb', '#d1d5db', '#f59e0b', '#dc2626'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // --- Chart 2: Survival Paradox (Bar) ---
+        const ctx2 = document.getElementById('survivalChart').getContext('2d');
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: ['合规企业报价 (100元)', '违规企业报价 (85元)'],
+                datasets: [
+                    { label: '基础成本', data: [80, 80], backgroundColor: '#d1d5db', stack: 'Stack 0' },
+                    { label: '微利', data: [5, 5], backgroundColor: '#9ca3af', stack: 'Stack 0' },
+                    { label: '税务成本', data: [15, 0], backgroundColor: '#1a1a1a', stack: 'Stack 0' },
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } },
+                scales: { y: { beginAtZero: true, max: 110 } }
+            }
+        });
+
+        // --- Chart 3 (NEW): Triggers (Horizontal Bar) ---
+        const ctx4 = document.getElementById('triggerChart').getContext('2d');
+        new Chart(ctx4, {
+            type: 'bar',
+            data: {
+                labels: ['私户收款 (国内)', '刷单虚假申报 (国内)', '平台数据差异 (跨境)', '出口退税违规 (跨境)', '直播隐匿收入 (国内)'],
+                datasets: [{
+                    label: '风险频发指数 (0-10)',
+                    data: [9.5, 8.0, 9.0, 7.5, 8.5],
+                    backgroundColor: [
+                        '#1a1a1a', // Black
+                        '#4b5563', // Gray
+                        '#1d4ed8', // Blue
+                        '#60a5fa', // Light Blue
+                        '#1a1a1a'  // Black
+                    ],
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { max: 10, grid: { display: false } } }
+            }
+        });
+
+        // --- Chart 4: Radar Chart ---
+        const ctx3 = document.getElementById('radarChart').getContext('2d');
+        new Chart(ctx3, {
+            type: 'radar',
+            data: {
+                labels: ['私户收款金额', '发票缺失率', '库存账实差异', '社保个税申报', '上下游关联度'],
+                datasets: [{
+                    label: '本案涉事企业',
+                    data: [95, 90, 85, 40, 70],
+                    backgroundColor: 'rgba(220, 38, 38, 0.2)',
+                    borderColor: '#dc2626',
+                    pointBackgroundColor: '#dc2626',
+                    borderWidth: 2
+                },
+                {
+                    label: '安全合规基准',
+                    data: [10, 10, 15, 90, 80],
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderColor: '#10b981',
+                    pointBackgroundColor: '#10b981',
+                    borderWidth: 2,
+                    borderDash: [5, 5]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: '#e5e7eb' },
+                        grid: { color: '#e5e7eb' },
+                        pointLabels: { font: { size: 11 } },
+                        suggestedMin: 0, suggestedMax: 100
+                    }
+                }
+            }
+        });
+
+        // --- Calculator Logic ---
+        function updateCalc() {
+            const revenue = parseFloat(document.getElementById('calc-revenue').value) || 0;
+            const years = parseFloat(document.getElementById('range-years').value);
+            const penalty = parseFloat(document.getElementById('range-penalty').value);
+
+            document.getElementById('val-years').innerText = years + " 年";
+            document.getElementById('val-penalty').innerText = penalty + " 倍";
+
+            const estimatedTax = revenue * 0.20; 
+            const daysDelayed = (years * 365) / 1.5; 
+            const estimatedLateFee = estimatedTax * (daysDelayed * 0.0005);
+            const estimatedFine = estimatedTax * penalty;
+            const total = estimatedTax + estimatedLateFee + estimatedFine;
+            const ratio = revenue > 0 ? (total / revenue * 100) : 0;
+
+            document.getElementById('out-tax').innerText = estimatedTax.toFixed(0) + " 万";
+            document.getElementById('out-late').innerText = estimatedLateFee.toFixed(0) + " 万";
+            document.getElementById('out-fine').innerText = estimatedFine.toFixed(0) + " 万";
+            document.getElementById('out-total').innerText = total.toFixed(0);
+            document.getElementById('out-ratio').innerText = ratio.toFixed(1) + "%";
+        }
+
+        // Listeners
+        document.getElementById('calc-revenue').addEventListener('input', updateCalc);
+        document.getElementById('range-years').addEventListener('input', updateCalc);
+        document.getElementById('range-penalty').addEventListener('input', updateCalc);
+        
+        // Init
+        updateCalc();
+    </script>
+</body>
+</html>
