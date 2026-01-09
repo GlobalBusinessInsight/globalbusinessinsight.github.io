@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6214772877334340"
+     crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUSINESS | Luxshare Precision Global Analysis - The Journal Style</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 引入类似WSJ的衬线字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Libre+Franklin:wght@300;400;600&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --wsj-black: #222222;
+            --wsj-grey: #555555;
+            --wsj-light-grey: #EBEBEB;
+            --wsj-border: #d7d7d7;
+            --lux-red: #C8102E; /* 立讯红 */
+            --lux-dark: #8B0A1F;
+            --tech-blue: #2B6CB0;
+            --bg-paper: #F8F8F8;
+            --alert-orange: #DD6B20;
+            --growth-green: #10B981;
+            --compliance-purple: #6B21A8; /* 合规紫 */
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'Times New Roman', serif;
+            color: var(--wsj-black);
+            background-color: #fff;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 报头样式 */
+        .wsj-header {
+            border-bottom: 1px solid var(--wsj-black);
+            padding-bottom: 2px;
+            margin-bottom: 2px;
+        }
+        
+        .section-tag {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            color: var(--wsj-grey);
+            letter-spacing: 0.05em;
+        }
+
+        /* 标题体系 */
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 2.2rem;
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+        }
+        @media (min-width: 768px) {
+            h1 { font-size: 2.8rem; }
+        }
+        
+        h2 {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 300;
+            font-size: 1.1rem;
+            color: var(--wsj-grey);
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+        h3 {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            border-bottom: 3px solid var(--wsj-black);
+            padding-bottom: 0.25rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        /* 侧边栏/快讯风格 */
+        .sidebar-box {
+            border-top: 4px solid var(--wsj-black);
+            border-bottom: 1px solid var(--wsj-border);
+            padding: 1.25rem 0;
+            background-color: #fcfcfc;
+        }
+        .market-data-label {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .market-data-value {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--wsj-black);
+        }
+
+        /* 正文首字下沉 */
+        .drop-cap::first-letter {
+            float: left;
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            line-height: 0.8;
+            padding-right: 0.5rem;
+            padding-top: 0.2rem;
+            font-weight: 700;
+            color: var(--lux-red);
+        }
+
+        /* 列表样式 */
+        .wsj-list li {
+            position: relative;
+            padding-left: 1rem;
+            margin-bottom: 0.5rem;
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.9rem;
+        }
+        .wsj-list li::before {
+            content: "■";
+            color: var(--lux-red);
+            font-size: 0.6rem;
+            position: absolute;
+            left: 0;
+            top: 0.4rem;
+        }
+
+        /* 图表容器 */
+        .chart-wrapper {
+            background-color: #fff;
+            border: 1px solid var(--wsj-border);
+            padding: 1rem;
+            margin: 2rem 0;
+        }
+        .chart-canvas-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .chart-title {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        /* 核心概览卡片 */
+        .intro-card {
+            background: #fff;
+            border-top: 3px solid var(--lux-red);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* 区域/板块卡片 */
+        .region-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            padding: 1.25rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        .region-card:hover {
+            border-color: var(--lux-red);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+        
+        /* 运营模式图示卡片 */
+        .ops-card {
+            background: #fff;
+            border-left: 4px solid var(--tech-blue);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* 组织架构卡片 (New) */
+        .org-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .org-title {
+            font-family: 'Libre Franklin', sans-serif;
+            font-weight: 700;
+            color: var(--lux-dark);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 0.25rem;
+        }
+
+        /* 图片容器 */
+        .img-container {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 0;
+            background-color: #eee;
+            height: 180px;
+        }
+        .img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .region-card:hover .img-container img {
+            transform: scale(1.05);
+        }
+        .main-img-container {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            background-color: #eee;
+            min-height: 250px;
+        }
+        .img-caption {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.5rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.5rem;
+        }
+
+        /* 重点引言 */
+        .pull-quote {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--lux-red);
+            border-top: 1px solid var(--wsj-black);
+            border-bottom: 1px solid var(--wsj-black);
+            padding: 1.5rem 0;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        /* 风险警示 */
+        .risk-alert {
+            background-color: #FFF5F5;
+            border-left: 4px solid var(--alert-orange);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <div class="max-w-6xl mx-auto px-4 py-3 border-b border-black flex justify-between items-center bg-white sticky top-0 z-50">
+        <div class="text-xs font-sans font-bold tracking-widest text-gray-500">TECHNOLOGY & MANUFACTURING</div>
+        <div class="font-serif font-black text-xl md:text-2xl tracking-tight">THE JOURNAL.</div>
+        <div class="text-xs font-sans text-gray-500">Dec 2025</div>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Main Content (Left 8 cols) -->
+        <div class="lg:col-span-8">
+            <article>
+                <div class="mb-4">
+                    <span class="section-tag text-[#C8102E]">Precision Manufacturing</span>
+                </div>
+                <h1>立讯精密：穿越周期的“精密”野心</h1>
+                <h2>从“果链一哥”到“汽车Tier 1”，这家市值3000亿的中国制造巨头正在经历一场静悄悄的质变。2025年，随着AI与汽车业务的全面爆发，它正试图向资本市场证明：我不仅仅是富士康的挑战者。</h2>
+                
+                <div class="flex items-center text-xs font-sans text-gray-500 mb-6 border-b border-gray-200 pb-4">
+                    <span class="font-bold text-black mr-2">By Tech Supply Chain Desk</span>
+                    <span>|</span>
+                    <span class="ml-2">Updated Dec. 2025</span>
+                </div>
+
+                <!-- 场景图 -->
+                <div class="main-img-container">
+                    <img src="https://img.baobacninhtv.vn/Medias/honghieu/2023/11/10/kt.jpg" alt="Luxshare Vietnam Factory" class="w-full h-auto object-cover">
+                    <div class="img-caption">立讯精密在越南北江省的生产基地，这里已成为其AirPods和Apple Watch的主要海外组装中心，也是2025年应对全球贸易不确定性的核心避风港。 / Source: Bac Ninh TV</div>
+                </div>
+
+                <p class="drop-cap mb-6 text-lg">
+                    在库克（Tim Cook）的供应链版图中，立讯精密（Luxshare Precision）的位置从未像今天这样重要。但对于董事长王来春来说，2025年的关键词不仅仅是“苹果”，更是“汽车”与“AI”。
+                </p>
+
+                <p class="mb-6">
+                    最新数据显示，2025年前三季度，立讯精密营收突破**2200亿元**，净利润增长超**26%**。在消费电子复苏乏力的背景下，这一成绩单令人瞩目。其背后的驱动力，正是公司多年布局的“汽车电子”与“通讯互联”业务在2025年迎来了真正的爆发期。
+                </p>
+
+                <!-- 核心概览 -->
+                <h3>战略全景：第二曲线的崛起 (Strategic Shift)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <div class="intro-card">
+                        <h4 class="font-bold text-sm text-gray-800 mb-2 uppercase">核心逻辑</h4>
+                        <p class="text-sm text-gray-600">
+                            <strong>同心圆扩张：</strong> 坚持“零部件-模组-系统”的垂直整合路径。
+                            <br><strong>去单一化：</strong> 2025年，非果链业务（汽车、通讯）的增速（>40%）远超消费电子（~10%），营收结构正趋于平衡。
+                        </p>
+                    </div>
+                    <div class="intro-card">
+                        <h4 class="font-bold text-sm text-gray-800 mb-2 uppercase">三驾马车 (2025 Mix)</h4>
+                        <p class="text-sm text-gray-600">
+                            <strong>1. 消费电子：</strong> 稳健基石，AI手机/眼镜带来新换机潮。<br>
+                            <strong>2. 汽车电子：</strong> 爆发增长，Tier 1地位稳固。<br>
+                            <strong>3. 通讯互联：</strong> AI算力需求驱动铜连接/光模块高增。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Chart: Revenue Trend -->
+                <div class="chart-wrapper">
+                    <div class="chart-title">营收增长与海外占比趋势 (2021-2025 Est.)</div>
+                    <div class="chart-canvas-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-2 font-sans text-right">Source: Annual Reports & Q3 2025 Filing</div>
+                </div>
+
+                <h3>全球布局：China + N 的深耕</h3>
+                <p class="mb-4">
+                    面对2025年复杂的地缘政治环境，立讯的“China+N”战略已从“布局期”进入“收获期”。越南、印度、墨西哥三大海外基地各司其职。
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <!-- 区域 1: 越南 -->
+                    <div class="region-card">
+                        <div class="img-container">
+                            <img src="https://www.yuanzhezixun.com/wp-content/uploads/2025/11/%E7%AB%8B%E8%AE%AF%E7%B2%BE%E5%AF%86%E8%B6%8A%E5%8D%97%E4%B9%89%E5%AE%89%E5%B7%A5%E5%8E%82.jpg" alt="Vietnam Nghe An Factory">
+                        </div>
+                        <div class="px-0 pt-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-bold text-[#C8102E]">1. 越南：海外大本营</h4>
+                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded font-bold">成熟</span>
+                            </div>
+                            <p class="text-sm text-gray-700">
+                                <strong>现状：</strong> 产能利用率和良率已接近国内水平。不仅生产配件，更承接了Apple Watch、iPad等复杂产品的整机组装。
+                                <br><strong>意义：</strong> 应对关税壁垒的核心“安全阀”，也是立讯全球产能调度的枢纽。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 区域 2: 墨西哥 -->
+                    <div class="region-card">
+                        <div class="img-container">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCaRCU9PB3dqz-j_BFxk2nBtu4trZiFPuNDA&s" alt="Mexico Auto Industry">
+                        </div>
+                        <div class="px-0 pt-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <h4 class="font-bold text-[#C8102E]">2. 墨西哥：汽车前哨</h4>
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded font-bold">高增长</span>
+                            </div>
+                            <p class="text-sm text-gray-700">
+                                <strong>现状：</strong> 2025年产能大幅释放。蒙特雷工厂主要服务特斯拉及北美传统车企。
+                                <br><strong>产品：</strong> 汽车线束、连接器、域控制器。这是立讯切入北美新能源汽车供应链的关键跳板。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 新增：组织与管控 -->
+                <h3>组织与管控：矩阵式全球大脑 (Organization)</h3>
+                <p class="mb-4">
+                    管理一个跨越三大洲、拥有数十万员工的精密制造帝国，立讯采用了一套**“中央厨房+前店后厂”**的矩阵架构。
+                </p>
+
+                <div class="grid grid-cols-1 gap-6 mb-8">
+                    <!-- 顶层设计 -->
+                    <div class="org-card border-l-4 border-[#C8102E]">
+                        <h4 class="org-title">BG（事业群）+ 区域双线汇报</h4>
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="flex-1 bg-white p-2">
+                                <h5 class="font-bold text-xs text-gray-900 mb-1">纵向：三大事业群 (BG)</h5>
+                                <p class="text-xs text-gray-600">
+                                    消费电子BG、汽车BG、通讯BG。
+                                    <br><strong>职责：</strong> 负责全球P&L（盈亏）、产品研发、核心客户（如Apple, Tesla）的对接。无论工厂在越南还是墨西哥，生产标准和技术工艺由BG统一垂直穿透。
+                                </p>
+                            </div>
+                            <div class="w-px bg-gray-300 hidden md:block"></div>
+                            <div class="flex-1 bg-white p-2">
+                                <h5 class="font-bold text-xs text-gray-900 mb-1">横向：区域总部 (Region)</h5>
+                                <p class="text-xs text-gray-600">
+                                    越南大区、印度大区、美洲大区。
+                                    <br><strong>职责：</strong> 负责“平台支撑”。包括当地政府关系、土地厂房、劳工招聘、税务合规、后勤安保。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 细化：海外架构 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="org-card">
+                            <h4 class="org-title">海外工厂管理：铁三角模式</h4>
+                            <p class="text-sm text-gray-700">
+                                每一个海外园区（如越南云中工业园），均派驻中方核心团队，形成“铁三角”：
+                                <ul class="wsj-list text-xs text-gray-600 mt-2">
+                                    <li><strong>厂长：</strong> 来自国内BG，懂技术和良率。</li>
+                                    <li><strong>财务总监：</strong> 总部委派，控成本和资金安全。</li>
+                                    <li><strong>HR/行政：</strong> 熟悉当地法规，负责庞大的劳工管理。</li>
+                                </ul>
+                            </p>
+                        </div>
+                        <div class="org-card">
+                            <h4 class="org-title">数字化脐带 (Digital Thread)</h4>
+                            <p class="text-sm text-gray-700">
+                                利用自研MES系统和SAP，将全球产能数据化。东莞总部可以实时看到越南产线每一个工站的良率（Yield Rate）和库存。这种“天眼”能力是立讯区别于普通代工厂的核心壁垒。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 新增：财税合规挑战 -->
+                <h3>财税合规：全球化的隐形战场 (Tax & Compliance)</h3>
+                <p class="mb-4">
+                    对于从中国出口零部件、在海外组装、再销往全球的立讯而言，财税合规不仅是风险控制，更是利润来源。
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <!-- 1. 转让定价 -->
+                    <div class="ops-card border-l-4 border-[#6B21A8]">
+                        <h4 class="font-bold text-sm text-[#6B21A8] mb-2 uppercase">1. 转让定价 (Transfer Pricing)</h4>
+                        <p class="text-xs text-gray-700">
+                            <strong>挑战：</strong> 中国母公司向越南/墨西哥子公司出口中间件，定价高低直接影响两国税负和反倾销认定。
+                            <br><strong>应对：</strong> 建立全球TP（Transfer Pricing）政策库，聘请四大作为顾问，确保关联交易定价符合OECD原则，规避BEPS（税基侵蚀）风险。
+                        </p>
+                    </div>
+
+                    <!-- 2. 关税筹划 -->
+                    <div class="ops-card border-l-4 border-[#6B21A8]">
+                        <h4 class="font-bold text-sm text-[#6B21A8] mb-2 uppercase">2. 关税工程 (Tariff Engineering)</h4>
+                        <p class="text-xs text-gray-700">
+                            <strong>挑战：</strong> 美国高额关税。
+                            <br><strong>应对：</strong> 深度利用<strong>墨西哥IMMEX计划</strong>。将零部件免税进口至墨西哥，加工成成品后，利用USMCA协议零关税进入美国市场。这是立讯汽车业务重仓墨西哥的核心财务逻辑。
+                        </p>
+                    </div>
+
+                    <!-- 3. 外汇管理 -->
+                    <div class="ops-card border-l-4 border-[#6B21A8]">
+                        <h4 class="font-bold text-sm text-[#6B21A8] mb-2 uppercase">3. 外汇风控 (FX Risk)</h4>
+                        <p class="text-xs text-gray-700">
+                            <strong>挑战：</strong> 收入多为美元，成本多为人民币/越南盾/卢比。
+                            <br><strong>应对：</strong> 实施严格的套期保值策略，并通过“自然对冲”（在当地融资、当地采购）减少敞口。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 新增：全球供应链管理 -->
+                <h3>供应链闭环：从预测到交付 (S&OP)</h3>
+                <p class="mb-4">
+                    立讯如何确保在越南组装的iPhone不会因为缺一颗来自中国的螺丝钉而停产？答案在于极致的S&OP（销售与运营规划）。
+                </p>
+
+                <div class="space-y-4 mb-12">
+                    <!-- 阶段 1: 预测与备料 -->
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 h-8 w-8 rounded-full bg-[#2B6CB0] flex items-center justify-center text-white font-bold text-sm">1</div>
+                        <div class="ml-4">
+                            <h4 class="text-sm font-bold text-gray-900">预测与备料 (Forecast & VMI)</h4>
+                            <p class="text-xs text-gray-600 mt-1">
+                                与苹果等大客户系统直连，获取Rolling Forecast（滚动预测）。对于长周期物料（如芯片），立讯会提前数月锁单。在越南/印度建立<strong>VMI（供应商管理库存）</strong>中心，把中国的零部件提前运到海外工厂门口，随用随取，资金压力转嫁给上游。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 阶段 2: 跨境物流 -->
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 h-8 w-8 rounded-full bg-[#2B6CB0] flex items-center justify-center text-white font-bold text-sm">2</div>
+                        <div class="ml-4">
+                            <h4 class="text-sm font-bold text-gray-900">跨境大动脉 (Logistics)</h4>
+                            <p class="text-xs text-gray-600 mt-1">
+                                开通了“华南-北越”的跨境卡车专线，实现<strong>24小时陆运直达</strong>。对于墨西哥，则利用海运快船。通过自建物流控制塔，实时监控每一箱物料的轨迹，确保JIT（准时制）生产不掉链子。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 阶段 3: 产能动态调配 -->
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 h-8 w-8 rounded-full bg-[#2B6CB0] flex items-center justify-center text-white font-bold text-sm">3</div>
+                        <div class="ml-4">
+                            <h4 class="text-sm font-bold text-gray-900">产能“双活” (Dual-Production)</h4>
+                            <p class="text-xs text-gray-600 mt-1">
+                                建立中国与海外工厂的“双活”机制。NPI（新产品导入）阶段在国内完成，工艺成熟后“复制粘贴”到海外。一旦海外出现罢工或疫情，国内产能可随时补位，确保全球交付韧性。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>挑战与风险：甜蜜的毒药</h3>
+                <div class="risk-alert">
+                    <h4 class="font-bold text-sm text-[#DD6B20] mb-2 uppercase">Risk Watch (2025)</h4>
+                    <ul class="wsj-list text-sm text-gray-800">
+                        <li><strong>大客户依赖：</strong> 尽管汽车业务高增，但苹果业务占比仍超70%。iPhone 17的市场表现将直接决定立讯2025全年的业绩上限。</li>
+                        <li><strong>地缘政治：</strong> 2025年全球贸易摩擦加剧，针对中国供应链的审查（如美国实体清单风险）始终是悬在头顶的达摩克利斯之剑。</li>
+                        <li><strong>汇率波动：</strong> 海外营收占比高达85%以上，人民币汇率波动对净利润的影响被放大。</li>
+                    </ul>
+                </div>
+
+                <div class="pull-quote">
+                    “立讯精密正在走钢丝：一边要紧紧抱住苹果的大腿，通过全球产能布局满足其去风险要求；另一边要拼命发展汽车和AI业务，试图在未来某一天摆脱对苹果的绝对依赖。”
+                </div>
+
+            </article>
+        </div>
+
+        <!-- Sidebar (Right 4 cols) -->
+        <div class="lg:col-span-4 space-y-8">
+            
+            <!-- Key Stats Box -->
+            <div class="sidebar-box">
+                <h4 class="font-sans font-bold text-xs tracking-widest mb-4 border-b border-gray-300 pb-2">MARKET DATA (2025 Est.)</h4>
+                
+                <div class="mb-4">
+                    <div class="market-data-label">年度营收 (Revenue)</div>
+                    <div class="market-data-value">3,250 <span class="text-sm font-normal text-gray-500">亿 RMB</span></div>
+                    <div class="text-xs text-green-600 font-bold font-sans">▲ ~21% Growth</div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="market-data-label">境外营收占比</div>
+                    <div class="market-data-value text-[#C8102E]">~85%</div>
+                    <div class="text-xs text-gray-500">全球化程度极高</div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="market-data-label">研发投入</div>
+                    <div class="market-data-value text-[#2B6CB0]">~100 亿 RMB</div>
+                    <div class="text-xs text-gray-500">持续投入</div>
+                </div>
+            </div>
+
+            <!-- Product Breakdown -->
+            <div class="sidebar-box">
+                <h4 class="font-sans font-bold text-xs tracking-widest mb-4 border-b border-gray-300 pb-2">REVENUE MIX (2025 H1)</h4>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h5 class="font-bold text-sm text-gray-900 flex justify-between">
+                            <span>消费电子 (Consumer)</span>
+                            <span>78%</span>
+                        </h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-[#C8102E] h-1.5 rounded-full" style="width: 78%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">基石业务，增速 +14%。</p>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-sm text-gray-900 flex justify-between">
+                            <span>通讯互联 (Comm)</span>
+                            <span>9%</span>
+                        </h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-[#2B6CB0] h-1.5 rounded-full" style="width: 9%"></div>
+                        </div>
+                        <p class="text-xs text-green-600 mt-1 font-bold">增速 +48%，AI驱动。</p>
+                    </div>
+                     <div>
+                        <h5 class="font-bold text-sm text-gray-900 flex justify-between">
+                            <span>汽车互联 (Auto)</span>
+                            <span>7%</span>
+                        </h5>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                            <div class="bg-green-600 h-1.5 rounded-full" style="width: 7%"></div>
+                        </div>
+                        <p class="text-xs text-green-600 mt-1 font-bold">增速 +82%，爆发期。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insight Box -->
+            <div class="bg-[#EBF8FF] p-4 border-t-2 border-[#C8102E]">
+                <h4 class="font-sans font-bold text-sm text-[#C8102E] mb-2">PoV 观察</h4>
+                <p class="text-sm font-serif italic leading-relaxed text-gray-800">
+                    “2025年是立讯精密‘去果链化’成效初显的一年。虽然苹果依然是绝对的大腿，但汽车和AI通讯业务的爆发式增长，正在重塑其估值逻辑。它不再仅仅是一个代工厂，而是一个精密制造平台。”
+                </p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-300 mt-12 py-8 bg-white">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0">
+                <div class="font-serif font-bold text-xl">THE JOURNAL.</div>
+                <div class="text-xs text-gray-500 font-sans mt-1">Copyright © 2025 Dow Jones & Company, Inc. All Rights Reserved.</div>
+            </div>
+            <div class="text-xs text-gray-400 font-sans">
+                Powered by Tech Insight Unit
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Chart.js Configuration for WSJ Style
+        Chart.defaults.font.family = "'Libre Franklin', sans-serif";
+        Chart.defaults.color = '#333';
+        
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['2021', '2022', '2023', '2024', '2025(E)'],
+                datasets: [
+                    {
+                        label: '海外营收 (Overseas)',
+                        data: [1400, 1950, 2046, 2354, 2760], // 2024实际，2025预估
+                        backgroundColor: '#C8102E',
+                        stack: 'Stack 0'
+                    },
+                    {
+                        label: '国内营收 (Domestic)',
+                        data: [139, 189, 273, 333, 490], // 2024实际，2025预估
+                        backgroundColor: '#d7d7d7',
+                        stack: 'Stack 0'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // 允许Canvas填满容器
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8 } },
+                    tooltip: {
+                        backgroundColor: '#fff',
+                        titleColor: '#000',
+                        bodyColor: '#000',
+                        borderColor: '#ccc',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        stacked: true,
+                        grid: {
+                            color: '#eee',
+                            borderDash: [2, 2]
+                        },
+                        title: { display: true, text: 'RMB Billion' }
+                    },
+                    x: {
+                        stacked: true,
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
