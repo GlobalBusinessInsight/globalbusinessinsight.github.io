@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>充电网络智能监控看板 (Pro版)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- SheetJS (XLSX) for Excel Import -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- 百度地图 API -->
+    <script type="text/javascript" src="https://api.map.baidu.com/api?v=3.0&ak=hyHkuQy8h5UbZVMC0mpVW4ma7TVxqm3W"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans SC', "Microsoft YaHei", sans-serif;
+            background-color: #f5f5f4;
+        }
+        /* Map Container */
+        #map-container {
+            position: relative;
+            height: 100%;
+            min-height: 450px;
+            width: 100%;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            z-index: 1;
+            border: 1px solid #e7e5e4;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        /* Remove Baidu Logo for clean view */
+        .anchorBL { display: none; }
+        
+        .station-list::-webkit-scrollbar { width: 6px; }
+        .station-list::-webkit-scrollbar-track { background: #f1f1f1; }
+        .station-list::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 3px; }
+        .chart-container { position: relative; width: 100%; height: 200px; }
+        
+        /* Baidu InfoWindow */
+        .BMap_bubble_title {
+            color: #1c1917;
+            font-weight: bold;
+            font-size: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 5px;
+        }
+        .BMap_bubble_content {
+            font-size: 12px;
+            color: #57534e;
+            padding-top: 5px;
+        }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body class="text-stone-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-stone-600 font-medium" id="loading-text">正在处理数据...</p>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white border-b border-stone-200 shadow-sm z-20 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">
+                    B
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-stone-900">充电网络全景看板 <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded ml-2 align-middle">Pro</span></h1>
+                    <p class="text-xs text-stone-500">
+                        引擎：<span class="text-blue-600 font-bold">百度地图</span> | 
+                        <span id="geo-status" class="text-stone-400">等待定位解析...</span>
+                    </p>
+                </div>
+            </div>
+            <div class="hidden sm:flex gap-4 text-sm font-medium text-stone-600">
+                <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100">
+                    <span class="block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span>已投运</span>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-100">
+                    <span class="block w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    <span>建设中</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-3 flex flex-col gap-4 h-full overflow-hidden order-2 lg:order-1">
+            
+            <!-- Controls & Import -->
+            <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-4 shrink-0 space-y-3">
+                
+                <!-- Import Button -->
+                <div class="relative">
+                    <input type="file" id="file-upload" accept=".xlsx, .xls, .csv" class="hidden" />
+                    <label for="file-upload" class="flex items-center justify-center w-full gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg cursor-pointer transition-colors shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        导入 Excel/CSV 数据
+                    </label>
+                    <p class="text-[10px] text-center text-stone-400 mt-1">支持：名称, 坐标(经,纬), 状态</p>
+                </div>
+
+                <hr class="border-stone-100">
+
+                <div class="grid grid-cols-3 gap-2">
+                    <button id="filter-all" class="px-2 py-2 text-xs font-medium bg-stone-800 text-white rounded hover:bg-stone-700 transition-colors shadow-sm">全部</button>
+                    <button id="filter-operational" class="px-2 py-2 text-xs font-medium bg-white border border-stone-200 text-stone-600 rounded hover:bg-emerald-50 hover:text-emerald-700 transition-colors">已投运</button>
+                    <button id="filter-construction" class="px-2 py-2 text-xs font-medium bg-white border border-stone-200 text-stone-600 rounded hover:bg-amber-50 hover:text-amber-700 transition-colors">建设中</button>
+                </div>
+                
+                <div class="relative group">
+                    <input type="text" id="search-input" placeholder="搜索名称或地区..." class="w-full pl-9 pr-3 py-2 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white transition-all">
+                    <span class="absolute left-3 top-2.5 text-stone-400">🔍</span>
+                </div>
+            </div>
+
+            <!-- List -->
+            <div class="bg-white rounded-xl shadow-sm border border-stone-200 flex flex-col flex-1 overflow-hidden">
+                <div class="px-4 py-3 border-b border-stone-100 bg-stone-50 flex justify-between items-center">
+                    <span class="text-xs font-bold text-stone-500 uppercase">站点列表</span>
+                    <span id="list-count" class="text-xs font-bold bg-stone-200 text-stone-700 px-2 py-0.5 rounded-md">0</span>
+                </div>
+                <div id="station-list" class="station-list flex-1 overflow-y-auto p-2 space-y-2">
+                    <!-- JS Populated -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Area -->
+        <div class="lg:col-span-9 flex flex-col gap-4 h-full overflow-hidden order-1 lg:order-2">
+            
+            <!-- Map Container -->
+            <div id="map-container" class="bg-white shadow-sm">
+                <div id="map"></div>
+                <!-- Legend -->
+                <div class="absolute bottom-5 right-5 bg-white/95 backdrop-blur shadow-md border border-stone-100 rounded-lg p-3 z-[400] text-xs">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"></span>
+                        <span class="text-stone-700 font-medium">正常运营</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-amber-500 shadow-sm"></span>
+                        <span class="text-stone-700 font-medium">规划建设</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics -->
+            <div class="h-auto lg:h-52 shrink-0 grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                <!-- Stat Card 1 -->
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 flex flex-col justify-center">
+                    <h3 class="text-sm font-bold text-stone-500 mb-4">网络规模</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="border-r border-stone-100">
+                            <div class="text-3xl font-bold text-emerald-600" id="stat-op">0</div>
+                            <div class="text-xs text-stone-500 mt-1">运营中</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-amber-500" id="stat-con">0</div>
+                            <div class="text-xs text-stone-500 mt-1">建设中</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Card 2 -->
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-4 flex flex-col">
+                    <h3 class="text-sm font-bold text-stone-500 mb-1">运营进度</h3>
+                    <div class="flex-1 flex items-center justify-center relative">
+                        <div class="chart-container">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Card 3 -->
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-4 flex flex-col relative">
+                    <div class="flex justify-between items-center mb-1">
+                        <h3 class="text-sm font-bold text-stone-500">热点区域 (实况)</h3>
+                        <span id="geo-badge" class="text-[9px] bg-blue-50 text-blue-600 px-1.5 rounded hidden">自动定位中</span>
+                    </div>
+                    <div class="flex-1 flex items-center justify-center">
+                        <div class="chart-container">
+                            <canvas id="regionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- 1. COORDINATE CONVERSION (GCJ-02 -> BD-09) ---
+        const x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+        function gcj02tobd09(lng, lat) {
+            const z = Math.sqrt(lng * lng + lat * lat) + 0.00002 * Math.sin(lat * x_pi);
+            const theta = Math.atan2(lat, lng) + 0.000003 * Math.cos(lng * x_pi);
+            const bd_lng = z * Math.cos(theta) + 0.0065;
+            const bd_lat = z * Math.sin(theta) + 0.006;
+            return [bd_lng, bd_lat];
+        }
+
+        // --- 2. CUSTOM ICONS ---
+        const iconGreen = new BMap.Icon(
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='36' height='36' fill='%2310b981'%3E%3Cpath d='M12 0C7.58 0 4 3.58 4 8c0 5.25 7 13 7 13s7-7.75 7-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z'/%3E%3C/svg%3E", 
+            new BMap.Size(30, 40), { anchor: new BMap.Size(15, 40) }
+        );
+        const iconAmber = new BMap.Icon(
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='36' height='36' fill='%23f59e0b'%3E%3Cpath d='M12 0C7.58 0 4 3.58 4 8c0 5.25 7 13 7 13s7-7.75 7-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z'/%3E%3C/svg%3E",
+            new BMap.Size(30, 40), { anchor: new BMap.Size(15, 40) }
+        );
+
+        // --- 3. DEFAULT DATA ---
+        const defaultStations = [
+            // 1-23 (Operational)
+            { name: "绿新能源潞铁智慧物流园园区内（换电站）", coords: "113.28292,36.325017", status: "已投运" },
+            { name: "绿新能源黄北充电站", coords: "113.134684,36.357572", status: "已投运" },
+            { name: "绿新能源涉县神头充电站", coords: "113.598247,36.519466", status: "已投运" },
+            { name: "绿新能源石梁充电站", coords: "113.318021,36.453537", status: "已投运" },
+            { name: "绿新能源坡底充电站", coords: "113.08529,36.341152", status: "已投运" },
+            { name: "绿新能源史廻汽贸园充电站", coords: "113.157286,36.349615", status: "已投运" },
+            { name: "绿新能源南王庄充电站（上党区琚家沟）", coords: "113.054248,36.03518", status: "已投运" },
+            { name: "绿新能源店上充电站1期", coords: "113.274594,35.989891", status: "已投运" },
+            { name: "绿新能源武乡蟠龙充电站", coords: "113.134701,36.787052", status: "已投运" },
+            { name: "绿新能源灵石充电站", coords: "111.721147,36.837839", status: "已投运" },
+            { name: "绿新能源荫城充电站", coords: "113.080556,36.007629", status: "已投运" },
+            { name: "绿新能源西池充电站", coords: "112.981881,36.104279", status: "已投运" },
+            { name: "绿新能源苏店充电站", coords: "113.076813,36.077271", status: "已投运" },
+            { name: "绿新能源西火充电站", coords: "113.28424,35.992813", status: "已投运" },
+            { name: "绿新能源八义充电站", coords: "113.033621,36.035777", status: "已投运" },
+            { name: "绿新能源南宋充电站", coords: "113.036081,35.948286", status: "已投运" },
+            { name: "绿新能源北呈充电站", coords: "113.057321,36.148197", status: "已投运" },
+            { name: "绿新能源韩北充电站", coords: "113.111874,36.151745", status: "已投运" },
+            { name: "绿新能源东和充电站", coords: "112.973341,36.143644", status: "已投运" },
+            { name: "绿新能源司马充电站", coords: "113.033785,36.082717", status: "已投运" },
+            { name: "绿新能源西营充电站", coords: "113.064516,35.480031", status: "已投运" },
+            { name: "绿新能源东冶头充电站", coords: "113.310636,35.539851", status: "已投运" },
+            { name: "绿新能源次营充电站", coords: "113.197967,35.433842", status: "已投运" },
+            // Construction (Sample)
+            { name: "绿新能源五龙山充电站", coords: "113.488347,35.501174", status: "建设中" },
+            { name: "绿新能源横水充电站", coords: "113.626305,36.155892", status: "建设中" },
+            { name: "绿新能源井坡充电站", coords: "113.568421,35.553909", status: "建设中" },
+            { name: "绿新能源合河充电站", coords: "113.971512,35.340078", status: "建设中" },
+            { name: "介休市义安镇", coords: "111.948054,36.985047", status: "建设中" },
+            { name: "孝义市柱濮镇上智峪村", coords: "111.691507,37.075799", status: "建设中" },
+            { name: "晋城市泽州县巴公镇", coords: "112.912409,35.609078", status: "建设中" },
+            { name: "安阳利源", coords: "114.344815,36.150114", status: "建设中" },
+            { name: "洪洞甘亭镇", coords: "111.672237,36.179187", status: "建设中" },
+            { name: "林州河顺镇杨家营村", coords: "113.901521,36.141551", status: "建设中" },
+            { name: "晋城市泽州县大东沟镇", coords: "112.720088,35.587986", status: "建设中" },
+            { name: "左权下其至村", coords: "113.447107,37.165597", status: "建设中" },
+            { name: "孝义市东董屯村", coords: "111.84799,37.044294", status: "建设中" },
+            { name: "林州桂林镇", coords: "113.999617,35.976077", status: "建设中" }
+        ];
+
+        // Global State
+        let appState = { filter: 'all', stations: [] };
+        let map; 
+        let statusChart, regionChart;
+        let geocodingQueue = []; // For throttling requests
+        let geocoder;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load Default Data First
+            processData(defaultStations);
+            
+            // Wait for BMap
+            const checkBMap = setInterval(() => {
+                if (typeof BMap !== 'undefined') {
+                    clearInterval(checkBMap);
+                    initMap();
+                    geocoder = new BMap.Geocoder();
+                    initCharts();
+                    renderApp();
+                    startReverseGeocoding(); // Start the async lookup
+                }
+            }, 500);
+
+            setupEvents();
+            setupImport();
+        });
+
+        // --- 4. DATA PROCESSING ---
+        function processData(rawData) {
+            appState.stations = rawData.map((item, index) => {
+                // Ensure coord exists
+                if(!item.coords) return null;
+
+                const [rawLng, rawLat] = item.coords.toString().split(/[,，]/).map(n => parseFloat(n.trim()));
+                
+                // Sanity Check
+                if (rawLng < 100 || isNaN(rawLng)) return null;
+
+                // Convert
+                const [bdLng, bdLat] = gcj02tobd09(rawLng, rawLat);
+
+                // Status Logic: Try to detect or fallback
+                let isOp = false;
+                if(item.status && (item.status.includes("投运") || item.status.includes("运营"))) {
+                    isOp = true;
+                } else if (!item.status && index < 23) {
+                    // Fallback for default data logic
+                    isOp = true; 
+                }
+
+                // Initial Name-based region guess (Temporary until Geocoding)
+                let region = "待解析区域";
+                const n = item.name || "";
+                if (n.includes("晋城") || n.includes("泽州")) region = "晋城市";
+                else if (n.includes("孝义")) region = "吕梁市"; // Corrected
+                else if (n.includes("林州") || n.includes("安阳")) region = "安阳市";
+                else if (n.includes("洪洞")) region = "临汾市";
+                else if (n.includes("长治") || n.includes("上党") || n.includes("潞城")) region = "长治市";
+                else if (n.includes("介休") || n.includes("灵石")) region = "晋中市";
+
+                return {
+                    name: item.name || `站点 ${index+1}`,
+                    lat: bdLat,
+                    lng: bdLng,
+                    region: region, // Will be updated by API
+                    regionResolved: false, // Flag
+                    isOperational: isOp,
+                    statusText: isOp ? "已投运" : "建设中"
+                };
+            }).filter(s => s !== null);
+        }
+
+        // --- 5. REVERSE GEOCODING LOGIC ---
+        function startReverseGeocoding() {
+            // Identify stations that need resolution
+            const targets = appState.stations.filter(s => !s.regionResolved);
+            if(targets.length === 0) return;
+
+            document.getElementById('geo-status').innerText = `正在解析 ${targets.length} 个地址...`;
+            document.getElementById('geo-badge').classList.remove('hidden');
+
+            let processed = 0;
+            
+            // Process sequentially with delay to be nice to API
+            function processNext(idx) {
+                if (idx >= targets.length) {
+                    document.getElementById('geo-status').innerText = "地址解析完成";
+                    document.getElementById('geo-badge').classList.add('hidden');
+                    updateChartsOnly(); // Final refresh
+                    updateListUI(); // Refresh text in list
+                    return;
+                }
+
+                const station = targets[idx];
+                const pt = new BMap.Point(station.lng, station.lat);
+
+                geocoder.getLocation(pt, function(rs){
+                    if (rs) {
+                        const comp = rs.addressComponents;
+                        // Format: "City District" e.g., "Changzhi Shangdang"
+                        // Or just City if District is empty
+                        station.region = comp.city; 
+                        if(comp.district) station.region += " " + comp.district;
+                        
+                        station.regionResolved = true;
+                    }
+                    
+                    processed++;
+                    // Update UI every 5 items to show progress
+                    if(processed % 5 === 0) {
+                        updateChartsOnly();
+                        updateListUI(); // Update list text dynamically
+                    }
+                    
+                    // Delay 100ms
+                    setTimeout(() => processNext(idx + 1), 150);
+                });
+            }
+
+            processNext(0);
+        }
+
+        // --- 6. IMPORT LOGIC ---
+        function setupImport() {
+            const fileInput = document.getElementById('file-upload');
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                document.getElementById('loading-overlay').style.display = 'flex';
+
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const bstr = evt.target.result;
+                    const wb = XLSX.read(bstr, { type: 'binary' });
+                    const wsname = wb.SheetNames[0];
+                    const ws = wb.Sheets[wsname];
+                    const json = XLSX.utils.sheet_to_json(ws);
+
+                    // Normalize Keys (Handle Fuzzy Headers)
+                    const normalizedData = json.map(row => {
+                        // Find Name
+                        let name = row['名称'] || row['name'] || row['Name'] || row['选址地点'] || row['站点名称'] || "";
+                        // Find Coords
+                        let coords = row['坐标'] || row['coords'] || row['Coords'] || row['经纬度'] || "";
+                        // Find Status
+                        let status = row['状态'] || row['status'] || row['Status'] || row['运营状态'] || "";
+
+                        return { name, coords, status };
+                    });
+
+                    // Valid rows only
+                    const validData = normalizedData.filter(d => d.name && d.coords);
+
+                    if (validData.length > 0) {
+                        processData(validData);
+                        renderApp(); // Re-render everything
+                        startReverseGeocoding(); // Trigger Geo Lookup
+                        alert(`成功导入 ${validData.length} 条数据！地图已更新。`);
+                    } else {
+                        alert("未识别到有效数据。请确保包含列：名称、坐标");
+                    }
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    fileInput.value = ''; // Reset
+                };
+                reader.readAsBinaryString(file);
+            });
+        }
+
+        // --- 7. RENDERING ---
+        function initMap() {
+            map = new BMap.Map("map");
+            map.centerAndZoom(new BMap.Point(113.2, 36.5), 9);
+            map.enableScrollWheelZoom(true);
+            map.addControl(new BMap.NavigationControl());
+            map.addControl(new BMap.ScaleControl());
+        }
+
+        function initCharts() {
+            // Status Chart
+            statusChart = new Chart(document.getElementById('statusChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['已投运', '建设中'],
+                    datasets: [{ data: [0, 0], backgroundColor: ['#10b981', '#f59e0b'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, font: {family: 'Noto Sans SC'} } } } }
+            });
+
+            // Region Chart
+            regionChart = new Chart(document.getElementById('regionChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: '站点数', data: [], backgroundColor: '#78716c', borderRadius: 3 }] },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { display: false }, y: { grid: { display: false }, ticks: { font: { size: 10, family: 'Noto Sans SC' } } } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function renderApp() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filter = appState.filter;
+
+            const filtered = appState.stations.filter(s => {
+                const matchStatus = filter === 'all' ? true : (filter === 'op' ? s.isOperational : !s.isOperational);
+                const matchSearch = s.name.toLowerCase().includes(query) || s.region.toLowerCase().includes(query);
+                return matchStatus && matchSearch;
+            });
+
+            // Counts
+            document.getElementById('list-count').innerText = filtered.length;
+            document.getElementById('stat-op').innerText = appState.stations.filter(s => s.isOperational).length;
+            document.getElementById('stat-con').innerText = appState.stations.filter(s => !s.isOperational).length;
+
+            // Map Overlays
+            if (map) {
+                map.clearOverlays();
+                const points = [];
+                filtered.forEach(s => {
+                    const pt = new BMap.Point(s.lng, s.lat);
+                    points.push(pt);
+                    const myIcon = s.isOperational ? iconGreen : iconAmber;
+                    const marker = new BMap.Marker(pt, {icon: myIcon});
+                    
+                    const content = `
+                        <div class="p-1">
+                            <div style="font-size:12px; color:#666; margin-bottom:4px;">${s.region} <span style="margin-left:5px; color:${s.isOperational?'#10b981':'#f59e0b'}; font-weight:bold;">${s.statusText}</span></div>
+                            <div style="font-weight:bold; color:#333; font-size:14px;">${s.name}</div>
+                        </div>`;
+                    const infoWindow = new BMap.InfoWindow(content, {width: 250, height: 80, title: "站点详情"});
+                    marker.addEventListener("click", () => map.openInfoWindow(infoWindow, pt));
+                    
+                    map.addOverlay(marker);
+                    s.markerRef = marker;
+                    s.pointRef = pt;
+                });
+                if (points.length > 0) map.setViewport(points);
+            }
+
+            updateListUI(filtered);
+            updateChartsOnly(filtered);
+        }
+
+        // Separated UI update logic for smoother partial updates
+        function updateListUI(data = null) {
+            // If data not provided, use current filter logic
+            if(!data) {
+                const query = document.getElementById('search-input').value.toLowerCase();
+                const filter = appState.filter;
+                data = appState.stations.filter(s => {
+                    const matchStatus = filter === 'all' ? true : (filter === 'op' ? s.isOperational : !s.isOperational);
+                    const matchSearch = s.name.toLowerCase().includes(query) || s.region.toLowerCase().includes(query);
+                    return matchStatus && matchSearch;
+                });
+            }
+
+            const listEl = document.getElementById('station-list');
+            listEl.innerHTML = '';
+            data.forEach(s => {
+                const item = document.createElement('div');
+                item.className = `p-3 rounded-lg border border-stone-100 hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all bg-white flex flex-col gap-1 group`;
+                item.onclick = () => {
+                    if(map) {
+                        map.centerAndZoom(s.pointRef, 15);
+                        s.markerRef.dispatchEvent('click');
+                        const infoWindow = new BMap.InfoWindow(`
+                            <div class="p-1">
+                                <div style="font-size:12px; color:#666; margin-bottom:4px;">${s.region} <span style="margin-left:5px; color:${s.isOperational?'#10b981':'#f59e0b'}; font-weight:bold;">${s.statusText}</span></div>
+                                <div style="font-weight:bold; color:#333; font-size:14px;">${s.name}</div>
+                            </div>`, {width: 250, height: 80, title: "站点详情"});
+                        map.openInfoWindow(infoWindow, s.pointRef);
+                    }
+                };
+                
+                const dotColor = s.isOperational ? 'bg-emerald-500' : 'bg-amber-500';
+                // Highlight resolved regions with a checkmark or distinct style if needed
+                item.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h4 class="text-xs font-bold text-stone-700 group-hover:text-blue-600 transition-colors line-clamp-2 w-11/12">${s.name}</h4>
+                        <div class="w-2 h-2 rounded-full ${dotColor} mt-1.5 shrink-0"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] text-stone-400 mt-1">
+                        <span>${s.region}</span>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
+        }
+
+        function updateChartsOnly(data = null) {
+             if(!data) {
+                const query = document.getElementById('search-input').value.toLowerCase();
+                const filter = appState.filter;
+                data = appState.stations.filter(s => {
+                    const matchStatus = filter === 'all' ? true : (filter === 'op' ? s.isOperational : !s.isOperational);
+                    const matchSearch = s.name.toLowerCase().includes(query) || s.region.toLowerCase().includes(query);
+                    return matchStatus && matchSearch;
+                });
+            }
+
+            // Status
+            const opCount = appState.stations.filter(s => s.isOperational).length;
+            const conCount = appState.stations.filter(s => !s.isOperational).length;
+            statusChart.data.datasets[0].data = [opCount, conCount];
+            statusChart.update();
+
+            // Region (Aggregated)
+            const regCounts = {};
+            // Group by City (First part of string) to avoid clutter e.g. "Changzhi" instead of "Changzhi Shangdang"
+            data.forEach(s => { 
+                // Simplify region name for chart: Take first 2-3 chars or split by space
+                const displayRegion = s.region.split(" ")[0]; 
+                regCounts[displayRegion] = (regCounts[displayRegion] || 0) + 1; 
+            });
+            const sortedReg = Object.entries(regCounts).sort((a,b) => b[1] - a[1]).slice(0, 6); // Top 6
+            regionChart.data.labels = sortedReg.map(x => x[0]);
+            regionChart.data.datasets[0].data = sortedReg.map(x => x[1]);
+            regionChart.update();
+        }
+
+        function setupEvents() {
+            const btns = {
+                all: document.getElementById('filter-all'),
+                op: document.getElementById('filter-operational'),
+                con: document.getElementById('filter-construction')
+            };
+
+            function updateBtnStyle(activeType) {
+                Object.values(btns).forEach(b => {
+                    b.className = 'px-2 py-2 text-xs font-medium bg-white border border-stone-200 text-stone-600 rounded hover:bg-stone-50 transition-colors';
+                });
+                if(activeType === 'all') btns.all.className = 'px-2 py-2 text-xs font-medium bg-stone-800 text-white rounded shadow-sm';
+                if(activeType === 'op') btns.op.className = 'px-2 py-2 text-xs font-medium bg-emerald-50 border border-emerald-200 text-emerald-700 rounded font-bold shadow-sm';
+                if(activeType === 'con') btns.con.className = 'px-2 py-2 text-xs font-medium bg-amber-50 border border-amber-200 text-amber-700 rounded font-bold shadow-sm';
+            }
+
+            btns.all.onclick = () => { appState.filter = 'all'; updateBtnStyle('all'); renderApp(); };
+            btns.op.onclick = () => { appState.filter = 'op'; updateBtnStyle('op'); renderApp(); };
+            btns.con.onclick = () => { appState.filter = 'con'; updateBtnStyle('con'); renderApp(); };
+
+            document.getElementById('search-input').addEventListener('input', renderApp);
+        }
+    </script>
+</body>
+</html>
