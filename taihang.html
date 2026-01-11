@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>充电网络智能监控看板 (Pro版)</title>
+    <title>绿新能源充电网络智能监控看板</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -91,9 +91,9 @@
                     B
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold tracking-tight text-stone-900">充电网络全景看板 <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded ml-2 align-middle">Pro</span></h1>
+                    <h1 class="text-xl font-bold tracking-tight text-stone-900">充电网络全景看板 <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded ml-2 align-middle">Pro v2</span></h1>
                     <p class="text-xs text-stone-500">
-                        引擎：<span class="text-blue-600 font-bold">百度地图</span> | 
+                        共 72 站 (23投运) | 
                         <span id="geo-status" class="text-stone-400">等待定位解析...</span>
                     </p>
                 </div>
@@ -127,9 +127,9 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>
-                        导入 Excel/CSV 数据
+                        导入更新 (Excel/CSV)
                     </label>
-                    <p class="text-[10px] text-center text-stone-400 mt-1">支持：名称, 坐标(经,纬), 状态</p>
+                    <p class="text-[10px] text-center text-stone-400 mt-1">支持拖拽导入，自动覆盖当前数据</p>
                 </div>
 
                 <hr class="border-stone-100">
@@ -182,7 +182,7 @@
                 
                 <!-- Stat Card 1 -->
                 <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 flex flex-col justify-center">
-                    <h3 class="text-sm font-bold text-stone-500 mb-4">网络规模</h3>
+                    <h3 class="text-sm font-bold text-stone-500 mb-4">网络概况</h3>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="border-r border-stone-100">
                             <div class="text-3xl font-bold text-emerald-600" id="stat-op">0</div>
@@ -197,7 +197,7 @@
 
                 <!-- Chart Card 2 -->
                 <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-4 flex flex-col">
-                    <h3 class="text-sm font-bold text-stone-500 mb-1">运营进度</h3>
+                    <h3 class="text-sm font-bold text-stone-500 mb-1">建设进度</h3>
                     <div class="flex-1 flex items-center justify-center relative">
                         <div class="chart-container">
                             <canvas id="statusChart"></canvas>
@@ -208,7 +208,7 @@
                 <!-- Chart Card 3 -->
                 <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-4 flex flex-col relative">
                     <div class="flex justify-between items-center mb-1">
-                        <h3 class="text-sm font-bold text-stone-500">热点区域 (实况)</h3>
+                        <h3 class="text-sm font-bold text-stone-500">区域分布 (智能解析)</h3>
                         <span id="geo-badge" class="text-[9px] bg-blue-50 text-blue-600 px-1.5 rounded hidden">自动定位中</span>
                     </div>
                     <div class="flex-1 flex items-center justify-center">
@@ -242,54 +242,90 @@
             new BMap.Size(30, 40), { anchor: new BMap.Size(15, 40) }
         );
 
-        // --- 3. DEFAULT DATA ---
+        // --- 3. FULL DATA (72 Stations) ---
+        // Logic: Index 0-22 (IDs 1-23) -> Operational
+        // Logic: Index 23-71 (IDs 24-72) -> Construction
         const defaultStations = [
-            // 1-23 (Operational)
-            { name: "绿新能源潞铁智慧物流园园区内（换电站）", coords: "113.28292,36.325017", status: "已投运" },
-            { name: "绿新能源黄北充电站", coords: "113.134684,36.357572", status: "已投运" },
-            { name: "绿新能源涉县神头充电站", coords: "113.598247,36.519466", status: "已投运" },
-            { name: "绿新能源石梁充电站", coords: "113.318021,36.453537", status: "已投运" },
-            { name: "绿新能源坡底充电站", coords: "113.08529,36.341152", status: "已投运" },
-            { name: "绿新能源史廻汽贸园充电站", coords: "113.157286,36.349615", status: "已投运" },
-            { name: "绿新能源南王庄充电站（上党区琚家沟）", coords: "113.054248,36.03518", status: "已投运" },
-            { name: "绿新能源店上充电站1期", coords: "113.274594,35.989891", status: "已投运" },
-            { name: "绿新能源武乡蟠龙充电站", coords: "113.134701,36.787052", status: "已投运" },
-            { name: "绿新能源灵石充电站", coords: "111.721147,36.837839", status: "已投运" },
-            { name: "绿新能源荫城充电站", coords: "113.080556,36.007629", status: "已投运" },
-            { name: "绿新能源西池充电站", coords: "112.981881,36.104279", status: "已投运" },
-            { name: "绿新能源苏店充电站", coords: "113.076813,36.077271", status: "已投运" },
-            { name: "绿新能源西火充电站", coords: "113.28424,35.992813", status: "已投运" },
-            { name: "绿新能源八义充电站", coords: "113.033621,36.035777", status: "已投运" },
-            { name: "绿新能源南宋充电站", coords: "113.036081,35.948286", status: "已投运" },
-            { name: "绿新能源北呈充电站", coords: "113.057321,36.148197", status: "已投运" },
-            { name: "绿新能源韩北充电站", coords: "113.111874,36.151745", status: "已投运" },
-            { name: "绿新能源东和充电站", coords: "112.973341,36.143644", status: "已投运" },
-            { name: "绿新能源司马充电站", coords: "113.033785,36.082717", status: "已投运" },
-            { name: "绿新能源西营充电站", coords: "113.064516,35.480031", status: "已投运" },
-            { name: "绿新能源东冶头充电站", coords: "113.310636,35.539851", status: "已投运" },
-            { name: "绿新能源次营充电站", coords: "113.197967,35.433842", status: "已投运" },
-            // Construction (Sample)
-            { name: "绿新能源五龙山充电站", coords: "113.488347,35.501174", status: "建设中" },
-            { name: "绿新能源横水充电站", coords: "113.626305,36.155892", status: "建设中" },
-            { name: "绿新能源井坡充电站", coords: "113.568421,35.553909", status: "建设中" },
-            { name: "绿新能源合河充电站", coords: "113.971512,35.340078", status: "建设中" },
-            { name: "介休市义安镇", coords: "111.948054,36.985047", status: "建设中" },
-            { name: "孝义市柱濮镇上智峪村", coords: "111.691507,37.075799", status: "建设中" },
-            { name: "晋城市泽州县巴公镇", coords: "112.912409,35.609078", status: "建设中" },
-            { name: "安阳利源", coords: "114.344815,36.150114", status: "建设中" },
-            { name: "洪洞甘亭镇", coords: "111.672237,36.179187", status: "建设中" },
-            { name: "林州河顺镇杨家营村", coords: "113.901521,36.141551", status: "建设中" },
-            { name: "晋城市泽州县大东沟镇", coords: "112.720088,35.587986", status: "建设中" },
-            { name: "左权下其至村", coords: "113.447107,37.165597", status: "建设中" },
-            { name: "孝义市东董屯村", coords: "111.84799,37.044294", status: "建设中" },
-            { name: "林州桂林镇", coords: "113.999617,35.976077", status: "建设中" }
+            // 1-23: Operational
+            { name: "绿新能源潞铁智慧物流园园区内（换电站）", coords: "113.28292,36.325017" },
+            { name: "绿新能源黄北充电站", coords: "113.134684,36.357572" },
+            { name: "绿新能源涉县神头充电站", coords: "113.598247,36.519466" },
+            { name: "绿新能源石梁充电站", coords: "113.318021,36.453537" },
+            { name: "绿新能源坡底充电站", coords: "113.08529,36.341152" },
+            { name: "绿新能源史廻汽贸园充电站", coords: "113.157286,36.349615" },
+            { name: "绿新能源南王庄充电站（上党区琚家沟）", coords: "113.054248,36.03518" },
+            { name: "绿新能源店上充电站1期", coords: "113.274594,35.989891" },
+            { name: "绿新能源武乡蟠龙充电站", coords: "113.134701,36.787052" },
+            { name: "绿新能源灵石充电站", coords: "111.721147,36.837839" },
+            { name: "绿新能源荫城充电站", coords: "113.080556,36.007629" },
+            { name: "绿新能源西池充电站", coords: "112.981881,36.104279" },
+            { name: "绿新能源苏店充电站", coords: "113.076813,36.077271" },
+            { name: "绿新能源西火充电站", coords: "113.28424,35.992813" },
+            { name: "绿新能源八义充电站", coords: "113.033621,36.035777" },
+            { name: "绿新能源南宋充电站", coords: "113.036081,35.948286" },
+            { name: "绿新能源北呈充电站", coords: "113.057321,36.148197" },
+            { name: "绿新能源韩北充电站", coords: "113.111874,36.151745" },
+            { name: "绿新能源东和充电站", coords: "112.973341,36.143644" },
+            { name: "绿新能源司马充电站", coords: "113.033785,36.082717" },
+            { name: "绿新能源西营充电站", coords: "113.064516,35.480031" },
+            { name: "绿新能源东冶头充电站", coords: "113.310636,35.539851" },
+            { name: "绿新能源次营充电站", coords: "113.197967,35.433842" },
+            // 24-72: Construction
+            { name: "绿新能源五龙山充电站", coords: "113.488347,35.501174" },
+            { name: "绿新能源横水充电站", coords: "113.626305,36.155892" },
+            { name: "绿新能源井坡充电站", coords: "113.568421,35.553909" },
+            { name: "绿新能源合河充电站", coords: "113.971512,35.340078" },
+            { name: "绿新能源临淇充电站", coords: "113.985926,35.895034" },
+            { name: "绿新能源五龙充电站", coords: "114.103986,35.858763" },
+            { name: "绿新能源东姚充电站", coords: "113.993083,35.975477" },
+            { name: "绿新能源采桑充电站", coords: "113.88602,35.918991" },
+            { name: "绿新能源东岗充电站", coords: "114.159381,36.257008" },
+            { name: "绿新能源任村充电站", coords: "113.931229,36.265731" },
+            { name: "绿新能源平邑充电站", coords: "113.250557,36.319762" },
+            { name: "绿新能源姚村充电站", coords: "113.840748,36.156828" },
+            { name: "绿新能源潞铁智慧物流园（充电站）", coords: "113.28424,35.992813" },
+            { name: "绿新能源振兴充电站", coords: "113.064516,35.480031" },
+            { name: "绿新能源壶关集店充电站", coords: "113.167824,36.082761" },
+            { name: "绿新能源平顺北社充电站", coords: "113.385906,36.145892" },
+            { name: "绿新能源屯留渔泽充电站", coords: "112.946351,36.286821" },
+            { name: "绿新能源长治县贾掌充电站", coords: "113.003554,35.932824" },
+            { name: "绿新能源潞城微子镇充电站", coords: "113.220197,36.284897" },
+            { name: "介休市义安镇", coords: "111.948054,36.985047" },
+            { name: "孝义市柱濮镇上智峪村", coords: "111.691507,37.075799" },
+            { name: "晋城市泽州县巴公镇", coords: "112.912409,35.609078" },
+            { name: "安阳利源", coords: "114.344815,36.150114" },
+            { name: "洪洞甘亭镇", coords: "111.672237,36.179187" },
+            { name: "林州河顺镇杨家营村", coords: "113.901521,36.141551" },
+            { name: "晋城市泽州县大东沟镇", coords: "112.720088,35.587986" },
+            { name: "左权下其至村", coords: "113.447107,37.165597" },
+            { name: "孝义市东董屯村（原昆仑加气站）", coords: "111.84799,37.044294" },
+            { name: "孝义市东许办事处东许村（原加油站）", coords: "111.848821,37.169123" },
+            { name: "孝义市高阳镇高阳村", coords: "111.751684,37.12764" },
+            { name: "林州临淇镇占元村", coords: "113.978276,35.85098" },
+            { name: "灵石县南关镇石柜村（超限站对面）", coords: "111.737126,36.878772" },
+            { name: "灵石县两渡镇两渡村", coords: "111.722607,36.83733" },
+            { name: "洪洞县赵城镇", coords: "111.743126,36.335955" },
+            { name: "长子县丹朱镇", coords: "112.909068,36.126435" },
+            { name: "安阳县水冶镇", coords: "114.168545,36.166418" },
+            { name: "林州原康镇", coords: "113.923489,35.986877" },
+            { name: "林州茶店镇", coords: "113.916812,35.923058" },
+            { name: "长治县南宋乡", coords: "113.064516,35.480031" },
+            { name: "泽州县北义城镇", coords: "112.923971,35.477028" },
+            { name: "武乡县分水岭乡", coords: "113.051918,36.938814" },
+            { name: "襄垣县夏店镇", coords: "113.03716,36.564414" },
+            { name: "长治县西火镇", coords: "113.28424,35.992813" },
+            { name: "壶关县百尺镇", coords: "113.243501,36.033628" },
+            { name: "林州东姚镇", coords: "113.993083,35.975477" },
+            { name: "林州横水镇", coords: "113.626305,36.155892" },
+            { name: "林州采桑镇", coords: "113.88602,35.918991" },
+            { name: "林州五龙镇", coords: "114.103986,35.858763" },
+            { name: "林州桂林镇", coords: "113.999617,35.976077" }
         ];
 
         // Global State
         let appState = { filter: 'all', stations: [] };
         let map; 
         let statusChart, regionChart;
-        let geocodingQueue = []; // For throttling requests
         let geocoder;
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -315,42 +351,31 @@
         // --- 4. DATA PROCESSING ---
         function processData(rawData) {
             appState.stations = rawData.map((item, index) => {
-                // Ensure coord exists
                 if(!item.coords) return null;
-
                 const [rawLng, rawLat] = item.coords.toString().split(/[,，]/).map(n => parseFloat(n.trim()));
                 
                 // Sanity Check
                 if (rawLng < 100 || isNaN(rawLng)) return null;
 
-                // Convert
+                // Convert GCJ to BD
                 const [bdLng, bdLat] = gcj02tobd09(rawLng, rawLat);
 
-                // Status Logic: Try to detect or fallback
+                // Status Logic: 
+                // 1. If explicitly has "投运", use it.
+                // 2. Otherwise use Index logic: 0-22 are Op.
                 let isOp = false;
                 if(item.status && (item.status.includes("投运") || item.status.includes("运营"))) {
                     isOp = true;
-                } else if (!item.status && index < 23) {
-                    // Fallback for default data logic
-                    isOp = true; 
+                } else if (!item.status) {
+                    if (index < 23) isOp = true;
                 }
-
-                // Initial Name-based region guess (Temporary until Geocoding)
-                let region = "待解析区域";
-                const n = item.name || "";
-                if (n.includes("晋城") || n.includes("泽州")) region = "晋城市";
-                else if (n.includes("孝义")) region = "吕梁市"; // Corrected
-                else if (n.includes("林州") || n.includes("安阳")) region = "安阳市";
-                else if (n.includes("洪洞")) region = "临汾市";
-                else if (n.includes("长治") || n.includes("上党") || n.includes("潞城")) region = "长治市";
-                else if (n.includes("介休") || n.includes("灵石")) region = "晋中市";
 
                 return {
                     name: item.name || `站点 ${index+1}`,
                     lat: bdLat,
                     lng: bdLng,
-                    region: region, // Will be updated by API
-                    regionResolved: false, // Flag
+                    region: "待解析...", 
+                    regionResolved: false,
                     isOperational: isOp,
                     statusText: isOp ? "已投运" : "建设中"
                 };
@@ -359,7 +384,6 @@
 
         // --- 5. REVERSE GEOCODING LOGIC ---
         function startReverseGeocoding() {
-            // Identify stations that need resolution
             const targets = appState.stations.filter(s => !s.regionResolved);
             if(targets.length === 0) return;
 
@@ -368,13 +392,12 @@
 
             let processed = 0;
             
-            // Process sequentially with delay to be nice to API
             function processNext(idx) {
                 if (idx >= targets.length) {
                     document.getElementById('geo-status').innerText = "地址解析完成";
                     document.getElementById('geo-badge').classList.add('hidden');
-                    updateChartsOnly(); // Final refresh
-                    updateListUI(); // Refresh text in list
+                    updateChartsOnly(); 
+                    updateListUI(); 
                     return;
                 }
 
@@ -384,23 +407,20 @@
                 geocoder.getLocation(pt, function(rs){
                     if (rs) {
                         const comp = rs.addressComponents;
-                        // Format: "City District" e.g., "Changzhi Shangdang"
-                        // Or just City if District is empty
                         station.region = comp.city; 
                         if(comp.district) station.region += " " + comp.district;
-                        
                         station.regionResolved = true;
+                    } else {
+                        station.region = "未知区域";
                     }
                     
                     processed++;
-                    // Update UI every 5 items to show progress
                     if(processed % 5 === 0) {
                         updateChartsOnly();
-                        updateListUI(); // Update list text dynamically
+                        updateListUI();
                     }
                     
-                    // Delay 100ms
-                    setTimeout(() => processNext(idx + 1), 150);
+                    setTimeout(() => processNext(idx + 1), 100);
                 });
             }
 
@@ -424,31 +444,25 @@
                     const ws = wb.Sheets[wsname];
                     const json = XLSX.utils.sheet_to_json(ws);
 
-                    // Normalize Keys (Handle Fuzzy Headers)
                     const normalizedData = json.map(row => {
-                        // Find Name
                         let name = row['名称'] || row['name'] || row['Name'] || row['选址地点'] || row['站点名称'] || "";
-                        // Find Coords
                         let coords = row['坐标'] || row['coords'] || row['Coords'] || row['经纬度'] || "";
-                        // Find Status
                         let status = row['状态'] || row['status'] || row['Status'] || row['运营状态'] || "";
-
                         return { name, coords, status };
                     });
 
-                    // Valid rows only
                     const validData = normalizedData.filter(d => d.name && d.coords);
 
                     if (validData.length > 0) {
                         processData(validData);
-                        renderApp(); // Re-render everything
-                        startReverseGeocoding(); // Trigger Geo Lookup
-                        alert(`成功导入 ${validData.length} 条数据！地图已更新。`);
+                        renderApp(); 
+                        startReverseGeocoding(); 
+                        alert(`导入成功！共 ${validData.length} 条数据。`);
                     } else {
                         alert("未识别到有效数据。请确保包含列：名称、坐标");
                     }
                     document.getElementById('loading-overlay').style.display = 'none';
-                    fileInput.value = ''; // Reset
+                    fileInput.value = ''; 
                 };
                 reader.readAsBinaryString(file);
             });
@@ -464,7 +478,6 @@
         }
 
         function initCharts() {
-            // Status Chart
             statusChart = new Chart(document.getElementById('statusChart').getContext('2d'), {
                 type: 'doughnut',
                 data: {
@@ -474,7 +487,6 @@
                 options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, font: {family: 'Noto Sans SC'} } } } }
             });
 
-            // Region Chart
             regionChart = new Chart(document.getElementById('regionChart').getContext('2d'), {
                 type: 'bar',
                 data: { labels: [], datasets: [{ label: '站点数', data: [], backgroundColor: '#78716c', borderRadius: 3 }] },
@@ -492,12 +504,10 @@
                 return matchStatus && matchSearch;
             });
 
-            // Counts
             document.getElementById('list-count').innerText = filtered.length;
             document.getElementById('stat-op').innerText = appState.stations.filter(s => s.isOperational).length;
             document.getElementById('stat-con').innerText = appState.stations.filter(s => !s.isOperational).length;
 
-            // Map Overlays
             if (map) {
                 map.clearOverlays();
                 const points = [];
@@ -526,9 +536,7 @@
             updateChartsOnly(filtered);
         }
 
-        // Separated UI update logic for smoother partial updates
         function updateListUI(data = null) {
-            // If data not provided, use current filter logic
             if(!data) {
                 const query = document.getElementById('search-input').value.toLowerCase();
                 const filter = appState.filter;
@@ -558,7 +566,6 @@
                 };
                 
                 const dotColor = s.isOperational ? 'bg-emerald-500' : 'bg-amber-500';
-                // Highlight resolved regions with a checkmark or distinct style if needed
                 item.innerHTML = `
                     <div class="flex justify-between items-start">
                         <h4 class="text-xs font-bold text-stone-700 group-hover:text-blue-600 transition-colors line-clamp-2 w-11/12">${s.name}</h4>
@@ -583,21 +590,17 @@
                 });
             }
 
-            // Status
             const opCount = appState.stations.filter(s => s.isOperational).length;
             const conCount = appState.stations.filter(s => !s.isOperational).length;
             statusChart.data.datasets[0].data = [opCount, conCount];
             statusChart.update();
 
-            // Region (Aggregated)
             const regCounts = {};
-            // Group by City (First part of string) to avoid clutter e.g. "Changzhi" instead of "Changzhi Shangdang"
             data.forEach(s => { 
-                // Simplify region name for chart: Take first 2-3 chars or split by space
                 const displayRegion = s.region.split(" ")[0]; 
                 regCounts[displayRegion] = (regCounts[displayRegion] || 0) + 1; 
             });
-            const sortedReg = Object.entries(regCounts).sort((a,b) => b[1] - a[1]).slice(0, 6); // Top 6
+            const sortedReg = Object.entries(regCounts).sort((a,b) => b[1] - a[1]).slice(0, 6); 
             regionChart.data.labels = sortedReg.map(x => x[0]);
             regionChart.data.datasets[0].data = sortedReg.map(x => x[1]);
             regionChart.update();
