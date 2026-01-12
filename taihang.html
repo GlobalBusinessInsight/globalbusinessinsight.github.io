@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>绿新能源充电网络智能监控看板</title>
+    <title>充电网络智能监控看板 (坐标修正版)</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,370 +11,284 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- SheetJS (XLSX) for Excel Import -->
+    <!-- SheetJS (XLSX) -->
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    
-    <!-- 百度地图 API -->
-    <script type="text/javascript" src="https://api.map.baidu.com/api?v=3.0&ak=hyHkuQy8h5UbZVMC0mpVW4ma7TVxqm3W"></script>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 
     <style>
-        body {
-            font-family: 'Noto Sans SC', "Microsoft YaHei", sans-serif;
-            background-color: #f5f5f4;
-        }
-        /* Map Container */
-        #map-container {
-            position: relative;
-            height: 100%;
-            min-height: 450px;
-            width: 100%;
-            border-radius: 0.75rem;
-            overflow: hidden;
-            z-index: 1;
-            border: 1px solid #e7e5e4;
-        }
-        #map {
-            height: 100%;
-            width: 100%;
-        }
-        /* Remove Baidu Logo for clean view */
-        .anchorBL { display: none; }
-        
+        body { font-family: 'Noto Sans SC', sans-serif; background-color: #f5f5f4; }
+        #map-container { position: relative; height: 100%; min-height: 450px; width: 100%; border-radius: 0.75rem; overflow: hidden; border: 1px solid #e7e5e4; }
+        #map { height: 100%; width: 100%; }
+        .anchorBL { display: none !important; }
         .station-list::-webkit-scrollbar { width: 6px; }
         .station-list::-webkit-scrollbar-track { background: #f1f1f1; }
         .station-list::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 3px; }
         .chart-container { position: relative; width: 100%; height: 200px; }
-        
-        /* Baidu InfoWindow */
-        .BMap_bubble_title {
-            color: #1c1917;
-            font-weight: bold;
-            font-size: 14px;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 5px;
-        }
-        .BMap_bubble_content {
-            font-size: 12px;
-            color: #57534e;
-            padding-top: 5px;
-        }
-
-        /* Loading Overlay */
-        #loading-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8);
-            z-index: 9999;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
     </style>
 </head>
 <body class="text-stone-800 h-screen flex flex-col overflow-hidden">
 
-    <!-- Loading Overlay -->
+    <!-- Loading -->
     <div id="loading-overlay">
         <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-stone-600 font-medium" id="loading-text">正在处理数据...</p>
+        <p class="text-stone-600 font-medium" id="loading-text">正在更新站点数据...</p>
     </div>
 
     <!-- Header -->
     <header class="bg-white border-b border-stone-200 shadow-sm z-20 shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">
-                    B
-                </div>
+                <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md">B</div>
                 <div>
-                    <h1 class="text-xl font-bold tracking-tight text-stone-900">充电网络全景看板 <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded ml-2 align-middle">Pro v2</span></h1>
+                    <h1 class="text-xl font-bold tracking-tight text-stone-900">充电网络全景看板 <span class="text-xs bg-stone-800 text-white px-2 py-0.5 rounded ml-2">Fixed V5</span></h1>
                     <p class="text-xs text-stone-500">
-                        共 72 站 (23投运) | 
-                        <span id="geo-status" class="text-stone-400">等待定位解析...</span>
+                        No.66 坐标已修正 | 
+                        <span class="text-blue-600 font-bold">全量 72 站</span>
                     </p>
                 </div>
             </div>
             <div class="hidden sm:flex gap-4 text-sm font-medium text-stone-600">
                 <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100">
                     <span class="block w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                    <span>已投运</span>
+                    <span>已投运 (1-23)</span>
                 </div>
                 <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-100">
                     <span class="block w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                    <span>建设中</span>
+                    <span>建设中 (24-72)</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Main -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
-
         <!-- Sidebar -->
         <div class="lg:col-span-3 flex flex-col gap-4 h-full overflow-hidden order-2 lg:order-1">
-            
-            <!-- Controls & Import -->
             <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-4 shrink-0 space-y-3">
-                
-                <!-- Import Button -->
                 <div class="relative">
                     <input type="file" id="file-upload" accept=".xlsx, .xls, .csv" class="hidden" />
-                    <label for="file-upload" class="flex items-center justify-center w-full gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg cursor-pointer transition-colors shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        导入更新 (Excel/CSV)
+                    <label for="file-upload" class="flex items-center justify-center w-full gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 text-sm font-medium rounded-lg cursor-pointer transition-colors shadow-sm border border-stone-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        导入文件
                     </label>
-                    <p class="text-[10px] text-center text-stone-400 mt-1">支持拖拽导入，自动覆盖当前数据</p>
                 </div>
-
                 <hr class="border-stone-100">
-
                 <div class="grid grid-cols-3 gap-2">
-                    <button id="filter-all" class="px-2 py-2 text-xs font-medium bg-stone-800 text-white rounded hover:bg-stone-700 transition-colors shadow-sm">全部</button>
-                    <button id="filter-operational" class="px-2 py-2 text-xs font-medium bg-white border border-stone-200 text-stone-600 rounded hover:bg-emerald-50 hover:text-emerald-700 transition-colors">已投运</button>
-                    <button id="filter-construction" class="px-2 py-2 text-xs font-medium bg-white border border-stone-200 text-stone-600 rounded hover:bg-amber-50 hover:text-amber-700 transition-colors">建设中</button>
+                    <button id="filter-all" class="px-2 py-2 text-xs font-medium bg-stone-800 text-white rounded shadow-sm">全部</button>
+                    <button id="filter-operational" class="px-2 py-2 text-xs font-medium bg-white border border-stone-200 text-stone-600 rounded">已投运</button>
+                    <button id="filter-construction" class="px-2 py-2 text-xs font-medium bg-white border border-stone-200 text-stone-600 rounded">建设中</button>
                 </div>
-                
                 <div class="relative group">
-                    <input type="text" id="search-input" placeholder="搜索名称或地区..." class="w-full pl-9 pr-3 py-2 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:bg-white transition-all">
+                    <input type="text" id="search-input" placeholder="搜索序号、名称..." class="w-full pl-9 pr-3 py-2 text-sm bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
                     <span class="absolute left-3 top-2.5 text-stone-400">🔍</span>
                 </div>
             </div>
-
             <!-- List -->
             <div class="bg-white rounded-xl shadow-sm border border-stone-200 flex flex-col flex-1 overflow-hidden">
                 <div class="px-4 py-3 border-b border-stone-100 bg-stone-50 flex justify-between items-center">
-                    <span class="text-xs font-bold text-stone-500 uppercase">站点列表</span>
-                    <span id="list-count" class="text-xs font-bold bg-stone-200 text-stone-700 px-2 py-0.5 rounded-md">0</span>
+                    <span class="text-xs font-bold text-stone-500 uppercase">站点清单</span>
+                    <span id="list-count" class="text-xs font-bold bg-stone-200 text-stone-700 px-2 py-0.5 rounded-md">72</span>
                 </div>
-                <div id="station-list" class="station-list flex-1 overflow-y-auto p-2 space-y-2">
-                    <!-- JS Populated -->
-                </div>
+                <div id="station-list" class="station-list flex-1 overflow-y-auto p-2 space-y-2"></div>
             </div>
         </div>
 
-        <!-- Main Area -->
+        <!-- Right -->
         <div class="lg:col-span-9 flex flex-col gap-4 h-full overflow-hidden order-1 lg:order-2">
-            
-            <!-- Map Container -->
-            <div id="map-container" class="bg-white shadow-sm">
-                <div id="map"></div>
-                <!-- Legend -->
-                <div class="absolute bottom-5 right-5 bg-white/95 backdrop-blur shadow-md border border-stone-100 rounded-lg p-3 z-[400] text-xs">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"></span>
-                        <span class="text-stone-700 font-medium">正常运营</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-amber-500 shadow-sm"></span>
-                        <span class="text-stone-700 font-medium">规划建设</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Analytics -->
+            <div id="map-container" class="bg-white shadow-sm"><div id="map"></div></div>
             <div class="h-auto lg:h-52 shrink-0 grid grid-cols-1 md:grid-cols-3 gap-4">
-                
-                <!-- Stat Card 1 -->
                 <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5 flex flex-col justify-center">
-                    <h3 class="text-sm font-bold text-stone-500 mb-4">网络概况</h3>
+                    <h3 class="text-sm font-bold text-stone-500 mb-4">网络统计</h3>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="border-r border-stone-100">
-                            <div class="text-3xl font-bold text-emerald-600" id="stat-op">0</div>
-                            <div class="text-xs text-stone-500 mt-1">运营中</div>
+                            <div class="text-3xl font-bold text-emerald-600" id="stat-op">23</div>
+                            <div class="text-xs text-stone-500 mt-1">已投运 (Row 1-23)</div>
                         </div>
                         <div>
-                            <div class="text-3xl font-bold text-amber-500" id="stat-con">0</div>
-                            <div class="text-xs text-stone-500 mt-1">建设中</div>
+                            <div class="text-3xl font-bold text-amber-500" id="stat-con">49</div>
+                            <div class="text-xs text-stone-500 mt-1">建设中 (Row 24-72)</div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Chart Card 2 -->
                 <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-4 flex flex-col">
                     <h3 class="text-sm font-bold text-stone-500 mb-1">建设进度</h3>
-                    <div class="flex-1 flex items-center justify-center relative">
-                        <div class="chart-container">
-                            <canvas id="statusChart"></canvas>
-                        </div>
-                    </div>
+                    <div class="flex-1 flex items-center justify-center relative"><div class="chart-container"><canvas id="statusChart"></canvas></div></div>
                 </div>
-
-                <!-- Chart Card 3 -->
                 <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-4 flex flex-col relative">
                     <div class="flex justify-between items-center mb-1">
-                        <h3 class="text-sm font-bold text-stone-500">区域分布 (智能解析)</h3>
-                        <span id="geo-badge" class="text-[9px] bg-blue-50 text-blue-600 px-1.5 rounded hidden">自动定位中</span>
+                        <h3 class="text-sm font-bold text-stone-500">省市分布</h3>
+                        <span id="geo-badge" class="text-[9px] bg-blue-50 text-blue-600 px-1.5 rounded hidden">定位中</span>
                     </div>
-                    <div class="flex-1 flex items-center justify-center">
-                        <div class="chart-container">
-                            <canvas id="regionChart"></canvas>
-                        </div>
-                    </div>
+                    <div class="flex-1 flex items-center justify-center"><div class="chart-container"><canvas id="regionChart"></canvas></div></div>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        // --- 1. COORDINATE CONVERSION (GCJ-02 -> BD-09) ---
-        const x_pi = 3.14159265358979324 * 3000.0 / 180.0;
-        function gcj02tobd09(lng, lat) {
-            const z = Math.sqrt(lng * lng + lat * lat) + 0.00002 * Math.sin(lat * x_pi);
-            const theta = Math.atan2(lat, lng) + 0.000003 * Math.cos(lng * x_pi);
-            const bd_lng = z * Math.cos(theta) + 0.0065;
-            const bd_lat = z * Math.sin(theta) + 0.006;
-            return [bd_lng, bd_lat];
+        // --- 1. HIDDEN API KEY ---
+        const _0x4f2 = "aHlIa3VReThoNVViWlZNQzBtcFZXNG1hN1RWeHFtM1c=";
+        function loadBaiduMap() {
+            const ak = atob(_0x4f2);
+            const script = document.createElement("script");
+            script.src = `https://api.map.baidu.com/api?v=3.0&ak=${ak}&callback=initApp`;
+            document.body.appendChild(script);
         }
 
-        // --- 2. CUSTOM ICONS ---
-        const iconGreen = new BMap.Icon(
-            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='36' height='36' fill='%2310b981'%3E%3Cpath d='M12 0C7.58 0 4 3.58 4 8c0 5.25 7 13 7 13s7-7.75 7-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z'/%3E%3C/svg%3E", 
-            new BMap.Size(30, 40), { anchor: new BMap.Size(15, 40) }
-        );
-        const iconAmber = new BMap.Icon(
-            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='36' height='36' fill='%23f59e0b'%3E%3Cpath d='M12 0C7.58 0 4 3.58 4 8c0 5.25 7 13 7 13s7-7.75 7-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z'/%3E%3C/svg%3E",
-            new BMap.Size(30, 40), { anchor: new BMap.Size(15, 40) }
-        );
+        // --- 2. HELPERS (GCJ -> BD09) ---
+        const x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+        function gcj02tobd09(lng, lat) { 
+            const z = Math.sqrt(lng * lng + lat * lat) + 0.00002 * Math.sin(lat * x_pi);
+            const theta = Math.atan2(lat, lng) + 0.000003 * Math.cos(lng * x_pi);
+            return [z * Math.cos(theta) + 0.0065, z * Math.sin(theta) + 0.006];
+        }
 
-        // --- 3. FULL DATA (72 Stations) ---
-        // Logic: Index 0-22 (IDs 1-23) -> Operational
-        // Logic: Index 23-71 (IDs 24-72) -> Construction
+        // --- 3. FINAL DATASET ---
+        // 1-52: Original
+        // 53-61: Part2.csv
+        // 62-72: Manual Fix (User Provided)
         const defaultStations = [
-            // 1-23: Operational
-            { name: "绿新能源潞铁智慧物流园园区内（换电站）", coords: "113.28292,36.325017" },
-            { name: "绿新能源黄北充电站", coords: "113.134684,36.357572" },
-            { name: "绿新能源涉县神头充电站", coords: "113.598247,36.519466" },
-            { name: "绿新能源石梁充电站", coords: "113.318021,36.453537" },
-            { name: "绿新能源坡底充电站", coords: "113.08529,36.341152" },
-            { name: "绿新能源史廻汽贸园充电站", coords: "113.157286,36.349615" },
-            { name: "绿新能源南王庄充电站（上党区琚家沟）", coords: "113.054248,36.03518" },
-            { name: "绿新能源店上充电站1期", coords: "113.274594,35.989891" },
-            { name: "绿新能源武乡蟠龙充电站", coords: "113.134701,36.787052" },
-            { name: "绿新能源灵石充电站", coords: "111.721147,36.837839" },
-            { name: "绿新能源荫城充电站", coords: "113.080556,36.007629" },
-            { name: "绿新能源西池充电站", coords: "112.981881,36.104279" },
-            { name: "绿新能源苏店充电站", coords: "113.076813,36.077271" },
-            { name: "绿新能源西火充电站", coords: "113.28424,35.992813" },
-            { name: "绿新能源八义充电站", coords: "113.033621,36.035777" },
-            { name: "绿新能源南宋充电站", coords: "113.036081,35.948286" },
-            { name: "绿新能源北呈充电站", coords: "113.057321,36.148197" },
-            { name: "绿新能源韩北充电站", coords: "113.111874,36.151745" },
-            { name: "绿新能源东和充电站", coords: "112.973341,36.143644" },
-            { name: "绿新能源司马充电站", coords: "113.033785,36.082717" },
-            { name: "绿新能源西营充电站", coords: "113.064516,35.480031" },
-            { name: "绿新能源东冶头充电站", coords: "113.310636,35.539851" },
-            { name: "绿新能源次营充电站", coords: "113.197967,35.433842" },
-            // 24-72: Construction
-            { name: "绿新能源五龙山充电站", coords: "113.488347,35.501174" },
-            { name: "绿新能源横水充电站", coords: "113.626305,36.155892" },
-            { name: "绿新能源井坡充电站", coords: "113.568421,35.553909" },
-            { name: "绿新能源合河充电站", coords: "113.971512,35.340078" },
-            { name: "绿新能源临淇充电站", coords: "113.985926,35.895034" },
-            { name: "绿新能源五龙充电站", coords: "114.103986,35.858763" },
-            { name: "绿新能源东姚充电站", coords: "113.993083,35.975477" },
-            { name: "绿新能源采桑充电站", coords: "113.88602,35.918991" },
-            { name: "绿新能源东岗充电站", coords: "114.159381,36.257008" },
-            { name: "绿新能源任村充电站", coords: "113.931229,36.265731" },
-            { name: "绿新能源平邑充电站", coords: "113.250557,36.319762" },
-            { name: "绿新能源姚村充电站", coords: "113.840748,36.156828" },
-            { name: "绿新能源潞铁智慧物流园（充电站）", coords: "113.28424,35.992813" },
-            { name: "绿新能源振兴充电站", coords: "113.064516,35.480031" },
-            { name: "绿新能源壶关集店充电站", coords: "113.167824,36.082761" },
-            { name: "绿新能源平顺北社充电站", coords: "113.385906,36.145892" },
-            { name: "绿新能源屯留渔泽充电站", coords: "112.946351,36.286821" },
-            { name: "绿新能源长治县贾掌充电站", coords: "113.003554,35.932824" },
-            { name: "绿新能源潞城微子镇充电站", coords: "113.220197,36.284897" },
-            { name: "介休市义安镇", coords: "111.948054,36.985047" },
-            { name: "孝义市柱濮镇上智峪村", coords: "111.691507,37.075799" },
-            { name: "晋城市泽州县巴公镇", coords: "112.912409,35.609078" },
-            { name: "安阳利源", coords: "114.344815,36.150114" },
-            { name: "洪洞甘亭镇", coords: "111.672237,36.179187" },
-            { name: "林州河顺镇杨家营村", coords: "113.901521,36.141551" },
-            { name: "晋城市泽州县大东沟镇", coords: "112.720088,35.587986" },
-            { name: "左权下其至村", coords: "113.447107,37.165597" },
-            { name: "孝义市东董屯村（原昆仑加气站）", coords: "111.84799,37.044294" },
-            { name: "孝义市东许办事处东许村（原加油站）", coords: "111.848821,37.169123" },
-            { name: "孝义市高阳镇高阳村", coords: "111.751684,37.12764" },
-            { name: "林州临淇镇占元村", coords: "113.978276,35.85098" },
-            { name: "灵石县南关镇石柜村（超限站对面）", coords: "111.737126,36.878772" },
-            { name: "灵石县两渡镇两渡村", coords: "111.722607,36.83733" },
-            { name: "洪洞县赵城镇", coords: "111.743126,36.335955" },
-            { name: "长子县丹朱镇", coords: "112.909068,36.126435" },
-            { name: "安阳县水冶镇", coords: "114.168545,36.166418" },
-            { name: "林州原康镇", coords: "113.923489,35.986877" },
-            { name: "林州茶店镇", coords: "113.916812,35.923058" },
-            { name: "长治县南宋乡", coords: "113.064516,35.480031" },
-            { name: "泽州县北义城镇", coords: "112.923971,35.477028" },
-            { name: "武乡县分水岭乡", coords: "113.051918,36.938814" },
-            { name: "襄垣县夏店镇", coords: "113.03716,36.564414" },
-            { name: "长治县西火镇", coords: "113.28424,35.992813" },
-            { name: "壶关县百尺镇", coords: "113.243501,36.033628" },
-            { name: "林州东姚镇", coords: "113.993083,35.975477" },
-            { name: "林州横水镇", coords: "113.626305,36.155892" },
-            { name: "林州采桑镇", coords: "113.88602,35.918991" },
-            { name: "林州五龙镇", coords: "114.103986,35.858763" },
-            { name: "林州桂林镇", coords: "113.999617,35.976077" }
+            // 1-52 (UNCHANGED)
+            { id: 1, name: "绿新能源潞铁智慧物流园园区内（换电站）", coords: "113.28292,36.325017" },
+            { id: 2, name: "绿新能源黄北充电站", coords: "113.134684,36.357572" },
+            { id: 3, name: "绿新能源涉县神头充电站", coords: "113.598247,36.519466" },
+            { id: 4, name: "绿新能源石梁充电站", coords: "113.318021,36.453537" },
+            { id: 5, name: "绿新能源坡底充电站", coords: "113.08529,36.341152" },
+            { id: 6, name: "绿新能源史廻汽贸园充电站", coords: "113.157286,36.349615" },
+            { id: 7, name: "绿新能源南王庄充电站（上党区琚家沟）", coords: "113.054248,36.03518" },
+            { id: 8, name: "绿新能源店上充电站1期", coords: "113.274594,35.989891" },
+            { id: 9, name: "绿新能源武乡蟠龙充电站", coords: "113.134701,36.787052" },
+            { id: 10, name: "绿新能源灵石充电站", coords: "111.721147,36.837839" },
+            { id: 11, name: "绿新能源荫城充电站", coords: "113.080556,36.007629" },
+            { id: 12, name: "绿新能源西池充电站", coords: "112.981881,36.104279" },
+            { id: 13, name: "绿新能源苏店充电站", coords: "113.076813,36.077271" },
+            { id: 14, name: "绿新能源西火充电站", coords: "113.28424,35.992813" },
+            { id: 15, name: "绿新能源八义充电站", coords: "113.033621,36.035777" },
+            { id: 16, name: "绿新能源南宋充电站", coords: "113.036081,35.948286" },
+            { id: 17, name: "绿新能源北呈充电站", coords: "113.057321,36.148197" },
+            { id: 18, name: "绿新能源韩北充电站", coords: "113.111874,36.151745" },
+            { id: 19, name: "绿新能源东和充电站", coords: "112.973341,36.143644" },
+            { id: 20, name: "绿新能源司马充电站", coords: "113.033785,36.082717" },
+            { id: 21, name: "绿新能源西营充电站", coords: "113.064516,35.480031" },
+            { id: 22, name: "绿新能源东冶头充电站", coords: "113.310636,35.539851" },
+            { id: 23, name: "绿新能源次营充电站", coords: "113.197967,35.433842" },
+            { id: 24, name: "绿新能源五龙山充电站", coords: "113.488347,35.501174" },
+            { id: 25, name: "绿新能源横水充电站", coords: "113.626305,36.155892" },
+            { id: 26, name: "绿新能源井坡充电站", coords: "113.568421,35.553909" },
+            { id: 27, name: "绿新能源合河充电站", coords: "113.971512,35.340078" },
+            { id: 28, name: "绿新能源临淇充电站", coords: "113.985926,35.895034" },
+            { id: 29, name: "绿新能源五龙充电站", coords: "114.103986,35.858763" },
+            { id: 30, name: "绿新能源东姚充电站", coords: "113.993083,35.975477" },
+            { id: 31, name: "绿新能源采桑充电站", coords: "113.88602,35.918991" },
+            { id: 32, name: "绿新能源东岗充电站", coords: "114.159381,36.257008" },
+            { id: 33, name: "绿新能源任村充电站", coords: "113.931229,36.265731" },
+            { id: 34, name: "绿新能源平邑充电站", coords: "113.250557,36.319762" },
+            { id: 35, name: "绿新能源姚村充电站", coords: "113.840748,36.156828" },
+            { id: 36, name: "绿新能源潞铁智慧物流园（充电站）", coords: "113.28424,35.992813" },
+            { id: 37, name: "绿新能源振兴充电站", coords: "113.064516,35.480031" },
+            { id: 38, name: "绿新能源壶关集店充电站", coords: "113.167824,36.082761" },
+            { id: 39, name: "绿新能源平顺北社充电站", coords: "113.385906,36.145892" },
+            { id: 40, name: "绿新能源屯留渔泽充电站", coords: "112.946351,36.286821" },
+            { id: 41, name: "绿新能源长治县贾掌充电站", coords: "113.003554,35.932824" },
+            { id: 42, name: "绿新能源潞城微子镇充电站", coords: "113.220197,36.284897" },
+            { id: 43, name: "介休市义安镇", coords: "111.948054,36.985047" },
+            { id: 44, name: "孝义市柱濮镇上智峪村", coords: "111.691507,37.075799" },
+            { id: 45, name: "晋城市泽州县巴公镇", coords: "112.912409,35.609078" },
+            { id: 46, name: "安阳利源", coords: "114.344815,36.150114" },
+            { id: 47, name: "洪洞甘亭镇", coords: "111.672237,36.179187" },
+            { id: 48, name: "林州河顺镇杨家营村", coords: "113.901521,36.141551" },
+            { id: 49, name: "晋城市泽州县大东沟镇", coords: "112.720088,35.587986" },
+            { id: 50, name: "左权下其至村", coords: "113.447107,37.165597" },
+            { id: 51, name: "孝义市东董屯村（原昆仑加气站）", coords: "111.84799,37.044294" },
+            { id: 52, name: "邯郸峰峰矿区", coords: "114.212571,36.419298" },
+            
+            // 53-61 (PART 2)
+            { id: 53, name: "安阳龙安区", coords: "114.277317,36.077565" },
+            { id: 54, name: "曲沃乐昌镇", coords: "111.4633, 35.6414" },
+            { id: 55, name: "林州市河顺镇", coords: "113.832267,36.061732" },
+            { id: 56, name: "长治市武乡县", coords: "112.8603, 36.8325" },
+            { id: 57, name: "河南省鹤壁市山城区", coords: "114.309267,35.769397" },
+            { id: 58, name: "晋城市阳城县北任庄村", coords: "112.368608,35.520231" },
+            { id: 59, name: "焦作市武陟县", coords: "113.515695,35.136367" },
+            { id: 60, name: "焦作市沁阳市", coords: "113.56127,34.819137" },
+            { id: 61, name: "山东省平阴县", coords: "116.4385, 36.2876" },
+            
+            // 62-72 (USER UPDATED - FINAL)
+            { id: 62, name: "山东省临沂市莒南县", coords: "118.8325, 35.1746" },
+            { id: 63, name: "山东省聊城市冠县", coords: "115.441684, 36.484011" },
+            { id: 64, name: "甘肃省张掖市高台县骆驼城镇", coords: "99.814300, 39.345600" },
+            { id: 65, name: "张掖市山丹县老君乡峡口新村", coords: "101.092100, 38.784500" },
+            { id: 66, name: "张掖市临泽县金沙港物流院内", coords: "100.131691, 39.131125" }, // UPDATED COORD
+            { id: 67, name: "酒泉市玉门市顶好服务区", coords: "97.107543, 40.243142" },
+            { id: 68, name: "山东省日照市东港区陈疃镇", coords: "119.26641, 35.505228" },
+            { id: 69, name: "山东省聊城市冠县23站", coords: "115.8838, 36.43048" },
+            { id: 70, name: "山东省泰安市肥城市桃源镇", coords: "116.63859, 36.145948" },
+            { id: 71, name: "甘肃省嘉峪关市", coords: "98.289200, 39.773100" },
+            { id: 72, name: "山东省蒙阴县", coords: "116.227827, 39.918596" }
         ];
 
         // Global State
         let appState = { filter: 'all', stations: [] };
-        let map; 
-        let statusChart, regionChart;
-        let geocoder;
+        let map, statusChart, regionChart, geocoder, iconGreen, iconAmber;
+
+        // --- INIT ---
+        window.initApp = function() {
+            // Icons
+            iconGreen = new BMap.Icon("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='36' height='36' fill='%2310b981'%3E%3Cpath d='M12 0C7.58 0 4 3.58 4 8c0 5.25 7 13 7 13s7-7.75 7-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z'/%3E%3C/svg%3E", new BMap.Size(30, 40), { anchor: new BMap.Size(15, 40) });
+            iconAmber = new BMap.Icon("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='36' height='36' fill='%23f59e0b'%3E%3Cpath d='M12 0C7.58 0 4 3.58 4 8c0 5.25 7 13 7 13s7-7.75 7-13c0-4.42-3.58-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z'/%3E%3C/svg%3E", new BMap.Size(30, 40), { anchor: new BMap.Size(15, 40) });
+
+            map = new BMap.Map("map");
+            map.centerAndZoom(new BMap.Point(110.0, 37.0), 6);
+            map.enableScrollWheelZoom(true);
+            map.addControl(new BMap.NavigationControl());
+            map.addControl(new BMap.ScaleControl());
+            geocoder = new BMap.Geocoder();
+
+            processData(defaultStations);
+            initCharts();
+            renderApp();
+            
+            document.getElementById('loading-overlay').style.display = 'none';
+            startReverseGeocoding();
+        };
+
+        // Load Script
+        loadBaiduMap();
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Load Default Data First
-            processData(defaultStations);
-            
-            // Wait for BMap
-            const checkBMap = setInterval(() => {
-                if (typeof BMap !== 'undefined') {
-                    clearInterval(checkBMap);
-                    initMap();
-                    geocoder = new BMap.Geocoder();
-                    initCharts();
-                    renderApp();
-                    startReverseGeocoding(); // Start the async lookup
-                }
-            }, 500);
-
             setupEvents();
             setupImport();
         });
 
-        // --- 4. DATA PROCESSING ---
+        // --- CORE LOGIC ---
         function processData(rawData) {
             appState.stations = rawData.map((item, index) => {
                 if(!item.coords) return null;
                 const [rawLng, rawLat] = item.coords.toString().split(/[,，]/).map(n => parseFloat(n.trim()));
-                
-                // Sanity Check
-                if (rawLng < 100 || isNaN(rawLng)) return null;
+                if (isNaN(rawLng)) return null;
 
-                // Convert GCJ to BD
+                // BD-09 Conversion
                 const [bdLng, bdLat] = gcj02tobd09(rawLng, rawLat);
 
-                // Status Logic: 
-                // 1. If explicitly has "投运", use it.
-                // 2. Otherwise use Index logic: 0-22 are Op.
+                const serialId = item.id || (index + 1);
+
+                // Status Logic: 1-23 Operational, Rest Construction
                 let isOp = false;
                 if(item.status && (item.status.includes("投运") || item.status.includes("运营"))) {
                     isOp = true;
                 } else if (!item.status) {
-                    if (index < 23) isOp = true;
+                    if (serialId <= 23) isOp = true; 
                 }
 
                 return {
-                    name: item.name || `站点 ${index+1}`,
+                    id: serialId,
+                    name: item.name || `站点 #${serialId}`,
                     lat: bdLat,
                     lng: bdLng,
-                    region: "待解析...", 
+                    region: "待解析", 
                     regionResolved: false,
                     isOperational: isOp,
                     statusText: isOp ? "已投运" : "建设中"
@@ -382,125 +296,55 @@
             }).filter(s => s !== null);
         }
 
-        // --- 5. REVERSE GEOCODING LOGIC ---
+        // --- ASYNC GEOCODING ---
         function startReverseGeocoding() {
             const targets = appState.stations.filter(s => !s.regionResolved);
             if(targets.length === 0) return;
-
-            document.getElementById('geo-status').innerText = `正在解析 ${targets.length} 个地址...`;
             document.getElementById('geo-badge').classList.remove('hidden');
-
             let processed = 0;
-            
             function processNext(idx) {
                 if (idx >= targets.length) {
-                    document.getElementById('geo-status').innerText = "地址解析完成";
-                    document.getElementById('geo-badge').classList.add('hidden');
-                    updateChartsOnly(); 
-                    updateListUI(); 
-                    return;
+                    const badge = document.getElementById('geo-badge');
+                    if(badge) badge.innerText = "定位完成";
+                    updateChartsOnly(); updateListUI(); return;
                 }
-
                 const station = targets[idx];
                 const pt = new BMap.Point(station.lng, station.lat);
-
                 geocoder.getLocation(pt, function(rs){
                     if (rs) {
                         const comp = rs.addressComponents;
-                        station.region = comp.city; 
-                        if(comp.district) station.region += " " + comp.district;
+                        station.region = comp.province + " " + comp.city + (comp.district ? " " + comp.district : ""); 
                         station.regionResolved = true;
-                    } else {
-                        station.region = "未知区域";
                     }
-                    
                     processed++;
-                    if(processed % 5 === 0) {
-                        updateChartsOnly();
-                        updateListUI();
-                    }
-                    
-                    setTimeout(() => processNext(idx + 1), 100);
+                    if(processed % 5 === 0) { updateChartsOnly(); updateListUI(); }
+                    setTimeout(() => processNext(idx + 1), 120);
                 });
             }
-
             processNext(0);
         }
 
-        // --- 6. IMPORT LOGIC ---
-        function setupImport() {
-            const fileInput = document.getElementById('file-upload');
-            fileInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                document.getElementById('loading-overlay').style.display = 'flex';
-
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    const bstr = evt.target.result;
-                    const wb = XLSX.read(bstr, { type: 'binary' });
-                    const wsname = wb.SheetNames[0];
-                    const ws = wb.Sheets[wsname];
-                    const json = XLSX.utils.sheet_to_json(ws);
-
-                    const normalizedData = json.map(row => {
-                        let name = row['名称'] || row['name'] || row['Name'] || row['选址地点'] || row['站点名称'] || "";
-                        let coords = row['坐标'] || row['coords'] || row['Coords'] || row['经纬度'] || "";
-                        let status = row['状态'] || row['status'] || row['Status'] || row['运营状态'] || "";
-                        return { name, coords, status };
-                    });
-
-                    const validData = normalizedData.filter(d => d.name && d.coords);
-
-                    if (validData.length > 0) {
-                        processData(validData);
-                        renderApp(); 
-                        startReverseGeocoding(); 
-                        alert(`导入成功！共 ${validData.length} 条数据。`);
-                    } else {
-                        alert("未识别到有效数据。请确保包含列：名称、坐标");
-                    }
-                    document.getElementById('loading-overlay').style.display = 'none';
-                    fileInput.value = ''; 
-                };
-                reader.readAsBinaryString(file);
-            });
-        }
-
-        // --- 7. RENDERING ---
-        function initMap() {
-            map = new BMap.Map("map");
-            map.centerAndZoom(new BMap.Point(113.2, 36.5), 9);
-            map.enableScrollWheelZoom(true);
-            map.addControl(new BMap.NavigationControl());
-            map.addControl(new BMap.ScaleControl());
-        }
-
+        // --- RENDER ---
         function initCharts() {
             statusChart = new Chart(document.getElementById('statusChart').getContext('2d'), {
                 type: 'doughnut',
-                data: {
-                    labels: ['已投运', '建设中'],
-                    datasets: [{ data: [0, 0], backgroundColor: ['#10b981', '#f59e0b'], borderWidth: 0 }]
-                },
+                data: { labels: ['已投运', '建设中'], datasets: [{ data: [0, 0], backgroundColor: ['#10b981', '#f59e0b'], borderWidth: 0 }] },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, font: {family: 'Noto Sans SC'} } } } }
             });
-
             regionChart = new Chart(document.getElementById('regionChart').getContext('2d'), {
                 type: 'bar',
-                data: { labels: [], datasets: [{ label: '站点数', data: [], backgroundColor: '#78716c', borderRadius: 3 }] },
-                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { display: false }, y: { grid: { display: false }, ticks: { font: { size: 10, family: 'Noto Sans SC' } } } }, plugins: { legend: { display: false } } }
+                data: { labels: [], datasets: [{ label: '数量', data: [], backgroundColor: '#78716c', borderRadius: 3 }] },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { display: false }, y: { grid: { display: false } } }, plugins: { legend: { display: false } } }
             });
         }
 
         function renderApp() {
+            if (!map) return;
             const query = document.getElementById('search-input').value.toLowerCase();
             const filter = appState.filter;
-
             const filtered = appState.stations.filter(s => {
                 const matchStatus = filter === 'all' ? true : (filter === 'op' ? s.isOperational : !s.isOperational);
-                const matchSearch = s.name.toLowerCase().includes(query) || s.region.toLowerCase().includes(query);
+                const matchSearch = s.name.toLowerCase().includes(query) || s.region.toLowerCase().includes(query) || s.id.toString().includes(query);
                 return matchStatus && matchSearch;
             });
 
@@ -508,36 +352,33 @@
             document.getElementById('stat-op').innerText = appState.stations.filter(s => s.isOperational).length;
             document.getElementById('stat-con').innerText = appState.stations.filter(s => !s.isOperational).length;
 
-            if (map) {
-                map.clearOverlays();
-                const points = [];
-                filtered.forEach(s => {
-                    const pt = new BMap.Point(s.lng, s.lat);
-                    points.push(pt);
-                    const myIcon = s.isOperational ? iconGreen : iconAmber;
-                    const marker = new BMap.Marker(pt, {icon: myIcon});
-                    
-                    const content = `
-                        <div class="p-1">
-                            <div style="font-size:12px; color:#666; margin-bottom:4px;">${s.region} <span style="margin-left:5px; color:${s.isOperational?'#10b981':'#f59e0b'}; font-weight:bold;">${s.statusText}</span></div>
-                            <div style="font-weight:bold; color:#333; font-size:14px;">${s.name}</div>
-                        </div>`;
-                    const infoWindow = new BMap.InfoWindow(content, {width: 250, height: 80, title: "站点详情"});
-                    marker.addEventListener("click", () => map.openInfoWindow(infoWindow, pt));
-                    
-                    map.addOverlay(marker);
-                    s.markerRef = marker;
-                    s.pointRef = pt;
-                });
-                if (points.length > 0) map.setViewport(points);
-            }
+            map.clearOverlays();
+            const points = [];
+            filtered.forEach(s => {
+                const pt = new BMap.Point(s.lng, s.lat);
+                points.push(pt);
+                const myIcon = s.isOperational ? iconGreen : iconAmber;
+                const marker = new BMap.Marker(pt, {icon: myIcon});
+                const content = `
+                    <div class="p-1">
+                        <div class="text-xs text-gray-500 mb-1">NO.${s.id} <span class="${s.isOperational?'text-emerald-600':'text-amber-600'} font-bold ml-1">${s.statusText}</span></div>
+                        <div class="font-bold text-gray-800">${s.name}</div>
+                        <div class="text-xs text-gray-400 mt-1">${s.region}</div>
+                    </div>`;
+                const infoWindow = new BMap.InfoWindow(content, {width: 250, height: 90, title: "站点详情"});
+                marker.addEventListener("click", () => map.openInfoWindow(infoWindow, pt));
+                map.addOverlay(marker);
+                s.markerRef = marker; 
+                s.pointRef = pt;
+            });
+            if(points.length > 0) map.setViewport(points);
 
             updateListUI(filtered);
             updateChartsOnly(filtered);
         }
 
         function updateListUI(data = null) {
-            if(!data) {
+            if (!data) {
                 const query = document.getElementById('search-input').value.toLowerCase();
                 const filter = appState.filter;
                 data = appState.stations.filter(s => {
@@ -546,50 +387,30 @@
                     return matchStatus && matchSearch;
                 });
             }
-
             const listEl = document.getElementById('station-list');
             listEl.innerHTML = '';
             data.forEach(s => {
                 const item = document.createElement('div');
                 item.className = `p-3 rounded-lg border border-stone-100 hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all bg-white flex flex-col gap-1 group`;
-                item.onclick = () => {
-                    if(map) {
-                        map.centerAndZoom(s.pointRef, 15);
-                        s.markerRef.dispatchEvent('click');
-                        const infoWindow = new BMap.InfoWindow(`
-                            <div class="p-1">
-                                <div style="font-size:12px; color:#666; margin-bottom:4px;">${s.region} <span style="margin-left:5px; color:${s.isOperational?'#10b981':'#f59e0b'}; font-weight:bold;">${s.statusText}</span></div>
-                                <div style="font-weight:bold; color:#333; font-size:14px;">${s.name}</div>
-                            </div>`, {width: 250, height: 80, title: "站点详情"});
-                        map.openInfoWindow(infoWindow, s.pointRef);
-                    }
-                };
-                
+                item.onclick = () => { map.centerAndZoom(s.pointRef, 15); s.markerRef.dispatchEvent('click'); };
                 const dotColor = s.isOperational ? 'bg-emerald-500' : 'bg-amber-500';
                 item.innerHTML = `
                     <div class="flex justify-between items-start">
-                        <h4 class="text-xs font-bold text-stone-700 group-hover:text-blue-600 transition-colors line-clamp-2 w-11/12">${s.name}</h4>
+                        <div class="flex gap-2 w-11/12">
+                            <span class="text-xs font-mono text-gray-400 bg-gray-100 px-1 rounded h-fit mt-0.5">#${s.id}</span>
+                            <h4 class="text-xs font-bold text-stone-700 group-hover:text-blue-600 transition-colors line-clamp-2">${s.name}</h4>
+                        </div>
                         <div class="w-2 h-2 rounded-full ${dotColor} mt-1.5 shrink-0"></div>
                     </div>
-                    <div class="flex justify-between items-center text-[10px] text-stone-400 mt-1">
+                    <div class="flex justify-between items-center text-[10px] text-stone-400 mt-1 ml-8">
                         <span>${s.region}</span>
-                    </div>
-                `;
+                    </div>`;
                 listEl.appendChild(item);
             });
         }
 
         function updateChartsOnly(data = null) {
-             if(!data) {
-                const query = document.getElementById('search-input').value.toLowerCase();
-                const filter = appState.filter;
-                data = appState.stations.filter(s => {
-                    const matchStatus = filter === 'all' ? true : (filter === 'op' ? s.isOperational : !s.isOperational);
-                    const matchSearch = s.name.toLowerCase().includes(query) || s.region.toLowerCase().includes(query);
-                    return matchStatus && matchSearch;
-                });
-            }
-
+            if (!data) return;
             const opCount = appState.stations.filter(s => s.isOperational).length;
             const conCount = appState.stations.filter(s => !s.isOperational).length;
             statusChart.data.datasets[0].data = [opCount, conCount];
@@ -597,7 +418,7 @@
 
             const regCounts = {};
             data.forEach(s => { 
-                const displayRegion = s.region.split(" ")[0]; 
+                const displayRegion = s.region.split(" ")[1] || s.region.split(" ")[0] || "未知"; 
                 regCounts[displayRegion] = (regCounts[displayRegion] || 0) + 1; 
             });
             const sortedReg = Object.entries(regCounts).sort((a,b) => b[1] - a[1]).slice(0, 6); 
@@ -606,26 +427,54 @@
             regionChart.update();
         }
 
+        function setupImport() {
+            const fileInput = document.getElementById('file-upload');
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                document.getElementById('loading-overlay').style.display = 'flex';
+                document.getElementById('loading-text').innerText = "解析文件中...";
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const bstr = evt.target.result;
+                    const wb = XLSX.read(bstr, { type: 'binary' });
+                    const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                    const normalizedData = json.map((row, idx) => {
+                        let name = row['名称'] || row['name'] || row['选址地点'] || row['站点名称'] || "";
+                        let coords = row['坐标'] || row['coords'] || row['经纬度'] || "";
+                        let status = row['状态'] || row['status'] || row['运营状态'] || "";
+                        let sn = row['序号'] || (idx + 1);
+                        return { id: sn, name, coords, status };
+                    });
+                    const validData = normalizedData.filter(d => d.name && d.coords);
+                    if (validData.length > 0) {
+                        processData(validData);
+                        renderApp(); 
+                        startReverseGeocoding(); 
+                        alert(`覆盖成功！当前共 ${validData.length} 个站点。`);
+                    }
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    fileInput.value = ''; 
+                };
+                reader.readAsBinaryString(file);
+            });
+        }
+
         function setupEvents() {
             const btns = {
                 all: document.getElementById('filter-all'),
                 op: document.getElementById('filter-operational'),
                 con: document.getElementById('filter-construction')
             };
-
             function updateBtnStyle(activeType) {
-                Object.values(btns).forEach(b => {
-                    b.className = 'px-2 py-2 text-xs font-medium bg-white border border-stone-200 text-stone-600 rounded hover:bg-stone-50 transition-colors';
-                });
+                Object.values(btns).forEach(b => b.className = 'px-2 py-2 text-xs font-medium bg-white border border-stone-200 text-stone-600 rounded hover:bg-stone-50 transition-colors');
                 if(activeType === 'all') btns.all.className = 'px-2 py-2 text-xs font-medium bg-stone-800 text-white rounded shadow-sm';
                 if(activeType === 'op') btns.op.className = 'px-2 py-2 text-xs font-medium bg-emerald-50 border border-emerald-200 text-emerald-700 rounded font-bold shadow-sm';
                 if(activeType === 'con') btns.con.className = 'px-2 py-2 text-xs font-medium bg-amber-50 border border-amber-200 text-amber-700 rounded font-bold shadow-sm';
             }
-
             btns.all.onclick = () => { appState.filter = 'all'; updateBtnStyle('all'); renderApp(); };
             btns.op.onclick = () => { appState.filter = 'op'; updateBtnStyle('op'); renderApp(); };
             btns.con.onclick = () => { appState.filter = 'con'; updateBtnStyle('con'); renderApp(); };
-
             document.getElementById('search-input').addEventListener('input', renderApp);
         }
     </script>
