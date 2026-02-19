@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>左手将专属：羽毛球12周进阶报告 (A4翻页版)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e2e8f0; /* Slate 200 - Background behind the paper */
+            color: #1e293b; 
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* A4 Paper Styles */
+        .a4-container {
+            width: 794px; /* A4 width */
+            height: 1123px; /* A4 height */
+            background-color: white;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            margin: 2rem auto;
+            position: relative;
+            overflow: hidden; 
+            flex-shrink: 0;
+        }
+
+        .a4-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            display: flex;
+            justify-content: center;
+            padding: 0 1rem;
+        }
+
+        /* Page Layout */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 40px 50px;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease-in-out;
+            background: white;
+            z-index: 1;
+        }
+
+        .page.active {
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .page-header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-shrink: 0;
+        }
+
+        .page-footer {
+            margin-top: auto; 
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #64748b;
+            flex-shrink: 0;
+        }
+
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 380px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        /* Navigation Controls */
+        .controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            z-index: 50;
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn {
+            background: #0284c7;
+            padding: 0.5rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .control-btn:hover:not(:disabled) { background: #0369a1; transform: translateY(-1px); }
+        .control-btn:disabled { background: #475569; cursor: not-allowed; opacity: 0.5; }
+    </style>
+
+    <!-- Placeholder Comments Required by Prompt -->
+    <!-- Chosen Palette: Blue Jersey Focus (Slate, White, Sky Blue #0284c7, Amber) -->
+    <!-- Application Structure Plan: Document/Presentation format. Total 15 pages.
+         - Page 1: Profile & Radar Chart.
+         - Page 2: Deep Dive Technical Video Analysis.
+         - Pages 3-14: 12 Weeks of training, strictly 1 week per page to avoid scrolling.
+         - Page 15: Coach's Insights & Urgent Fixes.
+         Dynamic rendering used via JS to keep the single HTML file maintainable and clean. -->
+    <!-- Visualization & Content Choices: 
+         - Report Info: Left-handed specific breakdown -> Goal: Focus on strengths/weaknesses (不求全求大) -> Method: Dedicated weekly pages.
+         - Report Info: Daily vs Tech split -> Goal: Accommodate busy grade 9 schedule -> Method: Clear visual separation of Daily Physical (40m) and 3x/Week Technical.
+         - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body>
+
+    <div class="a4-wrapper pb-24">
+        <!-- A4 Paper Container -->
+        <div class="a4-container" id="report-document">
+            
+            <!-- ================= PAGE 1 ================= -->
+            <div class="page active" id="page-1">
+                <div class="page-header">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-sky-600 text-white p-2 rounded-lg flex items-center justify-center w-10 h-10">
+                            <i class="fa-solid fa-hand-sparkles"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">LeftyEdge <span class="text-sky-600">Analytics</span></h1>
+                            <p class="text-sm text-slate-500">左手将专属发展档案 (学业兼顾版) | Confidential Scouting Report</p>
+                        </div>
+                    </div>
+                    <div class="text-right text-sm text-slate-500">
+                        <p><strong>日期:</strong> 2026-02-19</p>
+                        <p><strong>档案号:</strong> RSEQ-L2011-002</p>
+                    </div>
+                </div>
+
+                <div class="flex-grow flex flex-col gap-6">
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 relative overflow-hidden flex-shrink-0">
+                        <div class="absolute top-0 right-0 bg-amber-400 text-amber-900 text-xs font-bold px-4 py-1.5 rounded-bl-lg">
+                            RARE ADVANTAGE / 左手将
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-900 mb-6">蓝衣球员 (Blue Jersey)</h2>
+                        
+                        <div class="grid grid-cols-2 gap-6 text-sm">
+                            <div class="space-y-3">
+                                <div class="flex border-b border-slate-200 pb-2">
+                                    <span class="text-slate-500 w-24"><i class="fa-regular fa-calendar mr-2"></i>出生年份:</span>
+                                    <span class="font-medium text-slate-900">2011 (约14岁)</span>
+                                </div>
+                                <div class="flex border-b border-slate-200 pb-2">
+                                    <span class="text-slate-500 w-24"><i class="fa-solid fa-map-pin mr-2"></i>地区/年级:</span>
+                                    <span class="font-medium text-slate-900">Montreal / 9年级 (学业压力期)</span>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex border-b border-slate-200 pb-2">
+                                    <span class="text-slate-500 w-24"><i class="fa-solid fa-bullseye mr-2"></i>核心优势:</span>
+                                    <span class="font-medium text-green-600 font-bold">正手攻击框架 / 进攻意愿</span>
+                                </div>
+                                <div class="flex border-b border-slate-200 pb-2">
+                                    <span class="text-slate-500 w-24"><i class="fa-solid fa-shield-halved mr-2"></i>致命弱点:</span>
+                                    <span class="font-medium text-amber-600 font-bold">右后场头顶区 (RTH)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 bg-white p-4 rounded-lg border border-slate-200">
+                            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"><i class="fa-solid fa-crosshairs mr-1"></i> 训练核心方针：不求全求大</h3>
+                            <p class="text-sm text-slate-700 italic leading-relaxed">"鉴于9年级学业繁忙，本计划抛弃了华而不实的冗杂技术。**只做两件事**：第一，把左撇子的正手优势（直线突击/劈吊）练到极致；第二，用死磕到底的态度把右后场（头顶区）的漏洞补上。体能化整为零，技术直击要害。"</p>
+                        </div>
+                    </div>
+
+                    <div class="flex-grow flex flex-col items-center justify-center bg-white p-4 rounded-xl border border-slate-200">
+                        <h3 class="text-lg font-bold text-slate-900 mb-2 self-start border-l-4 border-sky-500 pl-3">左手将能力锚点雷达图</h3>
+                        <div class="chart-container">
+                            <canvas id="skillRadarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page-footer">
+                    <span>Elite Badminton System</span>
+                    <span>Page 1 / 15</span>
+                </div>
+            </div>
+
+            <!-- ================= PAGE 2 ================= -->
+            <div class="page" id="page-2">
+                <div class="page-header">
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">极简技术分析 (左手视角)</h2>
+                    <span class="text-sm text-slate-500 border border-slate-300 px-2 py-1 rounded">PART 01</span>
+                </div>
+
+                <div class="flex-grow flex flex-col gap-6">
+                    <p class="text-slate-600 mb-2">基于“扬长避短”原则，剔除次要问题，只聚焦决定比赛胜负的核心环节：</p>
+
+                    <!-- Focus 1 -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-green-500">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                <i class="fa-solid fa-arrow-trend-up"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-800">绝对优势：正手火力区 (Forehand Zone)</h3>
+                        </div>
+                        <ul class="space-y-4 text-sm text-slate-700">
+                            <li class="flex gap-3 items-start">
+                                <i class="fa-solid fa-circle-check text-green-500 mt-1"></i>
+                                <div>
+                                    <strong class="block text-slate-900">现状分析</strong>
+                                    <span>在左半区（正手区）击球十分舒展，有很强的下压欲望。</span>
+                                </div>
+                            </li>
+                            <li class="flex gap-3 items-start">
+                                <i class="fa-solid fa-bullseye text-sky-600 mt-1"></i>
+                                <div>
+                                    <strong class="block text-slate-900">强化方向</strong>
+                                    <span>继续强化正手杀球的落点精准度（专打右手球员的反手位），并开发出动作一致性极高的“正手劈吊对角”，形成两套杀招。</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Focus 2 -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-800">致命软肋：右后场与握拍 (RTH & Grip)</h3>
+                        </div>
+                        <ul class="space-y-4 text-sm text-slate-700">
+                            <li class="flex gap-3 items-start">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-1"></i>
+                                <div>
+                                    <strong class="block text-slate-900">头顶区退步错误</strong>
+                                    <span>退右后场时身体正对球网，未侧身，导致击球点靠后。如果不改，会被高水平对手用平高球一直压死。</span>
+                                </div>
+                            </li>
+                            <li class="flex gap-3 items-start">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-1"></i>
+                                <div>
+                                    <strong class="block text-slate-900">正反手转换迟钝</strong>
+                                    <span>网前右侧球习惯用“苍蝇拍”正面推挑，说明手指捻动发力和握拍转换的肌肉记忆尚未建立。</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="page-footer">
+                    <span>Elite Badminton System</span>
+                    <span>Page 2 / 15</span>
+                </div>
+            </div>
+
+            <!-- Pages 3 to 14 will be generated dynamically by JavaScript -->
+
+            <!-- ================= PAGE 15 ================= -->
+            <div class="page" id="page-15">
+                <div class="page-header">
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">执教总结与干预建议</h2>
+                    <span class="text-sm text-slate-500 border border-slate-300 px-2 py-1 rounded">PART 03</span>
+                </div>
+
+                <div class="flex-grow flex flex-col gap-8">
+                    
+                    <div class="bg-slate-800 text-white p-8 rounded-xl relative overflow-hidden shadow-lg">
+                        <div class="absolute -right-10 -top-10 opacity-10">
+                            <i class="fa-solid fa-feather-pointed text-9xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-6 text-sky-400 flex items-center gap-3">
+                            <i class="fa-solid fa-comment-dots"></i> 主教练核心洞察 (Coach's Insight)
+                        </h3>
+                        <p class="leading-relaxed text-slate-300 mb-4 text-lg">
+                            这是一份非常克制的训练计划。我没有安排复杂的反手高远球、假动作等炫技内容。因为对于一位9年级的左手将来说，**时间是最大的成本**。
+                        </p>
+                        <p class="leading-relaxed text-slate-300 text-lg">
+                            只要他能坚持每天晚上的40分钟体能（特别是空挥拍的侧身剪刀步），把右后场的漏洞补上及格线；同时在每周3次的技术课里，把左手天生的线路优势（压右手球员的反手）练成条件反射。他在蒙特利尔的同龄梯队中，就足以让所有右手球员感到窒息。
+                        </p>
+                    </div>
+                    
+                    <div class="bg-sky-50 p-8 rounded-xl border-2 border-sky-200 shadow-sm flex-grow">
+                        <h3 class="text-xl font-bold mb-6 text-sky-900 flex items-center gap-3">
+                            <i class="fa-solid fa-triangle-exclamation"></i> 父母/监督者注意事项
+                        </h3>
+                        <ul class="space-y-6 mt-4">
+                            <li class="flex items-start gap-4">
+                                <div class="w-8 h-8 shrink-0 rounded-full bg-sky-200 flex items-center justify-center text-sky-700 font-bold"><i class="fa-solid fa-1"></i></div>
+                                <div>
+                                    <strong class="text-slate-900 block mb-1">日常碎片化训练优先</strong>
+                                    <span class="text-slate-600 text-sm">手指捻动的练习不需要场地，看电视、休息时让球员手里拿把拍子不停地转动握拍即可。</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <div class="w-8 h-8 shrink-0 rounded-full bg-sky-200 flex items-center justify-center text-sky-700 font-bold"><i class="fa-solid fa-2"></i></div>
+                                <div>
+                                    <strong class="text-slate-900 block mb-1">监控无球挥拍的质量</strong>
+                                    <span class="text-slate-600 text-sm">晚间的40分钟体能非常枯燥，特别是“头顶区侧身退步”。请务必监督他每次退步必须**完全侧身**，这是防止在赛场上扭伤腰部和膝盖的关键。</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="page-footer">
+                    <span>Elite Badminton System</span>
+                    <span>Page 15 / 15</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="controls">
+        <button id="prevBtn" class="control-btn" onclick="prevPage()" disabled>
+            <i class="fa-solid fa-arrow-left"></i> 上一页
+        </button>
+        <div class="font-bold tracking-widest text-sm" id="pageIndicator">PAGE 1 OF 15</div>
+        <button id="nextBtn" class="control-btn" onclick="nextPage()">
+            下一页 <i class="fa-solid fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- 12 Weeks Data (Separating Daily Physical & 3x/Week Technical) ---
+        // Focus: Strengths (FH attack), Weakness (RTH, Grip), No fluff.
+        const weekData = [
+            {
+                week: 1, phase: "Phase 1: 基础抢救与握拍", title: "正反手切换与侧身意识重塑",
+                physical: {
+                    duration: "40 分钟",
+                    routine: [
+                        { name: "热身跳绳 (10分钟)", desc: "双脚并拢，体会前脚掌弹跳，强化脚踝力量。" },
+                        { name: "专项挥拍 (15分钟)", desc: "不带球，想象球在右后场。起动 -> 强制侧身 -> 右脚后退 -> 剪刀步挥拍。" },
+                        { name: "核心抗阻 (10分钟)", desc: "平板支撑 (3组x1分钟)，仰卧起坐 (3组x20个)。" },
+                        { name: "手指捻动 (5分钟)", desc: "坐在沙发上，正手握拍迅速切至反手握拍，反复进行。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "网前定点抛球：正反手搓球", keyPoint: "手指发力，大臂不动。来球在右必须秒切反手握拍。", metric: "连续20个网前球不出现'苍蝇拍'。" },
+                    { day: "训练 2", drill: "半场多球：右后场高远球过渡", keyPoint: "教练喂球到右后场，必须侧身完成击球，打直线高远球。", metric: "击球点必须在身体右前上方，不后仰。" },
+                    { day: "训练 3", drill: "全场六点无球跑动", keyPoint: "每一次移动的第一步必须是微跳的'启动步(Split Step)'。", metric: "完成5组x20次，不掉速。" }
+                ]
+            },
+            {
+                week: 2, phase: "Phase 1: 基础抢救与握拍", title: "固化头顶区退步与网前手感",
+                physical: {
+                    duration: "40 分钟",
+                    routine: [
+                        { name: "敏捷梯练习 (10分钟)", desc: "小碎步进出，提升脚底频率。" },
+                        { name: "头顶区挥拍 (15分钟)", desc: "持极轻哑铃(0.5kg)做侧身剪刀步挥拍，体会身体扭转力量。" },
+                        { name: "静蹲 (10分钟)", desc: "靠墙静蹲 (3组x1分钟)，保护膝盖。" },
+                        { name: "手腕柔韧性 (5分钟)", desc: "正反向拉伸小臂肌肉，防止发力不当受伤。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "多球：全场定点高远球", keyPoint: "只打高远球，体会左手正手区和头顶区发力时的'小臂内旋'。", metric: "70%以上的球必须落在底线半米内。" },
+                    { day: "训练 2", drill: "网前挑球专项", keyPoint: "右侧网前低手位，必须用标准反手握拍，拇指顶住拍柄宽面发力。", metric: "挑球高度过对手头顶，直达底线。" },
+                    { day: "训练 3", drill: "半场防守限制赛", keyPoint: "只防守右半场(头顶区)，对手随意进攻。强迫自己在受压下侧身。", metric: "抗住对手3拍连续进攻不丢分。" }
+                ]
+            },
+            {
+                week: 3, phase: "Phase 1: 基础抢救与握拍", title: "连贯性介入与网前突击",
+                physical: {
+                    duration: "40 分钟",
+                    routine: [
+                        { name: "单脚跳绳 (10分钟)", desc: "左右脚交替，提升单脚支撑稳定性。" },
+                        { name: "全场米字步无球跑 (15分钟)", desc: "每次跑动必须有清晰的启动、制动和回中步法。" },
+                        { name: "侧支撑卷腹 (10分钟)", desc: "针对腹外斜肌，为杀球腰部发力打基础。" },
+                        { name: "手指捻动加强 (5分钟)", desc: "用旧羽毛球拍套上塑料袋增加阻力，做握拍转换。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "多球：正手后场杀球+上网", keyPoint: "左后场杀直线后，左脚迅速蹬地全速上网扑推。", metric: "杀球与上网的两拍间隔不超过1.5秒。" },
+                    { day: "训练 2", drill: "头顶区被动吊网前", keyPoint: "右后场来不及退时，用滑板技术吊对手网前对角。", metric: "吊球过网即坠，不给对手扑球机会。" },
+                    { day: "训练 3", drill: "平抽挡对抗", keyPoint: "站在中前场，正反手快速抽球。重点监控反手握拍的及时性。", metric: "连续对抽15拍不死球。" }
+                ]
+            },
+            {
+                week: 4, phase: "Phase 1: 基础抢救与握拍", title: "第一阶段巩固与测验",
+                physical: {
+                    duration: "40 分钟",
+                    routine: [
+                        { name: "间歇折返跑 (10分钟)", desc: "羽毛球场单双打线折返，练爆发和心肺。" },
+                        { name: "专项挥拍测验 (15分钟)", desc: "全速进行右后场侧身挥拍，教练/家长录像打分。" },
+                        { name: "核心抗阻 (10分钟)", desc: "俄罗斯挺身，持水瓶负重。" },
+                        { name: "肌肉拉伸 (5分钟)", desc: "全身深度拉伸排酸。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "综合多球：四角随机", keyPoint: "教练随意发球，检验启动步习惯和退右后场是否仍有正面退的毛病。", metric: "右后场退步100%侧身，无一漏判。" },
+                    { day: "训练 2", drill: "实战模拟：发接发", keyPoint: "左手特有发球弧线，发对手反手网前或追身。", metric: "发球失误率控制在5%以内。" },
+                    { day: "训练 3", drill: "半场计分赛", keyPoint: "半场单打，强制要求所有网前反手区球必须标准反手握拍处理。", metric: "出现一次'苍蝇拍'扣1分。" }
+                ]
+            },
+            {
+                week: 5, phase: "Phase 2: 左手绝招开发", title: "正手滑板劈吊对角 (Reverse Slice)",
+                physical: {
+                    duration: "40 分钟",
+                    routine: [
+                        { name: "热身跳绳 (10分钟)", desc: "常规热身。" },
+                        { name: "肩袖肌群阻力带 (15分钟)", desc: "用弹力带练习内外旋，保护肩膀并增强劈吊力量。" },
+                        { name: "平板支撑 (10分钟)", desc: "强化核心。" },
+                        { name: "手指力量 (5分钟)", desc: "捏网球练习。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "多球：定点正手劈吊", keyPoint: "在左后场，起跳动作与杀球一致，击球瞬间拍面摩擦球托右侧。", metric: "落点必须在对手网前发球线以内。" },
+                    { day: "训练 2", drill: "高吊结合", keyPoint: "自己打一拍高远，打一拍劈吊，感受动作一致性。", metric: "让对手无法提前启动抓网前。" },
+                    { day: "训练 3", drill: "条件对抗", keyPoint: "全场比赛，通过劈吊对角线直接得分或迫使对手失误，得2分。", metric: "单局必须利用劈吊拿到至少4分。" }
+                ]
+            },
+            {
+                week: 6, phase: "Phase 2: 左手绝招开发", title: "直线极速重杀 (Straight Smash)",
+                physical: {
+                    duration: "40 分钟",
+                    routine: [
+                        { name: "深蹲跳 (10分钟)", desc: "增加垂直起跳高度，提高击球点。" },
+                        { name: "负重挥拍 (15分钟)", desc: "强调杀球时的鞭打动作，腹部收缩发力。" },
+                        { name: "仰卧举腿 (10分钟)", desc: "下腹部力量强化。" },
+                        { name: "放松拉伸 (5分钟)", desc: "常规拉伸。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "多球：左后场定点重杀", keyPoint: "全力杀向右手球员的反手位（左侧直线），要求球速和落点，不要太贴边线求稳。", metric: "连续10次重杀不过网/出界少于2个。" },
+                    { day: "训练 2", drill: "杀球落点控制", keyPoint: "在对面场地放置目标靶，杀球必须击中目标区域。", metric: "命中率达到60%。" },
+                    { day: "训练 3", drill: "攻防转换", keyPoint: "防起对手杀球后，一旦抓到机会半场球，坚决突击对手反手位。", metric: "形成'防守-反击直线'的条件反射。" }
+                ]
+            },
+            {
+                week: 7, phase: "Phase 2: 左手绝招开发", title: "进攻体系：吊杀结合",
+                physical: {
+                    duration: "40 分钟",
+                    routine: [
+                        { name: "高抬腿冲刺 (10分钟)", desc: "原地高抬腿10秒后冲刺5米。" },
+                        { name: "无球步法：杀上网 (15分钟)", desc: "后场起跳挥拍后，立刻做上网扑球步伐。" },
+                        { name: "核心抗阻 (10分钟)", desc: "俄罗斯挺身。" },
+                        { name: "手腕拉伸 (5分钟)", desc: "重点放松手腕和前臂。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "两点组合：劈吊+重杀", keyPoint: "教练多球，一拍劈吊对角，对方挑起后紧接一拍直线重杀。", metric: "两拍组合动作流畅，战术意图清晰。" },
+                    { day: "训练 2", drill: "多打少防守 (2打1)", keyPoint: "半场面对两人防守，练习在严密防守下寻找反手空档突击。", metric: "提高进攻的质量而非数量。" },
+                    { day: "训练 3", drill: "全场计分赛", keyPoint: "主动运用吊杀结合战术调动对手，不盲目发力。", metric: "主动失误率下降15%。" }
+                ]
+            },
+            {
+                week: 8, phase: "Phase 2: 左手绝招开发", title: "发接发与前三拍左手压制",
+                physical: {
+                    duration: "40 分钟",
+                    routine: [
+                        { name: "双摇跳绳 (10分钟)", desc: "连续双摇，增强绝对爆发力。" },
+                        { name: "极速挥拍 (15分钟)", desc: "用最快速度进行平抽挡空挥，练爆发神经。" },
+                        { name: "侧支撑卷腹 (10分钟)", desc: "强化腰腹两侧。" },
+                        { name: "肌肉拉伸 (5分钟)", desc: "腿部排酸。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "发球专项", keyPoint: "左手反手发小球，利用左手天然切角发对方1号位和外角。", metric: "连续20个发球不被对手直接扑死。" },
+                    { day: "训练 2", drill: "接发球推压", keyPoint: "接发球直接推压对手右手反手位（后场底角），迫使对方起高球。", metric: "推压速度快，落点准，不给对方拦截机会。" },
+                    { day: "训练 3", drill: "前三拍实战演练", keyPoint: "只打前三拍（发球、接发、第三拍），抢占主动权。", metric: "在10个回合中，至少7次取得第三拍主动权。" }
+                ]
+            },
+            {
+                week: 9, phase: "Phase 3: 战术成型与实战", title: "战术洗脑：死压反手底线",
+                physical: {
+                    duration: "40 分钟",
+                    routine: [
+                        { name: "敏捷梯练习 (10分钟)", desc: "巩固脚底频率。" },
+                        { name: "全场米字步 (15分钟)", desc: "模拟实战节奏，加入启动步停顿。" },
+                        { name: "靠墙静蹲 (10分钟)", desc: "保护膝盖，增加耐力。" },
+                        { name: "手指捻动 (5分钟)", desc: "握拍极速转换巩固。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "多球：控制对手反手后场", keyPoint: "高远球、平高球、推球，70%的落点必须精准砸向右手球员的反手底角。", metric: "建立死压反手的肌肉和潜意识记忆。" },
+                    { day: "训练 2", drill: "半场防守限制赛", keyPoint: "我方只能打直线（即对方反手），对方可以打全场。", metric: "在受限情况下依然能靠线路压制得分。" },
+                    { day: "训练 3", drill: "录像战术复盘", keyPoint: "打一局实战并录像。赛后统计自己打向对手反手后场的比例。", metric: "击打反手底线比例达标 (≥60%)。" }
+                ]
+            },
+            {
+                week: 10, phase: "Phase 3: 战术成型与实战", title: "压反调正：左打右经典套路",
+                physical: {
+                    duration: "40 分钟",
+                    routine: [
+                        { name: "间歇折返跑 (10分钟)", desc: "无氧耐力训练。" },
+                        { name: "头顶区挥拍巩固 (15分钟)", desc: "持续强化右后场侧身动作，防退化。" },
+                        { name: "平板支撑 (10分钟)", desc: "核心稳定。" },
+                        { name: "拉伸 (5分钟)", desc: "全身拉伸。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "多球套路：压一调二", keyPoint: "第一拍平高球快速压制对手反手后场，对手回球质量下降后，第二拍快速推/吊其正手网前空档。", metric: "战术执行连贯，不犹豫。" },
+                    { day: "训练 2", drill: "条件实战", keyPoint: "只有通过'压反调正'套路得分才算数，其他方式得分无效。", metric: "强迫在实战中执行左手特定战术。" },
+                    { day: "训练 3", drill: "防守反击训练", keyPoint: "接杀球挡网对角线，把球挡到右手球员最难受的反手网前。", metric: "挡网质量高，弧线贴网。" }
+                ]
+            },
+            {
+                week: 11, phase: "Phase 3: 战术成型与实战", title: "高压抗衡：头顶区终极考验",
+                physical: {
+                    duration: "40 分钟",
+                    routine: [
+                        { name: "跳绳 (10分钟)", desc: "维持体能水平。" },
+                        { name: "模拟抗压挥拍 (15分钟)", desc: "连续高强度进行头顶区侧身退步挥拍，模拟被连续压制。", metric: "动作不变形。" },
+                        { name: "核心抗阻 (10分钟)", desc: "俄罗斯挺身。" },
+                        { name: "拉伸 (5分钟)", desc: "常规拉伸。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "2打1极限防守", keyPoint: "面对两名球员进攻，对方主要压制你的右后场（头顶区）。", metric: "运用滑板吊网前或直线高远球成功摆脱压力。" },
+                    { day: "训练 2", drill: "逆风局实战", keyPoint: "从落后5分开始打起，锻炼心理素质和战术执行的坚定度。", metric: "在压力下不出现低级失误，坚决压反手。" },
+                    { day: "训练 3", drill: "体能结合多球", keyPoint: "在极其疲劳状态下进行多球训练，检验动作是否变形（特别是侧身和握拍）。", metric: "累了也不能正面退步，不能用苍蝇拍。" }
+                ]
+            },
+            {
+                week: 12, phase: "Phase 3: 战术成型与实战", title: "RSEQ 联赛模拟周",
+                physical: {
+                    duration: "20 分钟",
+                    routine: [
+                        { name: "赛前减量 (20分钟)", desc: "以慢跑、拉伸和极轻微的步法激活为主，保证身体处于最鲜活的状态。停止高强度力量训练。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "战术演练总结", keyPoint: "复习过去11周的所有左手专属战术（劈吊、直线重杀、压反调正）。", metric: "战术思路清晰，执行果断。" },
+                    { day: "训练 2", drill: "正规全场模拟赛", keyPoint: "邀请俱乐部最高水平的右手球员，打三局两胜正规比赛。", metric: "将所有训练内容转化为实战本能。" },
+                    { day: "训练 3", drill: "赛后录像全面复盘", keyPoint: "评估雷达图各项指标是否达标：右后场是否不再是被突破口？握拍是否流畅？左手线路压制力是否展现？", metric: "全面检验12周成果。" }
+                ]
+            }
+        ];
+
+        // --- Generate Pages Dynamically ---
+        function generateWeeklyPages() {
+            const container = document.getElementById('report-document');
+            // Insert pages before the last page (page-15)
+            const page15 = document.getElementById('page-15');
+
+            weekData.forEach((data, index) => {
+                const pageNum = index + 3; // Week 1 is Page 3
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page';
+                pageDiv.id = `page-${pageNum}`;
+
+                // Build Daily Physical HTML
+                let physicalHtml = '';
+                data.physical.routine.forEach(item => {
+                    physicalHtml += `
+                        <div class="flex items-start gap-2 mb-2">
+                            <i class="fa-solid fa-bolt text-amber-500 mt-1"></i>
+                            <div>
+                                <strong class="text-slate-800 text-sm">${item.name}</strong>
+                                <p class="text-xs text-slate-600">${item.desc}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Build Tech HTML
+                let techHtml = '';
+                data.technical.forEach(item => {
+                    techHtml += `
+                        <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm relative pl-12 mb-4 hover:border-sky-300 transition-colors">
+                            <div class="absolute left-0 top-0 bottom-0 w-10 bg-sky-100 flex items-center justify-center rounded-l-lg border-r border-slate-100">
+                                <span class="text-sky-800 font-bold text-xs transform -rotate-90 whitespace-nowrap tracking-widest">${item.day}</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-[15px] mb-2">${item.drill}</h4>
+                            <div class="space-y-2">
+                                <p class="text-sm text-slate-700 bg-slate-50 p-2 rounded"><strong class="text-slate-900"><i class="fa-solid fa-key text-sky-500 mr-1"></i>核心要点：</strong> ${item.keyPoint}</p>
+                                <p class="text-sm text-slate-700 bg-green-50 p-2 rounded border border-green-100"><strong class="text-green-800"><i class="fa-solid fa-flag-checkered text-green-600 mr-1"></i>达标指标：</strong> ${item.metric}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                pageDiv.innerHTML = `
+                    <div class="page-header">
+                        <div>
+                            <span class="text-xs font-bold text-sky-600 tracking-wider uppercase">${data.phase}</span>
+                            <h2 class="text-2xl font-bold text-slate-900 tracking-tight mt-1">第 ${data.week} 周：${data.title}</h2>
+                        </div>
+                        <span class="text-sm text-slate-500 border border-slate-300 px-2 py-1 rounded shadow-sm bg-slate-50">WEEK ${data.week}</span>
+                    </div>
+
+                    <div class="flex-grow flex flex-col gap-6">
+                        
+                        <!-- Daily Physical Box -->
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 shadow-sm">
+                            <div class="flex items-center gap-2 mb-3 border-b border-amber-200 pb-2">
+                                <div class="w-8 h-8 rounded bg-amber-500 text-white flex items-center justify-center"><i class="fa-solid fa-moon"></i></div>
+                                <h3 class="font-bold text-amber-900 text-lg">每日晚间体能与无球训练 (目标: ${data.physical.duration})</h3>
+                            </div>
+                            <div class="grid grid-cols-2 gap-x-6 gap-y-1">
+                                ${physicalHtml}
+                            </div>
+                        </div>
+
+                        <!-- Technical 3x Week Box -->
+                        <div class="flex-grow">
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="w-8 h-8 rounded bg-sky-600 text-white flex items-center justify-center"><i class="fa-solid fa-dumbbell"></i></div>
+                                <h3 class="font-bold text-sky-900 text-lg">专项技术强化 (每周 3 次，需球场/教练)</h3>
+                            </div>
+                            ${techHtml}
+                        </div>
+                    </div>
+
+                    <div class="page-footer">
+                        <span>Elite Badminton System - Weekly Blueprint</span>
+                        <span>Page ${pageNum} / 15</span>
+                    </div>
+                `;
+                
+                container.insertBefore(pageDiv, page15);
+            });
+        }
+
+        // --- Pagination Logic ---
+        let currentPage = 1;
+        const totalPages = 15;
+        let chartInstance = null; 
+
+        function updatePagination() {
+            for (let i = 1; i <= totalPages; i++) {
+                const pageEl = document.getElementById(`page-${i}`);
+                if (pageEl) {
+                    if (i === currentPage) {
+                        pageEl.classList.add('active');
+                    } else {
+                        pageEl.classList.remove('active');
+                    }
+                }
+            }
+            document.getElementById('pageIndicator').innerText = `PAGE ${currentPage} OF ${totalPages}`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+
+            if (currentPage === 1 && !chartInstance) {
+                initChart();
+            }
+        }
+
+        function nextPage() { if (currentPage < totalPages) { currentPage++; updatePagination(); } }
+        function prevPage() { if (currentPage > 1) { currentPage--; updatePagination(); } }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextPage();
+            if (e.key === 'ArrowLeft') prevPage();
+        });
+
+        // --- Radar Chart Initialization ---
+        function initChart() {
+            const ctx = document.getElementById('skillRadarChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: [
+                        '正手火力区 (FH)', 
+                        '头顶区防御 (RTH)', 
+                        '握拍转换敏捷 (Grip)', 
+                        '左手线路压制', 
+                        '连贯步伐 (Footwork)', 
+                        '体能储备 (Physical)'
+                    ],
+                    datasets: [{
+                        label: '当前状态 (Current)',
+                        data: [78, 40, 45, 55, 65, 60],
+                        fill: true,
+                        backgroundColor: 'rgba(2, 132, 199, 0.2)', // Sky blue
+                        borderColor: 'rgb(2, 132, 199)',
+                        pointBackgroundColor: 'rgb(2, 132, 199)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(2, 132, 199)'
+                    }, {
+                        label: '12周核心目标 (12-Week Target)',
+                        data: [85, 70, 75, 80, 70, 75],
+                        fill: true,
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)', // Green
+                        borderColor: 'rgb(34, 197, 94)',
+                        pointBackgroundColor: 'rgb(34, 197, 94)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(34, 197, 94)',
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    elements: { line: { borderWidth: 2 } },
+                    scales: {
+                        r: {
+                            angleLines: { color: '#e2e8f0' },
+                            grid: { color: '#e2e8f0' },
+                            pointLabels: {
+                                font: { size: 11, family: 'Inter', weight: 'bold' },
+                                color: '#334155'
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Inter' }, usePointStyle: true, boxWidth: 8 } }
+                    }
+                }
+            });
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', function() {
+            generateWeeklyPages(); // Inject Weeks 1-12 into DOM
+            updatePagination();    // Init UI & Chart
+        });
+    </script>
+</body>
+</html>
