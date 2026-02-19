@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>年轻球员：18岁基础技术规范与进阶报告 (移动端适配版)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; 
+            color: #1e293b; 
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Mobile-First A4 Container */
+        .a4-container {
+            width: 100%;
+            max-width: 794px; 
+            background-color: white;
+            margin: 0 auto;
+            position: relative;
+        }
+        @media (min-width: 640px) {
+            .a4-container {
+                margin: 2rem auto;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                border-radius: 0.5rem;
+            }
+        }
+        @media (min-width: 768px) {
+            .a4-container {
+                min-height: 1123px; 
+            }
+        }
+
+        .a4-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding-bottom: 5rem; 
+        }
+        @media (min-width: 640px) {
+            .a4-wrapper { padding: 0 1rem 6rem 1rem; }
+        }
+
+        /* Page Layout */
+        .page {
+            display: none;
+            flex-direction: column;
+            padding: 1.5rem 1rem; 
+            background: white;
+            animation: fadeIn 0.4s ease-out;
+            min-height: 100vh; 
+        }
+        @media (min-width: 640px) {
+            .page { padding: 40px 50px; min-height: auto; border-radius: 0.5rem; }
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+        @media (min-width: 640px) {
+            .page-header { flex-direction: row; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; gap: 0; }
+        }
+
+        .page-footer {
+            margin-top: auto; 
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: #64748b;
+            flex-shrink: 0;
+        }
+        @media (min-width: 640px) {
+            .page-footer { flex-direction: row; justify-content: space-between; }
+        }
+
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 280px; 
+            width: 100%;
+            max-width: 600px;
+        }
+        @media (min-width: 640px) {
+            .chart-container { height: 380px; }
+        }
+
+        /* Navigation Controls */
+        .controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+            z-index: 50;
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding-bottom: env(safe-area-inset-bottom, 0.75rem); 
+        }
+        @media (min-width: 640px) {
+            .controls { justify-content: center; gap: 2rem; padding: 1rem; }
+        }
+
+        .control-btn {
+            background: #059669; /* Emerald 600 */
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+        @media (min-width: 640px) {
+            .control-btn { padding: 0.5rem 1.5rem; font-size: 1rem; gap: 0.5rem; }
+        }
+        .control-btn:hover:not(:disabled) { background: #047857; transform: translateY(-1px); }
+        .control-btn:disabled { background: #475569; cursor: not-allowed; opacity: 0.5; }
+        
+        .drill-day-tag {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="a4-wrapper">
+        <div class="a4-container" id="report-document">
+            
+            <!-- ================= PAGE 1 ================= -->
+            <div class="page active" id="page-1">
+                <div class="page-header">
+                    <div class="flex items-start sm:items-center gap-3">
+                        <div class="bg-emerald-600 text-white p-2.5 rounded-lg flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 shrink-0">
+                            <i class="fa-solid fa-clipboard-check text-xl sm:text-base"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight leading-tight">Foundation <span class="text-emerald-600">Standardization</span></h1>
+                            <p class="text-xs sm:text-sm text-slate-500 mt-1">18岁年轻球员基础技术规范档案</p>
+                        </div>
+                    </div>
+                    <div class="text-left sm:text-right text-xs sm:text-sm text-slate-500 border-t sm:border-t-0 pt-2 sm:pt-0">
+                        <p><strong>日期:</strong> 2026-02-19</p>
+                        <p><strong>目标设定:</strong> 技术规范化与校队过渡</p>
+                    </div>
+                </div>
+
+                <div class="flex-grow flex flex-col gap-6">
+                    <div class="bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200 relative overflow-hidden flex-shrink-0 mt-2 sm:mt-0">
+                        <div class="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] sm:text-xs font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
+                            Player Profile
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-4 sm:mb-6 pr-20">年轻球员 (Young Player)</h2>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-6 text-sm">
+                            <div class="space-y-2 sm:space-y-3">
+                                <div class="flex border-b border-slate-200 pb-2">
+                                    <span class="text-slate-500 w-28 shrink-0"><i class="fa-regular fa-calendar mr-2"></i>年龄/持拍:</span>
+                                    <span class="font-medium text-slate-900">18岁 / 右手</span>
+                                </div>
+                                <div class="flex border-b border-slate-200 pb-2">
+                                    <span class="text-slate-500 w-28 shrink-0"><i class="fa-solid fa-graduation-cap mr-2"></i>当前阶段:</span>
+                                    <span class="font-medium text-slate-900">高中末期 (Montreal)</span>
+                                </div>
+                            </div>
+                            <div class="space-y-2 sm:space-y-3 mt-2 sm:mt-0">
+                                <div class="flex border-b border-slate-200 pb-2">
+                                    <span class="text-slate-500 w-28 shrink-0"><i class="fa-solid fa-person-running mr-2"></i>体能基础:</span>
+                                    <span class="font-medium text-emerald-600 font-bold">具备相应的身体力量</span>
+                                </div>
+                                <div class="flex border-b border-slate-200 pb-2">
+                                    <span class="text-slate-500 w-28 shrink-0"><i class="fa-solid fa-chart-line mr-2"></i>主要提升项:</span>
+                                    <span class="font-medium text-amber-600 font-bold">基础技术的规范性</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 bg-white p-3 sm:p-4 rounded-lg border border-slate-200 shadow-sm">
+                            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"><i class="fa-solid fa-crosshairs mr-1"></i> 训练核心方针：系统规范，夯实基础</h3>
+                            <p class="text-[13px] sm:text-sm text-slate-700 leading-relaxed">基于技术评估，该球员在发力机制、步伐逻辑等基础环节存在较大的改善空间（参见下方雷达图）。为了突破现有的技术瓶颈并减少运动损伤风险，本计划将暂停部分实战战术训练，优先以基础动作的规范化和标准化为核心，进行为期12周的系统性调整。</p>
+                        </div>
+                    </div>
+
+                    <div class="flex-grow flex flex-col items-center justify-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900 mb-2 self-start border-l-4 border-emerald-500 pl-3">基础能力客观评估</h3>
+                        <div class="chart-container">
+                            <canvas id="skillRadarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page-footer">
+                    <span>Elite Badminton System - Technical Standardization</span>
+                    <span>Page 1 / 15</span>
+                </div>
+            </div>
+
+            <!-- ================= PAGE 2 ================= -->
+            <div class="page" id="page-2">
+                <div class="page-header">
+                    <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">远端视角：基础技术短板分析</h2>
+                    <span class="text-xs sm:text-sm text-slate-500 border border-slate-300 px-2 py-1 rounded w-max">PART 01</span>
+                </div>
+
+                <div class="flex-grow flex flex-col gap-4 sm:gap-6">
+                    <p class="text-sm sm:text-base text-slate-600 mb-2">基于实战视频观察，当前基础技术存在以下主要改善空间：</p>
+
+                    <!-- Focus 1 -->
+                    <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                                <i class="fa-solid fa-hand-fist"></i>
+                            </div>
+                            <h3 class="text-lg sm:text-xl font-bold text-slate-800 leading-tight">手法优化：发力机制与握拍转换</h3>
+                        </div>
+                        <ul class="space-y-4 text-[13px] sm:text-sm text-slate-700">
+                            <li class="flex gap-3 items-start">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 sm:mt-1"></i>
+                                <div>
+                                    <strong class="block text-slate-900 mb-0.5">发力机制待优化 (Power Mechanism)</strong>
+                                    <span>击球动作较多依赖大臂，未能充分运用小臂内旋及手腕手指的爆发力，导致击球效率受限且出球落点不够理想。</span>
+                                </div>
+                            </li>
+                            <li class="flex gap-3 items-start">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 sm:mt-1"></i>
+                                <div>
+                                    <strong class="block text-slate-900 mb-0.5">握拍转换不畅 (Grip Transition)</strong>
+                                    <span>网前和中场过渡时，较少根据来球位置切换至标准反手握拍，正反手握拍的转换速度与规范性需重点加强。</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Focus 2 -->
+                    <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                                <i class="fa-solid fa-shoe-prints"></i>
+                            </div>
+                            <h3 class="text-lg sm:text-xl font-bold text-slate-800 leading-tight">步伐调整：启动步与退步框架</h3>
+                        </div>
+                        <ul class="space-y-4 text-[13px] sm:text-sm text-slate-700">
+                            <li class="flex gap-3 items-start">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 sm:mt-1"></i>
+                                <div>
+                                    <strong class="block text-slate-900 mb-0.5">缺乏启动步 (Missing Split-step)</strong>
+                                    <span>在对方击球瞬间，未形成起跳分腿垫步（Split-step）的习惯，影响了对回球路线判断后的初始移动速度。</span>
+                                </div>
+                            </li>
+                            <li class="flex gap-3 items-start">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 sm:mt-1"></i>
+                                <div>
+                                    <strong class="block text-slate-900 mb-0.5">退步姿态不规范 (Suboptimal Retreat)</strong>
+                                    <span>退后场时多采用正对或背对球网的步法，未能熟练运用侧身交叉步或并步，导致击球点偏后及后续回动困难。</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="page-footer">
+                    <span>Elite Badminton System - Technical Standardization</span>
+                    <span>Page 2 / 15</span>
+                </div>
+            </div>
+
+            <!-- Pages 3 to 14 will be generated dynamically by JavaScript -->
+
+            <!-- ================= PAGE 15 ================= -->
+            <div class="page" id="page-15">
+                <div class="page-header">
+                    <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">阶段总结与执行建议</h2>
+                    <span class="text-xs sm:text-sm text-slate-500 border border-slate-300 px-2 py-1 rounded w-max">PART 03</span>
+                </div>
+
+                <div class="flex-grow flex flex-col gap-6">
+                    
+                    <div class="bg-slate-800 text-white p-5 sm:p-8 rounded-xl relative overflow-hidden shadow-lg">
+                        <div class="absolute -right-6 -top-6 sm:-right-10 sm:-top-10 opacity-10">
+                            <i class="fa-solid fa-list-check text-8xl sm:text-9xl"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-2xl font-bold mb-4 sm:mb-6 text-emerald-400 flex items-center gap-2 sm:gap-3">
+                            <i class="fa-solid fa-clipboard"></i> 训练转型期说明
+                        </h3>
+                        <p class="leading-relaxed text-slate-300 mb-3 sm:mb-4 text-sm sm:text-lg">
+                            对于18岁球员而言，纠正已形成的动作习惯需要较高的专注度与耐心。
+                        </p>
+                        <p class="leading-relaxed text-slate-300 text-sm sm:text-lg">
+                            雷达图的数据客观反映了当前在步法与发力机制上的不足。若仅依靠身体力量而缺乏规范的技术框架，长远来看可能增加运动损伤风险并限制技术上限。接下来的12周，建议严格按照计划执行基础动作的标准化训练。
+                        </p>
+                    </div>
+                    
+                    <div class="bg-emerald-50 p-5 sm:p-8 rounded-xl border border-emerald-200 shadow-sm flex-grow">
+                        <h3 class="text-lg sm:text-xl font-bold mb-4 sm:mb-6 text-emerald-900 flex items-center gap-2 sm:gap-3">
+                            <i class="fa-solid fa-circle-info text-emerald-600"></i> 训练注意事项
+                        </h3>
+                        <ul class="space-y-4 sm:space-y-6">
+                            <li class="flex items-start gap-3 sm:gap-4">
+                                <div class="w-6 h-6 sm:w-8 sm:h-8 shrink-0 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-800 font-bold text-xs sm:text-sm"><i class="fa-solid fa-pause"></i></div>
+                                <div>
+                                    <strong class="text-slate-900 block mb-0.5 sm:mb-1 text-[13px] sm:text-base">阶段性暂停实战比赛</strong>
+                                    <span class="text-slate-600 text-xs sm:text-sm">在动作习惯修正初期（前四周），进行实战计分容易导致旧有非规范动作的复发。建议在此阶段专注于定点和多球训练。</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3 sm:gap-4">
+                                <div class="w-6 h-6 sm:w-8 sm:h-8 shrink-0 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-800 font-bold text-xs sm:text-sm"><i class="fa-solid fa-video"></i></div>
+                                <div>
+                                    <strong class="text-slate-900 block mb-0.5 sm:mb-1 text-[13px] sm:text-base">动作自我检查</strong>
+                                    <span class="text-slate-600 text-xs sm:text-sm">在进行晚间无球挥拍练习时，建议通过镜面观察或录像回放进行自我检查，确保练习的动作符合规范标准。</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="page-footer">
+                    <span>Elite Badminton System - Technical Standardization</span>
+                    <span>Page 15 / 15</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="controls">
+        <button id="prevBtn" class="control-btn" onclick="prevPage()" disabled>
+            <i class="fa-solid fa-chevron-left"></i> <span class="hidden sm:inline">上一页</span>
+        </button>
+        <div class="font-bold tracking-widest text-[11px] sm:text-sm bg-slate-800/50 px-3 py-1.5 rounded-full backdrop-blur" id="pageIndicator">
+            1 / 15
+        </div>
+        <button id="nextBtn" class="control-btn" onclick="nextPage()">
+            <span class="hidden sm:inline">下一页</span> <i class="fa-solid fa-chevron-right"></i>
+        </button>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- 12 Weeks Data: Neutral and Objective descriptions for identical drills ---
+        const weekData = [
+            {
+                week: 1, phase: "阶段 1: 基础动作规范", title: "握拍调整与挥拍发力机制",
+                physical: {
+                    duration: "45 分钟",
+                    routine: [
+                        { name: "腕部柔韧与激活 (10分钟)", desc: "正反向伸展手腕，拉伸前臂肌群，提升关节活动度。" },
+                        { name: "原地规范挥拍练习 (20分钟)", desc: "借助镜面辅助。慢动作分解：侧身架拍 -> 蹬地转体 -> 倒拍 -> 小臂内旋发力。减少大臂参与。" },
+                        { name: "手指发力练习 (10分钟)", desc: "使用握力器，或为球拍增加阻力进行正反手握拍切换练习。" },
+                        { name: "深蹲与核心基础 (5分钟)", desc: "靠墙静蹲与基础核心收紧练习。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "半场高远球定点练习", keyPoint: "专注于发力方式的正确性。运用小臂内旋发力，击球瞬间握紧拍柄。", metric: "击球点保持在右肩前上方，连续20次挥拍动作规范。" },
+                    { day: "训练 2", drill: "网前搓球与握拍转换", keyPoint: "教练于网前左右抛球。右侧来球需切换至标准反手握拍（拇指贴于宽面）。", metric: "避免非标准握拍，正反手切换流畅。" },
+                    { day: "训练 3", drill: "羽毛球投掷练习", keyPoint: "模拟投掷动作，体会侧身、转体及手臂连贯发力的过程，并将此发力顺序应用至挥拍中。", metric: "投掷轨迹合理，距离达标。" }
+                ]
+            },
+            {
+                week: 2, phase: "阶段 1: 基础动作规范", title: "无球步伐：移动框架建立",
+                physical: {
+                    duration: "45 分钟",
+                    routine: [
+                        { name: "跳绳弹性训练 (15分钟)", desc: "单双摇交替。保持前脚掌着地，培养小腿及跟腱弹性。" },
+                        { name: "四向启动步练习 (15分钟)", desc: "居中站立，根据指示向四周移动。强调移动前的起跳垫步（Split-step）。" },
+                        { name: "侧身退步专项 (10分钟)", desc: "练习向后场移动时的侧身并步和交叉步，规范退步姿态。" },
+                        { name: "腿部放松 (5分钟)", desc: "下肢肌肉静态拉伸。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "接发球启动反应", keyPoint: "对方击球瞬间，同步进行启动垫步。培养移动前的准备习惯。", metric: "形成稳定的启动步习惯。" },
+                    { day: "训练 2", drill: "正手后场退步击球", keyPoint: "定点高球练习。侧身 -> 并步后退 -> 击球 -> 回中。", metric: "步伐流畅，击球后能稳定返回中心位置。" },
+                    { day: "训练 3", drill: "头顶区退步练习", keyPoint: "针对右后场区域。练习转身侧对网，采用交叉步后退进行正手击球。", metric: "避免正对球网后退，确保击球点在身体前方。" }
+                ]
+            },
+            {
+                week: 3, phase: "阶段 1: 基础动作规范", title: "网前步法与重心控制",
+                physical: {
+                    duration: "45 分钟",
+                    routine: [
+                        { name: "弓箭步静力支撑 (15分钟)", desc: "模拟上网跨步动作，控制重心，后腿自然伸展。" },
+                        { name: "米字步慢速分解 (15分钟)", desc: "慢速进行米字步六点移动，检查步伐朝向及重心变化。" },
+                        { name: "平板支撑 (10分钟)", desc: "提升躯干及核心稳定性。" },
+                        { name: "提踵练习 (5分钟)", desc: "增强踝关节周围肌肉力量。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "正反手网前挑球", keyPoint: "跨步上网时脚跟先着地以缓冲。手臂稳定，主要运用手腕及手指力量完成挑球。", metric: "挑球弧线合理，落点接近底线。" },
+                    { day: "训练 2", drill: "网前放网练习", keyPoint: "在较高点击球，拍面放松，控制力量使球贴网过网。", metric: "回球弧线平稳，高度适中。" },
+                    { day: "训练 3", drill: "前后场移动衔接", keyPoint: "放网 -> 后退高远球 -> 上网放网。结合步法与击球动作。", metric: "移动过程中保持启动步习惯，节奏稳定。" }
+                ]
+            },
+            {
+                week: 4, phase: "阶段 1: 基础动作规范", title: "第一阶段：动作规范测评",
+                physical: {
+                    duration: "45 分钟",
+                    routine: [
+                        { name: "折返跑测验 (15分钟)", desc: "评估方向转换能力与启动速度。" },
+                        { name: "全场无球步法录像 (20分钟)", desc: "独立进行全场步法移动，重点复核侧身姿态与启动步执行情况。" },
+                        { name: "核心力量训练 (10分钟)", desc: "卷腹与背部伸展。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "四方球定点对拉（慢速）", keyPoint: "注重步法启动与击球发力的规范性，不强调球速。", metric: "稳定对拉30拍，出现非规范动作需重新计次。" },
+                    { day: "训练 2", drill: "全场随机多球防守", keyPoint: "检验步法框架。在随机落点中测试跑动的合理性。", metric: "移动连贯，无明显步伐混乱。" },
+                    { day: "训练 3", drill: "阶段性技术评估", keyPoint: "针对高远球发力、网前握拍转换、启动步执行三项进行客观评估。", metric: "评估达标后进入下一阶段，否则延长本阶段训练时间。" }
+                ]
+            },
+            {
+                week: 5, phase: "阶段 2: 核心技术强化", title: "高远球与平高球技术",
+                physical: {
+                    duration: "45 分钟",
+                    routine: [
+                        { name: "跳绳训练 (15分钟)", desc: "维持下肢轻盈度。" },
+                        { name: "阻力带挥拍 (15分钟)", desc: "手腕处增加适度阻力，强化正确发力肌群。" },
+                        { name: "核心训练 (15分钟)", desc: "腹背肌群均衡练习。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "底线高远球对拉", keyPoint: "应用前期规范的内旋发力。练习较高弧线、深落点的高远球。", metric: "连续10球落点接近后场底线。" },
+                    { day: "训练 2", drill: "平高球技术引入", keyPoint: "调整击球点略微靠前，降低击球弧线，增加球速以压缩对方准备时间。", metric: "球速较快，弧线有效越过对方拦截高度。" },
+                    { day: "训练 3", drill: "高低弧线技术切换", keyPoint: "交替打出高远球与平高球，练习手腕下压角度的控制。", metric: "能够清晰展现两种不同技术的击球特征。" }
+                ]
+            },
+            {
+                week: 6, phase: "阶段 2: 核心技术强化", title: "杀球技术：落点控制优先",
+                physical: {
+                    duration: "45 分钟",
+                    routine: [
+                        { name: "深蹲跳跃 (15分钟)", desc: "提升下肢爆发力与起跳高度。" },
+                        { name: "药球训练 (15分钟)", desc: "模拟下压发力，增强核心参与度。" },
+                        { name: "手腕前臂放松 (15分钟)", desc: "针对杀球练习后的上肢肌肉放松与拉伸。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "半场定点杀球", keyPoint: "控制发力在70%左右，重点体会击球瞬间的拍面角度，保持过网稳定性。", metric: "连续20次杀球的过网率保持在90%以上。" },
+                    { day: "训练 2", drill: "杀球落点练习", keyPoint: "在场地设置目标区域。练习直线与对角线杀球的精确控制。", metric: "提高落点精确度，尽量靠近边线。" },
+                    { day: "训练 3", drill: "杀球后上网衔接", keyPoint: "击球落地后，顺势进行上网步法，练习前后场连贯。", metric: "动作连贯，减少中间的停顿时间。" }
+                ]
+            },
+            {
+                week: 7, phase: "阶段 2: 核心技术强化", title: "吊球技术：丰富击球节奏",
+                physical: {
+                    duration: "45 分钟",
+                    routine: [
+                        { name: "短距冲刺步 (15分钟)", desc: "提升网前制动及向后回动的灵敏度。" },
+                        { name: "无球吊上网 (15分钟)", desc: "模拟后场吊球后的快速上网移动。" },
+                        { name: "平板及侧支撑 (15分钟)", desc: "维持核心稳定性。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "正手劈吊与滑板练习", keyPoint: "引拍动作与高远球相似。击球时拍面摩擦球托侧部，控制力度使球下坠。", metric: "回球弧线合理，落点控制在前场区域。" },
+                    { day: "训练 2", drill: "头顶区吊对角线", keyPoint: "练习在右后场被动状态下的过渡技术，将球吊至对方网前对角。", metric: "落点准确，有效缓解后场防守压力。" },
+                    { day: "训练 3", drill: "半场高吊杀组合", keyPoint: "混合使用高远球、吊球、杀球。保持前期准备动作的一致性。", metric: "提高动作隐蔽度，增加回球变化。" }
+                ]
+            },
+            {
+                week: 8, phase: "阶段 2: 核心技术强化", title: "防守技术：接杀与过渡",
+                physical: {
+                    duration: "45 分钟",
+                    routine: [
+                        { name: "阻力带侧向滑步 (15分钟)", desc: "保持防守姿态进行横向移动练习。" },
+                        { name: "靠墙静蹲 (15分钟)", desc: "增强下肢肌肉耐力，适应低重心防守需求。" },
+                        { name: "手腕灵活性训练 (15分钟)", desc: "放松手腕，提升防守时的拍面控制感。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "正反手接杀挡网", keyPoint: "降低重心，球拍置于身前。借助来球力量，控制拍面进行挡网。", metric: "回球高度适中，不易被直接封网。" },
+                    { day: "训练 2", drill: "接杀抽后场", keyPoint: "在对方回球较平时，利用手指发力将球平抽至对方后场。", metric: "回球具备一定速度，有效将防守转为相持。" },
+                    { day: "训练 3", drill: "半场连续防守练习", keyPoint: "面对连续进攻，练习防守时的站位调整与重心转换。", metric: "提升连续防守的稳定性与耐心。" }
+                ]
+            },
+            {
+                week: 9, phase: "阶段 3: 连贯与综合应用", title: "全场跑动与出球合理性",
+                physical: {
+                    duration: "45 分钟",
+                    routine: [
+                        { name: "间歇跑训练 (15分钟)", desc: "提升多拍回合下的体能耐力。" },
+                        { name: "米字步综合跑动 (20分钟)", desc: "在保持步法框架的前提下提升移动速度。" },
+                        { name: "全身静态拉伸 (10分钟)", desc: "运动后恢复。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "吊上网放网连贯", keyPoint: "后场吊球 -> 上网 -> 对方挑球 -> 上网放网。练习直线区域的移动衔接。", metric: "步法连贯，移动方向明确。" },
+                    { day: "训练 2", drill: "对角线综合击球", keyPoint: "右后场高远 -> 左前场挑球 -> 左后场杀球 -> 右前场放网。练习大范围移动。", metric: "在体能消耗较大的情况下维持规范动作。" },
+                    { day: "训练 3", drill: "半场单打练习", keyPoint: "在限定半场内进行对抗，练习回球线路的精确度。", metric: "控制非受迫性出界失误。" }
+                ]
+            },
+            {
+                week: 10, phase: "阶段 3: 连贯与综合应用", title: "前场技术与发接发",
+                physical: {
+                    duration: "45 分钟",
+                    routine: [
+                        { name: "反应球训练 (15分钟)", desc: "提升视觉与动作的快速响应能力。" },
+                        { name: "弓箭步推蹬练习 (15分钟)", desc: "练习网前击球后的快速回位发力。" },
+                        { name: "平板支撑 (15分钟)", desc: "核心力量维持。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "反手发小球练习", keyPoint: "练习反手发球技术，要求弧线合理，落点精准。", metric: "发球质量稳定，减少发球失误。" },
+                    { day: "训练 2", drill: "接发球网前推拨", keyPoint: "接发球时尽量避免起高球。运用手指发力将球推向空档区域。", metric: "回球平快，争取前场主动。" },
+                    { day: "训练 3", drill: "网前平抽挡练习", keyPoint: "在靠近前场区域进行较快节奏的对抽，练习握拍转换。", metric: "专注度高，反应及时。" }
+                ]
+            },
+            {
+                week: 11, phase: "阶段 3: 连贯与综合应用", title: "四方球实战系统",
+                physical: {
+                    duration: "45 分钟",
+                    routine: [
+                        { name: "波比跳训练 (15分钟)", desc: "高强度心肺负荷训练。" },
+                        { name: "疲劳状态下挥拍 (20分钟)", desc: "在体能消耗后进行基础挥拍练习，动作变形需停止并增加体能附加组。", metric: "巩固正确的肌肉记忆。" },
+                        { name: "深度拉伸 (10分钟)", desc: "全面的肌肉放松。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "四方球综合跑动", keyPoint: "教练多点喂球，球员进行全场移动。要求融合前期规范的步法与手法。", metric: "注重每一拍的合理过渡，不盲目追求得分。" },
+                    { day: "训练 2", drill: "防守反击演练", keyPoint: "练习接杀挡网后迅速跟进准备下一拍，实现由防守向相持的转换。", metric: "防守思路清晰，跟进及时。" },
+                    { day: "训练 3", drill: "条件实战 (21分制)", keyPoint: "恢复全场比赛。要求：失分后明确指出失误原因，建立纠错意识。", metric: "将实战表现与前期技术规范相印证。" }
+                ]
+            },
+            {
+                week: 12, phase: "阶段 3: 连贯与综合应用", title: "规范化成果检验周",
+                physical: {
+                    duration: "30 分钟",
+                    routine: [
+                        { name: "体能恢复与调整 (30分钟)", desc: "适当降低训练强度，以慢跑和柔韧性练习为主，保持良好的身体状态。" }
+                    ]
+                },
+                technical: [
+                    { day: "训练 1", drill: "薄弱环节针对性复习", keyPoint: "复习计划初期的主要改善项：头顶区退步与网前握拍转换，确认改进效果。", metric: "错误习惯已得到明显改善。" },
+                    { day: "训练 2", drill: "全场综合测验赛", keyPoint: "进行完整的实战比赛并录像记录。观察相持过程中的技术动作表现。", metric: "在比赛节奏中能够维持规范的动作框架。" },
+                    { day: "训练 3", drill: "雷达图数据重估", keyPoint: "对照初期的评估数据，客观评价各项技术的提升幅度，为下一阶段训练提供参考。", metric: "完成12周基础规范化训练周期。" }
+                ]
+            }
+        ];
+
+        // --- Generate Weekly Pages ---
+        function generateWeeklyPages() {
+            const container = document.getElementById('report-document');
+            const page15 = document.getElementById('page-15');
+
+            weekData.forEach((data, index) => {
+                const pageNum = index + 3; 
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page';
+                pageDiv.id = `page-${pageNum}`;
+
+                let physicalHtml = '';
+                data.physical.routine.forEach(item => {
+                    physicalHtml += `
+                        <div class="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
+                            <i class="fa-solid fa-stopwatch text-amber-500 mt-0.5 sm:mt-1 text-sm sm:text-base"></i>
+                            <div>
+                                <strong class="text-slate-800 text-[13px] sm:text-sm leading-tight block mb-0.5">${item.name}</strong>
+                                <p class="text-[11px] sm:text-xs text-slate-600 leading-snug">${item.desc}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                let techHtml = '';
+                data.technical.forEach(item => {
+                    techHtml += `
+                        <div class="bg-white p-3 sm:p-4 rounded-lg border border-slate-200 shadow-sm relative pl-10 sm:pl-12 mb-3 sm:mb-4 hover:border-emerald-300 transition-colors">
+                            <div class="absolute left-0 top-0 bottom-0 w-8 sm:w-10 bg-emerald-100 flex items-center justify-center rounded-l-lg border-r border-slate-100">
+                                <span class="text-emerald-800 font-bold text-[10px] sm:text-xs drill-day-tag uppercase tracking-widest">${item.day}</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm sm:text-[15px] mb-2 leading-tight">${item.drill}</h4>
+                            <div class="space-y-1.5 sm:space-y-2">
+                                <p class="text-[12px] sm:text-sm text-slate-700 bg-slate-50 p-2 rounded leading-snug"><strong class="text-slate-900"><i class="fa-solid fa-bullseye text-emerald-500 mr-1"></i>训练要求:</strong> ${item.keyPoint}</p>
+                                <p class="text-[12px] sm:text-sm text-slate-700 bg-amber-50 p-2 rounded border border-amber-100 leading-snug"><strong class="text-amber-800"><i class="fa-solid fa-clipboard-check text-amber-600 mr-1"></i>评估指标:</strong> ${item.metric}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                pageDiv.innerHTML = `
+                    <div class="page-header">
+                        <div>
+                            <span class="text-[10px] sm:text-xs font-bold text-emerald-600 tracking-wider uppercase">${data.phase}</span>
+                            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-0.5 sm:mt-1 leading-tight">第 ${data.week} 周: ${data.title}</h2>
+                        </div>
+                        <span class="hidden sm:inline-block text-sm text-slate-500 border border-slate-300 px-2 py-1 rounded shadow-sm bg-slate-50">WEEK ${data.week}</span>
+                    </div>
+
+                    <div class="flex-grow flex flex-col gap-4 sm:gap-6">
+                        
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-5 shadow-sm">
+                            <div class="flex items-center gap-2 mb-3 border-b border-amber-200 pb-2">
+                                <div class="w-6 h-6 sm:w-8 sm:h-8 rounded bg-amber-500 text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-house text-xs sm:text-base"></i></div>
+                                <h3 class="font-bold text-amber-900 text-sm sm:text-lg leading-tight">基础体能与无球训练 (${data.physical.duration})</h3>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-6">
+                                ${physicalHtml}
+                            </div>
+                        </div>
+
+                        <div class="flex-grow">
+                            <div class="flex items-center gap-2 mb-3 sm:mb-4">
+                                <div class="w-6 h-6 sm:w-8 sm:h-8 rounded bg-emerald-600 text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-dumbbell text-xs sm:text-base"></i></div>
+                                <h3 class="font-bold text-emerald-900 text-sm sm:text-lg leading-tight">球场技术规范训练 (每周3次)</h3>
+                            </div>
+                            ${techHtml}
+                        </div>
+                    </div>
+
+                    <div class="page-footer">
+                        <span>Elite Badminton System - Technical Standardization</span>
+                        <span>Page ${pageNum} / 15</span>
+                    </div>
+                `;
+                
+                container.insertBefore(pageDiv, page15);
+            });
+        }
+
+        // --- Pagination Logic ---
+        let currentPage = 1;
+        const totalPages = 15;
+        let chartInstance = null; 
+
+        function updatePagination() {
+            for (let i = 1; i <= totalPages; i++) {
+                const pageEl = document.getElementById(`page-${i}`);
+                if (pageEl) {
+                    if (i === currentPage) {
+                        pageEl.classList.add('active');
+                    } else {
+                        pageEl.classList.remove('active');
+                    }
+                }
+            }
+            
+            // Scroll to top on page change
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            document.getElementById('pageIndicator').innerText = `${currentPage} / ${totalPages}`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+
+            if (currentPage === 1 && !chartInstance) {
+                initChart();
+            }
+        }
+
+        function nextPage() { if (currentPage < totalPages) { currentPage++; updatePagination(); } }
+        function prevPage() { if (currentPage > 1) { currentPage--; updatePagination(); } }
+
+        // Touch swipe support for mobile
+        let touchstartX = 0;
+        let touchendX = 0;
+        
+        document.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeThreshold = 50; 
+            if (touchendX < touchstartX - swipeThreshold) {
+                nextPage(); // Swipe left -> Next
+            }
+            if (touchendX > touchstartX + swipeThreshold) {
+                prevPage(); // Swipe right -> Prev
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextPage();
+            if (e.key === 'ArrowLeft') prevPage();
+        });
+
+        // --- Radar Chart Initialization ---
+        function initChart() {
+            const ctx = document.getElementById('skillRadarChart').getContext('2d');
+            
+            const isMobile = window.innerWidth < 640;
+            
+            chartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: [
+                        '基本动作框架', 
+                        '步伐规范度', 
+                        '发力机制', 
+                        '连贯意识', 
+                        '技术应用', 
+                        '体能基础'
+                    ],
+                    datasets: [{
+                        label: '当前评估现状',
+                        data: [45, 30, 35, 40, 35, 50],
+                        fill: true,
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)', // Amber
+                        borderColor: 'rgb(245, 158, 11)',
+                        pointBackgroundColor: 'rgb(245, 158, 11)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(245, 158, 11)'
+                    }, {
+                        label: '12周阶段目标',
+                        data: [70, 60, 65, 65, 60, 75],
+                        fill: true,
+                        backgroundColor: 'rgba(5, 150, 105, 0.1)', // Emerald
+                        borderColor: 'rgb(5, 150, 105)',
+                        pointBackgroundColor: 'rgb(5, 150, 105)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(5, 150, 105)',
+                        borderDash: [5, 5]
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    elements: { line: { borderWidth: 2 } },
+                    scales: {
+                        r: {
+                            angleLines: { color: '#e2e8f0' },
+                            grid: { color: '#e2e8f0' },
+                            pointLabels: {
+                                font: { size: isMobile ? 9 : 11, family: 'Inter', weight: 'bold' },
+                                color: '#334155'
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            ticks: { display: false } 
+                        }
+                    },
+                    plugins: {
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                font: { size: isMobile ? 10 : 12, family: 'Inter' }, 
+                                usePointStyle: true, 
+                                boxWidth: 6,
+                                padding: isMobile ? 10 : 20
+                            } 
+                        },
+                        tooltip: {
+                            bodyFont: { size: isMobile ? 10 : 12 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', function() {
+            generateWeeklyPages(); 
+            updatePagination();    
+        });
+    </script>
+</body>
+</html>
