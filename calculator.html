@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>绿新能源 (GNE) - 纯电重卡承包商盈利测算系统</title>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --success-color: #28a745;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; }
+        .header { background: var(--primary-color); color: white; padding: 20px 15px; text-align: center; }
+        .header h1 { margin: 0; font-size: 22px; letter-spacing: 1px; }
+        .header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.8; }
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        .card { background: var(--card-bg); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card-title { font-size: 18px; font-weight: bold; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; margin-top: 0; margin-bottom: 15px; color: var(--primary-color); }
+        .form-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px dashed #eee; padding-bottom: 5px;}
+        .form-group:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0;}
+        .form-group label { flex: 1; font-size: 14px; font-weight: 500;}
+        .form-group .input-wrapper { display: flex; align-items: center; width: 45%; justify-content: flex-end;}
+        .form-group input { width: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; text-align: right; font-size: 16px; font-weight: bold; color: var(--primary-color);}
+        .form-group input:focus { outline: none; border-color: var(--primary-color); }
+        .form-group .unit { margin-left: 8px; font-size: 12px; color: #888; width: 35px;}
+        
+        .result-group { display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px;}
+        .result-group.highlight { font-weight: bold; border-top: 1px solid #eee; padding-top: 12px; margin-top: 5px; }
+        .result-value { font-family: monospace; font-size: 16px; }
+        
+        .profit-card { background: #e8f5e9; border: 1px solid #c8e6c9; text-align: center; }
+        .profit-card h2 { margin: 0 0 10px 0; color: #2e7d32; font-size: 18px;}
+        .profit-number { font-size: 36px; font-weight: bold; color: var(--success-color); font-family: monospace; margin: 10px 0;}
+        .profit-yearly { font-size: 16px; color: #555; }
+        .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>绿新燎原 · 承包商盈利测算系统</h1>
+    <p>改变行业，让每公里都能赚到钱</p>
+</div>
+
+<div class="container">
+    <!-- 输入区：运营假设 -->
+    <div class="card">
+        <h3 class="card-title">▶ 业务与收入参数 (可修改)</h3>
+        <div class="form-group">
+            <label>单公里结算运费</label>
+            <div class="input-wrapper"><input type="number" id="pricePerKm" value="6.5" step="0.1"><span class="unit">元/km</span></div>
+        </div>
+        <div class="form-group">
+            <label>日均行驶里程</label>
+            <div class="input-wrapper"><input type="number" id="dailyKm" value="350"><span class="unit">km/天</span></div>
+        </div>
+        <div class="form-group">
+            <label>月度出勤天数</label>
+            <div class="input-wrapper"><input type="number" id="days" value="26"><span class="unit">天/月</span></div>
+        </div>
+    </div>
+
+    <!-- 输入区：成本参数 -->
+    <div class="card">
+        <h3 class="card-title">▶ 车辆与能耗成本 (可修改)</h3>
+        <div class="form-group">
+            <label>单车月度承包费</label>
+            <div class="input-wrapper"><input type="number" id="rent" value="12000" step="100"><span class="unit">元/月</span></div>
+        </div>
+        <div class="form-group">
+            <label>司机月薪预估</label>
+            <div class="input-wrapper"><input type="number" id="salary" value="8000" step="100"><span class="unit">元/月</span></div>
+        </div>
+        <div class="form-group">
+            <label>保险及杂费均摊</label>
+            <div class="input-wrapper"><input type="number" id="insurance" value="1500" step="100"><span class="unit">元/月</span></div>
+        </div>
+        <div class="form-group">
+            <label>百公里耗电量</label>
+            <div class="input-wrapper"><input type="number" id="powerPer100" value="140"><span class="unit">度/百km</span></div>
+        </div>
+        <div class="form-group">
+            <label>绿新网络电价</label>
+            <div class="input-wrapper"><input type="number" id="powerPrice" value="1.1" step="0.05"><span class="unit">元/度</span></div>
+        </div>
+        <div class="form-group">
+            <label>单公里过路/维保</label>
+            <div class="input-wrapper"><input type="number" id="tollMain" value="1.5" step="0.1"><span class="unit">元/km</span></div>
+        </div>
+    </div>
+
+    <!-- 输出区：计算结果 -->
+    <div class="card">
+        <h3 class="card-title">📊 财务测算明细</h3>
+        <div class="result-group"><span>月度总行驶里程</span><span class="result-value" id="outTotalKm">0 km</span></div>
+        <div class="result-group"><span>月度毛收入总计</span><span class="result-value" style="color:var(--primary-color)" id="outRevenue">¥0.00</span></div>
+        <div class="result-group highlight"><span>固定成本合计 (租金/人工)</span><span class="result-value" style="color:#d32f2f" id="outFixedCost">¥0.00</span></div>
+        <div class="result-group"><span>核心优势：单公里电费</span><span class="result-value" style="color:var(--success-color)" id="outElecPerKm">0.00 元/km</span></div>
+        <div class="result-group highlight"><span>变动成本合计 (电费/路桥)</span><span class="result-value" style="color:#d32f2f" id="outVarCost">¥0.00</span></div>
+    </div>
+
+    <!-- 输出区：利润面板 -->
+    <div class="card profit-card">
+        <h2>🔥 承包商单车净利润 (月)</h2>
+        <div class="profit-number" id="outNetProfit">¥0.00</div>
+        <div class="profit-yearly">预估年化净利润：<strong id="outYearProfit">¥0.00</strong></div>
+    </div>
+</div>
+
+<div class="footer">
+    &copy; 2026 绿新能源 (GNE) 保留所有权利<br>本测算模型仅供业务参考，实际利润受路线、路况及驾驶习惯影响。
+</div>
+
+<script>
+    // 监听所有输入框的变动
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.addEventListener('input', calculate);
+    });
+
+    // 核心计算逻辑
+    function calculate() {
+        // 取值
+        const pricePerKm = parseFloat(document.getElementById('pricePerKm').value) || 0;
+        const dailyKm = parseFloat(document.getElementById('dailyKm').value) || 0;
+        const days = parseFloat(document.getElementById('days').value) || 0;
+        
+        const rent = parseFloat(document.getElementById('rent').value) || 0;
+        const salary = parseFloat(document.getElementById('salary').value) || 0;
+        const insurance = parseFloat(document.getElementById('insurance').value) || 0;
+        
+        const powerPer100 = parseFloat(document.getElementById('powerPer100').value) || 0;
+        const powerPrice = parseFloat(document.getElementById('powerPrice').value) || 0;
+        const tollMain = parseFloat(document.getElementById('tollMain').value) || 0;
+
+        // 运算
+        const totalKm = dailyKm * days;
+        const totalRevenue = totalKm * pricePerKm;
+        
+        const fixedCost = rent + salary + insurance;
+        const elecPerKm = (powerPer100 / 100) * powerPrice;
+        const varCostPerKm = elecPerKm + tollMain;
+        const totalVarCost = totalKm * varCostPerKm;
+        
+        const totalCost = fixedCost + totalVarCost;
+        const netProfit = totalRevenue - totalCost;
+        const yearProfit = netProfit * 12;
+
+        // 渲染到页面 (加入货币格式化)
+        document.getElementById('outTotalKm').innerText = totalKm.toLocaleString() + ' km';
+        document.getElementById('outRevenue').innerText = '¥' + totalRevenue.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('outFixedCost').innerText = '- ¥' + fixedCost.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('outElecPerKm').innerText = elecPerKm.toFixed(2) + ' 元/km';
+        document.getElementById('outVarCost').innerText = '- ¥' + totalVarCost.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        const profitEl = document.getElementById('outNetProfit');
+        profitEl.innerText = '¥' + netProfit.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        // 亏损标红，盈利标绿
+        profitEl.style.color = netProfit >= 0 ? '#28a745' : '#dc3545';
+        
+        document.getElementById('outYearProfit').innerText = '¥' + yearProfit.toLocaleString('zh-CN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    // 页面加载时执行一次计算初始化
+    window.onload = calculate;
+</script>
+
+</body>
+</html>
