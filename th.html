@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绿新能源 (GNE) 全国重卡充电网络分布图</title>
+    <!-- 引入 Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: "Microsoft YaHei", sans-serif; }
+        #map { width: 100%; height: 100vh; }
+        .legend {
+            background: white; padding: 10px; border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2); line-height: 24px;
+            color: #333; position: absolute; bottom: 30px; right: 10px; z-index: 1000;
+        }
+        .legend i { width: 16px; height: 16px; float: left; margin-right: 8px; border-radius: 50%; }
+        .title-box {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            background: rgba(255,255,255,0.9); padding: 10px 20px; border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000; text-align: center;
+        }
+        .title-box h2 { margin: 0 0 5px 0; font-size: 20px; color: #0056b3; }
+        .title-box p { margin: 0; font-size: 14px; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="title-box">
+    <h2>绿新能源 重卡充电网络</h2>
+    <p>全国布局站点总数：72 座（山河四省及西北走廊）</p>
+</div>
+
+<div id="map"></div>
+<div class="legend">
+    <i style="background: #28a745; border: 1px solid #fff;"></i> 已投运 (23座)<br>
+    <i style="background: #ffc107; border: 1px solid #fff;"></i> 建设中 (49座)
+</div>
+
+<!-- 引入 Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // 初始化地图，中心点设在晋冀鲁豫交界处（长治附近），缩放级别 6（适合查看全国及省际走廊）
+    var map = L.map('map').setView([36.5, 113.0], 6);
+
+    // 加载高德地图底图 (无秘钥限制版本)
+    L.tileLayer('https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+        maxZoom: 18,
+        attribution: '&copy; 高德地图 & 绿新能源'
+    }).addTo(map);
+
+    // 完整的72个站点数据
+    var stations = [
+        { id: 1, name: "绿新能源潞铁智慧物流园园区内（换电站）", coord: "113.28292,36.325017", status: "已投运" },
+        { id: 2, name: "绿新能源黄北充电站", coord: "113.134684,36.357572", status: "已投运" },
+        { id: 3, name: "绿新能源涉县神头充电站", coord: "113.598247,36.519466", status: "已投运" },
+        { id: 4, name: "绿新能源石梁充电站", coord: "113.318021,36.453537", status: "已投运" },
+        { id: 5, name: "绿新能源坡底充电站", coord: "113.08529,36.341152", status: "已投运" },
+        { id: 6, name: "绿新能源史廻汽贸园充电站", coord: "113.157286,36.349615", status: "已投运" },
+        { id: 7, name: "绿新能源南王庄充电站（上党区琚家沟）", coord: "113.054248,36.03518", status: "已投运" },
+        { id: 8, name: "绿新能源店上充电站1期", coord: "113.274594,35.989891", status: "已投运" },
+        { id: 9, name: "绿新能源武乡蟠龙充电站", coord: "113.134701,36.787052", status: "已投运" },
+        { id: 10, name: "绿新能源灵石充电站", coord: "111.721147,36.822618", status: "已投运" },
+        { id: 11, name: "绿新能源沁源交口充电站1期", coord: "112.381101,36.583089", status: "已投运" },
+        { id: 12, name: "中石化屯留常村加油站", coord: "112.989419,36.356389", status: "已投运" },
+        { id: 13, name: "中石化长治县中村加油站", coord: "113.102902,36.000628", status: "已投运" },
+        { id: 14, name: "中石化沁县漫水加油站", coord: "112.56382,36.699023", status: "已投运" },
+        { id: 15, name: "中石化沁县松村加油站", coord: "112.771153,36.830392", status: "已投运" },
+        { id: 16, name: "中石化沁县金源加油站(沁县新店镇东庄村)", coord: "112.747043,36.645132", status: "已投运" },
+        { id: 17, name: "中石化长治县荫城加油站（上党区荫城长陵公路旁）", coord: "113.0645,35.9712", status: "已投运" },
+{ id: 18, name: "山东省德州市永锋钢铁", coord: "116.821125,36.794975", status: "已投运" },
+        { id: 19, name: "山东省东阿县", coord: "116.284198,36.369041", status: "已投运" },
+        { id: 20, name: "绿新能源襄汾永固充电站（襄汾县永固乡南董村）", coord: "111.345216,35.721279", status: "已投运" },
+        { id: 21, name: "绿新能源阳城凤城充电站（阳城县凤城镇下孔寨村）", coord: "112.500327,35.482223", status: "已投运" },
+        { id: 22, name: "林州任村镇", coord: "113.808103,36.335749", status: "已投运" },
+        { id: 23, name: "中石化长治上党区东苗闲置空地", coord: "113.07947,36.07138", status: "已投运" },
+        { id: 24, name: "绿新能源李村煤矿充电站", coord: "112.870029,36.087228", status: "建设中" },
+        { id: 25, name: "绿新能源潞光电厂充电站", coord: "113.0245,36.5312", status: "建设中" },
+        { id: 26, name: "绿新能源沁县定昌充电站", coord: "112.704547,36.769299", status: "建设中" },
+        { id: 27, name: "绿新能源武安瑞斌充电站", coord: "114.101399,36.607907", status: "建设中" },
+        { id: 28, name: "绿新能源襄垣百顺充电站", coord: "113.0344,36.5292", status: "建设中" },
+        { id: 29, name: "绿新能源荫城镇化肥厂充、换电站", coord: "112.614498,37.723722", status: "建设中" },
+        { id: 30, name: "绿新能源长信钢铁充电站", coord: "113.124089,36.326081", status: "建设中" },
+        { id: 31, name: "绿新能源长子东旺充电站", coord: "112.973233,36.050637", status: "建设中" },
+        { id: 32, name: "绿新能源店上充电站2期", coord: "113.111766,35.957182", status: "建设中" },
+        { id: 33, name: "绿新能源西村果园充电站1期", coord: "113.219017,36.344992", status: "建设中" },
+        { id: 34, name: "绿新能源西村果园充电站2期", coord: "112.159847,36.53785", status: "建设中" },
+        { id: 35, name: "绿新能源沁源灵空山充电站", coord: "111.72112,36.822525", status: "建设中" },
+        { id: 36, name: "绿新能源沁源交口充电站2期", coord: "112.22086,36.412308", status: "建设中" },
+        { id: 37, name: "绿新能源沁源百草充电站", coord: "112.195833,36.837221", status: "建设中" },
+        { id: 38, name: "绿新能源襄垣王桥充电站", coord: "113.06832,36.501125", status: "建设中" },
+        { id: 39, name: "绿新能源襄垣下良充电站", coord: "113.0486,36.6547", status: "建设中" },
+        { id: 40, name: "绿新能源济源涛翔充电站", coord: "112.5735,35.0876", status: "建设中" },
+        { id: 41, name: "中石化长子县东田良加油站", coord: "112.934617,36.001732", status: "建设中" },
+        { id: 42, name: "中石化黎城县仵桥加油站", coord: "113.3845,36.5021", status: "建设中" },
+        { id: 43, name: "介休市义安镇", coord: "111.948054,36.985047", status: "建设中" },
+        { id: 44, name: "孝义市柱濮镇上智峪村", coord: "111.691507,37.075799", status: "建设中" },
+        { id: 45, name: "晋城市泽州县巴公镇", coord: "112.912409,35.609078", status: "建设中" },
+        { id: 46, name: "安阳利源", coord: "114.344815,36.150114", status: "建设中" },
+        { id: 47, name: "洪洞甘亭镇", coord: "111.672237,36.179187", status: "建设中" },
+        { id: 48, name: "林州河顺镇杨家营村", coord: "113.901521,36.141551", status: "建设中" },
+        { id: 49, name: "晋城市泽州县大东沟镇", coord: "112.720088,35.587986", status: "建设中" },
+        { id: 50, name: "左权下其至村", coord: "113.447107,37.165597", status: "建设中" },
+        { id: 51, name: "孝义市东董屯村", coord: "111.84799,37.044294", status: "建设中" },
+        { id: 52, name: "邯郸峰峰矿区", coord: "114.212571,36.419298", status: "建设中" },
+        { id: 53, name: "安阳龙安区", coord: "114.277317,36.077565", status: "建设中" },
+        { id: 54, name: "曲沃乐昌镇", coord: "111.4633,35.6414", status: "建设中" },
+        { id: 55, name: "林州市河顺镇", coord: "113.832267,36.061732", status: "建设中" },
+        { id: 56, name: "长治市武乡县", coord: "112.8603,36.8325", status: "建设中" },
+        { id: 57, name: "河南省鹤壁市山城区", coord: "114.309267,35.769397", status: "建设中" },
+        { id: 58, name: "晋城市阳城县北任庄村", coord: "112.368608,35.520231", status: "建设中" },
+        { id: 59, name: "焦作市武陟县", coord: "113.515695,35.136367", status: "建设中" },
+        { id: 60, name: "焦作市沁阳市", coord: "113.56127,34.819137", status: "建设中" },
+        { id: 61, name: "山东省平阴县", coord: "116.4385,36.2876", status: "建设中" },
+        { id: 62, name: "山东省临沂市莒南县", coord: "118.8325,35.1746", status: "建设中" },
+        { id: 63, name: "山东省聊城市冠县", coord: "115.441684,36.484011", status: "建设中" },
+        { id: 64, name: "甘肃省张掖市高台县骆驼城镇", coord: "99.8143,39.3456", status: "建设中" },
+{ id: 65, name: "张掖市山丹县老君乡峡口新村", coord: "101.0921,38.7845", status: "建设中" },
+        { id: 66, name: "张掖市临泽县金沙港物流院内", coord: "100.131691,39.131125", status: "建设中" },
+        { id: 67, name: "酒泉市玉门市顶好服务区", coord: "97.107543,40.243142", status: "建设中" },
+        { id: 68, name: "山东省日照市东港区陈疃镇", coord: "119.26641,35.505228", status: "建设中" },
+        { id: 69, name: "山东省聊城市冠县23站", coord: "115.8838,36.43048", status: "建设中" },
+        { id: 70, name: "山东省泰安市肥城市桃源镇", coord: "116.63859,36.145948", status: "建设中" },
+        { id: 71, name: "甘肃省嘉峪关市", coord: "98.2892,39.7731", status: "建设中" },
+        { id: 72, name: "山东省蒙阴县", coord: "118.645613,35.745408", status: "建设中" }
+    ];
+
+    // 遍历数据并打点
+    stations.forEach(function(station) {
+        var coords = station.coord.split(',');
+        var lng = parseFloat(coords[0]);
+        var lat = parseFloat(coords[1]);
+        
+        // 区分颜色：已投运（绿色），建设中（橙/黄色）
+        var markerColor = station.status === '已投运' ? '#28a745' : '#ffc107';
+
+        var circleMarker = L.circleMarker([lat, lng], {
+            radius: 7, // 图钉大小
+            fillColor: markerColor,
+            color: '#ffffff',
+            weight: 1.5,
+            opacity: 1,
+            fillOpacity: 0.9
+        }).addTo(map);
+
+        // 设置弹出气泡内容
+        var popupContent = `
+            <div style="font-size:14px; padding:5px;">
+                <strong style="color:#0056b3; font-size:16px;">${station.name}</strong><br/>
+                <hr style="margin:5px 0; border:0; border-top:1px solid #eee;">
+                <b>状态:</b> <span style="color:${markerColor}; font-weight:bold;">${station.status}</span><br/>
+                <b>坐标:</b> ${station.coord}
+            </div>
+        `;
+        circleMarker.bindPopup(popupContent);
+    });
+</script>
+
+</body>
+</html>
