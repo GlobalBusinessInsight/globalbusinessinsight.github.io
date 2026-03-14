@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Dashboard</title>
+    <title>Enterprise Dashboard with AI Agent</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -25,14 +25,18 @@
                             600: '#4e6381',
                             700: '#3f5068',
                             800: '#364356',
-                            900: '#001A3D', // Deep SAP/Salesforce blue
+                            900: '#001A3D',
                         },
                         accent: {
                             blue: '#0056b3',
                             green: '#107c41',
                             red: '#da1e28',
-                            yellow: '#f3c300'
+                            yellow: '#f3c300',
+                            purple: '#6b21a8'
                         }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     }
                 }
             }
@@ -41,12 +45,27 @@
     <style>
         body { background-color: #f8f9fa; }
         .card-shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.025); }
+        .agent-shadow { box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); }
         .table-row-hover:hover { background-color: #f1f3f5; }
-        /* Scrollbar styling */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .chat-bubble-agent { background: #f0fdfa; border: 1px solid #ccfbf1; border-radius: 12px 12px 12px 2px; }
+        .chat-bubble-user { background: #0056b3; color: white; border-radius: 12px 12px 2px 12px; }
+        
+        #agent-panel {
+            transform: translateY(120%) scale(0.95);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+        #agent-panel.open {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
     </style>
 </head>
 <body class="font-sans text-gray-800 flex h-screen overflow-hidden antialiased">
@@ -54,13 +73,11 @@
     <!-- Global Sidebar -->
     <aside class="w-16 lg:w-64 bg-enterprise-900 text-white flex flex-col justify-between transition-all duration-300 flex-shrink-0 z-20">
         <div>
-            <!-- Logo Area -->
             <div class="h-16 flex items-center justify-center lg:justify-start lg:px-6 border-b border-enterprise-800">
                 <svg class="w-8 h-8 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
                 <span class="ml-3 font-bold text-lg tracking-wide hidden lg:block">Inossem<span class="text-blue-400">Hub</span></span>
             </div>
             
-            <!-- Navigation -->
             <nav class="mt-6 px-2 lg:px-4 space-y-1">
                 <p class="px-2 text-xs font-semibold text-enterprise-400 uppercase tracking-wider hidden lg:block mb-2">Analytics</p>
                 <a href="#" class="flex items-center px-2 py-2.5 bg-enterprise-800 rounded-md group relative">
@@ -84,7 +101,6 @@
             </nav>
         </div>
         
-        <!-- User Menu -->
         <div class="p-4 border-t border-enterprise-800">
             <div class="flex items-center justify-center lg:justify-start">
                 <div class="w-8 h-8 rounded bg-enterprise-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
@@ -99,7 +115,7 @@
     </aside>
 
     <!-- Main Workspace -->
-    <div class="flex-1 flex flex-col h-screen overflow-hidden bg-[#f4f6f8]">
+    <div class="flex-1 flex flex-col h-screen overflow-hidden bg-[#f4f6f8] relative">
         
         <!-- Top App Bar -->
         <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0 z-10 card-shadow">
@@ -141,8 +157,10 @@
                     <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded text-sm font-medium hover:bg-gray-50 card-shadow transition-colors">
                         Export PDF
                     </button>
-                    <button class="px-4 py-2 bg-accent-blue text-white rounded text-sm font-medium hover:bg-blue-700 shadow-sm transition-colors">
-                        Create Action
+                    <!-- Ask Agent Button -->
+                    <button id="ask-agent-btn" class="px-4 py-2 bg-gradient-to-r from-accent-purple to-accent-blue text-white rounded text-sm font-medium hover:opacity-90 shadow-sm transition-opacity flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Ask Inossem AI
                     </button>
                 </div>
             </div>
@@ -167,7 +185,6 @@
                         </span>
                         <span class="text-gray-400 ml-2">vs prior period</span>
                     </div>
-                    <!-- decorative background line -->
                     <div class="absolute bottom-0 right-0 left-0 h-1 bg-accent-blue"></div>
                 </div>
 
@@ -245,7 +262,7 @@
                     </div>
                 </div>
 
-                <!-- Secondary Panel (Doughnut / Progress) -->
+                <!-- Secondary Panel -->
                 <div class="bg-white border border-gray-200 rounded card-shadow flex flex-col">
                     <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
                         <h3 class="font-semibold text-gray-800">Regional Allocation</h3>
@@ -276,7 +293,7 @@
                 </div>
             </div>
 
-            <!-- Data Table (Complex Enterprise Table) -->
+            <!-- Data Table -->
             <div class="bg-white border border-gray-200 rounded card-shadow">
                 <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <h3 class="font-semibold text-gray-800">Recent High-Value Opportunities</h3>
@@ -290,7 +307,6 @@
                                 <th class="px-5 py-3 font-medium">Account</th>
                                 <th class="px-5 py-3 font-medium">Amount</th>
                                 <th class="px-5 py-3 font-medium">Stage</th>
-                                <th class="px-5 py-3 font-medium">Close Date</th>
                                 <th class="px-5 py-3 font-medium text-right">Owner</th>
                             </tr>
                         </thead>
@@ -302,7 +318,6 @@
                                 <td class="px-5 py-3">
                                     <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium border border-yellow-200">Proposal / Quote</span>
                                 </td>
-                                <td class="px-5 py-3 text-gray-500">Oct 15, 2026</td>
                                 <td class="px-5 py-3 text-right">
                                     <div class="flex items-center justify-end">
                                         <div class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold mr-2">SJ</div>
@@ -317,7 +332,6 @@
                                 <td class="px-5 py-3">
                                     <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium border border-blue-200">Negotiation</span>
                                 </td>
-                                <td class="px-5 py-3 text-gray-500">Nov 02, 2026</td>
                                 <td class="px-5 py-3 text-right">
                                     <div class="flex items-center justify-end">
                                         <div class="w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold mr-2">MP</div>
@@ -325,47 +339,76 @@
                                     </div>
                                 </td>
                             </tr>
-                            <tr class="border-b border-gray-100 table-row-hover cursor-pointer transition-colors">
-                                <td class="px-5 py-3 font-medium text-accent-blue">Supply Chain Optimization</td>
-                                <td class="px-5 py-3 text-gray-700">Global Retail Inc.</td>
-                                <td class="px-5 py-3 font-medium text-gray-900">$2,100,000</td>
-                                <td class="px-5 py-3">
-                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium border border-green-200">Closed Won</span>
-                                </td>
-                                <td class="px-5 py-3 text-gray-500">Sep 28, 2026</td>
-                                <td class="px-5 py-3 text-right">
-                                    <div class="flex items-center justify-end">
-                                        <div class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-bold mr-2">DL</div>
-                                        <span class="text-gray-600">David L.</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr class="table-row-hover cursor-pointer transition-colors">
-                                <td class="px-5 py-3 font-medium text-accent-blue">HRIS Systems Upgrade</td>
-                                <td class="px-5 py-3 text-gray-700">Nexus Health</td>
-                                <td class="px-5 py-3 font-medium text-gray-900">$420,000</td>
-                                <td class="px-5 py-3">
-                                    <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-medium border border-gray-200">Discovery</span>
-                                </td>
-                                <td class="px-5 py-3 text-gray-500">Dec 10, 2026</td>
-                                <td class="px-5 py-3 text-right">
-                                    <div class="flex items-center justify-end">
-                                        <div class="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold mr-2">SJ</div>
-                                        <span class="text-gray-600">Sarah J.</span>
-                                    </div>
-                                </td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-
+            
+            <div class="h-16"></div> <!-- Padding for bottom -->
         </main>
+
+        <!-- Floating AI Agent Widget -->
+        <div class="absolute bottom-6 right-6 z-50 flex flex-col items-end">
+            <!-- Agent Chat Panel -->
+            <div id="agent-panel" class="w-80 md:w-96 bg-white border border-gray-200 rounded-xl agent-shadow mb-4 flex flex-col overflow-hidden">
+                <!-- Panel Header -->
+                <div class="bg-gradient-to-r from-enterprise-900 to-enterprise-700 p-4 text-white flex justify-between items-center">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mr-3 relative">
+                            <svg class="w-5 h-5 text-teal-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-enterprise-800"></div>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-sm">Inossem AI Assistant</h4>
+                            <p class="text-xs text-blue-200 opacity-80">Online & ready to analyze</p>
+                        </div>
+                    </div>
+                    <button id="close-agent-btn" class="text-white/70 hover:text-white transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                
+                <!-- Chat History Area -->
+                <div id="chat-history" class="p-4 h-72 overflow-y-auto bg-gray-50 flex flex-col space-y-4 text-sm">
+                    <!-- Agent Greeting -->
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-6 h-6 rounded-full bg-teal-100 flex items-center justify-center mr-2 mt-1">
+                            <svg class="w-3 h-3 text-teal-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        </div>
+                        <div class="chat-bubble-agent p-3 shadow-sm">
+                            <p class="text-gray-700">Hello Mark! I have analyzed the current dashboard. Q3 Revenue is tracking <strong>8.4% above last quarter</strong>. How can I help you analyze this data further?</p>
+                        </div>
+                    </div>
+                    <!-- Suggestion Chips -->
+                    <div class="pl-8 flex flex-wrap gap-2">
+                        <button class="bg-white border border-teal-200 text-teal-700 px-3 py-1.5 rounded-full text-xs font-medium hover:bg-teal-50 transition shadow-sm" onclick="sendPrompt('Analyze Margin Drop in APAC')">📉 Analyze Margin Drop in APAC</button>
+                        <button class="bg-white border border-teal-200 text-teal-700 px-3 py-1.5 rounded-full text-xs font-medium hover:bg-teal-50 transition shadow-sm" onclick="sendPrompt('Compare with Salesforce Q3 benchmark')">📊 Compare w/ Salesforce benchmark</button>
+                        <button class="bg-white border border-teal-200 text-teal-700 px-3 py-1.5 rounded-full text-xs font-medium hover:bg-teal-50 transition shadow-sm" onclick="sendPrompt('Predict Q4 Pipeline closing probability')">🔮 Predict Q4 Pipeline closing</button>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-3 bg-white border-t border-gray-200 flex items-center relative">
+                    <input type="text" id="agent-input" placeholder="Ask about market data, competitors..." class="w-full pl-3 pr-10 py-2.5 bg-gray-100 border-transparent focus:bg-white focus:border-teal-400 focus:ring-2 focus:ring-teal-100 rounded-lg text-sm transition-all outline-none text-gray-700">
+                    <button class="absolute right-5 text-teal-600 hover:text-teal-800 transition transform hover:scale-110" onclick="simulateSend()">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Floating Trigger Button -->
+            <button id="agent-trigger-btn" class="w-14 h-14 bg-gradient-to-tr from-teal-500 to-blue-600 rounded-full text-white flex items-center justify-center agent-shadow hover:scale-105 transition-transform duration-200 focus:outline-none focus:ring-4 focus:ring-teal-300 focus:ring-opacity-50 relative">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                <!-- Notification Dot -->
+                <span class="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 border-2 border-white rounded-full animate-pulse-slow"></span>
+            </button>
+        </div>
+
     </div>
 
-    <!-- Chart.js Initialization -->
+    <!-- Chart.js and Logic Scripts -->
     <script>
-        // Main Line/Bar Combo Chart
+        // --- Dashboard Charts Initialization ---
         const ctxMain = document.getElementById('mainChart').getContext('2d');
         new Chart(ctxMain, {
             type: 'bar',
@@ -376,7 +419,7 @@
                         type: 'line',
                         label: 'Operating Margin (%)',
                         data: [21, 22, 21.5, 23, 23.5, 22.8, 24, 24.1],
-                        borderColor: '#107c41', // Accent Green
+                        borderColor: '#107c41',
                         backgroundColor: '#107c41',
                         borderWidth: 2,
                         tension: 0.4,
@@ -390,7 +433,7 @@
                         type: 'bar',
                         label: 'Revenue ($M)',
                         data: [3.2, 3.4, 3.1, 3.8, 3.9, 3.7, 4.1, 4.25],
-                        backgroundColor: '#0056b3', // Accent Blue
+                        backgroundColor: '#0056b3',
                         borderRadius: 4,
                         yAxisID: 'y',
                         barPercentage: 0.6,
@@ -400,50 +443,16 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#111827',
-                        padding: 12,
-                        titleFont: { family: 'Inter', size: 13 },
-                        bodyFont: { family: 'Inter', size: 13 },
-                        cornerRadius: 4,
-                    }
-                },
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { display: false } },
                 scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { family: 'Inter', size: 12 }, color: '#6b7280' }
-                    },
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        grid: { color: '#f3f4f6' },
-                        ticks: {
-                            font: { family: 'Inter', size: 12 }, color: '#6b7280',
-                            callback: function(value) { return '$' + value + 'M'; }
-                        }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        grid: { display: false },
-                        ticks: {
-                            font: { family: 'Inter', size: 12 }, color: '#107c41',
-                            callback: function(value) { return value + '%'; }
-                        }
-                    }
+                    x: { grid: { display: false } },
+                    y: { type: 'linear', display: true, position: 'left', grid: { color: '#f3f4f6' } },
+                    y1: { type: 'linear', display: true, position: 'right', grid: { display: false } }
                 }
             }
         });
 
-        // Donut Chart
         const ctxDonut = document.getElementById('donutChart').getContext('2d');
         new Chart(ctxDonut, {
             type: 'doughnut',
@@ -456,22 +465,97 @@
                     hoverOffset: 4
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '75%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#111827',
-                        bodyFont: { family: 'Inter', size: 13 },
-                        callbacks: {
-                            label: function(context) {
-                                return ' ' + context.label + ': ' + context.raw + '%';
-                            }
-                        }
-                    }
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
+        });
+
+        // --- AI Agent Logic ---
+        const agentPanel = document.getElementById('agent-panel');
+        const triggerBtn = document.getElementById('agent-trigger-btn');
+        const closeBtn = document.getElementById('close-agent-btn');
+        const askBtn = document.getElementById('ask-agent-btn');
+        const chatHistory = document.getElementById('chat-history');
+        const inputField = document.getElementById('agent-input');
+
+        function togglePanel() {
+            agentPanel.classList.toggle('open');
+            // Remove notification dot when opened
+            const dot = triggerBtn.querySelector('span');
+            if(dot) dot.style.display = 'none';
+        }
+
+        triggerBtn.addEventListener('click', togglePanel);
+        closeBtn.addEventListener('click', togglePanel);
+        askBtn.addEventListener('click', () => {
+            if(!agentPanel.classList.contains('open')) togglePanel();
+            inputField.focus();
+        });
+
+        function sendPrompt(text) {
+            inputField.value = text;
+            simulateSend();
+        }
+
+        function simulateSend() {
+            const val = inputField.value.trim();
+            if(!val) return;
+            
+            // Add user message
+            const userHtml = `
+                <div class="flex items-start justify-end mt-4">
+                    <div class="chat-bubble-user p-3 shadow-sm max-w-[85%] text-right">
+                        <p>${val}</p>
+                    </div>
+                </div>
+            `;
+            chatHistory.insertAdjacentHTML('beforeend', userHtml);
+            inputField.value = '';
+            
+            // Auto scroll to bottom
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // Simulate Agent Thinking
+            const typingId = 'typing-' + Date.now();
+            const typingHtml = `
+                <div id="${typingId}" class="flex items-center mt-4 text-gray-400 text-xs italic pl-8">
+                    <svg class="w-3 h-3 animate-spin mr-2 text-teal-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Analyzing contextual data & generating insights...
+                </div>
+            `;
+            chatHistory.insertAdjacentHTML('beforeend', typingHtml);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // Fake delay for response
+            setTimeout(() => {
+                document.getElementById(typingId).remove();
+                
+                let responseText = "Based on the data, the trend looks positive. However, I noticed a slight dip in the APAC region last month due to currency fluctuations. Would you like me to generate a mitigation report?";
+                
+                if(val.toLowerCase().includes("apac") || val.toLowerCase().includes("margin drop")) {
+                    responseText = "<strong>Analysis of APAC Margin Drop:</strong><br/>The 1.5% drop in APAC margins correlates with increased logistics costs in Q2 and the recent depreciation of the JPY. <br/><br/><em>Recommendation:</em> Shift fulfillment center allocation to our Vietnam hub to offset shipping premiums. <span class='text-blue-600 cursor-pointer block mt-1 hover:underline'>Apply Scenario to Dashboard?</span>";
+                } else if(val.toLowerCase().includes("competitor") || val.toLowerCase().includes("salesforce")) {
+                    responseText = "<strong>Competitive Benchmark (Q3):</strong><br/>Our Revenue Growth (8.4%) currently outpaces the industry average (5.2%). However, our CSAT score (4.8) is trailing slightly behind the top-tier competitor benchmark (4.9).<br/><em>Focus Area:</em> Service response times in EMEA.";
                 }
+
+                const responseHtml = `
+                    <div class="flex items-start mt-4">
+                        <div class="flex-shrink-0 w-6 h-6 rounded-full bg-teal-100 flex items-center justify-center mr-2 mt-1">
+                            <svg class="w-3 h-3 text-teal-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        </div>
+                        <div class="chat-bubble-agent p-3 shadow-sm">
+                            <p class="text-gray-700">${responseText}</p>
+                        </div>
+                    </div>
+                `;
+                chatHistory.insertAdjacentHTML('beforeend', responseHtml);
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }, 1800);
+        }
+
+        // Allow Enter key to send
+        inputField.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                simulateSend();
             }
         });
     </script>
