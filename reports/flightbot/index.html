@@ -3,61 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flight Tracker</title>
+    <title>Flight Status Tracker</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .tracker-section { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
-        input[type="text"] { padding: 5px; margin-right: 10px; }
-        button { padding: 5px 15px; cursor: pointer; }
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
+        h1 { color: #333; }
+        .tracker-section { margin-bottom: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background: white; }
+        .flight-card { border: 1px solid #ddd; padding: 15px; margin-top: 10px; border-radius: 4px; background: #fff; }
+        input[type="text"], input[type="date"] { padding: 8px; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 15px; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 3px; }
+        button:hover { background: #2980b9; }
+        .status-badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; color: white; }
+        .bg-green { background-color: #2ecc71; }
+        .bg-orange { background-color: #e67e22; }
+        .bg-red { background-color: #e74c3c; }
     </style>
 </head>
 <body>
-    <h1>Flight Tracker Dashboard</h1>
+    <h1>✈️ Flight Status Tracker</h1>
     
     <div class="tracker-section" id="track-flight">
-        <h2>1. Track by Flight Number</h2>
-        <input type="text" id="flight-number" placeholder="e.g., AA123">
-        <button onclick="trackFlight()">Track</button>
-        <div id="flight-result"></div>
-    </div>
-
-    <div class="tracker-section" id="track-airport">
-        <h2>2. Track by Airport (Origin/Destination)</h2>
-        <input type="text" id="airport-code" placeholder="e.g., JFK">
-        <button onclick="trackAirport()">Track</button>
-        <div id="airport-result"></div>
-    </div>
-
-    <div class="tracker-section" id="track-aircraft">
-        <h2>3. Track by Aircraft Registration</h2>
-        <input type="text" id="aircraft-reg" placeholder="e.g., N12345">
-        <button onclick="trackAircraft()">Track</button>
-        <div id="aircraft-result"></div>
-    </div>
-
-    <div class="tracker-section" id="track-airspace">
-        <h2>4. Track in Specific Airspace</h2>
-        <input type="text" id="airspace-bounds" placeholder="Enter bounds (e.g., lat,lon,lat,lon)">
-        <button onclick="trackAirspace()">Track</button>
-        <div id="airspace-result"></div>
+        <h2>Search by Flight Number & Date</h2>
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="carrier-code" placeholder="Carrier (e.g., AA)" maxlength="2" style="width: 100px; text-transform: uppercase;">
+            <input type="text" id="flight-number" placeholder="Flight # (e.g., 123)" style="width: 120px;">
+            <input type="date" id="flight-date">
+            <button onclick="searchFlight()">Track Flight</button>
+        </div>
+        <div id="flight-result" style="margin-top: 15px;"></div>
     </div>
 
     <script>
-        function trackFlight() {
-            document.getElementById('flight-result').innerHTML = '<p>Fetching data...</p>';
-            // Integration logic goes here
-        }
-        function trackAirport() {
-            document.getElementById('airport-result').innerHTML = '<p>Fetching data...</p>';
-            // Integration logic goes here
-        }
-        function trackAircraft() {
-            document.getElementById('aircraft-result').innerHTML = '<p>Fetching data...</p>';
-            // Integration logic goes here
-        }
-        function trackAirspace() {
-            document.getElementById('airspace-result').innerHTML = '<p>Fetching data...</p>';
-            // Integration logic goes here
+        // Set default date to today
+        document.getElementById('flight-date').valueAsDate = new Date();
+
+        async function searchFlight() {
+            const carrier = document.getElementById('carrier-code').value.toUpperCase();
+            const flightNum = document.getElementById('flight-number').value;
+            const date = document.getElementById('flight-date').value;
+            const resultDiv = document.getElementById('flight-result');
+
+            if (!carrier || !flightNum || !date) {
+                resultDiv.innerHTML = '<p style="color:red;">Please fill in Carrier, Flight Number, and Date.</p>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<p>Fetching flight status...</p>';
+
+            try {
+                // Since this is a static page, we simulate calling our backend by fetching the static JSON 
+                // In a real live API scenario, we would need a middleware server to hide the API key.
+                // For this demo, we will read the JSON published by our Bot.
+                const response = await fetch('flight_status.json?v=' + new Date().getTime());
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                
+                let found = false;
+                let html = '';
+
+                data.flights.forEach(f => {
+                    if (f.carrier === carrier && f.number === flightNum && data.query_date === date) {
+                        found = true;
+                        if (f.result.status === 'error') {
+                            html = `<div class="flight-card"><p style="color:red;">Error: ${f.result.message}</p></div>`;
+                        } else if (f.result.data && f.result.data.length > 0) {
+                            const flightData = f.result.data[0];
+                            const legs = flightData.flightPoints;
+                            const departure = legs[0];
+                            const arrival = legs[legs.length - 1];
+                            
+                            html += `
+                            <div class="flight-card">
+                                <h3>${carrier}${flightNum} Status</h3>
+                                <p><strong>Departure:</strong> ${departure.iataCode} at ${departure.departure.timings[0].value}</p>
+                                <p><strong>Arrival:</strong> ${arrival.iataCode} at ${arrival.arrival.timings[0].value}</p>
+                            </div>`;
+                        } else {
+                            html = `<div class="flight-card"><p>Flight found but no schedule data available in Test API.</p></div>`;
+                        }
+                    }
+                });
+
+                if (!found) {
+                    html = `<div class="flight-card">
+                        <p style="color:#e67e22;">
+                            ⚠️ This static demo currently only tracks pre-configured flights (e.g., AA 123, UA 1, DL 10 on today's date). <br>
+                            To allow arbitrary live searches without exposing API keys on GitHub Pages, we need to set up a serverless function (like AWS Lambda or Vercel).
+                        </p>
+                    </div>`;
+                }
+
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color:red;">Failed to fetch data: ${error.message}</p>`;
+            }
         }
     </script>
 </body>
