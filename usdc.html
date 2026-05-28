@@ -1,321 +1,405 @@
-import React, { useState, useMemo } from 'react';
-
-// 通用图标组件 (避免引入外部依赖)
-const Icon = ({ name, className }) => {
-  const icons = {
-    activity: "M22 12h-4l-3 9L9 3l-3 9H2",
-    dollar: "M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
-    power: "M13 2 3 14h9l-1 8 10-12h-9l1-8z",
-    server: "M2 12h20M2 6h20M2 18h20",
-    clock: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M12 6v6l4 2",
-    trendingUp: "M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6"
-  };
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d={icons[name]} />
-    </svg>
-  );
-};
-
-// 滑动条组件
-const Slider = ({ label, value, min, max, step, onChange, unit, icon }) => (
-  <div className="mb-5">
-    <div className="flex justify-between items-center mb-2">
-      <label className="text-sm font-medium text-slate-300 flex items-center">
-        {icon && <Icon name={icon} className="w-4 h-4 mr-2 text-slate-400" />}
-        {label}
-      </label>
-      <span className="text-sm font-bold text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/50">
-        {value} {unit}
-      </span>
-    </div>
-    <input
-      type="range"
-      min={min}
-      max={max}
-      step={step}
-      value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500 hover:accent-cyan-400 transition-all"
-    />
-  </div>
-);
-
-// KPI卡片组件
-const KpiCard = ({ title, value, subtext, icon, highlight }) => (
-  <div className={`p-5 rounded-xl border flex flex-col relative overflow-hidden transition-all ${
-    highlight 
-      ? 'border-cyan-500/50 bg-gradient-to-br from-cyan-950/40 to-blue-900/20 shadow-[0_0_15px_rgba(6,182,212,0.1)]' 
-      : 'border-slate-700/50 bg-slate-800/40 hover:bg-slate-800/60'
-  }`}>
-    <div className="flex items-center justify-between mb-3">
-      <span className="text-slate-400 text-sm font-medium">{title}</span>
-      <Icon name={icon} className={`w-5 h-5 ${highlight ? 'text-cyan-400' : 'text-slate-500'}`} />
-    </div>
-    <span className={`text-3xl font-bold tracking-tight ${highlight ? 'text-cyan-300' : 'text-white'}`}>
-      {value}
-    </span>
-    {subtext && <span className="text-slate-500 text-xs mt-2 font-medium">{subtext}</span>}
-    
-    {highlight && (
-      <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
-    )}
-  </div>
-);
-
-export default function App() {
-  // 初始状态设定 (基于文档中100MW的案例)
-  const [itLoad, setItLoad] = useState(100);
-  const [occupancy, setOccupancy] = useState(90);
-  const [rent, setRent] = useState(180);
-  
-  const [capexEarly, setCapexEarly] = useState(20);
-  const [capexDC, setCapexDC] = useState(1000);
-  const [capexPower, setCapexPower] = useState(600);
-  const [capexLand, setCapexLand] = useState(150);
-  
-  const [opex, setOpex] = useState(150);
-  const years = 15;
-
-  // 核心财务逻辑计算
-  const totalCapex = capexEarly + capexDC + capexPower + capexLand;
-  // 收入公式: IT负荷(kW) * 出租率 * 批发租金($/kW/月) * 12 / 100万 = 年收入(百万美元)
-  const annualRevenue = (itLoad * 1000 * (occupancy / 100) * rent * 12) / 1000000;
-  const netCashFlow = annualRevenue - opex;
-  const payback = netCashFlow > 0 ? (totalCapex / netCashFlow).toFixed(1) : "无法回收";
-  const totalProfit = netCashFlow * years - totalCapex;
-
-  // 图表数据生成
-  const chartData = useMemo(() => {
-    const data = [];
-    let currentCash = -totalCapex;
-    data.push({ year: 0, cash: currentCash });
-    for (let i = 1; i <= years; i++) {
-      currentCash += netCashFlow;
-      data.push({ year: i, cash: currentCash });
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gas-to-Power AI Data Center 财务生命周期模拟器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom styling for range sliders */
+    input[type=range] {
+      -webkit-appearance: none;
     }
-    return data;
-  }, [totalCapex, netCashFlow]);
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 16px;
+      width: 16px;
+      border-radius: 50%;
+      background: #06b6d4;
+      cursor: pointer;
+      margin-top: -5px; /* Center thumb */
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 6px;
+      cursor: pointer;
+      background: #334155;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-cyan-900 selection:text-cyan-100 p-4 md:p-8">
 
-  // 图表渲染配置 (SVG)
-  const viewBoxWidth = 1000;
-  const viewBoxHeight = 350;
-  const paddingX = 40;
-  const paddingY = 40;
-  
-  const minCash = Math.min(...chartData.map(d => d.cash), -totalCapex * 1.1);
-  const maxCash = Math.max(...chartData.map(d => d.cash), totalProfit > 0 ? totalProfit * 1.1 : 0);
-  const range = maxCash - minCash || 1;
+  <!-- Header -->
+  <header class="mb-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center">
+      <svg class="w-8 h-8 mr-3 text-cyan-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12h20M2 6h20M2 18h20" />
+      </svg>
+      Gas-to-Power AI Data Center 
+      <span class="ml-3 font-light text-slate-500">财务生命周期模拟器</span>
+    </h1>
+    <p class="mt-2 text-slate-400 text-sm">
+      交互式测算模型：支持通过调节天然气表后发电（BTM）的基础设施投入、客户租赁条款与IT体量，动态推演项目回收期与利润趋势。
+    </p>
+  </header>
 
-  const getX = (year) => paddingX + (year / years) * (viewBoxWidth - 2 * paddingX);
-  const getY = (val) => viewBoxHeight - paddingY - ((val - minCash) / range) * (viewBoxHeight - 2 * paddingY);
-
-  const zeroY = getY(0);
-  const breakEvenYear = netCashFlow > 0 ? totalCapex / netCashFlow : null;
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 font-sans selection:bg-cyan-900 selection:text-cyan-100">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Left Control Panel -->
+    <div class="lg:col-span-4 space-y-6">
       
-      {/* 头部区域 */}
-      <header className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center">
-          <Icon name="server" className="w-8 h-8 mr-3 text-cyan-500" />
-          Gas-to-Power AI Data Center 
-          <span className="ml-3 font-light text-slate-500">财务生命周期模拟器</span>
-        </h1>
-        <p className="mt-2 text-slate-400 text-sm">
-          交互式测算模型：支持通过调节天然气表后发电（BTM）的基础设施投入、客户租赁条款与IT体量，动态推演项目回收期与利润趋势。
-        </p>
-      </header>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <!-- Business Assumptions -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm">
+        <h2 class="text-lg font-semibold text-white mb-6 flex items-center border-b border-slate-800 pb-3">
+          <svg class="w-5 h-5 mr-2 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          商业与规模假设 (Business)
+        </h2>
         
-        {/* 左侧控制面板 */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm">
-            <h2 className="text-lg font-semibold text-white mb-6 flex items-center border-b border-slate-800 pb-3">
-              <Icon name="activity" className="w-5 h-5 mr-2 text-blue-400" />
-              商业与规模假设 (Business)
-            </h2>
-            <Slider label="IT 负荷容量" value={itLoad} min={50} max={300} step={10} onChange={setItLoad} unit="MW" icon="power" />
-            <Slider label="目标出租率" value={occupancy} min={50} max={100} step={5} onChange={setOccupancy} unit="%" icon="activity" />
-            <Slider label="平均批发租金" value={rent} min={120} max={250} step={5} onChange={setRent} unit="$/kW/月" icon="dollar" />
+        <!-- Slider: IT Load -->
+        <div class="mb-5">
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-sm font-medium text-slate-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              IT 负荷容量
+            </label>
+            <span id="val-itLoad" class="text-sm font-bold text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/50">100 MW</span>
           </div>
-
-          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm">
-            <h2 className="text-lg font-semibold text-white mb-6 flex items-center border-b border-slate-800 pb-3">
-              <Icon name="dollar" className="w-5 h-5 mr-2 text-rose-400" />
-              开发与基建投入 (CAPEX)
-            </h2>
-            <Slider label="前期合规、尽调与许可" value={capexEarly} min={5} max={50} step={1} onChange={setCapexEarly} unit="$M" />
-            <Slider label="数据中心本体与机电" value={capexDC} min={500} max={2000} step={50} onChange={setCapexDC} unit="$M" />
-            <Slider label="表后发电与配电系统" value={capexPower} min={300} max={1200} step={20} onChange={setCapexPower} unit="$M" />
-            <Slider label="土地、光纤与外部配套" value={capexLand} min={50} max={300} step={10} onChange={setCapexLand} unit="$M" />
-          </div>
-
-          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm">
-            <h2 className="text-lg font-semibold text-white mb-6 flex items-center border-b border-slate-800 pb-3">
-              <Icon name="clock" className="w-5 h-5 mr-2 text-emerald-400" />
-              运营成本 (OPEX)
-            </h2>
-            <Slider label="年度总OPEX (含气费、维保等)" value={opex} min={50} max={300} step={10} onChange={setOpex} unit="$M/年" />
-            <p className="text-xs text-slate-500 mt-2">提示：若合同采用Power Pass-through结构，可在此处下调净OPEX模拟真实收益敞口。</p>
-          </div>
+          <input type="range" id="itLoad" min="50" max="300" step="10" value="100" class="w-full" oninput="calculate()">
         </div>
 
-        {/* 右侧仪表盘区域 */}
-        <div className="lg:col-span-8 flex flex-col space-y-6">
-          
-          {/* 核心指标卡片组 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            <KpiCard 
-              title="总初始投资 (Total CAPEX)" 
-              value={`$${totalCapex}M`} 
-              subtext={`约合 ${(totalCapex/itLoad).toFixed(2)} 百万/MW`}
-              icon="dollar" 
-            />
-            <KpiCard 
-              title="年营业收入 (Annual Rev)" 
-              value={`$${annualRevenue.toFixed(1)}M`} 
-              subtext={`基于 ${itLoad}MW @ ${occupancy}%`}
-              icon="trendingUp" 
-            />
-            <KpiCard 
-              title="年净现金流 (Net CF)" 
-              value={`$${netCashFlow.toFixed(1)}M`} 
-              subtext="年收入减去年度OPEX"
-              icon="activity"
-              highlight={true}
-            />
-            <KpiCard 
-              title="静态回收期 (Payback)" 
-              value={payback === "无法回收" ? payback : `${payback} 年`} 
-              subtext={payback !== "无法回收" ? "从项目投入运营起算" : "请调整租金或削减成本"}
-              icon="clock" 
-            />
+        <!-- Slider: Occupancy -->
+        <div class="mb-5">
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-sm font-medium text-slate-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              目标出租率 (Anchor Tenant)
+            </label>
+            <span id="val-occupancy" class="text-sm font-bold text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/50">100 %</span>
           </div>
+          <input type="range" id="occupancy" min="50" max="100" step="5" value="100" class="w-full" oninput="calculate()">
+        </div>
 
-          {/* 累计现金流图表 */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 flex-1 min-h-[400px] flex flex-col relative backdrop-blur-sm">
-            <div className="flex justify-between items-end mb-6">
-              <div>
-                <h3 className="text-lg font-semibold text-white flex items-center">
-                  <Icon name="trendingUp" className="w-5 h-5 mr-2 text-cyan-400" />
-                  15年全生命周期累计现金流 (Cumulative Cash Flow)
-                </h3>
-                <p className="text-slate-400 text-sm mt-1">模拟在给定参数下的项目跨期盈亏曲线</p>
-              </div>
-              <div className="text-right">
-                <span className="block text-slate-400 text-sm">15年周期总净利 (Total Profit)</span>
-                <span className={`text-2xl font-bold ${totalProfit > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {totalProfit > 0 ? '+' : ''}{totalProfit > 0 ? `$${totalProfit.toFixed(0)}M` : `-$${Math.abs(totalProfit).toFixed(0)}M`}
-                </span>
-              </div>
-            </div>
-
-            <div className="relative flex-1 w-full bg-slate-950/50 rounded-xl border border-slate-800 overflow-hidden">
-              <svg viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`} className="w-full h-full overflow-visible">
-                {/* 网格背景 */}
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <line 
-                    key={`grid-y-${i}`}
-                    x1={paddingX} y1={paddingY + (i/5)*(viewBoxHeight - 2*paddingY)} 
-                    x2={viewBoxWidth - paddingX} y2={paddingY + (i/5)*(viewBoxHeight - 2*paddingY)} 
-                    stroke="#1e293b" strokeWidth="1" 
-                  />
-                ))}
-
-                {/* 盈亏平衡线 (Y=0) */}
-                <line x1={paddingX} y1={zeroY} x2={viewBoxWidth - paddingX} y2={zeroY} stroke="#475569" strokeWidth="2" strokeDasharray="6,6" />
-                <text x={paddingX + 10} y={zeroY - 10} fill="#94a3b8" fontSize="12" className="font-sans">盈亏平衡线 ($0)</text>
-
-                {/* 曲线阴影区 (使用多边形) */}
-                <polygon 
-                  points={`${getX(0)},${zeroY} ${chartData.map(d => `${getX(d.year)},${getY(d.cash)}`).join(' ')} ${getX(years)},${zeroY}`}
-                  fill="url(#gradient-blue)"
-                  opacity="0.2"
-                />
-
-                {/* 主数据连线 */}
-                <polyline
-                  fill="none"
-                  stroke="#06b6d4" // cyan-500
-                  strokeWidth="3"
-                  points={chartData.map(d => `${getX(d.year)},${getY(d.cash)}`).join(' ')}
-                />
-
-                {/* 数据点与交互展示 */}
-                {chartData.map(d => (
-                  <g key={d.year}>
-                    <circle 
-                      cx={getX(d.year)} 
-                      cy={getY(d.cash)} 
-                      r="4" 
-                      fill="#082f49" // sky-900
-                      stroke="#06b6d4" 
-                      strokeWidth="2" 
-                    />
-                    {/* 关键节点标签 (起点、终点) */}
-                    {(d.year === 0 || d.year === years) && (
-                      <text 
-                        x={getX(d.year) + (d.year === 0 ? 10 : -10)} 
-                        y={getY(d.cash) + (d.cash < 0 ? 20 : -10)} 
-                        fill={d.cash < 0 ? '#f43f5e' : '#34d399'} 
-                        fontSize="12" 
-                        fontWeight="bold"
-                        textAnchor={d.year === 0 ? "start" : "end"}
-                      >
-                        ${d.cash.toFixed(0)}M
-                      </text>
-                    )}
-                  </g>
-                ))}
-
-                {/* 回收期交叉点标识 */}
-                {breakEvenYear > 0 && breakEvenYear <= years && (
-                  <g>
-                    <circle cx={getX(breakEvenYear)} cy={zeroY} r="6" fill="#10b981" />
-                    <text x={getX(breakEvenYear)} y={zeroY - 15} fill="#10b981" fontSize="12" fontWeight="bold" textAnchor="middle">
-                      {breakEvenYear.toFixed(1)} 年回本
-                    </text>
-                    <line x1={getX(breakEvenYear)} y1={zeroY} x2={getX(breakEvenYear)} y2={viewBoxHeight - paddingY + 10} stroke="#10b981" strokeWidth="1" strokeDasharray="3,3" />
-                  </g>
-                )}
-
-                {/* X轴标签 */}
-                {Array.from({ length: 16 }).map((_, i) => (
-                  i % 3 === 0 && (
-                    <text 
-                      key={`x-label-${i}`}
-                      x={getX(i)} 
-                      y={viewBoxHeight - 15} 
-                      fill="#64748b" 
-                      fontSize="12" 
-                      textAnchor="middle"
-                    >
-                      第 {i} 年
-                    </text>
-                  )
-                ))}
-
-                {/* 渐变定义 */}
-                <defs>
-                  <linearGradient id="gradient-blue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="1"/>
-                    <stop offset="100%" stopColor="#06b6d4" stopOpacity="0"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-            
-            <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-500">
-              <span className="flex items-center"><div className="w-3 h-3 rounded-full bg-rose-500 mr-2 opacity-80"></div> 初期巨额沉没成本 (前期许可+基建+发电机组)</span>
-              <span className="flex items-center"><div className="w-3 h-3 rounded-full bg-cyan-500 mr-2 opacity-80"></div> 现金流回正轨道 (年收入抵扣OPEX)</span>
-              <span className="flex items-center"><div className="w-3 h-3 rounded-full bg-emerald-500 mr-2 opacity-80"></div> 回收期拐点</span>
-            </div>
+        <!-- Slider: Rent -->
+        <div class="mb-5">
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-sm font-medium text-slate-300 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              平均批发租金 (Capacity)
+            </label>
+            <span id="val-rent" class="text-sm font-bold text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/50">180 $/kW/月</span>
           </div>
+          <input type="range" id="rent" min="120" max="250" step="5" value="180" class="w-full" oninput="calculate()">
+        </div>
+      </div>
+
+      <!-- CAPEX -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm">
+        <h2 class="text-lg font-semibold text-white mb-6 flex items-center border-b border-slate-800 pb-3">
+          <svg class="w-5 h-5 mr-2 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          开发与基建投入 (CAPEX)
+        </h2>
+        
+        <div class="mb-5">
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-sm font-medium text-slate-300">前期合规、尽调与许可</label>
+            <span id="val-capexEarly" class="text-sm font-bold text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/50">20 $M</span>
+          </div>
+          <input type="range" id="capexEarly" min="5" max="50" step="1" value="20" class="w-full" oninput="calculate()">
+        </div>
+
+        <div class="mb-5">
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-sm font-medium text-slate-300">数据中心本体与机电 (Wholesale标准)</label>
+            <span id="val-capexDC" class="text-sm font-bold text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/50">800 $M</span>
+          </div>
+          <input type="range" id="capexDC" min="500" max="2000" step="50" value="800" class="w-full" oninput="calculate()">
+        </div>
+
+        <div class="mb-5">
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-sm font-medium text-slate-300">表后发电与配电系统</label>
+            <span id="val-capexPower" class="text-sm font-bold text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/50">500 $M</span>
+          </div>
+          <input type="range" id="capexPower" min="300" max="1200" step="20" value="500" class="w-full" oninput="calculate()">
+        </div>
+
+        <div class="mb-5">
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-sm font-medium text-slate-300">土地、光纤与外部配套</label>
+            <span id="val-capexLand" class="text-sm font-bold text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/50">150 $M</span>
+          </div>
+          <input type="range" id="capexLand" min="50" max="300" step="10" value="150" class="w-full" oninput="calculate()">
+        </div>
+      </div>
+
+      <!-- OPEX -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm">
+        <h2 class="text-lg font-semibold text-white mb-6 flex items-center border-b border-slate-800 pb-3">
+          <svg class="w-5 h-5 mr-2 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M12 6v6l4 2"/></svg>
+          运营成本 (OPEX)
+        </h2>
+        
+        <div class="mb-5">
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-sm font-medium text-slate-300">年度净OPEX (NNN租约, 气/电费由租户承担)</label>
+            <span id="val-opex" class="text-sm font-bold text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/50">30 $M/年</span>
+          </div>
+          <input type="range" id="opex" min="10" max="300" step="5" value="30" class="w-full" oninput="calculate()">
+          <p class="text-xs text-slate-500 mt-2">提示：在Wholesale模式下，大额能源(天然气)与发电运行成本直接Pass-through给租户，业主仅承担物业与基础运维。</p>
         </div>
       </div>
     </div>
-  );
-}
+
+    <!-- Right Dashboard -->
+    <div class="lg:col-span-8 flex flex-col space-y-6">
+      
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        
+        <!-- Total CAPEX -->
+        <div class="p-5 rounded-xl border border-slate-700/50 bg-slate-800/40 transition-all flex flex-col relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-slate-400 text-sm font-medium">总初始投资 (Total CAPEX)</span>
+            <svg class="w-5 h-5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <span id="kpi-totalCapex" class="text-3xl font-bold tracking-tight text-white"></span>
+          <span id="kpi-totalCapex-sub" class="text-slate-500 text-xs mt-2 font-medium"></span>
+        </div>
+
+        <!-- Annual Revenue -->
+        <div class="p-5 rounded-xl border border-slate-700/50 bg-slate-800/40 transition-all flex flex-col relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-slate-400 text-sm font-medium">年营业收入 (Annual Rev)</span>
+            <svg class="w-5 h-5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6"/></svg>
+          </div>
+          <span id="kpi-annualRev" class="text-3xl font-bold tracking-tight text-white"></span>
+          <span id="kpi-annualRev-sub" class="text-slate-500 text-xs mt-2 font-medium"></span>
+        </div>
+
+        <!-- Net Cash Flow (Highlighted) -->
+        <div class="p-5 rounded-xl border border-cyan-500/50 bg-gradient-to-br from-cyan-950/40 to-blue-900/20 shadow-[0_0_15px_rgba(6,182,212,0.1)] transition-all flex flex-col relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-slate-400 text-sm font-medium">年净现金流 (Net CF)</span>
+            <svg class="w-5 h-5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <span id="kpi-netCF" class="text-3xl font-bold tracking-tight text-cyan-300"></span>
+          <span class="text-slate-500 text-xs mt-2 font-medium">年收入减去年度OPEX</span>
+          <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+        </div>
+
+        <!-- Payback -->
+        <div class="p-5 rounded-xl border border-slate-700/50 bg-slate-800/40 transition-all flex flex-col relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-slate-400 text-sm font-medium">静态回收期 (Payback)</span>
+            <svg class="w-5 h-5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M12 6v6l4 2"/></svg>
+          </div>
+          <span id="kpi-payback" class="text-3xl font-bold tracking-tight text-white"></span>
+          <span id="kpi-payback-sub" class="text-slate-500 text-xs mt-2 font-medium"></span>
+        </div>
+
+      </div>
+
+      <!-- Chart -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 flex-1 min-h-[400px] flex flex-col relative backdrop-blur-sm">
+        <div class="flex justify-between items-end mb-6">
+          <div>
+            <h3 class="text-lg font-semibold text-white flex items-center">
+              <svg class="w-5 h-5 mr-2 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6"/></svg>
+              15年全生命周期累计现金流 (Cumulative Cash Flow)
+            </h3>
+            <p class="text-slate-400 text-sm mt-1">模拟在给定参数下的项目跨期盈亏曲线</p>
+          </div>
+          <div class="text-right">
+            <span class="block text-slate-400 text-sm">15年周期总净利 (Total Profit)</span>
+            <span id="kpi-totalProfit" class="text-2xl font-bold text-emerald-400"></span>
+          </div>
+        </div>
+
+        <div class="relative flex-1 w-full bg-slate-950/50 rounded-xl border border-slate-800 overflow-hidden" id="chart-container">
+          <!-- SVG will be injected here via JS -->
+        </div>
+        
+        <div class="mt-4 flex flex-wrap gap-4 text-xs text-slate-500">
+          <span class="flex items-center"><div class="w-3 h-3 rounded-full bg-rose-500 mr-2 opacity-80"></div> 初期巨额沉没成本 (前期许可+基建+发电机组)</span>
+          <span class="flex items-center"><div class="w-3 h-3 rounded-full bg-cyan-500 mr-2 opacity-80"></div> 现金流回正轨道 (年收入抵扣OPEX)</span>
+          <span class="flex items-center"><div class="w-3 h-3 rounded-full bg-emerald-500 mr-2 opacity-80"></div> 回收期拐点</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Logic -->
+  <script>
+    const years = 15;
+
+    function getVal(id) {
+      return parseFloat(document.getElementById(id).value);
+    }
+
+    function setDisplay(id, val, suffix) {
+      document.getElementById('val-' + id).innerText = val + suffix;
+    }
+
+    function calculate() {
+      // 1. Get input values
+      const itLoad = getVal('itLoad');
+      const occupancy = getVal('occupancy');
+      const rent = getVal('rent');
+      const capexEarly = getVal('capexEarly');
+      const capexDC = getVal('capexDC');
+      const capexPower = getVal('capexPower');
+      const capexLand = getVal('capexLand');
+      const opex = getVal('opex');
+
+      // Update Slider Labels
+      setDisplay('itLoad', itLoad, ' MW');
+      setDisplay('occupancy', occupancy, ' %');
+      setDisplay('rent', rent, ' $/kW/月');
+      setDisplay('capexEarly', capexEarly, ' $M');
+      setDisplay('capexDC', capexDC, ' $M');
+      setDisplay('capexPower', capexPower, ' $M');
+      setDisplay('capexLand', capexLand, ' $M');
+      setDisplay('opex', opex, ' $M/年');
+
+      // 2. Core Calculations
+      const totalCapex = capexEarly + capexDC + capexPower + capexLand;
+      const annualRevenue = (itLoad * 1000 * (occupancy / 100) * rent * 12) / 1000000;
+      const netCashFlow = annualRevenue - opex;
+      const totalProfit = netCashFlow * years - totalCapex;
+      
+      let paybackText = "无法回收";
+      let paybackNum = null;
+      if (netCashFlow > 0) {
+        paybackNum = totalCapex / netCashFlow;
+        paybackText = paybackNum.toFixed(1) + " 年";
+      }
+
+      // 3. Update KPI Cards
+      document.getElementById('kpi-totalCapex').innerText = '$' + totalCapex + 'M';
+      document.getElementById('kpi-totalCapex-sub').innerText = '约合 ' + (totalCapex/itLoad).toFixed(2) + ' 百万/MW';
+      
+      document.getElementById('kpi-annualRev').innerText = '$' + annualRevenue.toFixed(1) + 'M';
+      document.getElementById('kpi-annualRev-sub').innerText = '基于 ' + itLoad + 'MW @ ' + occupancy + '%';
+      
+      document.getElementById('kpi-netCF').innerText = '$' + netCashFlow.toFixed(1) + 'M';
+      
+      document.getElementById('kpi-payback').innerText = paybackText;
+      document.getElementById('kpi-payback-sub').innerText = netCashFlow > 0 ? "从项目投入运营起算" : "请调整租金或削减成本";
+
+      const profitEl = document.getElementById('kpi-totalProfit');
+      if (totalProfit > 0) {
+        profitEl.innerText = '+$' + totalProfit.toFixed(0) + 'M';
+        profitEl.className = 'text-2xl font-bold text-emerald-400';
+      } else {
+        profitEl.innerText = '-$' + Math.abs(totalProfit).toFixed(0) + 'M';
+        profitEl.className = 'text-2xl font-bold text-rose-400';
+      }
+
+      // 4. Render Chart
+      renderChart(totalCapex, netCashFlow, totalProfit, paybackNum);
+    }
+
+    function renderChart(totalCapex, netCashFlow, totalProfit, breakEvenYear) {
+      // Data generation
+      const chartData = [];
+      let currentCash = -totalCapex;
+      chartData.push({ year: 0, cash: currentCash });
+      for (let i = 1; i <= years; i++) {
+        currentCash += netCashFlow;
+        chartData.push({ year: i, cash: currentCash });
+      }
+
+      const viewBoxWidth = 1000;
+      const viewBoxHeight = 350;
+      const paddingX = 40;
+      const paddingY = 40;
+
+      const minCash = Math.min(...chartData.map(d => d.cash), -totalCapex * 1.1);
+      const maxCash = Math.max(...chartData.map(d => d.cash), totalProfit > 0 ? totalProfit * 1.1 : 0);
+      const range = (maxCash - minCash) || 1;
+
+      const getX = (year) => paddingX + (year / years) * (viewBoxWidth - 2 * paddingX);
+      const getY = (val) => viewBoxHeight - paddingY - ((val - minCash) / range) * (viewBoxHeight - 2 * paddingY);
+
+      const zeroY = getY(0);
+
+      // Construct SVG inner string
+      let svgContent = `
+        <svg viewBox="0 0 ${viewBoxWidth} ${viewBoxHeight}" class="w-full h-full overflow-visible absolute top-0 left-0">
+          <defs>
+            <linearGradient id="gradient-blue" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="1"/>
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0"/>
+            </linearGradient>
+          </defs>
+      `;
+
+      // Background grids
+      for(let i=0; i<=5; i++) {
+        let yPos = paddingY + (i/5)*(viewBoxHeight - 2*paddingY);
+        svgContent += `<line x1="${paddingX}" y1="${yPos}" x2="${viewBoxWidth - paddingX}" y2="${yPos}" stroke="#1e293b" stroke-width="1" />`;
+      }
+
+      // Zero line
+      svgContent += `
+        <line x1="${paddingX}" y1="${zeroY}" x2="${viewBoxWidth - paddingX}" y2="${zeroY}" stroke="#475569" stroke-width="2" stroke-dasharray="6,6" />
+        <text x="${paddingX + 10}" y="${zeroY - 10}" fill="#94a3b8" font-size="12" class="font-sans">盈亏平衡线 ($0)</text>
+      `;
+
+      // Points array for shapes
+      const pointsString = chartData.map(d => `${getX(d.year)},${getY(d.cash)}`).join(' ');
+
+      // Area polygon
+      svgContent += `<polygon points="${getX(0)},${zeroY} ${pointsString} ${getX(years)},${zeroY}" fill="url(#gradient-blue)" opacity="0.2" />`;
+
+      // Main line
+      svgContent += `<polyline fill="none" stroke="#06b6d4" stroke-width="3" points="${pointsString}" />`;
+
+      // Data points and labels
+      chartData.forEach(d => {
+        const x = getX(d.year);
+        const y = getY(d.cash);
+        svgContent += `<circle cx="${x}" cy="${y}" r="4" fill="#082f49" stroke="#06b6d4" stroke-width="2" />`;
+        
+        // Start and end labels
+        if (d.year === 0 || d.year === years) {
+          const textX = x + (d.year === 0 ? 10 : -10);
+          const textY = y + (d.cash < 0 ? 20 : -10);
+          const color = d.cash < 0 ? '#f43f5e' : '#34d399';
+          const anchor = d.year === 0 ? "start" : "end";
+          svgContent += `<text x="${textX}" y="${textY}" fill="${color}" font-size="12" font-weight="bold" text-anchor="${anchor}">$${d.cash.toFixed(0)}M</text>`;
+        }
+      });
+
+      // Break-even point marker
+      if (breakEvenYear && breakEvenYear > 0 && breakEvenYear <= years) {
+        const breakX = getX(breakEvenYear);
+        svgContent += `
+          <circle cx="${breakX}" cy="${zeroY}" r="6" fill="#10b981" />
+          <text x="${breakX}" y="${zeroY - 15}" fill="#10b981" font-size="12" font-weight="bold" text-anchor="middle">${breakEvenYear.toFixed(1)} 年回本</text>
+          <line x1="${breakX}" y1="${zeroY}" x2="${breakX}" y2="${viewBoxHeight - paddingY + 10}" stroke="#10b981" stroke-width="1" stroke-dasharray="3,3" />
+        `;
+      }
+
+      // X-Axis Labels
+      for (let i = 0; i <= years; i++) {
+        if (i % 3 === 0) {
+          svgContent += `<text x="${getX(i)}" y="${viewBoxHeight - 15}" fill="#64748b" font-size="12" text-anchor="middle">第 ${i} 年</text>`;
+        }
+      }
+
+      svgContent += `</svg>`;
+      
+      document.getElementById('chart-container').innerHTML = svgContent;
+    }
+
+    // Initialize calculation on page load
+    window.onload = calculate;
+
+  </script>
+</body>
+</html>
