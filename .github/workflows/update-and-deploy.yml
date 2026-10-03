@@ -1,0 +1,89 @@
+name: Update data and deploy Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '23 * * * *'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      degraded: ${{ steps.data.outputs.degraded }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch market data in mk
+        id: data
+        working-directory: mk
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: python scripts/update_data.py
+      - name: Validate market data
+        working-directory: mk
+        run: |
+          python -m unittest discover -s tests
+          node tests/test_calculations.cjs
+      - name: Save updated history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add mk/data/history.json mk/data/history.js
+          if ! git diff --staged --quiet; then
+            git commit -m "Update market dashboard history"
+            git push
+          fi
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Build the entire existing Jekyll website
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - name: Verify dashboard is included
+        run: |
+          test -f _site/mk/index.html
+          test -f _site/mk/data/history.json
+          test -f _site/mk/data/history.js
+      - name: Upload entire website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy entire website
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  report-source-failure:
+    needs: [update, deploy]
+    if: needs.update.outputs.degraded == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report retained stale observations
+        run: |
+          echo "::error::Some sources failed. Previous observations were retained and deployed. Inspect the Fetch market data in mk step."
+          exit 1
