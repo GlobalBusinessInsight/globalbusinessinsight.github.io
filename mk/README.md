@@ -67,3 +67,11 @@ GitHub 部署参考：[自定义 Pages 工作流](https://docs.github.com/en/pag
 时间筛选下方新增“持续更新至今”开关，默认开启并记住选择。结束月份跟随美东当前月份；新月份出现时自动延伸。快捷 1/3/5/10/20 年按固定月数滚动，“全部”保留最早起点。自定义历史区间会关闭跟随；重新开启时保留自定义起点。快照停留在历史月份时不会被刷新跳走，停留在最新月份时则随月份一起前移。
 
 网页每分钟检查静态数据文件，重新回到标签页或网络恢复时也检查。GitHub Actions 每小时抓取并部署，可能存在调度与行情源延迟。开关只控制网页时间范围，不会从浏览器启动 GitHub 任务；本地双击文件仍为随附快照，持续取得新数据需要部署并启用工作流。未发布的宏观数据和当前月份尚无行情时均留空，不把旧月份伪装成当前值。
+
+## 中英文 / Language selection
+
+页面首次打开使用浏览器首选语言列表中第一个支持的语言：`zh-*` 使用简体中文，`en-*` 使用英文；未匹配时使用英文。右上角的 **自动 / 中文 / English** 可随时切换。手动选择保存在当前浏览器中；选择“自动”可恢复跟随浏览器语言。浏览器禁止本地存储时，当前页面仍可切换语言，但不会记住选择。
+
+The first visit uses the first supported language in the browser's ordered language preferences: `zh-*` selects Simplified Chinese and `en-*` selects English, with English as the fallback. Use **Auto / 中文 / English** in the header to switch. Manual choices persist in this browser; Auto restores browser-language detection. Switching preserves the selected date range, focused month, chart mode and overlays. Labels, chart tooltips, status messages, accessibility labels and CSV headers follow the selected language; observation dates and CSV numeric values stay language-neutral. No translation service or database is required.
+
+Translations live in `i18n.js`. Run `node tests/test_calculations.cjs` to verify calculations and language selection/translation coverage.

@@ -5,6 +5,7 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const source = fs.readFileSync(path.join(root,'app.js'),'utf8');
 const context = vm.createContext({});
+vm.runInContext(fs.readFileSync(path.join(root,'i18n.js'),'utf8'), context);
 vm.runInContext(source.slice(0,source.indexOf('function setData')) + '\nglobalThis.api={makeRows,shiftMonth,quarter,percent,validate,followRange};})();', context);
 const {makeRows,shiftMonth,quarter,percent,validate,followRange}=context.api;
 assert.equal(shiftMonth('2020-01',-1),'2019-12');
@@ -43,3 +44,6 @@ assert.equal(followRange({...active,focus:'2020-04'},'2005-01','2026-11').focus,
 assert.equal(followRange({...active,preset:null},'2005-01','2026-11').start,'2006-11');
 assert.equal(followRange({...active,followNow:false},'2005-01','2026-11').end,'2026-10');
 console.log('Follow-current checks passed: rolling range, fixed range, pinned month, missing current data.');
+
+// Keep language regressions covered by the existing Actions validation command.
+require('./test_i18n.cjs');
