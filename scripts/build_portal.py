@@ -52,7 +52,7 @@ class Extract(HTMLParser):
   if self.p is not None and not self.ignore:self.p.append(t)
 def clean_generated(s):
  for name in ['metadata','reader']:
-  s=re.sub(r'\n?<!-- GBI '+name+r' start -->.*?<!-- GBI '+name+r' end -->\n?', '\n',s,flags=re.S)
+  s=re.sub(r'\s*<!-- GBI '+name+r' start -->.*?<!-- GBI '+name+r' end -->\s*', '\n',s,flags=re.S)
  return s
 
 def classify(path,title):
