@@ -1,0 +1,32 @@
+name: Validate business portal
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python scripts/build_portal.py
+      - run: python scripts/check_portal.py
+      - run: node --check assets/gbi/site.js
+      - name: Build published website
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - name: Check final routes
+        run: |
+          test -f _site/index.html
+          test -f _site/tools/english/index.html
+          test -f _site/mk/index.html
+          test -f _site/robots.txt
+          test -f _site/about/index.html
