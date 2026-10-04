@@ -47,6 +47,8 @@ def main():
  robots=(ROOT/'robots.txt').read_text();require('Disallow: /' not in robots,'Site crawling blocked');require('Allow: /' in robots,'Missing crawl permission')
  english=(ROOT/'tools/english/index.html').read_text();require('src="/app.js"' in english and 'src="/curriculum.js"' in english,'English migration asset paths');require("KEY='nj-english-v1'" in (ROOT/'app.js').read_text(),'English progress storage changed')
  require('English, Every Day' not in (ROOT/'index.html').read_text(),'Root homepage is still English app');require(not (ROOT/'index.md').exists(),'Two root homepage sources');require(not (ROOT/'about.md').exists(),'Two about page sources')
+ require((ROOT/'subscribe/index.html').is_file(),'Missing subscription page');require((ROOT/'assets/gbi/subscribe.js').is_file(),'Missing subscription script')
+ home=(ROOT/'index.html').read_text();require('https://obbdeep.com/' in home,'Missing OBB evaluator link');require('https://inossem.com/' in home,'Missing INOSSEM link');require('data-manual-subscribe' in home,'Missing manual subscription form')
  for cn,en in [('50909us3pl.html','50909us3plen.html'),('aierp.html','aierpen.html')]:
   for path in [cn,en]:
    s=(ROOT/path).read_text();require('hreflang="zh-CN"' in s and 'hreflang="en"' in s,'Missing reciprocal language pair: '+path)
