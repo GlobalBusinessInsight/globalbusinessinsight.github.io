@@ -35,7 +35,7 @@ AD='<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoog
 # Leave this empty until the site owner supplies the Gmail address used for
 # manual subscription requests. The browser form still works as a copyable
 # email draft while this is blank.
-MANUAL_SUBSCRIBE_EMAIL=''
+MANUAL_SUBSCRIBE_EMAIL='paulhu@asu.edu'
 def write(path,text):
  p=ROOT/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(text,encoding='utf-8')
 def url(path):return '/'+quote(path,safe='/')
