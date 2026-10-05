@@ -125,7 +125,7 @@ def share_card(r, kind):
 def share_section(industry_path,company_path,by):
  industry=by.get(industry_path); company=by.get(company_path)
  if not industry or not company:return ''
- return '<section class="share-section" id="latest"><div class="section-head"><div><div class="eyebrow">GLOBAL BRIEFINGS / SHARE & READ</div><h2>Start with the signal. Share the full story.</h2></div><span>English-first · 中文补充</span></div><div class="share-grid">'+share_card(industry,'industry')+share_card(company,'company')+'</div><p class="share-help">Copy the bilingual post, then paste it into your LinkedIn or Facebook update. Social buttons open the sharing window. / 复制文案后粘贴到社交平台，分享按钮会打开发布窗口。</p></section>
+ return '<section class="share-section" id="latest"><div class="section-head"><div><div class="eyebrow">GLOBAL BRIEFINGS / SHARE & READ</div><h2>Start with the signal. Share the full story.</h2></div><span>English-first · 中文补充</span></div><div class="share-grid">'+share_card(industry,'industry')+share_card(company,'company')+'</div><p class="share-help">Copy the bilingual post, then paste it into your LinkedIn or Facebook update. Social buttons open the sharing window. / 复制文案后粘贴到社交平台，分享按钮会打开发布窗口。</p></section>'
 
 def intro(label,title,desc):return f'<div class="page-intro"><div class="eyebrow">{label}</div><h1>{title}</h1><p>{desc}</p></div>'
 def topic_cards():return ''.join(f'<article class="topic"><span class="number">0{i+1}</span><h3><a href="/topics/{slug}/">{title}</a></h3><p>{desc}</p><a class="text-link" href="/topics/{slug}/">进入研究专题 →</a></article>' for i,(slug,title,desc,cat,paths) in enumerate(TOPICS))
