@@ -14,3 +14,6 @@
  form.addEventListener('submit',e=>{e.preventDefault();load().then(search)});input.addEventListener('input',()=>load().then(search));select.addEventListener('change',()=>load().then(search));more.addEventListener('click',()=>{limit+=48;paint()});
  if(input.value||select.value)load();
 })();
+
+// Homepage social publishing helper: copy bilingual post text for manual publishing.
+(()=>{document.addEventListener('click',async e=>{const button=e.target.closest('[data-copy-text]');if(!button)return;const card=button.closest('.share-card'),status=card&&card.querySelector('[data-copy-status]'),value=button.getAttribute('data-copy-text')||'';try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(value)}else{const area=document.createElement('textarea');area.value=value;area.setAttribute('readonly','');area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();const ok=document.execCommand('copy');area.remove();if(!ok)throw new Error('copy failed')}button.textContent='已复制 / Copied';if(status)status.textContent='文案已复制，可粘贴到 LinkedIn 或 Facebook。';window.setTimeout(()=>{button.textContent='复制双语文案'},2200)}catch{if(status)status.textContent='自动复制失败，请选择卡片文案手动复制。'}})})();
