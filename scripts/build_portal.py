@@ -128,6 +128,16 @@ def share_section(industry_path,company_path,by):
  return '<section class="share-section" id="latest"><div class="section-head"><div><div class="eyebrow">GLOBAL BRIEFINGS / SHARE & READ</div><h2>Start with the signal. Share the full story.</h2></div><span>English-first · 中文补充</span></div><div class="share-grid">'+share_card(industry,'industry')+share_card(company,'company')+'</div><p class="share-help">Copy the bilingual post, then paste it into your LinkedIn or Facebook update. Social buttons open the sharing window. / 复制文案后粘贴到社交平台，分享按钮会打开发布窗口。</p></section>'
 
 def intro(label,title,desc):return f'<div class="page-intro"><div class="eyebrow">{label}</div><h1>{title}</h1><p>{desc}</p></div>'
+def desk_tiles():
+ entries=[
+  ('EUROPE / EV MARKET','欧盟电动车市场','BEV、混动与规则口径分开看。','/eu-ev-market-2026.html'),
+  ('LATIN AMERICA / MACHINERY','三一南美市场','经销网络、设备服务与本地执行。','/reports/sany-south-america/index.html'),
+  ('AI / OPERATIONS','企业AI与流程转型','从业务流程和数据基础评估落地条件。','/aierp.html'),
+  ('U.S. DATA / MARKET ATLAS','美国市场观察','指数、利率、就业与GDP放在同一条线上。','/mk/')
+ ]
+ tiles=''.join('<article class="desk-tile"><div class="eyebrow">'+label+'</div><h3><a href="'+href+'">'+title+'</a></h3><p>'+desc+'</p><a class="desk-cta" href="'+href+'">查看专题 →</a></article>' for label,title,desc,href in entries)
+ return '<section class="research-desk"><div class="section-head"><div><div class="eyebrow">RESEARCH DESK / EXPLORE BY LENS</div><h2>四条研究线索，快速进入</h2></div><a href="/archive/">打开完整资料库 →</a></div><div class="desk-grid">'+tiles+'</div></section>'
+
 def topic_cards():return ''.join(f'<article class="topic"><span class="number">0{i+1}</span><h3><a href="/topics/{slug}/">{title}</a></h3><p>{desc}</p><a class="text-link" href="/topics/{slug}/">进入研究专题 →</a></article>' for i,(slug,title,desc,cat,paths) in enumerate(TOPICS))
 
 def global_feature_paths(records):
@@ -205,13 +215,13 @@ def generate():
  hero='''<section class="hero"><div class="hero-copy"><div class="eyebrow">GLOBAL BUSINESS, IN CONTEXT · WEEKLY INTELLIGENCE</div><h1>Follow the shift.<br>Find your next market.</h1><p class="hero-cn">看懂全球产业变化，找到中国企业出海的下一步。</p><p>Source-led briefings on industries, regional markets and Chinese companies going global. English-first summaries, with Chinese context.</p><div class="hero-actions"><a class="action" href="#latest">Read this week’s briefings ↓</a><a class="action secondary" href="/category/global/">中国企业出海 →</a><a class="action secondary" href="/archive/">Browse research</a></div><div class="hero-signals"><span>INDUSTRY × REGION</span><span>CHINA GOING GLOBAL</span><span>MARKET DATA & TOOLS</span></div></div><aside class="tool-feature"><div class="eyebrow">MARKET & MACRO / RESEARCH TOOL</div><h2>Market Atlas</h2><p>Compare U.S. market and macro indicators on one timeline.</p><div class="tool-tags"><span>Market indices</span><span>Rates & Treasuries</span><span>Jobs & GDP</span></div><p>Choose a period, compare monthly changes, and review source definitions.</p><a class="action" href="/mk/">Open Market Atlas ↗</a><a class="tool-secondary" href="/markets/">浏览市场专题 / More market research →</a></aside></section>'''
  selected=FEATURED['industry'][:2]+FEATURED['global'][:2]+FEATURED['digital'][:2]
  global_paths=global_feature_paths(records)
- global_day=datetime.now(timezone.utc).strftime('%Y-%m-%d')
  company_path=global_paths[0] if global_paths else ''
  featured_industry=FEATURED['industry'][0]
  social=share_section(featured_industry,company_path,by)
- daily_cards=[p for p in global_paths if p!=company_path]
- global_section='<div class="section-head"><div><div class="eyebrow">CHINA GOING GLOBAL / DAILY WATCH</div><h2>中国企业全球化</h2></div><span>今日精选 · '+global_day+' · 每日更新</span></div><div class="collection global-daily">'+cards(daily_cards,by)+'</div><p class="global-daily-note">有新研究时优先呈现；暂无新稿时，每天轮换已有的企业出海与全球市场专题。<a href="/category/global/">查看全部企业出海资料 →</a></p>'
- body=hero+social+global_section+'<div class="section-head"><div><div class="eyebrow">RESEARCH PATHS / START HERE</div><h2>从一个重要问题开始</h2></div><span>先建立框架，再深入一个具体问题</span></div><section class="topics">'+topic_cards()+'</section><div class="section-head"><div><div class="eyebrow">MORE TO EXPLORE / ARCHIVE</div><h2>从资料库继续发现</h2></div><a href="/archive/">全部报告 →</a></div><div class="editorial-grid"><div class="report-list">'+cards(selected,by)+'</div><aside class="reading-note"><div class="eyebrow">READ WITH CONTEXT</div><h3>Research with context.</h3><p>读报告，也读它的边界。历史判断、情景预测和当前事实，需要分别看待。</p><ul><li>先确认数据年份与市场范围</li><li>区分事实、估计和预测</li><li>回到原始出处核对关键数字</li></ul><a class="text-link" href="/editorial/">编辑与来源标准 →</a><h3>Selected in English</h3><p>从仓储、企业技术与全球业务开始，查阅已有英文研究。</p><a class="text-link" href="/en/">Explore English reports →</a></aside></div>'+subscribe_panel()+partner_panel()
+ daily_cards=[p for p in global_paths if p!=company_path][:3]
+ global_section='<div class="section-head"><div><div class="eyebrow">CHINA GOING GLOBAL / COMPANY BRIEFINGS</div><h2>中国企业全球化</h2></div><a href="/category/global/">全部企业出海案例 →</a></div><div class="collection global-daily">'+cards(daily_cards,by)+'</div>'
+ desk=desk_tiles()
+ body=hero+desk+social+global_section+'<div class="section-head"><div><div class="eyebrow">RESEARCH PATHS / START HERE</div><h2>从一个重要问题开始</h2></div><span>先建立框架，再深入一个具体问题</span></div><section class="topics">'+topic_cards()+'</section><div class="section-head"><div><div class="eyebrow">MORE TO EXPLORE / ARCHIVE</div><h2>从资料库继续发现</h2></div><a href="/archive/">全部报告 →</a></div><div class="editorial-grid"><div class="report-list">'+cards(selected,by)+'</div><aside class="reading-note"><div class="eyebrow">READ WITH CONTEXT</div><h3>Research with context.</h3><p>读报告，也读它的边界。历史判断、情景预测和当前事实，需要分别看待。</p><ul><li>先确认数据年份与市场范围</li><li>区分事实、估计和预测</li><li>回到原始出处核对关键数字</li></ul><a class="text-link" href="/editorial/">编辑与来源标准 →</a><h3>Selected in English</h3><p>从仓储、企业技术与全球业务开始，查阅已有英文研究。</p><a class="text-link" href="/en/">Explore English reports →</a></aside></div>'+subscribe_panel()+partner_panel()
  write('index.html',shell('全球产业、企业出海与数字化研究','Source-led briefings on industry shifts, regional markets and Chinese companies expanding globally. 中文补充：产业研究、区域市场分析与中国企业出海案例。','index.html',body,og_title='Global Business Insight | Markets & China Going Global',og_desc='Source-led briefings on industry shifts, regional markets and Chinese companies expanding globally. 中文补充：产业研究、区域市场分析与中国企业出海案例。'))
  for cat in ['industry','global','digital']:
   title,desc=CATEGORIES[cat];items=[r for r in records if r['category']==cat];ordered=FEATURED[cat]+[r['path'] for r in items if r['path'] not in FEATURED[cat]]
