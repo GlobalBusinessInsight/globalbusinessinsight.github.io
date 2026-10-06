@@ -107,7 +107,11 @@ def card(r):return f'<article class="report"><div class="eyebrow">{escape(r["cat
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if kind=='industry':
+ if r['path']=='asean-cooling-market-2026.html':
+  en='Southeast Asia’s residential air-conditioner stock is projected to triple by 2035. But the region is not one uniform market: efficiency rules, affordability, grid capacity and after-sales networks shape the business case country by country.'
+  zh='中文补充：东南亚空调需求长期向上，但能效规则、售价、电力约束与售后网络决定增长质量。'
+  tags='#SoutheastAsia #Cooling #MarketEntry'
+ elif kind=='industry':
   en='Europe’s EV transition is accelerating—but market share alone does not tell the whole story. Our briefing separates battery-electric growth from the broader powertrain mix, then examines what trade rules, country-level demand and local execution mean for market entry.'
   zh='中文补充：看懂欧盟电动车增长，先分清统计口径，再看贸易规则、国别需求与本地化能力。'
   tags='#EuropeanAuto #MarketEntry #ChinaGoingGlobal'
@@ -136,7 +140,7 @@ def share_section(industry_path,company_path,by):
 def intro(label,title,desc):return f'<div class="page-intro"><div class="eyebrow">{label}</div><h1>{title}</h1><p>{desc}</p></div>'
 def desk_tiles():
  entries=[
-  ('EUROPE / EV MARKET','欧盟电动车市场','BEV、混动与规则口径分开看。','/eu-ev-market-2026.html'),
+  ('SOUTHEAST ASIA / COOLING','东南亚空调市场','需求增长、能效规则与本地运营。','/asean-cooling-market-2026.html'),
   ('LATIN AMERICA / MACHINERY','三一南美市场','经销网络、设备服务与本地执行。','/reports/sany-south-america/index.html'),
   ('AI / OPERATIONS','企业AI与流程转型','从业务流程和数据基础评估落地条件。','/aierp.html'),
   ('U.S. DATA / MARKET ATLAS','美国市场观察','指数、利率、就业与GDP放在同一条线上。','/mk/')
