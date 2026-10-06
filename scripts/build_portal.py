@@ -10,11 +10,13 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'asean-cooling-market-2026.html':'基于IEA与东盟能源中心资料，分析东南亚空调需求、能效要求、国家差异与本地化经营。',
+'haier-global-2026.html':'依据海尔智家2026年中期业绩披露，梳理区域经营表现、产品本地化与全球供应链策略。',
 '50909us3pl.html':'从服务分类、客户结构与竞争格局，理解美国第三方仓储。历史资料含预测，使用数值前请核对原始来源。',
 '50909us3plen.html':'An English-language overview of U.S. third-party warehousing, service models and competition. Historical analysis includes forecasts.',
 'aierp.html':'围绕能源企业的SAP S/4HANA与AI应用，梳理流程、数据和实施问题。',
@@ -109,6 +111,10 @@ def share_card(r, kind):
   en='Europe’s EV transition is accelerating—but market share alone does not tell the whole story. Our briefing separates battery-electric growth from the broader powertrain mix, then examines what trade rules, country-level demand and local execution mean for market entry.'
   zh='中文补充：看懂欧盟电动车增长，先分清统计口径，再看贸易规则、国别需求与本地化能力。'
   tags='#EuropeanAuto #MarketEntry #ChinaGoingGlobal'
+ elif r['path']=='haier-global-2026.html':
+  en='Haier Smart Home’s H1 2026 results point to a global model built on regional brands, localized products and supply-chain capabilities. Europe revenue grew 4.9%, South Asia revenue rose 17.1% in RMB terms, and Southeast Asia delivered double-digit growth. The briefing separates company-reported signals from what remains unproven about regional profitability and returns.'
+  zh='中文补充：海尔智家多区域收入保持增长，但地区利润、现金回报与本地投资效率仍需更多披露验证。'
+  tags='#Haier #ChinaGoingGlobal #GlobalBusiness'
  elif r['path']=='byd_global_2026.html':
   en='BYD’s overseas growth is moving beyond exports. The next test is whether local manufacturing, product adaptation, R&D and service networks can turn shipment growth into a durable business. This source-led briefing separates company disclosures from what the numbers cannot yet prove.'
   zh='中文补充：比亚迪出海的下一阶段，不只是销量，而是本地制造、产品适配与服务网络能否形成可持续经营。'
