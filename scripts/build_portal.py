@@ -10,11 +10,13 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'us-datacenter-power-2026.html':'基于LBNL、EIA、FERC与美国能源部资料，拆解美国数据中心用电情景、电网接入和商业机会。',
+'anker-global-2026.html':'依据安克创新2026年半年度报告，分析海外收入、区域与渠道结构、研发投入及现金流风险。',
 'asean-cooling-market-2026.html':'基于IEA与东盟能源中心资料，分析东南亚空调需求、能效要求、国家差异与本地化经营。',
 'haier-global-2026.html':'依据海尔智家2026年中期业绩披露，梳理区域经营表现、产品本地化与全球供应链策略。',
 '50909us3pl.html':'从服务分类、客户结构与竞争格局，理解美国第三方仓储。历史资料含预测，使用数值前请核对原始来源。',
@@ -107,14 +109,22 @@ def card(r):return f'<article class="report"><div class="eyebrow">{escape(r["cat
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='asean-cooling-market-2026.html':
-  en='Southeast Asia’s residential air-conditioner stock is projected to triple by 2035. But the region is not one uniform market: efficiency rules, affordability, grid capacity and after-sales networks shape the business case country by country.'
+ if r['path']=='us-datacenter-power-2026.html':
+  en='U.S. data-center electricity demand is rising, but a forecast is not a firm load or a supplier order. This briefing separates LBNL’s modeled scenarios from recent EIA estimates, then examines FERC interconnection action and transmission constraints.'
+  zh='中文补充：数据中心用电预测不等于已落地项目或供应商订单。判断美国市场机会，要跟踪并网、输电、许可与实际采购。'
+  tags='#DataCenters #PowerGrid #USMarket'
+ elif r['path']=='asean-cooling-market-2026.html':
+  en='Southeast Asia’s residential air-conditioner stock is projected to triple by 2035.' But the region is not one uniform market: efficiency rules, affordability, grid capacity and after-sales networks shape the business case country by country.'
   zh='中文补充：东南亚空调需求长期向上，但能效规则、售价、电力约束与售后网络决定增长质量。'
   tags='#SoutheastAsia #Cooling #MarketEntry'
  elif kind=='industry':
   en='Europe’s EV transition is accelerating—but market share alone does not tell the whole story. Our briefing separates battery-electric growth from the broader powertrain mix, then examines what trade rules, country-level demand and local execution mean for market entry.'
   zh='中文补充：看懂欧盟电动车增长，先分清统计口径，再看贸易规则、国别需求与本地化能力。'
   tags='#EuropeanAuto #MarketEntry #ChinaGoingGlobal'
+ elif r['path']=='anker-global-2026.html':
+  en='Anker Innovations reported 29.05% H1 2026 revenue growth, with overseas sales accounting for 94.72% of revenue. North America and Europe remain key reported regions; Amazon is still a major channel while the company’s own site grew faster. Higher R&D, inventory and receivables make cash conversion a key metric to watch.'
+  zh='中文补充：安克创新海外收入占比达94.72%，但渠道利润未单独披露；研发、库存、应收账款和剔除一次性退款后的现金流仍需跟踪。'
+  tags='#Anker #ChinaGoingGlobal #ConsumerTech'
  elif r['path']=='haier-global-2026.html':
   en='Haier Smart Home’s H1 2026 results point to a global model built on regional brands, localized products and supply-chain capabilities. Europe revenue grew 4.9%, South Asia revenue rose 17.1% in RMB terms, and Southeast Asia delivered double-digit growth. The briefing separates company-reported signals from what remains unproven about regional profitability and returns.'
   zh='中文补充：海尔智家多区域收入保持增长，但地区利润、现金回报与本地投资效率仍需更多披露验证。'
