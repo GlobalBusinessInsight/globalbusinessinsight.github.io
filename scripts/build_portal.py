@@ -114,7 +114,7 @@ def share_card(r, kind):
   zh='中文补充：数据中心用电预测不等于已落地项目或供应商订单。判断美国市场机会，要跟踪并网、输电、许可与实际采购。'
   tags='#DataCenters #PowerGrid #USMarket'
  elif r['path']=='asean-cooling-market-2026.html':
-  en='Southeast Asia’s residential air-conditioner stock is projected to triple by 2035.' But the region is not one uniform market: efficiency rules, affordability, grid capacity and after-sales networks shape the business case country by country.'
+  en='Southeast Asia’s residential air-conditioner stock is projected to triple by 2035. But the region is not one uniform market: efficiency rules, affordability, grid capacity and after-sales networks shape the business case country by country.'
   zh='中文补充：东南亚空调需求长期向上，但能效规则、售价、电力约束与售后网络决定增长质量。'
   tags='#SoutheastAsia #Cooling #MarketEntry'
  elif kind=='industry':
