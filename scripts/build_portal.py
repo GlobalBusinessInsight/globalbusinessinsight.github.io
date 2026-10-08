@@ -10,12 +10,14 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'us-manufacturing-orders-2026.html':'基于美国人口普查局与美联储2026年8月数据，拆解工厂订单、资本设备、制造业产出和产能利用率。',
 'us-datacenter-power-2026.html':'基于LBNL、EIA、FERC与美国能源部资料，拆解美国数据中心用电情景、电网接入和商业机会。',
+'xcmg-global-2026.html':'依据徐工机械2026年半年度报告，分析境外收入占比、本地服务网络、汇兑影响与利润转换。',
 'anker-global-2026.html':'依据安克创新2026年半年度报告，分析海外收入、区域与渠道结构、研发投入及现金流风险。',
 'asean-cooling-market-2026.html':'基于IEA与东盟能源中心资料，分析东南亚空调需求、能效要求、国家差异与本地化经营。',
 'haier-global-2026.html':'依据海尔智家2026年中期业绩披露，梳理区域经营表现、产品本地化与全球供应链策略。',
@@ -113,6 +115,14 @@ def share_card(r, kind):
   en='U.S. data-center electricity demand is rising, but a forecast is not a firm load or a supplier order. This briefing separates LBNL’s modeled scenarios from recent EIA estimates, then examines FERC interconnection action and transmission constraints.'
   zh='中文补充：数据中心用电预测不等于已落地项目或供应商订单。判断美国市场机会，要跟踪并网、输电、许可与实际采购。'
   tags='#DataCenters #PowerGrid #USMarket'
+ elif r['path']=='us-manufacturing-orders-2026.html':
+  en='U.S. factory orders edged up 0.1% in August, while manufacturing output fell 0.3%. Nondefense capital goods ex-aircraft orders rose 1.6%, but capacity utilization remained 2.5 points below its long-run average. The signal: uneven repair, not yet a broad production boom.'
+  zh='中文补充：美国制造业订单小幅回升，但产出回落。拆解资本设备订单、积压订单与产能利用率，判断需求能否转化为实际生产。'
+  tags='#USManufacturing #FactoryOrders #MarketBrief'
+ elif r['path']=='xcmg-global-2026.html':
+  en='XCMG reported H1 2026 overseas revenue of RMB30.9bn, 50.5% of group sales (+21%). The next test is local execution: manufacturing, service networks and maintenance agreements—against falling net profit and a sharp FX-related finance-cost swing.'
+  zh='中文补充：徐工海外收入突破总收入一半，但净利润下滑，汇兑损失上升。看出海增量如何转化为本地服务、利润和现金回报。'
+  tags='#XCMG #ChinaGoingGlobal #Machinery'
  elif r['path']=='asean-cooling-market-2026.html':
   en='Southeast Asia’s residential air-conditioner stock is projected to triple by 2035. But the region is not one uniform market: efficiency rules, affordability, grid capacity and after-sales networks shape the business case country by country.'
   zh='中文补充：东南亚空调需求长期向上，但能效规则、售价、电力约束与售后网络决定增长质量。'
