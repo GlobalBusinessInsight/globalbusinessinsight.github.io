@@ -26,7 +26,7 @@ def main():
   return p.is_file() or (p/'index.html').is_file()
  for r in catalog:
   require(r['path'] not in paths,'Duplicate catalog path: '+r['path']);paths.add(r['path']);p=ROOT/r['path'];require(p.is_file(),'Missing report: '+r['path']);s=p.read_text();h=Page(s)
-  require(len(h.canon)==1,'Canonical count: '+r['path']);require(h.ads<=1,'Duplicate AdSense: '+r['path']);require(s.count('id="gbi-reader"')==1,'Missing reading navigation: '+r['path'])
+  require(len(h.canon)==1,'Canonical count: '+r['path']);require(h.ads==1,'Expected one AdSense loader on editorial report: '+r['path']);require(s.count('id="gbi-reader"')==1,'Missing reading navigation: '+r['path'])
   for u in re.findall(r'href="(/[^"#]*)"',s.split('<!-- GBI reader start -->')[-1].split('<!-- GBI reader end -->')[0]):require(exists(u),'Broken reading link: '+u)
  require(len(catalog)>400,'Catalog unexpectedly lost reports')
  generated=[]
