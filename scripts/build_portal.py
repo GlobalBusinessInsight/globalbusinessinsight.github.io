@@ -10,13 +10,15 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'middle-east-desalination-2026.html':'基于沙特官方项目资料，分析海水淡化采购、私营融资、反渗透能效及水务基础设施投资风险。',
 'us-manufacturing-orders-2026.html':'基于美国人口普查局与美联储2026年8月数据，拆解工厂订单、资本设备、制造业产出和产能利用率。',
 'us-datacenter-power-2026.html':'基于LBNL、EIA、FERC与美国能源部资料，拆解美国数据中心用电情景、电网接入和商业机会。',
+'catl-global-2026.html':'依据宁德时代2026年半年度报告及德布勒森公告，分析海外收入、欧洲本地化生产和量产兑现风险。',
 'xcmg-global-2026.html':'依据徐工机械2026年半年度报告，分析境外收入占比、本地服务网络、汇兑影响与利润转换。',
 'anker-global-2026.html':'依据安克创新2026年半年度报告，分析海外收入、区域与渠道结构、研发投入及现金流风险。',
 'asean-cooling-market-2026.html':'基于IEA与东盟能源中心资料，分析东南亚空调需求、能效要求、国家差异与本地化经营。',
@@ -111,6 +113,14 @@ def card(r):return f'<article class="report"><div class="eyebrow">{escape(r["cat
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
+ if r['path']=='middle-east-desalination-2026.html':
+  en='Saudi Arabia’s water procurement system has disclosed contracted desalination capacity above 10 million m³/day and SAR 56bn in privately financed projects. The opportunity extends beyond plant construction: bankable water-purchase agreements, whole-system energy performance and long-term operations matter.'
+  zh='中文补充：沙特淡化项目规模可观，但已签约能力不是新增订单；单台能耗纪录也不能代表行业平均。'
+  tags='#Desalination #SaudiArabia #WaterInfrastructure'
+ elif r['path']=='catl-global-2026.html':
+  en='CATL reported H1 2026 overseas revenue of RMB87.1bn (+42.35%) and a 29.97% overseas gross margin. Its Debrecen cell plant entered trial operations in September. The next proof points are customer qualification, yield, safe ramp-up and returns—not the planned 100GWh capacity.'
+  zh='中文补充：宁德时代欧洲制造走到试运行阶段；规划产能不等于当前产量，客户认证、良率与投资回报仍待验证。'
+  tags='#CATL #ChinaGoingGlobal #Battery'
  if r['path']=='us-datacenter-power-2026.html':
   en='U.S. data-center electricity demand is rising, but a forecast is not a firm load or a supplier order. This briefing separates LBNL’s modeled scenarios from recent EIA estimates, then examines FERC interconnection action and transmission constraints.'
   zh='中文补充：数据中心用电预测不等于已落地项目或供应商订单。判断美国市场机会，要跟踪并网、输电、许可与实际采购。'
