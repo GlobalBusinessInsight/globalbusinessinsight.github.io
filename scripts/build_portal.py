@@ -12,10 +12,10 @@ CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局�
 FEATURED={
 'industry':['middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
 'global':['catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
-'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
+'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
-'middle-east-desalination-2026.html':'基于沙特官方项目资料，分析海水淡化采购、私营融资、反渗透能效及水务基础设施投资风险。',
+'reports/e-invoicing/01-what-is-an-e-invoice.html':'从数据结构、自动处理和交易链路，解释PDF、扫描件与结构化电子发票的区别。',\n'reports/e-invoicing/02-from-paper-to-digital-reporting.html':'沿着纸面凭证、EDI、语义标准、互联网络与税务数字报告，解释电子发票体系如何逐层演进。',\n'middle-east-desalination-2026.html':'基于沙特官方项目资料，分析海水淡化采购、私营融资、反渗透能效及水务基础设施投资风险。',
 'us-manufacturing-orders-2026.html':'基于美国人口普查局与美联储2026年8月数据，拆解工厂订单、资本设备、制造业产出和产能利用率。',
 'us-datacenter-power-2026.html':'基于LBNL、EIA、FERC与美国能源部资料，拆解美国数据中心用电情景、电网接入和商业机会。',
 'catl-global-2026.html':'依据宁德时代2026年半年度报告及德布勒森公告，分析海外收入、欧洲本地化生产和量产兑现风险。',
@@ -272,7 +272,7 @@ def generate():
  series_phases=[
   ('第一阶段：建立认知',[
    ('电子发票是什么？PDF 算不算？','/reports/e-invoicing/01-what-is-an-e-invoice.html'),
-   ('电子发票从哪里来：从纸票、EDI 到税务数字化',''),
+   ('电子发票从哪里来：从纸票、EDI 到税务数字化','/reports/e-invoicing/02-from-paper-to-digital-reporting.html'),
    ('电子发票为什么重要：效率、合规、征管与数据价值',''),
    ('一张电子发票的生命周期：开具、传输、接收、入账、归档','')]),
   ('第二阶段：解释技术路线',[
@@ -299,7 +299,7 @@ def generate():
  for phase,items in series_phases:
   rows=''.join('<li>'+('<a href="'+href+'">'+title+'</a>' if href else title)+' <small>'+('已发布' if href else '规划中')+'</small></li>' for title,href in items)
   roadmap+='<h2>'+phase+'</h2><ol>'+rows+'</ol>'
- series_body='<div class="breadcrumb"><a href="/">首页</a> / 电子发票专题</div><article class="prose"><div class="eyebrow">E-INVOICING / KNOWLEDGE SERIES</div><h1>电子发票：从一张票到数字交易基础设施</h1><p>从基础概念、数据标准和传输网络，逐步走向不同国家的监管模式、企业业务场景与实施选择。本系列面向企业财务、税务、IT、采购及出海团队；每篇分别核对适用范围、数据口径与原始来源。</p><p class="notice">目前第 1 篇已发布；其余为系列选题规划，后续将逐篇核验资料并制作，不代表相关文章已经完成。</p><h2>已发布</h2><p><a class="action" href="/reports/e-invoicing/01-what-is-an-e-invoice.html">第 1 篇：电子发票是什么？PDF 算不算？ →</a></p><p>先区分可阅读的电子文件与可由系统处理的结构化发票数据，再分别观察数据格式、传输机制和当地税务规则。</p>'+roadmap+'<h2>编辑说明</h2><p>国家政策和生效日期会变化。涉及现行要求的文章将标注核对日期，并优先引用税务机关、监管机构、标准组织及官方网络资料。本文系列规划不是法律或税务意见。</p></article>'
+ series_body='<div class="breadcrumb"><a href="/">首页</a> / 电子发票专题</div><article class="prose"><div class="eyebrow">E-INVOICING / KNOWLEDGE SERIES</div><h1>电子发票：从一张票到数字交易基础设施</h1><p>从基础概念、数据标准和传输网络，逐步走向不同国家的监管模式、企业业务场景与实施选择。本系列面向企业财务、税务、IT、采购及出海团队；每篇分别核对适用范围、数据口径与原始来源。</p><p class="notice">目前第 1、2 篇已发布；其余为系列选题规划，将逐篇核验资料后继续制作。</p><h2>已发布</h2><p><a class="action" href="/reports/e-invoicing/01-what-is-an-e-invoice.html">第 1 篇：电子发票是什么？PDF 算不算？ →</a></p><p>先区分可阅读的电子文件与可由系统处理的结构化发票数据，再分别观察数据格式、传输机制和当地税务规则。</p><p><a class="action" href="/reports/e-invoicing/02-from-paper-to-digital-reporting.html">第 2 篇：电子发票从哪里来：从纸票、EDI 到税务数字化 →</a></p><p>沿着纸面凭证、EDI、共同标准、互联网络与税务报告，理解全球电子发票如何逐层演进。</p>'+roadmap+'<h2>编辑说明</h2><p>国家政策和生效日期会变化。涉及现行要求的文章将标注核对日期，并优先引用税务机关、监管机构、标准组织及官方网络资料。本文系列规划不是法律或税务意见。</p></article>'
  write(series_path,shell('电子发票专题：从一张票到数字交易基础设施','电子发票系列：结构化数据、全球标准、传输网络、区域规则与企业落地。','reports/e-invoicing/index.html',series_body,active='/category/digital/',ads=False))
  for cat in ['industry','global','digital']:
   title,desc=CATEGORIES[cat];items=[r for r in records if r['category']==cat];ordered=FEATURED[cat]+[r['path'] for r in items if r['path'] not in FEATURED[cat]]
