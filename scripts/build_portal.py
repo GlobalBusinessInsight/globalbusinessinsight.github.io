@@ -114,58 +114,60 @@ def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
  if r['path']=='middle-east-desalination-2026.html':
-  en='Saudi Arabia’s water procurement system has disclosed contracted desalination capacity above 10 million m³/day and SAR 56bn in privately financed projects. The opportunity extends beyond plant construction: bankable water-purchase agreements, whole-system energy performance and long-term operations matter.'
-  zh='中文补充：沙特淡化项目规模可观，但已签约能力不是新增订单；单台能耗纪录也不能代表行业平均。'
+  en='Saudi Arabia’s water procurement system has contracted desalination capacity above 10 million m³/day, with SAR 56bn in privately financed projects. This briefing examines project stages, reverse-osmosis energy use, water-purchase agreements and delivery risks.'
+  zh='沙特淡化水已签约能力超过每日1,000万立方米，私营项目投资累计560亿里亚尔。本文拆解项目阶段、反渗透能耗、购水协议与交付风险。'
   tags='#Desalination #SaudiArabia #WaterInfrastructure'
  elif r['path']=='catl-global-2026.html':
-  en='CATL reported H1 2026 overseas revenue of RMB87.1bn (+42.35%) and a 29.97% overseas gross margin. Its Debrecen cell plant entered trial operations in September. The next proof points are customer qualification, yield, safe ramp-up and returns—not the planned 100GWh capacity.'
-  zh='中文补充：宁德时代欧洲制造走到试运行阶段；规划产能不等于当前产量，客户认证、良率与投资回报仍待验证。'
+  en='CATL reported H1 2026 overseas revenue of RMB87.1bn, up 42.35%, with a 29.97% overseas gross margin. Its Debrecen cell plant entered trial operations in September. The briefing separates trial production from planned capacity and examines the next proof points: customer qualification, yield and returns.'
+  zh='宁德时代2026年上半年境外收入871.29亿元，同比增长42.35%，境外毛利率29.97%。德布勒森电芯厂于9月启动试运行；规划产能不等于当前产量。'
   tags='#CATL #ChinaGoingGlobal #Battery'
- if r['path']=='us-datacenter-power-2026.html':
-  en='U.S. data-center electricity demand is rising, but a forecast is not a firm load or a supplier order. This briefing separates LBNL’s modeled scenarios from recent EIA estimates, then examines FERC interconnection action and transmission constraints.'
-  zh='中文补充：数据中心用电预测不等于已落地项目或供应商订单。判断美国市场机会，要跟踪并网、输电、许可与实际采购。'
-  tags='#DataCenters #PowerGrid #USMarket'
  elif r['path']=='us-manufacturing-orders-2026.html':
-  en='U.S. factory orders edged up 0.1% in August, while manufacturing output fell 0.3%. Nondefense capital goods ex-aircraft orders rose 1.6%, but capacity utilization remained 2.5 points below its long-run average. The signal: uneven repair, not yet a broad production boom.'
-  zh='中文补充：美国制造业订单小幅回升，但产出回落。拆解资本设备订单、积压订单与产能利用率，判断需求能否转化为实际生产。'
+  en='U.S. factory orders edged up 0.1% in August, while manufacturing output fell 0.3%. Nondefense capital-goods orders excluding aircraft rose 1.6%, but capacity utilization remained below its long-run average. This is an uneven demand signal, not proof of a broad production boom.'
+  zh='美国2026年8月工厂订单环比增长0.1%，制造业产出下降0.3%；非国防、除飞机资本品订单增长1.6%。订单回升尚未全面传导为产出增长。'
   tags='#USManufacturing #FactoryOrders #MarketBrief'
  elif r['path']=='xcmg-global-2026.html':
-  en='XCMG reported H1 2026 overseas revenue of RMB30.9bn, 50.5% of group sales (+21%). The next test is local execution: manufacturing, service networks and maintenance agreements—against falling net profit and a sharp FX-related finance-cost swing.'
-  zh='中文补充：徐工海外收入突破总收入一半，但净利润下滑，汇兑损失上升。看出海增量如何转化为本地服务、利润和现金回报。'
+  en='XCMG reported H1 2026 overseas revenue of RMB30.9bn, 50.48% of group revenue and up 21.03%. Attributable net profit fell 9.09%, while finance costs swung with foreign-exchange losses. The briefing looks at local service, profit conversion and the limits of the company’s disclosures.'
+  zh='徐工机械2026年上半年境外收入309.17亿元，占总收入50.48%，同比增长21.03%；归母净利润下降9.09%，汇兑影响推高财务费用。'
   tags='#XCMG #ChinaGoingGlobal #Machinery'
+ elif r['path']=='us-datacenter-power-2026.html':
+  en='U.S. data-center electricity demand is rising, but forecasts are not firm loads or supplier orders. This briefing separates modeled scenarios from reported estimates and examines grid interconnection, transmission and project execution.'
+  zh='美国数据中心用电预测不等于已落地负荷或供应商订单。本文拆解情景预测、并网、输电和项目执行。'
+  tags='#DataCenters #PowerGrid #USMarket'
  elif r['path']=='asean-cooling-market-2026.html':
-  en='Southeast Asia’s residential air-conditioner stock is projected to triple by 2035. But the region is not one uniform market: efficiency rules, affordability, grid capacity and after-sales networks shape the business case country by country.'
-  zh='中文补充：东南亚空调需求长期向上，但能效规则、售价、电力约束与售后网络决定增长质量。'
+  en='Southeast Asia’s residential air-conditioner stock is projected to triple by 2035, but national markets differ in efficiency rules, affordability, grid capacity and service networks. This briefing maps the opportunity and its execution constraints.'
+  zh='东南亚住宅空调存量预计到2035年增至三倍，但各国能效规则、购买力、电网和售后条件差异显著。'
   tags='#SoutheastAsia #Cooling #MarketEntry'
- elif kind=='industry':
-  en='Europe’s EV transition is accelerating—but market share alone does not tell the whole story. Our briefing separates battery-electric growth from the broader powertrain mix, then examines what trade rules, country-level demand and local execution mean for market entry.'
-  zh='中文补充：看懂欧盟电动车增长，先分清统计口径，再看贸易规则、国别需求与本地化能力。'
+ elif r['path']=='eu-ev-market-2026.html':
+  en='Europe’s EV transition is accelerating, but market share depends on how powertrains and registrations are defined. This briefing separates battery-electric vehicles from the broader mix and examines trade rules, country-level demand and local execution.'
+  zh='分析欧盟电动车市场时，需先区分纯电与其他动力类型，再看贸易规则、国别需求和本地执行。'
   tags='#EuropeanAuto #MarketEntry #ChinaGoingGlobal'
  elif r['path']=='anker-global-2026.html':
-  en='Anker Innovations reported 29.05% H1 2026 revenue growth, with overseas sales accounting for 94.72% of revenue. North America and Europe remain key reported regions; Amazon is still a major channel while the company’s own site grew faster. Higher R&D, inventory and receivables make cash conversion a key metric to watch.'
-  zh='中文补充：安克创新海外收入占比达94.72%，但渠道利润未单独披露；研发、库存、应收账款和剔除一次性退款后的现金流仍需跟踪。'
+  en='Anker Innovations reported H1 2026 revenue growth and a high overseas revenue share. This briefing examines the company’s region and channel disclosures alongside R&D, inventory, receivables and cash conversion.'
+  zh='本文根据安克创新2026年半年报梳理海外收入、区域与渠道结构，并关注研发、库存、应收账款和现金回收。'
   tags='#Anker #ChinaGoingGlobal #ConsumerTech'
  elif r['path']=='haier-global-2026.html':
-  en='Haier Smart Home’s H1 2026 results point to a global model built on regional brands, localized products and supply-chain capabilities. Europe revenue grew 4.9%, South Asia revenue rose 17.1% in RMB terms, and Southeast Asia delivered double-digit growth. The briefing separates company-reported signals from what remains unproven about regional profitability and returns.'
-  zh='中文补充：海尔智家多区域收入保持增长，但地区利润、现金回报与本地投资效率仍需更多披露验证。'
+  en='Haier Smart Home’s H1 2026 disclosures point to a model built on regional brands, localized products and supply-chain capabilities. The briefing reviews regional growth while identifying what remains unknown about profitability and returns.'
+  zh='本文梳理海尔智家区域收入、本地产品与供应链布局，并指出地区盈利和投资回报仍缺少完整披露。'
   tags='#Haier #ChinaGoingGlobal #GlobalBusiness'
  elif r['path']=='byd_global_2026.html':
-  en='BYD’s overseas growth is moving beyond exports. The next test is whether local manufacturing, product adaptation, R&D and service networks can turn shipment growth into a durable business. This source-led briefing separates company disclosures from what the numbers cannot yet prove.'
-  zh='中文补充：比亚迪出海的下一阶段，不只是销量，而是本地制造、产品适配与服务网络能否形成可持续经营。'
+  en='BYD’s overseas growth is moving beyond exports. This briefing examines whether local manufacturing, product adaptation, R&D and service networks can turn shipments into durable operations, separating company disclosures from unproven outcomes.'
+  zh='比亚迪全球化的重点正从出口销量延伸到本地制造、产品适配、研发和服务网络；本文区分公司披露与尚待验证的经营结果。'
   tags='#BYD #ChinaGoingGlobal #GlobalBusiness'
  else:
-  en='What happens after a Chinese company wins customers abroad? This source-led briefing looks beyond headline growth at the company’s market-entry choices, local execution and the evidence available in the report.'
-  zh='中文补充：从企业披露与案例信息出发，关注出海市场选择、本地执行及仍需核实的经营证据。'
-  tags='#ChinaGoingGlobal #GlobalBusiness #MarketEntry'
+  en='A source-led briefing on '+r['title']+'. Read the full analysis for the evidence, market context, assumptions and risks.'
+  zh=r['description']
+  tags='#GlobalBusiness #MarketResearch'
+ if zh.startswith('中文补充：'):zh=zh[len('中文补充：'):]
  copy='\n'.join([en,zh,tracked,tags])
  li='https://www.linkedin.com/sharing/share-offsite/?url='+quote(tracked,safe='')
  fb='https://www.facebook.com/sharer/sharer.php?u='+quote(tracked,safe='')
- return '<article class="share-card"><div class="eyebrow">READY TO SHARE / LINKEDIN · FACEBOOK</div><h3><a href="'+r['url']+'">'+escape(r['title'])+'</a></h3><p class="share-en">'+escape(en)+'</p><p class="share-zh">'+escape(zh)+'</p><div class="share-tags">'+escape(tags)+'</div><div class="share-actions"><button type="button" class="action" data-copy-text="'+escape(copy,quote=True)+'">复制双语文案</button><a class="share-link" target="_blank" rel="noopener noreferrer" href="'+li+'">LinkedIn ↗</a><a class="share-link" target="_blank" rel="noopener noreferrer" href="'+fb+'">Facebook ↗</a></div><span class="copy-status" data-copy-status role="status" aria-live="polite"></span></article>'
+ repost_icon='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M7 7h10l-2.5-2.5M17 7l-2.5 2.5M17 17H7l2.5 2.5M7 17l2.5-2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+ return '<article class="share-card"><div class="eyebrow">READY TO SHARE / LINKEDIN · FACEBOOK</div><h3><a href="'+r['url']+'">'+escape(r['title'])+'</a></h3><p class="share-en">'+escape(en)+'</p><p class="share-zh">'+escape(zh)+'</p><div class="share-tags">'+escape(tags)+'</div><div class="share-actions"><button type="button" class="action repost-action" aria-label="Repost" title="Repost / copy bilingual post" data-copy-text="'+escape(copy,quote=True)+'">'+repost_icon+'</button><a class="share-link" target="_blank" rel="noopener noreferrer" href="'+li+'">LinkedIn ↗</a><a class="share-link" target="_blank" rel="noopener noreferrer" href="'+fb+'">Facebook ↗</a></div><span class="copy-status" data-copy-status role="status" aria-live="polite"></span></article>'
 
 def share_section(industry_path,company_path,by):
  industry=by.get(industry_path); company=by.get(company_path)
  if not industry or not company:return ''
- return '<section class="share-section" id="latest"><div class="section-head"><div><div class="eyebrow">GLOBAL BRIEFINGS / SHARE & READ</div><h2>Start with the signal. Share the full story.</h2></div><span>English-first · 中文补充</span></div><div class="share-grid">'+share_card(industry,'industry')+share_card(company,'company')+'</div><p class="share-help">Copy the bilingual post, then paste it into your LinkedIn or Facebook update. Social buttons open the sharing window. / 复制文案后粘贴到社交平台，分享按钮会打开发布窗口。</p></section>'
+ return '<section class="share-section" id="latest"><div class="section-head"><div><div class="eyebrow">GLOBAL BRIEFINGS / SHARE & READ</div><h2>Start with the signal. Share the full story.</h2></div><span>English first · bilingual summaries</span></div><div class="share-grid">'+share_card(industry,'industry')+share_card(company,'company')+'</div><p class="share-help">Use the repost icon to copy a bilingual post, then share it on your platform. / 点击 repost 图标复制双语文案，再自行发布。</p></section>'
 
 def intro(label,title,desc):return f'<div class="page-intro"><div class="eyebrow">{label}</div><h1>{title}</h1><p>{desc}</p></div>'
 def desk_tiles():
@@ -262,7 +264,7 @@ def generate():
  global_section='<div class="section-head"><div><div class="eyebrow">CHINA GOING GLOBAL / COMPANY BRIEFINGS</div><h2>中国企业全球化</h2></div><a href="/category/global/">全部企业出海案例 →</a></div><div class="collection global-daily">'+cards(daily_cards,by)+'</div>'
  desk=desk_tiles()
  body=hero+desk+social+global_section+'<div class="section-head"><div><div class="eyebrow">RESEARCH PATHS / START HERE</div><h2>从一个重要问题开始</h2></div><span>先建立框架，再深入一个具体问题</span></div><section class="topics">'+topic_cards()+'</section><div class="section-head"><div><div class="eyebrow">MORE TO EXPLORE / ARCHIVE</div><h2>从资料库继续发现</h2></div><a href="/archive/">全部报告 →</a></div><div class="editorial-grid"><div class="report-list">'+cards(selected,by)+'</div><aside class="reading-note"><div class="eyebrow">READ WITH CONTEXT</div><h3>Research with context.</h3><p>读报告，也读它的边界。历史判断、情景预测和当前事实，需要分别看待。</p><ul><li>先确认数据年份与市场范围</li><li>区分事实、估计和预测</li><li>回到原始出处核对关键数字</li></ul><a class="text-link" href="/editorial/">编辑与来源标准 →</a><h3>Selected in English</h3><p>从仓储、企业技术与全球业务开始，查阅已有英文研究。</p><a class="text-link" href="/en/">Explore English reports →</a></aside></div>'+subscribe_panel()+partner_panel()
- write('index.html',shell('全球产业、企业出海与数字化研究','Source-led briefings on industry shifts, regional markets and Chinese companies expanding globally. 中文补充：产业研究、区域市场分析与中国企业出海案例。','index.html',body,og_title='Global Business Insight | Markets & China Going Global',og_desc='Source-led briefings on industry shifts, regional markets and Chinese companies expanding globally. 中文补充：产业研究、区域市场分析与中国企业出海案例。'))
+ write('index.html',shell('全球产业、企业出海与数字化研究','Source-led briefings on industry shifts, regional markets and Chinese companies expanding globally, with Chinese-language coverage.','index.html',body,og_title='Global Business Insight | Markets & China Going Global',og_desc='Source-led briefings on industry shifts, regional markets and Chinese companies expanding globally. 中文补充：产业研究、区域市场分析与中国企业出海案例。'))
  for cat in ['industry','global','digital']:
   title,desc=CATEGORIES[cat];items=[r for r in records if r['category']==cat];ordered=FEATURED[cat]+[r['path'] for r in items if r['path'] not in FEATURED[cat]]
   body=intro('RESEARCH / '+cat.upper(),title,desc)+'<div class="plain-links">'+''.join(f'<a class="text-link" href="/topics/{slug}/">{t} →</a>' for slug,t,d,c,ps in TOPICS if c==cat)+'</div><div class="collection">'+cards(ordered,by)+'</div>'
