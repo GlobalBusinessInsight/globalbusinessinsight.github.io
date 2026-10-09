@@ -175,10 +175,11 @@ def desk_tiles():
   ('SOUTHEAST ASIA / COOLING','东南亚空调市场','需求增长、能效规则与本地运营。','/asean-cooling-market-2026.html'),
   ('LATIN AMERICA / MACHINERY','三一南美市场','经销网络、设备服务与本地执行。','/reports/sany-south-america/index.html'),
   ('AI / OPERATIONS','企业AI与流程转型','从业务流程和数据基础评估落地条件。','/aierp.html'),
-  ('U.S. DATA / MARKET ATLAS','美国市场观察','指数、利率、就业与GDP放在同一条线上。','/mk/')
+  ('U.S. DATA / MARKET ATLAS','美国市场观察','指数、利率、就业与GDP放在同一条线上。','/mk/'),
+  ('E-INVOICING / KNOWLEDGE SERIES','电子发票专题','从文件、结构化数据到全球规则与系统落地。','/reports/e-invoicing/')
  ]
  tiles=''.join('<article class="desk-tile"><div class="eyebrow">'+label+'</div><h3><a href="'+href+'">'+title+'</a></h3><p>'+desc+'</p><a class="desk-cta" href="'+href+'">查看专题 →</a></article>' for label,title,desc,href in entries)
- return '<section class="research-desk"><div class="section-head"><div><div class="eyebrow">RESEARCH DESK / EXPLORE BY LENS</div><h2>四条研究线索，快速进入</h2></div><a href="/archive/">打开完整资料库 →</a></div><div class="desk-grid">'+tiles+'</div></section>'
+ return '<section class="research-desk"><div class="section-head"><div><div class="eyebrow">RESEARCH DESK / EXPLORE BY LENS</div><h2>五条研究线索，快速进入</h2></div><a href="/archive/">打开完整资料库 →</a></div><div class="desk-grid">'+tiles+'</div></section>'
 
 def topic_cards():return ''.join(f'<article class="topic"><span class="number">0{i+1}</span><h3><a href="/topics/{slug}/">{title}</a></h3><p>{desc}</p><a class="text-link" href="/topics/{slug}/">进入研究专题 →</a></article>' for i,(slug,title,desc,cat,paths) in enumerate(TOPICS))
 
@@ -267,6 +268,39 @@ def generate():
  desk=desk_tiles()
  body=hero+desk+social+global_section+'<div class="section-head"><div><div class="eyebrow">RESEARCH PATHS / START HERE</div><h2>从一个重要问题开始</h2></div><span>先建立框架，再深入一个具体问题</span></div><section class="topics">'+topic_cards()+'</section><div class="section-head"><div><div class="eyebrow">MORE TO EXPLORE / ARCHIVE</div><h2>从资料库继续发现</h2></div><a href="/archive/">全部报告 →</a></div><div class="editorial-grid"><div class="report-list">'+cards(selected,by)+'</div><aside class="reading-note"><div class="eyebrow">READ WITH CONTEXT</div><h3>Research with context.</h3><p>读报告，也读它的边界。历史判断、情景预测和当前事实，需要分别看待。</p><ul><li>先确认数据年份与市场范围</li><li>区分事实、估计和预测</li><li>回到原始出处核对关键数字</li></ul><a class="text-link" href="/editorial/">编辑与来源标准 →</a><h3>Selected in English</h3><p>从仓储、企业技术与全球业务开始，查阅已有英文研究。</p><a class="text-link" href="/en/">Explore English reports →</a></aside></div>'+subscribe_panel()+partner_panel()
  write('index.html',shell('全球产业、企业出海与数字化研究','Source-led briefings on industry shifts, regional markets and Chinese companies expanding globally, with Chinese-language coverage.','index.html',body,og_title='Global Business Insight | Markets & China Going Global',og_desc='Source-led briefings on industry shifts, regional markets and Chinese companies expanding globally. 中文补充：产业研究、区域市场分析与中国企业出海案例。'))
+ series_path='reports/e-invoicing/index.html'
+ series_phases=[
+  ('第一阶段：建立认知',[
+   ('电子发票是什么？PDF 算不算？','/reports/e-invoicing/01-what-is-an-e-invoice.html'),
+   ('电子发票从哪里来：从纸票、EDI 到税务数字化',''),
+   ('电子发票为什么重要：效率、合规、征管与数据价值',''),
+   ('一张电子发票的生命周期：开具、传输、接收、入账、归档','')]),
+  ('第二阶段：解释技术路线',[
+   ('电子发票的技术架构：业务系统、税务平台、服务网络如何协作',''),
+   ('发票数据标准：UBL、UN/CEFACT、EN 16931 各解决什么问题？',''),
+   ('传输与互联模式：点对点、EDI、平台网络和 Peppol 四角模型',''),
+   ('税务监管模式：开具前审批、开具后报送、实时报告和混合模式',''),
+   ('电子签名、身份认证、二维码与存证分别解决什么问题？',''),
+   ('跨境互操作的难点：数据映射、税制差异、身份和本地规则','')]),
+  ('第三阶段：分区域、分国家看实践',[
+   ('中国：数电发票推广后，企业流程有哪些变化？',''),
+   ('欧洲：ViDA 将怎样推动跨境数字报告和电子发票？',''),
+   ('印度：GST e-Invoice 与 IRP 登记机制',''),
+   ('新加坡：InvoiceNow、Peppol 网络与分阶段推广',''),
+   ('东南亚、拉美、中东和澳大利亚：模式比较','')]),
+  ('第四阶段：场景、厂商与落地',[
+   ('To G、To B、To C：同样是发票，需求为什么不同？',''),
+   ('制造、零售、平台经济、公共采购和跨境贸易场景',''),
+   ('企业选型指南：自建、采购、平台接入分别适合什么情况？',''),
+   ('电子发票厂商与服务模式：税务平台、网络运营方、软件商和集成商',''),
+   ('INOSSEM 专题：目标业务问题、产品能力与企业系统协作','')])
+ ]
+ roadmap=''
+ for phase,items in series_phases:
+  rows=''.join('<li>'+('<a href="'+href+'">'+title+'</a>' if href else title)+' <small>'+('已发布' if href else '规划中')+'</small></li>' for title,href in items)
+  roadmap+='<h2>'+phase+'</h2><ol>'+rows+'</ol>'
+ series_body='<div class="breadcrumb"><a href="/">首页</a> / 电子发票专题</div><article class="prose"><div class="eyebrow">E-INVOICING / KNOWLEDGE SERIES</div><h1>电子发票：从一张票到数字交易基础设施</h1><p>从基础概念、数据标准和传输网络，逐步走向不同国家的监管模式、企业业务场景与实施选择。本系列面向企业财务、税务、IT、采购及出海团队；每篇分别核对适用范围、数据口径与原始来源。</p><p class="notice">目前第 1 篇已发布；其余为系列选题规划，后续将逐篇核验资料并制作，不代表相关文章已经完成。</p><h2>已发布</h2><p><a class="action" href="/reports/e-invoicing/01-what-is-an-e-invoice.html">第 1 篇：电子发票是什么？PDF 算不算？ →</a></p><p>先区分可阅读的电子文件与可由系统处理的结构化发票数据，再分别观察数据格式、传输机制和当地税务规则。</p>'+roadmap+'<h2>编辑说明</h2><p>国家政策和生效日期会变化。涉及现行要求的文章将标注核对日期，并优先引用税务机关、监管机构、标准组织及官方网络资料。本文系列规划不是法律或税务意见。</p></article>'
+ write(series_path,shell('电子发票专题：从一张票到数字交易基础设施','电子发票系列：结构化数据、全球标准、传输网络、区域规则与企业落地。','reports/e-invoicing/index.html',series_body,active='/category/digital/',ads=False))
  for cat in ['industry','global','digital']:
   title,desc=CATEGORIES[cat];items=[r for r in records if r['category']==cat];ordered=FEATURED[cat]+[r['path'] for r in items if r['path'] not in FEATURED[cat]]
   body=intro('RESEARCH / '+cat.upper(),title,desc)+'<div class="plain-links">'+''.join(f'<a class="text-link" href="/topics/{slug}/">{t} →</a>' for slug,t,d,c,ps in TOPICS if c==cat)+'</div><div class="collection">'+cards(ordered,by)+'</div>'
