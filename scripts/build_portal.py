@@ -16,7 +16,8 @@ FEATURED={
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
 'reports/e-invoicing/01-what-is-an-e-invoice.html':'从数据结构、自动处理和交易链路，解释PDF、扫描件与结构化电子发票的区别。',
-'reports/e-invoicing/02-from-paper-to-digital-reporting.html':'沿着纸面凭证、EDI、语义标准、互联网络与税务数字报告，解释电子发票体系如何逐层演进。',\n'middle-east-desalination-2026.html':'基于沙特官方项目资料，分析海水淡化采购、私营融资、反渗透能效及水务基础设施投资风险。',
+'reports/e-invoicing/02-from-paper-to-digital-reporting.html':'沿着纸面凭证、EDI、语义标准、互联网络与税务数字报告，解释电子发票体系如何逐层演进。',
+'middle-east-desalination-2026.html':'基于沙特官方项目资料，分析海水淡化采购、私营融资、反渗透能效及水务基础设施投资风险。',
 'us-manufacturing-orders-2026.html':'基于美国人口普查局与美联储2026年8月数据，拆解工厂订单、资本设备、制造业产出和产能利用率。',
 'us-datacenter-power-2026.html':'基于LBNL、EIA、FERC与美国能源部资料，拆解美国数据中心用电情景、电网接入和商业机会。',
 'catl-global-2026.html':'依据宁德时代2026年半年度报告及德布勒森公告，分析海外收入、欧洲本地化生产和量产兑现风险。',
