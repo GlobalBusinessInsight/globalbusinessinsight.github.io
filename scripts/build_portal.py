@@ -239,9 +239,9 @@ def enhance(records):
    nonlocal seen
    if seen:return ''
    seen=True;return m[0]
-  s=re.sub(r'<script\\b[^>]*src=["\\']https://pagead2\\.googlesyndication\\.com/pagead/js/adsbygoogle\\.js[^"\\']*["\\'][^>]*>\\s*</script>',dedup,s,flags=re.I)
+  s=re.sub(r'<script\b[^>]*src=["\']https://pagead2\.googlesyndication\.com/pagead/js/adsbygoogle\.js[^"\']*["\'][^>]*>\s*</script>',dedup,s,flags=re.I)
   if not seen:
-   s=re.sub(r'</head\\s*>',lambda m:AD+'\\n'+m[0],s,count=1,flags=re.I)
+   s=re.sub(r'</head\s*>',lambda m:AD+'\n'+m[0],s,count=1,flags=re.I)
   related=[v for v in FEATURED.get(r['category'],[]) if v!=r['path']][:2]
   links=''.join(f'<a href="{url(p)}">{escape(next(x["title"] for x in records if x["path"]==p))}</a>' for p in related if any(x['path']==p for x in records))
   alternate=''.join(f'<a href="{u}">{"English edition" if l=="en" else "中文版"}</a>' for l,u in pairmap.get(r['path'],[]) if u!=r['url'])
