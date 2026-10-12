@@ -276,7 +276,7 @@ def generate():
  company_path=global_paths[0] if global_paths else ''
  featured_industry=FEATURED['industry'][0]
  social=share_section(featured_industry,company_path,by)
- daily_cards=[p for p in global_paths if p!=company_path][:3]
+ daily_cards=global_paths[:3]
  global_section='<div class="section-head"><div><div class="eyebrow">CHINA GOING GLOBAL / COMPANY BRIEFINGS</div><h2>中国企业全球化</h2></div><a href="/category/global/">全部企业出海案例 →</a></div><div class="collection global-daily">'+cards(daily_cards,by)+'</div>'
  desk=desk_tiles()
  body=hero+desk+social+global_section+'<div class="section-head"><div><div class="eyebrow">RESEARCH PATHS / START HERE</div><h2>从一个重要问题开始</h2></div><span>先建立框架，再深入一个具体问题</span></div><section class="topics">'+topic_cards()+'</section><div class="section-head"><div><div class="eyebrow">MORE TO EXPLORE / ARCHIVE</div><h2>从资料库继续发现</h2></div><a href="/archive/">全部报告 →</a></div><div class="editorial-grid"><div class="report-list">'+cards(selected,by)+'</div><aside class="reading-note"><div class="eyebrow">READ WITH CONTEXT</div><h3>Research with context.</h3><p>读报告，也读它的边界。历史判断、情景预测和当前事实，需要分别看待。</p><ul><li>先确认数据年份与市场范围</li><li>区分事实、估计和预测</li><li>回到原始出处核对关键数字</li></ul><a class="text-link" href="/editorial/">编辑与来源标准 →</a><h3>Selected in English</h3><p>从仓储、企业技术与全球业务开始，查阅已有英文研究。</p><a class="text-link" href="/en/">Explore English reports →</a></aside></div>'+subscribe_panel()+partner_panel()
