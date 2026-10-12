@@ -10,14 +10,16 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
 'reports/e-invoicing/01-what-is-an-e-invoice.html':'从数据结构、自动处理和交易链路，解释PDF、扫描件与结构化电子发票的区别。',
 'reports/e-invoicing/02-from-paper-to-digital-reporting.html':'沿着纸面凭证、EDI、语义标准、互联网络与税务数字报告，解释电子发票体系如何逐层演进。',
 'reports/e-invoicing/03-why-e-invoicing-matters.html':'结合企业调查、欧盟评估和秘鲁研究，分析电子发票的效率、合规、征管与数据价值及其实现条件。',
+'north-america-freight-rail-2026.html':'基于AAR、USDOT与STB公开资料，分析北美铁路联运、跨境货运结构、关键通道和服务约束。',
+'huhutech-global-2026.html':'依据HUHUTECH向SEC提交的未经审计2026年中期资料，分析新市场收入、项目结构、利润与现金回收。',
 'middle-east-desalination-2026.html':'基于沙特官方项目资料，分析海水淡化采购、私营融资、反渗透能效及水务基础设施投资风险。',
 'us-manufacturing-orders-2026.html':'基于美国人口普查局与美联储2026年8月数据，拆解工厂订单、资本设备、制造业产出和产能利用率。',
 'us-datacenter-power-2026.html':'基于LBNL、EIA、FERC与美国能源部资料，拆解美国数据中心用电情景、电网接入和商业机会。',
@@ -116,7 +118,15 @@ def card(r):return f'<article class="report"><div class="eyebrow">{escape(r["cat
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='middle-east-desalination-2026.html':
+ if r['path']=='north-america-freight-rail-2026.html':
+  en='U.S. intermodal rail reached a monthly record in August, while June cross-border freight value rose 19.9% year over year. The measures cover different scopes: U.S. rail units versus cross-border trade value. Corridor capacity, terminal dwell and first/last-mile execution will shape service quality.'
+  zh='美国铁路联运8月创月度纪录，6月跨境货运金额同比增长19.9%。两项指标口径不同；口岸、场站和两端短驳决定增长能否转化为稳定交付。'
+  tags='#NorthAmericanFreight #Intermodal #SupplyChain'
+ elif r['path']=='huhutech-global-2026.html':
+  en='HUHUTECH reported US$10.67m in H1 2026 revenue, up 8.6%; new U.S., German and Singapore operations supplied 34.6% of sales. Yet GAAP net loss widened to US$16.65m, receivables rose to US$10.94m and operating cash outflow reached US$3.36m. Expansion is visible; repeatable delivery and cash conversion remain unproven.'
+  zh='HUHUTECH上半年营收增长8.6%，美国、德国和新加坡贡献34.6%；但GAAP净亏损扩大，应收账款上升、经营现金流流出。出海质量仍需回款与项目表现验证。'
+  tags='#ChinaGoingGlobal #IndustrialAutomation #GlobalBusiness'
+ elif r['path']=='middle-east-desalination-2026.html':
   en='Saudi Arabia’s water procurement system has contracted desalination capacity above 10 million m³/day, with SAR 56bn in privately financed projects. This briefing examines project stages, reverse-osmosis energy use, water-purchase agreements and delivery risks.'
   zh='沙特淡化水已签约能力超过每日1,000万立方米，私营项目投资累计560亿里亚尔。本文拆解项目阶段、反渗透能耗、购水协议与交付风险。'
   tags='#Desalination #SaudiArabia #WaterInfrastructure'
