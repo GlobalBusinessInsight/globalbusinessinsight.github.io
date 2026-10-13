@@ -10,8 +10,8 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
@@ -19,6 +19,8 @@ DESCS={
 'reports/e-invoicing/02-from-paper-to-digital-reporting.html':'沿着纸面凭证、EDI、语义标准、互联网络与税务数字报告，解释电子发票体系如何逐层演进。',
 'reports/e-invoicing/03-why-e-invoicing-matters.html':'结合企业调查、欧盟评估和秘鲁研究，分析电子发票的效率、合规、征管与数据价值及其实现条件。',
 'north-america-freight-rail-2026.html':'基于AAR、USDOT与STB公开资料，分析北美铁路联运、跨境货运结构、关键通道和服务约束。',
+'latin-american-manufacturing-fdi-2026.html':'依据ECLAC 2026年报告，拆解拉美和加勒比FDI总量、制造业与服务业分化、资金来源和投资项目公告变化。',
+'alibaba-global-2026.html':'依据阿里巴巴FY2026年报及2026年6月季度SEC披露，分析国际零售增长、分部亏损收窄、AliExpress盈利信号与报告口径变化。',
 'huhutech-global-2026.html':'依据HUHUTECH向SEC提交的未经审计2026年中期资料，分析新市场收入、项目结构、利润与现金回收。',
 'middle-east-desalination-2026.html':'基于沙特官方项目资料，分析海水淡化采购、私营融资、反渗透能效及水务基础设施投资风险。',
 'us-manufacturing-orders-2026.html':'基于美国人口普查局与美联储2026年8月数据，拆解工厂订单、资本设备、制造业产出和产能利用率。',
@@ -122,6 +124,14 @@ def share_card(r, kind):
   en='U.S. intermodal rail reached a monthly record in August, while June cross-border freight value rose 19.9% year over year. The measures cover different scopes: U.S. rail units versus cross-border trade value. Corridor capacity, terminal dwell and first/last-mile execution will shape service quality.'
   zh='美国铁路联运8月创月度纪录，6月跨境货运金额同比增长19.9%。两项指标口径不同；口岸、场站和两端短驳决定增长能否转化为稳定交付。'
   tags='#NorthAmericanFreight #Intermodal #SupplyChain'
+ elif r['path']=='latin-american-manufacturing-fdi-2026.html':
+  en='Latin America and the Caribbean attracted US$194.2bn of FDI in 2025 (+1.7%), but manufacturing inflows fell 17.2% as services rose 19.5%. Announced project value dropped 34.3%—a reminder that capital flows, project announcements and factory investment are different signals.'
+  zh='拉美和加勒比2025年FDI流入增长1.7%，但制造业下降17.2%，服务业增长19.5%；公告项目金额下降34.3%。资金流、项目公告与实际建厂不能混为一谈。'
+  tags='#LatinAmerica #Manufacturing #ForeignDirectInvestment'
+ elif r['path']=='alibaba-global-2026.html':
+  en='Alibaba’s FY2026 international retail revenue grew 9%, while the international digital commerce group’s adjusted EBITA loss narrowed to RMB2.05bn. In the June quarter, international e-commerce revenue fell 1% year over year even as AliExpress reported operating profit and local product supply grew. Profitability is improving, but growth remains uneven.'
+  zh='阿里巴巴FY2026国际零售收入增长9%，国际数字商业集团经调整EBITA亏损收窄；但截至6月季度国际电商收入同比下降1%，AliExpress单平台称实现经营利润。本地化与持续增长仍待验证。'
+  tags='#Alibaba #CrossBorderEcommerce #ChinaGoingGlobal'
  elif r['path']=='huhutech-global-2026.html':
   en='HUHUTECH reported US$10.67m in H1 2026 revenue, up 8.6%; new U.S., German and Singapore operations supplied 34.6% of sales. Yet GAAP net loss widened to US$16.65m, receivables rose to US$10.94m and operating cash outflow reached US$3.36m. Expansion is visible; repeatable delivery and cash conversion remain unproven.'
   zh='HUHUTECH上半年营收增长8.6%，美国、德国和新加坡贡献34.6%；但GAAP净亏损扩大，应收账款上升、经营现金流流出。出海质量仍需回款与项目表现验证。'
