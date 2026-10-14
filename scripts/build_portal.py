@@ -18,8 +18,10 @@ DESCS={
 'reports/e-invoicing/01-what-is-an-e-invoice.html':'从数据结构、自动处理和交易链路，解释PDF、扫描件与结构化电子发票的区别。',
 'reports/e-invoicing/02-from-paper-to-digital-reporting.html':'沿着纸面凭证、EDI、语义标准、互联网络与税务数字报告，解释电子发票体系如何逐层演进。',
 'reports/e-invoicing/03-why-e-invoicing-matters.html':'结合企业调查、欧盟评估和秘鲁研究，分析电子发票的效率、合规、征管与数据价值及其实现条件。',
-'eu-solar-grid-flexibility-2026.html':'依据SolarPower Europe、Eurostat和欧盟电力市场法规，分析欧盟太阳能装机、发电结构、并网灵活性与项目收益兑现。',\n'north-america-freight-rail-2026.html':'基于AAR、USDOT与STB公开资料，分析北美铁路联运、跨境货运结构、关键通道和服务约束。',
-'zte-global-2026.html':'依据中兴通讯2025年年报及2026年半年报披露，分析国际收入、区域布局、网络与算力业务、本地执行及盈利兑现风险。',\n'latin-american-manufacturing-fdi-2026.html':'依据ECLAC 2026年报告，拆解拉美和加勒比FDI总量、制造业与服务业分化、资金来源和投资项目公告变化。',
+'eu-solar-grid-flexibility-2026.html':'依据SolarPower Europe、Eurostat和欧盟电力市场法规，分析欧盟太阳能装机、发电结构、并网灵活性与项目收益兑现。',
+'north-america-freight-rail-2026.html':'基于AAR、USDOT与STB公开资料，分析北美铁路联运、跨境货运结构、关键通道和服务约束。',
+'zte-global-2026.html':'依据中兴通讯2025年年报及2026年半年报披露，分析国际收入、区域布局、网络与算力业务、本地执行及盈利兑现风险。',
+'latin-american-manufacturing-fdi-2026.html':'依据ECLAC 2026年报告，拆解拉美和加勒比FDI总量、制造业与服务业分化、资金来源和投资项目公告变化。',
 'alibaba-global-2026.html':'依据阿里巴巴FY2026年报及2026年6月季度SEC披露，分析国际零售增长、分部亏损收窄、AliExpress盈利信号与报告口径变化。',
 'huhutech-global-2026.html':'依据HUHUTECH向SEC提交的未经审计2026年中期资料，分析新市场收入、项目结构、利润与现金回收。',
 'middle-east-desalination-2026.html':'基于沙特官方项目资料，分析海水淡化采购、私营融资、反渗透能效及水务基础设施投资风险。',
@@ -72,7 +74,8 @@ class Extract(HTMLParser):
   if self.p is not None and not self.ignore:self.p.append(t)
 def clean_generated(s):
  for name in ['metadata','reader']:
-  s=re.sub(r'\s*<!-- GBI '+name+r' start -->.*?<!-- GBI '+name+r' end -->\s*', '\n',s,flags=re.S)
+  s=re.sub(r'\s*<!-- GBI '+name+r' start -->.*?<!-- GBI '+name+r' end -->\s*', '
+',s,flags=re.S)
  return s
 
 def classify(path,title):
@@ -189,7 +192,8 @@ def share_card(r, kind):
   zh=r['description']
   tags='#GlobalBusiness #MarketResearch'
  if zh.startswith('中文补充：'):zh=zh[len('中文补充：'):]
- copy='\n'.join([en,zh,tracked,tags])
+ copy='
+'.join([en,zh,tracked,tags])
  li='https://www.linkedin.com/sharing/share-offsite/?url='+quote(tracked,safe='')
  fb='https://www.facebook.com/sharer/sharer.php?u='+quote(tracked,safe='')
  repost_icon='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M7 7h10l-2.5-2.5M17 7l-2.5 2.5M17 17H7l2.5 2.5M7 17l2.5-2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
@@ -263,7 +267,10 @@ def enhance(records):
   metadata.extend(f'<link rel="alternate" hreflang="{lang}" href="{BASE+u}">' for lang,u in pairmap.get(r['path'],[]))
   schema={'@context':'https://schema.org','@type':'WebPage','name':r['title'],'url':canonical(r['path']),'inLanguage':r['language'],'isPartOf':{'@type':'WebSite','name':'Global Business Insight','url':BASE+'/'}}
   metadata.append('<script type="application/ld+json">'+json.dumps(schema,ensure_ascii=False).replace('</','<\\/')+'</script>')
-  block='\n<!-- GBI metadata start -->\n'+'\n'.join(metadata)+'\n<!-- GBI metadata end -->\n'
+  block='\n<!-- GBI metadata start -->
+'+'
+'.join(metadata)+'\n<!-- GBI metadata end -->
+'
   s=re.sub(r'</head\s*>',lambda m:block+m[0],s,count=1,flags=re.I)
   # Ensure every editorial report page loads AdSense exactly once.
   seen=False
@@ -273,13 +280,16 @@ def enhance(records):
    seen=True;return m[0]
   s=re.sub(r'<script\b[^>]*src=["\']https://pagead2\.googlesyndication\.com/pagead/js/adsbygoogle\.js[^"\']*["\'][^>]*>\s*</script>',dedup,s,flags=re.I)
   if not seen:
-   s=re.sub(r'</head\s*>',lambda m:AD+'\n'+m[0],s,count=1,flags=re.I)
+   s=re.sub(r'</head\s*>',lambda m:AD+'
+'+m[0],s,count=1,flags=re.I)
   related=[v for v in FEATURED.get(r['category'],[]) if v!=r['path']][:2]
   links=''.join(f'<a href="{url(p)}">{escape(next(x["title"] for x in records if x["path"]==p))}</a>' for p in related if any(x['path']==p for x in records))
   alternate=''.join(f'<a href="{u}">{"English edition" if l=="en" else "中文版"}</a>' for l,u in pairmap.get(r['path'],[]) if u!=r['url'])
   caturl='/category/'+r['category']+'/' if r['category'] in ('industry','global','digital') else '/markets/' if r['category']=='markets' else '/archive/'
   panel=f'''<details id="gbi-reader"><summary>{'GBI · Explore' if english else '全球商业洞察 · 导航'}</summary><div class="gbi-reader-panel"><strong>{'Global Business Insight' if english else '全球商业洞察'}</strong><a href="/">{'Home / 中文首页' if english else '商业首页'}</a><a href="{caturl}">{escape(r['categoryLabel'])}</a><a href="/archive/">{'All reports / Search' if english else '报告目录与搜索'}</a>{alternate}{links}<p>{'Archived report. Check the original dates, sources and forecast assumptions before using figures.' if english else '历史报告：请核对正文的数据日期、原始出处与预测假设。'}</p><a href="/editorial/">{'Editorial standards' if english else '编辑与来源标准'}</a><a href="/privacy/">{'Privacy & advertising' if english else '隐私与广告说明'}</a><a href="/contact/">{'Report a correction' if english else '反馈与纠错'}</a></div></details>'''
-  reader='\n<!-- GBI reader start -->\n'+panel+'\n<!-- GBI reader end -->\n'
+  reader='\n<!-- GBI reader start -->
+'+panel+'\n<!-- GBI reader end -->
+'
   if re.search(r'</body\s*>',s,re.I):s=re.sub(r'</body\s*>',lambda m:reader+m[0],s,count=1,flags=re.I)
   elif re.search(r'</html\s*>',s,re.I):s=re.sub(r'</html\s*>',lambda m:reader+m[0],s,count=1,flags=re.I)
   else:s+=reader
@@ -287,7 +297,8 @@ def enhance(records):
 
 def generate():
  records=scan();by={r['path']:r for r in records}
- write('assets/gbi/catalog.json',json.dumps(sorted(records,key=lambda r:(r['category']=='archive',r['title'])),ensure_ascii=False,separators=(',',':'))+'\n')
+ write('assets/gbi/catalog.json',json.dumps(sorted(records,key=lambda r:(r['category']=='archive',r['title'])),ensure_ascii=False,separators=(',',':'))+'
+')
  hero='''<section class="hero"><div class="hero-copy"><div class="eyebrow">GLOBAL BUSINESS, IN CONTEXT · WEEKLY INTELLIGENCE</div><h1>Follow the shift.<br>Find your next market.</h1><p class="hero-cn">看懂全球产业变化，找到中国企业出海的下一步。</p><p>Source-led briefings on industries, regional markets and Chinese companies going global. English-first summaries, with Chinese context.</p><div class="hero-actions"><a class="action" href="#latest">Read this week’s briefings ↓</a><a class="action secondary" href="/category/global/">中国企业出海 →</a><a class="action secondary" href="/archive/">Browse research</a></div><div class="hero-signals"><span>INDUSTRY × REGION</span><span>CHINA GOING GLOBAL</span><span>MARKET DATA & TOOLS</span></div></div><aside class="tool-feature"><div class="eyebrow">MARKET & MACRO / RESEARCH TOOL</div><h2>Market Atlas</h2><p>Compare U.S. market and macro indicators on one timeline.</p><div class="tool-tags"><span>Market indices</span><span>Rates & Treasuries</span><span>Jobs & GDP</span></div><p>Choose a period, compare monthly changes, and review source definitions.</p><a class="action" href="/mk/">Open Market Atlas ↗</a><a class="tool-secondary" href="/markets/">浏览市场专题 / More market research →</a></aside></section>'''
  selected=FEATURED['industry'][:2]+FEATURED['global'][:2]+FEATURED['digital'][:2]+['reports/e-invoicing/03-why-e-invoicing-matters.html']
  global_paths=global_feature_paths(records)
@@ -371,7 +382,8 @@ def generate():
  write('404.html',shell('页面未找到','查找报告目录或返回全球商业洞察首页。','404.html',intro('404','这个地址暂时没有内容。','可以搜索报告标题，或从商业首页重新开始。')+'<p><a class="action" href="/archive/">搜索报告</a> <a class="action secondary" href="/">返回首页</a></p>',active='',ads=False).replace('<meta name="description"','<meta name="robots" content="noindex"><meta name="description"',1))
  enhance(records)
  # The root English app uses the same origin, JS and localStorage key after relocation.
- ep=ROOT/'tools/english/index.html';s=clean_generated(ep.read_text());block='\n<!-- GBI metadata start -->\n<link rel="canonical" href="'+BASE+'/tools/english/">\n<!-- GBI metadata end -->\n';s=s.replace('</head>',block+'</head>');ep.write_text(s)
+ ep=ROOT/'tools/english/index.html';s=clean_generated(ep.read_text());block='\n<!-- GBI metadata start -->\n<link rel="canonical" href="'+BASE+'/tools/english/">\n<!-- GBI metadata end -->
+';s=s.replace('</head>',block+'</head>');ep.write_text(s)
  # Sitemap dates are deliberately omitted rather than inventing content update dates.
  locations=[]
  for p in sorted(ROOT.rglob('*.html')):
@@ -380,7 +392,12 @@ def generate():
   text=p.read_text(errors='replace')
   if not re.search(r'<title[^>]*>\s*[^<\s]',text,re.I):continue
   locations.append(canonical(path))
- write('sitemap.xml','<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+''.join('  <url><loc>'+escape(u)+'</loc></url>\n' for u in sorted(set(locations)))+'</urlset>\n')
- robots='User-agent: *\nAllow: /\n\nSitemap: '+BASE+'/sitemap.xml\n';write('robots.txt',robots);write('robot.txt','# Legacy filename. Crawlers should use /robots.txt.\n'+robots)
+ write('sitemap.xml','<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+'+''.join('  <url><loc>'+escape(u)+'</loc></url>
+' for u in sorted(set(locations)))+'</urlset>
+')
+ robots='User-agent: *\nAllow: /\n\nSitemap: '+BASE+'/sitemap.xml
+';write('robots.txt',robots);write('robot.txt','# Legacy filename. Crawlers should use /robots.txt.
+'+robots)
  print(f'Built portal, {len(records)} catalog entries, {pages} archive pages and {len(set(locations))} sitemap URLs.')
 if __name__=='__main__':generate()
