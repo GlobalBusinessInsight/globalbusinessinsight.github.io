@@ -10,16 +10,16 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
 'reports/e-invoicing/01-what-is-an-e-invoice.html':'从数据结构、自动处理和交易链路，解释PDF、扫描件与结构化电子发票的区别。',
 'reports/e-invoicing/02-from-paper-to-digital-reporting.html':'沿着纸面凭证、EDI、语义标准、互联网络与税务数字报告，解释电子发票体系如何逐层演进。',
 'reports/e-invoicing/03-why-e-invoicing-matters.html':'结合企业调查、欧盟评估和秘鲁研究，分析电子发票的效率、合规、征管与数据价值及其实现条件。',
-'north-america-freight-rail-2026.html':'基于AAR、USDOT与STB公开资料，分析北美铁路联运、跨境货运结构、关键通道和服务约束。',
-'latin-american-manufacturing-fdi-2026.html':'依据ECLAC 2026年报告，拆解拉美和加勒比FDI总量、制造业与服务业分化、资金来源和投资项目公告变化。',
+'eu-solar-grid-flexibility-2026.html':'依据SolarPower Europe、Eurostat和欧盟电力市场法规，分析欧盟太阳能装机、发电结构、并网灵活性与项目收益兑现。',\n'north-america-freight-rail-2026.html':'基于AAR、USDOT与STB公开资料，分析北美铁路联运、跨境货运结构、关键通道和服务约束。',
+'zte-global-2026.html':'依据中兴通讯2025年年报及2026年半年报披露，分析国际收入、区域布局、网络与算力业务、本地执行及盈利兑现风险。',\n'latin-american-manufacturing-fdi-2026.html':'依据ECLAC 2026年报告，拆解拉美和加勒比FDI总量、制造业与服务业分化、资金来源和投资项目公告变化。',
 'alibaba-global-2026.html':'依据阿里巴巴FY2026年报及2026年6月季度SEC披露，分析国际零售增长、分部亏损收窄、AliExpress盈利信号与报告口径变化。',
 'huhutech-global-2026.html':'依据HUHUTECH向SEC提交的未经审计2026年中期资料，分析新市场收入、项目结构、利润与现金回收。',
 'middle-east-desalination-2026.html':'基于沙特官方项目资料，分析海水淡化采购、私营融资、反渗透能效及水务基础设施投资风险。',
@@ -120,7 +120,15 @@ def card(r):return f'<article class="report"><div class="eyebrow">{escape(r["cat
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='north-america-freight-rail-2026.html':
+ if r['path']=='eu-solar-grid-flexibility-2026.html':
+  en='EU solar added an estimated 33.8 GWdc in H1 2026 (+1.9% year over year), while solar made up 41.6% of renewable electricity generation in Q2. These are different measures. The next market test is grid access, flexibility and revenue capture—not capacity alone.'
+  zh='欧盟2026年上半年新增太阳能装机估算33.8 GWdc、同比增长1.9%；Q2太阳能占可再生电力发电量41.6%，并非全部发电量。并网、储能与收益兑现将决定下一阶段竞争。'
+  tags='#EuropeanSolar #EnergyStorage #GridFlexibility'
+ elif r['path']=='zte-global-2026.html':
+  en='ZTE’s international revenue grew 12.39% in 2025 and 33.1% in H1 2026, reaching 35.7% of first-half group revenue. Networks, devices and computing offer several growth paths, but overseas margins, local customer mix and cash conversion remain key proof points.'
+  zh='中兴通讯国际收入2025年增长12.39%，2026年上半年增长33.1%，占同期总收入35.7%。网络、终端与算力形成多条增长路径，海外利润、客户结构和现金回收仍待验证。'
+  tags='#ZTE #ChinaGoingGlobal #GlobalBusiness'
+ elif r['path']=='north-america-freight-rail-2026.html':
   en='U.S. intermodal rail reached a monthly record in August, while June cross-border freight value rose 19.9% year over year. The measures cover different scopes: U.S. rail units versus cross-border trade value. Corridor capacity, terminal dwell and first/last-mile execution will shape service quality.'
   zh='美国铁路联运8月创月度纪录，6月跨境货运金额同比增长19.9%。两项指标口径不同；口岸、场站和两端短驳决定增长能否转化为稳定交付。'
   tags='#NorthAmericanFreight #Intermodal #SupplyChain'
