@@ -10,16 +10,18 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
 'reports/e-invoicing/01-what-is-an-e-invoice.html':'从数据结构、自动处理和交易链路，解释PDF、扫描件与结构化电子发票的区别。',
 'reports/e-invoicing/02-from-paper-to-digital-reporting.html':'沿着纸面凭证、EDI、语义标准、互联网络与税务数字报告，解释电子发票体系如何逐层演进。',
 'reports/e-invoicing/03-why-e-invoicing-matters.html':'结合企业调查、欧盟评估和秘鲁研究，分析电子发票的效率、合规、征管与数据价值及其实现条件。',
+'asean-power-grid-2026.html':'依据东盟能源中心第九版《东盟能源展望》、IEA《东盟能源安全评估》及东盟电网互联研究，分析区域电力需求、数据中心、灵活性与投资落地。',
 'middle-east-aviation-2026.html':'依据IATA 2026年8月客运统计与迪拜机场上半年运营披露，分析中东航司需求、运力、客座率及枢纽恢复。',
 'middle-east-desalination-2026.html':'基于沙特官方项目资料，分析海水淡化采购、私营融资、反渗透能效及水务基础设施投资风险。',
+'xpeng-global-2026.html':'依据小鹏汽车2026年中期报告及截至10月15日的欧洲业务公告，分析海外收入、交付增长、奥地利合作生产与盈利验证。',
 'transsion-global-2026.html':'依据传音控股在港交所披露的2023至2025年审计财务资料及2026年前四个月数据，分析多品牌布局、区域收入、售后网络与现金流。',
 'eu-solar-grid-flexibility-2026.html':'依据SolarPower Europe、Eurostat和欧盟电力市场法规，分析欧盟太阳能装机、发电结构、并网灵活性与项目收益兑现。',
 'north-america-freight-rail-2026.html':'基于AAR、USDOT与STB公开资料，分析北美铁路联运、跨境货运结构、关键通道和服务约束。',
@@ -125,10 +127,18 @@ def card(r):return f'<article class="report"><div class="eyebrow">{escape(r["cat
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='middle-east-aviation-2026.html':
+ if r['path']=='asean-power-grid-2026.html':
+  en='IEA projects Southeast Asian electricity demand to grow 5.4% a year in 2026–2030; ASEAN’s new Energy Outlook says data centres account for about one-fifth of power-demand growth to 2030. The opportunity depends on grids, flexibility, project bankability and cross-border rules—not demand forecasts alone.'
+  zh='IEA预计东南亚2026—2030年电力需求年均增长5.4%；东盟第九版能源展望估算，数据中心约占未来五年新增用电增长的五分之一。并网、灵活性、融资和跨境规则决定需求能否兑现。'
+  tags='#ASEAN #PowerGrid #EnergyInvestment'
+ elif r['path']=='middle-east-aviation-2026.html':
   en='Middle East carriers saw August 2026 passenger demand (RPK) fall 14.6% year over year, while capacity (ASK) fell 9.3% and load factor slipped 4.9 points to 78.9%. Dubai International welcomed 31.5m passengers in H1, down 31.3%, despite a month-by-month Q2 rebound. Route reopening is not the same as hub recovery.'
   zh='中东航司2026年8月RPK同比下降14.6%，ASK下降9.3%，客座率同比降4.9个百分点至78.9%。迪拜机场上半年客流下降31.3%，Q2逐月回升；航线恢复不等于枢纽网络完全恢复。'
   tags='#MiddleEastAviation #AirTransport #MarketBrief'
+ elif r['path']=='xpeng-global-2026.html':
+  en='XPENG’s H1 2026 overseas revenue rose 62.2% to RMB8.23bn, and Q2 overseas deliveries topped 20,000. Graz partner production and a new European launch deepen localization, but group losses widened and overseas profit was not disclosed. Can growth become durable local economics?'
+  zh='小鹏2026年上半年境外收入增长62.2%至82.26亿元，Q2海外交付超过2万辆；格拉茨合作生产和欧洲新车发布深化本地化，但集团亏损扩大，海外利润未单独披露。'
+  tags='#XPENG #ChinaGoingGlobal #EuropeanEV'
  elif r['path']=='transsion-global-2026.html':
   en='Transsion’s 2025 revenue fell 4.5%, while attributable profit dropped 53.5%. Revenue rebounded 30.1% in the four months to April 2026, but operating cash flow was negative RMB5.28bn, largely alongside inventory build. Its multi-brand and after-sales footprint is real; durable cash conversion is the next test.'
   zh='传音2025年收入下降4.5%、归母利润下降53.5%；2026年前四个月收入回升30.1%，经营现金流仍净流出52.8亿元，存货增加占用现金。多品牌与售后网络已形成，盈利恢复还需现金流验证。'
