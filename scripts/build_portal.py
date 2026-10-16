@@ -126,13 +126,16 @@ def card(r):return f'<article class="report"><div class="eyebrow">{escape(r["cat
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='asean-power-grid-2026.html':\n  en='IEA projects Southeast Asian electricity demand to grow 5.4% a year in 2026–2030; ASEAN’s new Energy Outlook says data centres account for about one-fifth of power-demand growth to 2030. The opportunity depends on grids, flexibility, project bankability and cross-border rules—not demand forecasts alone.'\n  zh='IEA预计东南亚2026—2030年电力需求年均增长5.4%；东盟第九版能源展望估算，数据中心约占未来五年新增用电增长的五分之一。并网、灵活性、融资和跨境规则决定需求能否兑现。'
+ if r['path']=='asean-power-grid-2026.html':
+  en='IEA projects Southeast Asian electricity demand to grow 5.4% a year in 2026–2030; ASEAN’s new Energy Outlook says data centres account for about one-fifth of power-demand growth to 2030. The opportunity depends on grids, flexibility, project bankability and cross-border rules—not demand forecasts alone.'
+  zh='IEA预计东南亚2026—2030年电力需求年均增长5.4%；东盟第九版能源展望估算，数据中心约占未来五年新增用电增长的五分之一。并网、灵活性、融资和跨境规则决定需求能否兑现。'
   tags='#ASEAN #PowerGrid #EnergyInvestment'
  elif r['path']=='middle-east-aviation-2026.html':
   en='Middle East carriers saw August 2026 passenger demand (RPK) fall 14.6% year over year, while capacity (ASK) fell 9.3% and load factor slipped 4.9 points to 78.9%. Dubai International welcomed 31.5m passengers in H1, down 31.3%, despite a month-by-month Q2 rebound. Route reopening is not the same as hub recovery.'
   zh='中东航司2026年8月RPK同比下降14.6%，ASK下降9.3%，客座率同比降4.9个百分点至78.9%。迪拜机场上半年客流下降31.3%，Q2逐月回升；航线恢复不等于枢纽网络完全恢复。'
   tags='#MiddleEastAviation #AirTransport #MarketBrief'
- elif r['path']=='xpeng-global-2026.html':\n  en='XPENG’s H1 2026 overseas revenue rose 62.2% to RMB8.23bn, and Q2 overseas deliveries topped 20,000. Graz partner production and a new European launch deepen localization, but group losses widened and overseas profit was not disclosed. Can growth become durable local economics?'
+ elif r['path']=='xpeng-global-2026.html':
+  en='XPENG’s H1 2026 overseas revenue rose 62.2% to RMB8.23bn, and Q2 overseas deliveries topped 20,000. Graz partner production and a new European launch deepen localization, but group losses widened and overseas profit was not disclosed. Can growth become durable local economics?'
   zh='小鹏2026年上半年境外收入增长62.2%至82.26亿元，Q2海外交付超过2万辆；格拉茨合作生产和欧洲新车发布深化本地化，但集团亏损扩大，海外利润未单独披露。'
   tags='#XPENG #ChinaGoingGlobal #EuropeanEV'
  elif r['path']=='transsion-global-2026.html':
