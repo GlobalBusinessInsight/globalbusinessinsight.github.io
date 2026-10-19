@@ -10,11 +10,13 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'latin-america-power-resilience-2026.html':'依据IEA 2026年10月拉美电力系统评估与气候资料，分析厄尔尼诺对水电、备用电源、区域互联和电网投资的影响。',
+'superhi-global-2026.html':'依据特海国际2026年中期报告，分析海底捞海外门店、地区收入、翻台率、同店销售及集团利润变化。',
 'reports/e-invoicing/01-what-is-an-e-invoice.html':'从数据结构、自动处理和交易链路，解释PDF、扫描件与结构化电子发票的区别。',
 'reports/e-invoicing/02-from-paper-to-digital-reporting.html':'沿着纸面凭证、EDI、语义标准、互联网络与税务数字报告，解释电子发票体系如何逐层演进。',
 'reports/e-invoicing/03-why-e-invoicing-matters.html':'结合企业调查、欧盟评估和秘鲁研究，分析电子发票的效率、合规、征管与数据价值及其实现条件。',
@@ -127,7 +129,15 @@ def card(r):return f'<article class="report"><div class="eyebrow">{escape(r["cat
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='asean-power-grid-2026.html':
+ if r['path']=='latin-america-power-resilience-2026.html':
+  en='IEA warns the 2026–27 El Niño may stress Latin American power systems where hydropower supplies over half of generation in several countries. Drought, heat and flooding risks vary by location; resilience depends on prepared emergency measures, reserve resources, grid links and tested coordination.'
+  zh='IEA指出，2026—2027年厄尔尼诺可能冲击部分水电依赖度高的拉美电力系统。旱涝风险因地而异，备用资源、跨境互联、应急治理和演练决定韧性。'
+  tags='#LatinAmerica #PowerSystems #ClimateResilience'
+ elif r['path']=='superhi-global-2026.html':
+  en='Super Hi’s H1 2026 revenue rose 12.1% to US$444.8m and operating margin improved to 5.0%, yet net profit fell to US$2.1m from US$28.3m. Southeast Asia accounts for 73 of 129 Haidilao restaurants. Regional store metrics diverge—growth needs to be tested against same-store sales and group-level profit.'
+  zh='特海国际上半年收入增长12.1%至4.448亿美元，经营利润率升至5.0%，净利润却由2,827万美元降至212万美元。129家海外门店中73家位于东南亚；区域同店与翻台指标分化，扩张质量仍需集团利润验证。'
+  tags='#Haidilao #ChinaGoingGlobal #RestaurantBusiness'
+ elif r['path']=='asean-power-grid-2026.html':
   en='IEA projects Southeast Asian electricity demand to grow 5.4% a year in 2026–2030; ASEAN’s new Energy Outlook says data centres account for about one-fifth of power-demand growth to 2030. The opportunity depends on grids, flexibility, project bankability and cross-border rules—not demand forecasts alone.'
   zh='IEA预计东南亚2026—2030年电力需求年均增长5.4%；东盟第九版能源展望估算，数据中心约占未来五年新增用电增长的五分之一。并网、灵活性、融资和跨境规则决定需求能否兑现。'
   tags='#ASEAN #PowerGrid #EnergyInvestment'
