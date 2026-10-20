@@ -12,7 +12,7 @@ CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局�
 FEATURED={
 'industry':['latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
 'global':['superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
-'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html'],
+'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/04-e-invoice-lifecycle.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
 'latin-america-power-resilience-2026.html':'依据IEA 2026年10月拉美电力系统评估与气候资料，分析厄尔尼诺对水电、备用电源、区域互联和电网投资的影响。',
@@ -20,6 +20,7 @@ DESCS={
 'reports/e-invoicing/01-what-is-an-e-invoice.html':'从数据结构、自动处理和交易链路，解释PDF、扫描件与结构化电子发票的区别。',
 'reports/e-invoicing/02-from-paper-to-digital-reporting.html':'沿着纸面凭证、EDI、语义标准、互联网络与税务数字报告，解释电子发票体系如何逐层演进。',
 'reports/e-invoicing/03-why-e-invoicing-matters.html':'结合企业调查、欧盟评估和秘鲁研究，分析电子发票的效率、合规、征管与数据价值及其实现条件。',
+'reports/e-invoicing/04-e-invoice-lifecycle.html':'从交易证据、开具校验、传输回执、接收审批到入账归档，拆解电子发票端到端流程、状态边界、异常处理与留存证据；监管平台并非所有国家的必经环节。',
 'asean-power-grid-2026.html':'依据东盟能源中心第九版《东盟能源展望》、IEA《东盟能源安全评估》及东盟电网互联研究，分析区域电力需求、数据中心、灵活性与投资落地。',
 'middle-east-aviation-2026.html':'依据IATA 2026年8月客运统计与迪拜机场上半年运营披露，分析中东航司需求、运力、客座率及枢纽恢复。',
 'middle-east-desalination-2026.html':'基于沙特官方项目资料，分析海水淡化采购、私营融资、反渗透能效及水务基础设施投资风险。',
@@ -322,7 +323,7 @@ def generate():
  records=scan();by={r['path']:r for r in records}
  write('assets/gbi/catalog.json',json.dumps(sorted(records,key=lambda r:(r['category']=='archive',r['title'])),ensure_ascii=False,separators=(',',':'))+'\n')
  hero='''<section class="hero"><div class="hero-copy"><div class="eyebrow">GLOBAL BUSINESS, IN CONTEXT · WEEKLY INTELLIGENCE</div><h1>Follow the shift.<br>Find your next market.</h1><p class="hero-cn">看懂全球产业变化，找到中国企业出海的下一步。</p><p>Source-led briefings on industries, regional markets and Chinese companies going global. English-first summaries, with Chinese context.</p><div class="hero-actions"><a class="action" href="#latest">Read this week’s briefings ↓</a><a class="action secondary" href="/category/global/">中国企业出海 →</a><a class="action secondary" href="/archive/">Browse research</a></div><div class="hero-signals"><span>INDUSTRY × REGION</span><span>CHINA GOING GLOBAL</span><span>MARKET DATA & TOOLS</span></div></div><aside class="tool-feature"><div class="eyebrow">MARKET & MACRO / RESEARCH TOOL</div><h2>Market Atlas</h2><p>Compare U.S. market and macro indicators on one timeline.</p><div class="tool-tags"><span>Market indices</span><span>Rates & Treasuries</span><span>Jobs & GDP</span></div><p>Choose a period, compare monthly changes, and review source definitions.</p><a class="action" href="/mk/">Open Market Atlas ↗</a><a class="tool-secondary" href="/markets/">浏览市场专题 / More market research →</a></aside></section>'''
- selected=FEATURED['industry'][:2]+FEATURED['global'][:2]+FEATURED['digital'][:2]+['reports/e-invoicing/03-why-e-invoicing-matters.html']
+ selected=FEATURED['industry'][:2]+FEATURED['global'][:2]+FEATURED['digital'][:2]+['reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/04-e-invoice-lifecycle.html']
  global_paths=global_feature_paths(records)
  company_path=global_paths[0] if global_paths else ''
  featured_industry=FEATURED['industry'][0]
@@ -338,7 +339,7 @@ def generate():
    ('电子发票是什么？PDF 算不算？','/reports/e-invoicing/01-what-is-an-e-invoice.html'),
    ('电子发票从哪里来：从纸票、EDI 到税务数字化','/reports/e-invoicing/02-from-paper-to-digital-reporting.html'),
    ('电子发票为什么重要：效率、合规、征管与数据价值','/reports/e-invoicing/03-why-e-invoicing-matters.html'),
-   ('一张电子发票的生命周期：开具、传输、接收、入账、归档','')]),
+   ('一张电子发票的生命周期：开具、传输、接收、入账与归档','/reports/e-invoicing/04-e-invoice-lifecycle.html')]),
   ('第二阶段：解释技术路线',[
    ('电子发票的技术架构：业务系统、税务平台、服务网络如何协作',''),
    ('发票数据标准：UBL、UN/CEFACT、EN 16931 各解决什么问题？',''),
@@ -363,7 +364,7 @@ def generate():
  for phase,items in series_phases:
   rows=''.join('<li>'+('<a href="'+href+'">'+title+'</a>' if href else title)+' <small>'+('已发布' if href else '规划中')+'</small></li>' for title,href in items)
   roadmap+='<h2>'+phase+'</h2><ol>'+rows+'</ol>'
- series_body='<div class="breadcrumb"><a href="/">首页</a> / 电子发票专题</div><article class="prose"><div class="eyebrow">E-INVOICING / KNOWLEDGE SERIES</div><h1>电子发票：从一张票到数字交易基础设施</h1><p>从基础概念、数据标准和传输网络，逐步走向不同国家的监管模式、企业业务场景与实施选择。本系列面向企业财务、税务、IT、采购及出海团队；每篇分别核对适用范围、数据口径与原始来源。</p><p class="notice">目前第 1、2、3 篇已发布；其余为系列选题规划，将逐篇核验资料后继续制作。</p><h2>已发布</h2><p><a class="action" href="/reports/e-invoicing/01-what-is-an-e-invoice.html">第 1 篇：电子发票是什么？PDF 算不算？ →</a></p><p>先区分可阅读的电子文件与可由系统处理的结构化发票数据，再分别观察数据格式、传输机制和当地税务规则。</p><p><a class="action" href="/reports/e-invoicing/02-from-paper-to-digital-reporting.html">第 2 篇：电子发票从哪里来：从纸票、EDI 到税务数字化 →</a></p><p>沿着纸面凭证、EDI、共同标准、互联网络与税务报告，理解全球电子发票如何逐层演进。</p><p><a class="action" href="/reports/e-invoicing/03-why-e-invoicing-matters.html">第 3 篇：电子发票为什么重要：效率、合规、征管与数据价值 →</a></p><p>结合企业调查、欧盟政策评估与秘鲁研究，区分结构化数据的价值机制、观察到的结果和落地限制。</p>'+roadmap+'<h2>编辑说明</h2><p>国家政策和生效日期会变化。涉及现行要求的文章将标注核对日期，并优先引用税务机关、监管机构、标准组织及官方网络资料。本文系列规划不是法律或税务意见。</p></article>'
+ series_body='<div class="breadcrumb"><a href="/">首页</a> / 电子发票专题</div><article class="prose"><div class="eyebrow">E-INVOICING / KNOWLEDGE SERIES</div><h1>电子发票：从一张票到数字交易基础设施</h1><p>从基础概念、数据标准和传输网络，逐步走向不同国家的监管模式、企业业务场景与实施选择。本系列面向企业财务、税务、IT、采购及出海团队；每篇分别核对适用范围、数据口径与原始来源。</p><p class="notice">第 1 至第 4 篇已发布；其余选题将逐篇核验资料后制作。</p><h2>已发布</h2><p><a class="action" href="/reports/e-invoicing/01-what-is-an-e-invoice.html">第 1 篇：电子发票是什么？PDF 算不算？ →</a></p><p>先区分可阅读的电子文件与可由系统处理的结构化发票数据，再分别观察数据格式、传输机制和当地税务规则。</p><p><a class="action" href="/reports/e-invoicing/02-from-paper-to-digital-reporting.html">第 2 篇：电子发票从哪里来：从纸票、EDI 到税务数字化 →</a></p><p>沿着纸面凭证、EDI、共同标准、互联网络与税务报告，理解全球电子发票如何逐层演进。</p><p><a class="action" href="/reports/e-invoicing/03-why-e-invoicing-matters.html">第 3 篇：电子发票为什么重要：效率、合规、征管与数据价值 →</a></p><p>结合企业调查、欧盟政策评估与秘鲁研究，区分结构化数据的价值机制、观察到的结果和落地限制。</p><p><a class="action" href="/reports/e-invoicing/04-e-invoice-lifecycle.html">第 4 篇：一张电子发票的生命周期：开具、传输、接收、入账与归档 →</a></p><p>追踪交易证据如何变成发票，区分技术回执、监管确认、买方审批、入账、付款和归档，并处理异常与证据留存。</p>'+roadmap+'<h2>编辑说明</h2><p>国家政策和生效日期会变化。涉及现行要求的文章将标注核对日期，并优先引用税务机关、监管机构、标准组织及官方网络资料。本文系列规划不是法律或税务意见。</p></article>'
  write(series_path,shell('电子发票专题：从一张票到数字交易基础设施','电子发票系列：结构化数据、全球标准、传输网络、区域规则与企业落地。','reports/e-invoicing/index.html',series_body,active='/category/digital/',ads=False))
  for cat in ['industry','global','digital']:
   title,desc=CATEGORIES[cat];items=[r for r in records if r['category']==cat];ordered=FEATURED[cat]+[r['path'] for r in items if r['path'] not in FEATURED[cat]]
