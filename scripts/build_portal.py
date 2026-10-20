@@ -10,11 +10,13 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/04-e-invoice-lifecycle.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'north-america-transformers-market-2026.html':'依据美国能源部与NERC公开资料，分析配电变压器需求、交付周期、规格碎片化、能效标准与供应商准入；区分美国行业数据与北美区域预测。',
+'sungrow-global-2026.html':'依据阳光电源2025年年报与2026年半年报，分析境外收入、地区毛利率、海外服务网络、产品认证及集团业绩变化。',
 'latin-america-power-resilience-2026.html':'依据IEA 2026年10月拉美电力系统评估与气候资料，分析厄尔尼诺对水电、备用电源、区域互联和电网投资的影响。',
 'superhi-global-2026.html':'依据特海国际2026年中期报告，分析海底捞海外门店、地区收入、翻台率、同店销售及集团利润变化。',
 'reports/e-invoicing/01-what-is-an-e-invoice.html':'从数据结构、自动处理和交易链路，解释PDF、扫描件与结构化电子发票的区别。',
@@ -130,7 +132,15 @@ def card(r):return f'<article class="report"><div class="eyebrow">{escape(r["cat
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='latin-america-power-resilience-2026.html':
+ if r['path']=='north-america-transformers-market-2026.html':
+  en='DOE says U.S. distribution-transformer demand is up 41% since 2019, while 2024 lead times remained 1–2+ years. With 80,000+ configurations and rising replacement needs, qualification and procurement standardization matter as much as factory capacity.'
+  zh='DOE称美国配电变压器需求较2019年升41%，2024年交期仍达1–2年以上；约8万种配置、老旧设备更换与新增负荷共同挤压供应。标准化、资质与交付能力决定供应商能否进入。'
+  tags='#NorthAmerica #GridInfrastructure #Transformers'
+ elif r['path']=='sungrow-global-2026.html':
+  en='Sungrow’s 2025 overseas revenue rose 48.8% to RMB54.0bn, about 60.5% of total by calculation; overseas gross margin was 40.36%. Yet H1 2026 group revenue fell 29.0%. Local service is visible; current overseas growth and country-level returns still need proof.'
+  zh='阳光电源2025年境外收入539.9亿元、同比增长48.76%，按地区收入合计推算约占60.5%；境外毛利率40.36%。但2026年上半年集团收入下降28.99%、归母净利下降32.01%，不能把2025海外增长直接外推。'
+  tags='#Sungrow #ChinaGoingGlobal #EnergyStorage'
+ elif r['path']=='latin-america-power-resilience-2026.html':
   en='IEA warns the 2026–27 El Niño may stress Latin American power systems where hydropower supplies over half of generation in several countries. Drought, heat and flooding risks vary by location; resilience depends on prepared emergency measures, reserve resources, grid links and tested coordination.'
   zh='IEA指出，2026—2027年厄尔尼诺可能冲击部分水电依赖度高的拉美电力系统。旱涝风险因地而异，备用资源、跨境互联、应急治理和演练决定韧性。'
   tags='#LatinAmerica #PowerSystems #ClimateResilience'
@@ -222,12 +232,19 @@ def share_card(r, kind):
   en='A source-led briefing on '+r['title']+'. Read the full analysis for the evidence, market context, assumptions and risks.'
   zh=r['description']
   tags='#GlobalBusiness #MarketResearch'
+ if r['path']=='north-america-transformers-market-2026.html':
+  xcopy='U.S. transformer demand is up 41% since 2019, while 2024 lead times remained 1–2+ years. Qualification and standardization are key entry gates. '+tracked+' #GridInfrastructure'
+ elif r['path']=='sungrow-global-2026.html':
+  xcopy='Sungrow 2025 overseas revenue rose 48.8% to RMB54.0bn. H1 2026 group revenue fell 29.0%; local service and overseas returns remain the test. '+tracked+' #ChinaGoingGlobal'
+ else:
+  xcopy=en[:180]+' '+tracked
+ x='https://twitter.com/intent/tweet?text='+quote(xcopy,safe='')
  if zh.startswith('中文补充：'):zh=zh[len('中文补充：'):]
  copy='\n'.join([en,zh,tracked,tags])
  li='https://www.linkedin.com/sharing/share-offsite/?url='+quote(tracked,safe='')
  fb='https://www.facebook.com/sharer/sharer.php?u='+quote(tracked,safe='')
  repost_icon='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M7 7h10l-2.5-2.5M17 7l-2.5 2.5M17 17H7l2.5 2.5M7 17l2.5-2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
- return '<article class="share-card"><div class="eyebrow">READY TO SHARE / LINKEDIN · FACEBOOK</div><h3><a href="'+r['url']+'">'+escape(r['title'])+'</a></h3><p class="share-en">'+escape(en)+'</p><p class="share-zh">'+escape(zh)+'</p><div class="share-tags">'+escape(tags)+'</div><div class="share-actions"><button type="button" class="action repost-action" aria-label="Repost" title="Repost / copy bilingual post" data-copy-text="'+escape(copy,quote=True)+'">'+repost_icon+'</button><a class="share-link" target="_blank" rel="noopener noreferrer" href="'+li+'">LinkedIn ↗</a><a class="share-link" target="_blank" rel="noopener noreferrer" href="'+fb+'">Facebook ↗</a></div><span class="copy-status" data-copy-status role="status" aria-live="polite"></span></article>'
+ return '<article class="share-card"><div class="eyebrow">READY TO SHARE / LINKEDIN · FACEBOOK</div><h3><a href="'+r['url']+'">'+escape(r['title'])+'</a></h3><p class="share-en">'+escape(en)+'</p><p class="share-zh">'+escape(zh)+'</p><div class="share-tags">'+escape(tags)+'</div><div class="share-actions"><button type="button" class="action repost-action" aria-label="Repost" title="Repost / copy bilingual post" data-copy-text="'+escape(copy,quote=True)+'">'+repost_icon+'</button><a class="share-link" target="_blank" rel="noopener noreferrer" href="'+li+'">LinkedIn ↗</a><a class="share-link" target="_blank" rel="noopener noreferrer" href="'+fb+'">Facebook ↗</a><a class="share-link" target="_blank" rel="noopener noreferrer" href="'+x+'">X ↗</a></div><span class="copy-status" data-copy-status role="status" aria-live="polite"></span></article>'
 
 def share_section(industry_path,company_path,by):
  industry=by.get(industry_path); company=by.get(company_path)
