@@ -494,5 +494,6 @@ def generate():
   locations.append(canonical(path))
  write('sitemap.xml','<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+''.join('  <url><loc>'+escape(u)+'</loc></url>\n' for u in sorted(set(locations)))+'</urlset>\n')
  robots='User-agent: *\nAllow: /\n\nSitemap: '+BASE+'/sitemap.xml\n';write('robots.txt',robots);write('robot.txt','# Legacy filename. Crawlers should use /robots.txt.\n'+robots)
- print(f'Built portal, {len(records)} catalog entries, {pages} archive pages and {len(set(locations))} sitemap URLs.')
+ low_count=sum(1 for r in records if r.get('qualityScore',100)<70)
+ print(f'Built portal, {len(records)} catalog entries ({low_count} below 70), {pages} archive pages and {len(set(locations))} sitemap URLs.')
 if __name__=='__main__':generate()
