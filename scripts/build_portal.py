@@ -70,24 +70,64 @@ def write(path,text):
 def url(path):return '/'+quote(path,safe='/')
 def canonical(path):return BASE+('/' if path=='index.html' else url(path).removesuffix('index.html') if path.endswith('/index.html') else url(path))
 class Extract(HTMLParser):
- def __init__(self):super().__init__();self.title=[];self.in_title=False;self.lang='';self.paragraphs=[];self.p=None;self.ignore=0
+ def __init__(self):
+  super().__init__();self.title=[];self.in_title=False;self.lang='';self.paragraphs=[];self.p=None;self.ignore=0;self.text=[];self.headings=[];self.heading=None;self.links=[]
  def handle_starttag(self,tag,attrs):
   a=dict(attrs)
   if tag=='html':self.lang=a.get('lang','')
   if tag=='title':self.in_title=True
   if tag in ('script','style'):self.ignore+=1
+  if tag in ('h1','h2','h3') and not self.ignore:self.heading=[]
+  if tag=='a' and not self.ignore and a.get('href'):self.links.append(a['href'])
   if tag=='p' and not self.ignore:self.p=[]
  def handle_endtag(self,tag):
   if tag=='title':self.in_title=False
   if tag in ('script','style'):self.ignore=max(0,self.ignore-1)
+  if tag in ('h1','h2','h3') and self.heading is not None:
+   self.headings.append(' '.join(''.join(self.heading).split()));self.heading=None
   if tag=='p' and self.p is not None:self.paragraphs.append(' '.join(''.join(self.p).split()));self.p=None
  def handle_data(self,t):
   if self.in_title:self.title.append(t)
-  if self.p is not None and not self.ignore:self.p.append(t)
+  if not self.ignore:
+   self.text.append(t)
+   if self.heading is not None:self.heading.append(t)
+   if self.p is not None:self.p.append(t)
 def clean_generated(s):
  for name in ['metadata','reader']:
   s=re.sub(r'\s*<!-- GBI '+name+r' start -->.*?<!-- GBI '+name+r' end -->\s*', '\n',s,flags=re.S)
  return s
+
+def quality_score(source,parsed):
+ text=' '.join(''.join(parsed.text).split())
+ plain=re.sub(r'\s+',' ',text)
+ chars=len(re.sub(r'\s','',plain))
+ h2=sum(1 for h in parsed.headings if h)
+ paragraphs=[p for p in parsed.paragraphs if len(p)>45]
+ external=[]
+ for href in parsed.links:
+  if href.startswith('https://') and not any(x in href.lower() for x in ('globalbusinessinsight.github.io','facebook.com','linkedin.com','twitter.com','x.com','googlesyndication','google.com','w3.org','schema.org','fonts.')):
+   external.append(href)
+ score=0
+ # Completeness and substance (30 points)
+ if re.search(r'<h1\b',source,re.I):score+=5
+ score+=15 if chars>=1800 else 10 if chars>=1000 else 5 if chars>=500 else 0
+ score+=10 if len(paragraphs)>=7 else 7 if len(paragraphs)>=4 else 3 if len(paragraphs)>=2 else 0
+ # Argument and structure (25 points)
+ score+=15 if h2>=4 else 10 if h2>=2 else 4 if h2>=1 else 0
+ score+=5 if re.search(r'摘要|核心判断|结论|总结|summary|conclusion|key takeaways|executive summary',plain,re.I) else 0
+ score+=5 if re.search(r'风险|局限|限制|不确定|风险提示|limitations?|risks?|caveat',plain,re.I) else 0
+ # Evidence and auditability (30 points)
+ score+=15 if len(set(external))>=4 else 11 if len(set(external))>=2 else 6 if external else 0
+ score+=7 if re.search(r'来源|参考资料|数据来源|sources|references|methodology|资料口径',plain,re.I) else 0
+ score+=4 if re.search(r'20\d{2}年|20\d{2}\s*年|as of 20\d{2}|20\d{2}年\d{1,2}月',plain,re.I) else 0
+ score+=4 if re.search(r'\d[\d,.]*\s*(%|％|亿美元|亿元|万|亿|GW|MW|吨|台|辆|家|人|billion|million|\$|€|£)',plain,re.I) else 0
+ # Editorial clarity (15 points), with a penalty for generic filler.
+ score+=5 if re.search(r'关键在于|这意味着|核心问题|决定.*是否|the question is|the test is|what matters',plain,re.I) else 0
+ score+=5 if re.search(r'结论|建议|因此|优先|进入门槛|盈利兑现|our view|the implication|we conclude',plain,re.I) else 0
+ score+=5 if re.search(r'而非|不等于|不能.*混为|相比|相较|条件是|取决于|rather than|not the same as|depends on',plain,re.I) else 0
+ filler=len(re.findall(r'值得注意的是|总的来说|综上所述|在当今快速变化的|随着全球化不断深入|it is worth noting|in today.s rapidly changing|in conclusion',plain,re.I))
+ score=max(0,min(100,score-min(12,filler*3)))
+ return score
 
 def classify(path,title):
  for cat,files in FEATURED.items():
@@ -110,11 +150,12 @@ def scan():
   s=clean_generated(s);x=Extract();x.feed(s);title=' '.join(''.join(x.title).split())
   if not title or not re.search(r'</head\s*>',s,re.I):continue
   lang=x.lang or ('zh-CN' if re.search('[\u4e00-\u9fff]',title) else 'en')
-  cat=classify(rel,title)
+  qualityScore=quality_score(s,x)
+  cat='archive' if qualityScore<70 else classify(rel,title)
   candidates=[t for t in x.paragraphs if len(t)>45 and not re.search(r'免责声明|Copyright|版权所有',t,re.I)]
   desc=DESCS.get(rel) or (candidates[0][:160] if candidates else title+'。历史资料，数据日期与适用范围请参阅正文。')
   desc=re.sub(r'\s+',' ',desc)
-  records.append(dict(path=rel,url=url(rel),title=title,description=desc,language=lang,languageLabel='中文' if lang.startswith('zh') else 'English' if lang.startswith('en') else lang,category=cat,categoryLabel=CATEGORIES[cat][0]))
+  records.append(dict(path=rel,url=url(rel),title=title,description=desc,language=lang,languageLabel='中文' if lang.startswith('zh') else 'English' if lang.startswith('en') else lang,category=cat,categoryLabel=CATEGORIES[cat][0],qualityScore=qualityScore))
  return records
 
 def head(title,desc,path,lang='zh-CN',ads=False,alternate=None,og_title=None,og_desc=None):
@@ -130,8 +171,10 @@ def shell(title,desc,path,body,active='/',lang='zh-CN',ads=True,og_title=None,og
  footer_links = ('<a href="/about/">About</a><a href="/editorial/">Editorial standards</a><a href="/privacy/">Privacy & advertising</a><a href="/contact/">Contact</a><a href="/subscribe/">Subscribe</a><a href="/tools/">Tools</a><a href="/archive/">All reports</a><a href="https://obbdeep.com/" target="_blank" rel="noopener noreferrer">OBB</a><a href="https://inossem.com/" target="_blank" rel="noopener noreferrer">INOSSEM</a>') if english else ('<a href="/about/">关于我们</a><a href="/editorial/">编辑与来源标准</a><a href="/privacy/">隐私与广告说明</a><a href="/contact/">联系与纠错</a><a href="/subscribe/">订阅更新</a><a href="/tools/">更多工具</a><a href="/archive/">全部资料</a><a href="https://obbdeep.com/" target="_blank" rel="noopener noreferrer">OBB品牌增长</a><a href="https://inossem.com/" target="_blank" rel="noopener noreferrer">INOSSEM</a>')
  return f'''<!doctype html><!-- GBI generated --><html lang="{lang}"><head>{head(title,desc,path,lang,ads,og_title=og_title,og_desc=og_desc)}<script type="application/ld+json">{schema}</script></head><body><a class="skip" href="#content">{'Skip to content' if english else '跳到正文'}</a><div class="topline"><div class="wrap"><span>GLOBAL PERSPECTIVE · PRACTICAL CONTEXT</span><span>{'Selected English research' if english else '中文视角 · 全球商业'}</span></div></div><header class="wrap masthead"><a class="brand" href="/" aria-label="全球商业洞察首页"><span class="brand-mark" aria-hidden="true">GB</span><span><strong>全球商业洞察</strong><small>GLOBAL BUSINESS INSIGHT</small></span></a><div class="tagline">看懂产业变化，理解企业出海。<br>产业 · 市场 · 企业 · 技术</div></header><nav class="primary-nav" aria-label="主导航"><div class="wrap nav-inner">{menu}<a class="nav-search" href="/archive/">{'All reports / 搜索' if english else '报告目录 / 搜索'}</a></div></nav><main id="content" class="wrap">{body}</main>{evaluator}<footer class="site-footer"><div class="wrap"><div class="footer-main"><div><strong>Global Business Insight</strong><p>{'Put business questions in their wider context.' if english else '把商业问题放进更完整的背景。'}</p></div><nav class="footer-links" aria-label="{'Footer' if english else '页脚'}">{footer_links}</nav></div><div class="footer-bottom">{'Archived reports retain their original dates and assumptions. Check primary sources before relying on figures.' if english else '历史报告保留原文。数据日期、估计与预测请以正文和原始出处为准。'} · © Global Business Insight</div></div></footer></body></html>'''
 
-def card(r):return f'<article class="report"><div class="eyebrow">{escape(r["categoryLabel"])} / {escape(r["languageLabel"])}</div><h3><a href="{r["url"]}">{escape(r["title"])}</a></h3><p>{escape(r["description"])}</p><small>日期与口径见正文</small></article>'
-def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by)
+def card(r):
+ status=f'档案 / {r.get("qualityScore",0)}分（未达70分）' if r.get('qualityScore',100)<70 else '日期与口径见正文'
+ return f'<article class="report"><div class="eyebrow">{escape(r["categoryLabel"])} / {escape(r["languageLabel"])}</div><h3><a href="{r["url"]}">{escape(r["title"])}</a></h3><p>{escape(r["description"])}</p><small>{status}</small></article>'
+def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by and by[p].get('qualityScore',100)>=70)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
  if r['path']=='eu-heat-pump-market-2026.html':
@@ -258,7 +301,7 @@ def share_card(r, kind):
 
 def share_section(industry_path,company_path,by):
  industry=by.get(industry_path); company=by.get(company_path)
- if not industry or not company:return ''
+ if not industry or not company or industry.get('qualityScore',0)<70 or company.get('qualityScore',0)<70:return ''
  return '<section class="share-section" id="latest"><div class="section-head"><div><div class="eyebrow">GLOBAL BRIEFINGS / SHARE & READ</div><h2>Start with the signal. Share the full story.</h2></div><span>English first · bilingual summaries</span></div><div class="share-grid">'+share_card(industry,'industry')+share_card(company,'company')+'</div><p class="share-help">Use the repost icon to copy a bilingual post, then share it on your platform. / 点击 repost 图标复制双语文案，再自行发布。</p></section>'
 
 def intro(label,title,desc):return f'<div class="page-intro"><div class="eyebrow">{label}</div><h1>{title}</h1><p>{desc}</p></div>'
@@ -280,7 +323,7 @@ def global_feature_paths(records):
  by={r['path']:r for r in records}
  pool=[]
  for path in FEATURED['global']+[r['path'] for r in records if r['category']=='global' and r['language'].startswith('zh')]:
-  if path in by and path not in pool:pool.append(path)
+  if path in by and by[path].get('qualityScore',0)>=70 and path not in pool:pool.append(path)
  if not pool:return []
  now=int(datetime.now(timezone.utc).timestamp());recent=[]
  for path in pool:
@@ -349,11 +392,18 @@ def enhance(records):
 def generate():
  records=scan();by={r['path']:r for r in records}
  write('assets/gbi/catalog.json',json.dumps(sorted(records,key=lambda r:(r['category']=='archive',r['title'])),ensure_ascii=False,separators=(',',':'))+'\n')
- hero='''<section class="hero"><div class="hero-copy"><div class="eyebrow">GLOBAL BUSINESS, IN CONTEXT · WEEKLY INTELLIGENCE</div><h1>Follow the shift.<br>Find your next market.</h1><p class="hero-cn">看懂全球产业变化，找到中国企业出海的下一步。</p><p>Source-led briefings on industries, regional markets and Chinese companies going global. English-first summaries, with Chinese context.</p><div class="hero-actions"><a class="action" href="#latest">Read this week’s briefings ↓</a><a class="action secondary" href="/category/global/">中国企业出海 →</a><a class="action secondary" href="/archive/">Browse research</a></div><div class="hero-signals"><span>INDUSTRY × REGION</span><span>CHINA GOING GLOBAL</span><span>MARKET DATA & TOOLS</span></div></div><aside class="tool-feature"><div class="eyebrow">MARKET & MACRO / RESEARCH TOOL</div><h2>Market Atlas</h2><p>Compare U.S. market and macro indicators on one timeline.</p><div class="tool-tags"><span>Market indices</span><span>Rates & Treasuries</span><span>Jobs & GDP</span></div><p>Choose a period, compare monthly changes, and review source definitions.</p><a class="action" href="/mk/">Open Market Atlas ↗</a><a class="tool-secondary" href="/markets/">浏览市场专题 / More market research →</a></aside></section>'''
+ hero=''
  selected=FEATURED['industry'][:2]+FEATURED['global'][:2]+FEATURED['digital'][:2]+['reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/04-e-invoice-lifecycle.html']
  global_paths=global_feature_paths(records)
+ lead_path=next((p for p in FEATURED['industry'] if p in by and by[p].get('qualityScore',0)>=70),None)
+ lead=by.get(lead_path,{})
+ side_paths=[]
+ for candidate in (global_paths[0] if global_paths else '', 'reports/e-invoicing/03-why-e-invoicing-matters.html', 'us-manufacturing-orders-2026.html', 'asean-cooling-market-2026.html'):
+  if candidate in by and by[candidate].get('qualityScore',0)>=70 and candidate!=lead_path and candidate not in side_paths:side_paths.append(candidate)
+ side=''.join('<li><span>'+escape(by[p]['categoryLabel'])+'</span><a href="'+by[p]['url']+'">'+escape(by[p]['title'])+'</a><small>'+escape(by[p]['description'])+'</small></li>' for p in side_paths[:3])
+ hero=f'''<section class="front-lead"><div class="front-intro"><div class="eyebrow">GLOBAL BUSINESS INSIGHT / EDITORIAL DESK</div><h1>看清变化，<br>再判断机会。</h1><p>产业、市场与中国企业全球化。每篇研究先交代数据和来源，再给出明确判断。</p><div class="front-links"><a class="action" href="/category/global/">中国企业出海 →</a><a class="action secondary" href="/archive/">查找全部研究</a></div></div><article class="lead-story"><div class="eyebrow">重点市场 / INDUSTRY × REGION</div><h2><a href="{lead.get("url","#")}">{escape(lead.get("title","全球市场研究"))}</a></h2><p>{escape(lead.get("description",""))}</p><a class="lead-more" href="{lead.get("url","#")}">阅读分析 ↗</a></article><aside class="latest-briefs"><div class="eyebrow">MORE BRIEFINGS / 延伸阅读</div><ol>{side}</ol><a class="text-link" href="/markets/">打开市场数据与工具 →</a></aside></section>'''
  company_path=global_paths[0] if global_paths else ''
- featured_industry=FEATURED['industry'][0]
+ featured_industry=next((p for p in FEATURED['industry'] if p in by and by[p].get('qualityScore',0)>=70),'')
  social=share_section(featured_industry,company_path,by)
  daily_cards=global_paths[:3]
  global_section='<div class="section-head"><div><div class="eyebrow">CHINA GOING GLOBAL / COMPANY BRIEFINGS</div><h2>中国企业全球化</h2></div><a href="/category/global/">全部企业出海案例 →</a></div><div class="collection global-daily">'+cards(daily_cards,by)+'</div>'
@@ -415,11 +465,12 @@ def generate():
   path='archive/index.html' if n==1 else f'archive/page/{n}/index.html'
   options=''.join(f'<option value="{k}">{v[0]}</option>' for k,v in CATEGORIES.items())
   pagination=''.join(f'<a href="'+('/archive/' if i==1 else f'/archive/page/{i}/')+'"'+(' aria-current="page"' if i==n else '')+f'>{i}</a>' for i in range(1,pages+1))
-  body=intro('RESEARCH ARCHIVE','报告目录','按主题查阅历史资料，或搜索行业、公司和关键词。')+f'<form class="search-form" data-search-form role="search"><label>搜索报告<input type="search" name="q" placeholder="例如：仓储、工程机械、ERP" autocomplete="off"></label><label>主题<select name="category"><option value="">全部主题</option>{options}</select></label><button class="action" type="submit">搜索</button></form><p class="search-status" data-search-status aria-live="polite">共 {len(records)} 篇资料 · 第 {n} / {pages} 页 · 历史资料不代表最新事实</p><div class="collection" data-search-results>'+''.join(card(r) for r in archive_records[(n-1)*48:n*48])+'</div><button type="button" class="search-more" data-search-more hidden>显示更多结果</button><nav class="pagination" data-pagination aria-label="目录分页">'+pagination+'</nav><noscript><p>当前显示静态目录。可通过分页继续浏览全部资料；关键词筛选需要启用JavaScript。</p></noscript>'
+  low_quality=sum(1 for r in records if r.get('qualityScore',100)<70)
+  body=intro('RESEARCH ARCHIVE','报告目录','通过70分编辑门槛的资料进入主题栏目；其余内容保留在档案，原始链接不变。')+f'<div class="archive-rule"><strong>归档规则 / Editorial threshold</strong><p>质量评估低于70分的页面不进入首页和主题栏目。评分检查文章完整度、段落与分节结构、来源链接、日期与数据口径、结论和风险说明；自动评分用于筛查，不能替代逐项事实核验。当前档案中有 {low_quality} 篇未达门槛。</p></div><form class="search-form" data-search-form role="search"><label>搜索报告<input type="search" name="q" placeholder="例如：仓储、工程机械、ERP" autocomplete="off"></label><label>主题<select name="category"><option value="">全部主题</option>{options}</select></label><button class="action" type="submit">搜索</button></form><p class="search-status" data-search-status aria-live="polite">共 {len(records)} 篇资料 · 第 {n} / {pages} 页 · 历史资料不代表最新事实</p><div class="collection" data-search-results>'+''.join(card(r) for r in archive_records[(n-1)*48:n*48])+'</div><button type="button" class="search-more" data-search-more hidden>显示更多结果</button><nav class="pagination" data-pagination aria-label="目录分页">'+pagination+'</nav><noscript><p>当前显示静态目录。可通过分页继续浏览全部资料；关键词筛选需要启用JavaScript。</p></noscript>'
   write(path,shell('报告目录'+('' if n==1 else f' · 第{n}页'),'查找全球商业洞察的产业、出海、数字化与历史专题资料。',path,body,active='/archive/',ads=False))
  info={
  'about':('关于全球商业洞察','关于网站的内容方向与使用方式。','''<p>Global Business Insight（全球商业洞察）围绕产业与供应链、企业出海、AI与数字化整理专题资料，并提供美国市场与宏观数据工具。</p><h2>我们希望解决什么问题</h2><p>帮助中文商业读者理解行业背景、比较企业与市场，并找到继续研究的线索。英文精选提供已有英文报告的独立入口。</p><h2>怎样使用资料库</h2><p>从专题页建立阅读顺序，也可以在报告目录中搜索具体行业或公司。历史报告保留原有地址与内容，可能包含过时信息、估计或预测。请结合原始来源与当前情况使用。</p><p>本站不是实时新闻终端，也不提供个性化投资、法律或税务服务。关于来源、AI辅助与更正方式，请阅读<a href="/editorial/">编辑与来源标准</a>。</p><h2>广告与支持</h2><p>部分页面展示Google AdSense广告，广告收入支持网站维护。广告展示不代表本站对广告产品或观点的认可。</p>'''),
- 'editorial':('编辑与来源标准','了解历史资料、来源核验、AI辅助与纠错方式。','''<p>读者应能够区分文章中的可核验事实、作者分析、估计和情景预测。以下是本站整理和维护内容时采用的标准。</p><h2>历史资料的状态</h2><p>本站保留不同时期的报告。增加导航、调整样式或重新编排专题，不代表原文事实已经重新核验，也不会被描述为研究内容更新。资料日期与范围以正文为准；缺少出处的数字应作为待核验信息。</p><h2>来源与数据</h2><ul><li>优先引用统计机构、监管机构、公司公告、年报和原始研究。</li><li>标明观察期间、单位、地区、统计口径和来源链接。</li><li>区分实际值、估计值和预测值，预测应解释假设。</li><li>产品、法律和政策内容需要确认版本、适用地区及有效日期。</li></ul><h2>AI辅助与责任</h2><p>内容整理、研究初稿、翻译和交互页面可能使用AI辅助。AI生成本身不是事实依据；关键结论应回到可核验材料。不将自动生成内容冒充实地调查或具名专家审查。</p><h2>更新与纠错</h2><p>内容发生实质修订时，应说明变更内容。读者发现问题，可通过<a href="/contact/">联系与纠错</a>提供文章地址、具体段落和参考来源。</p>'''),
+ 'editorial':('编辑与来源标准','了解历史资料、来源核验、AI辅助与纠错方式。','''<p>读者应能够区分文章中的可核验事实、作者分析、估计和情景预测。以下是本站整理和维护内容时采用的标准。</p><h2>70分编辑门槛</h2><p>主题栏目和首页只展示自动评估达到70分的文章；未达门槛的原文保留在报告目录的档案中。评分从完整度与篇幅（30分）、论证与结构（25分）、证据与可追溯性（30分）、表达清晰度（15分）四部分计算。系统检查标题、分节、有效段落、摘要/结论、风险说明、外部来源、资料日期和可量化数据，并扣除常见套话。它用于统一初筛，无法判断所有事实真伪、来源权威性或论证原创性；编辑仍应核对原始来源。</p><h2>历史资料的状态</h2><p>本站保留不同时期的报告。增加导航、调整样式或重新编排专题，不代表原文事实已经重新核验，也不会被描述为研究内容更新。资料日期与范围以正文为准；缺少出处的数字应作为待核验信息。</p><h2>来源与数据</h2><ul><li>优先引用统计机构、监管机构、公司公告、年报和原始研究。</li><li>标明观察期间、单位、地区、统计口径和来源链接。</li><li>区分实际值、估计值和预测值，预测应解释假设。</li><li>产品、法律和政策内容需要确认版本、适用地区及有效日期。</li></ul><h2>AI辅助与责任</h2><p>内容整理、研究初稿、翻译和交互页面可能使用AI辅助。AI生成本身不是事实依据；关键结论应回到可核验材料。不将自动生成内容冒充实地调查或具名专家审查。</p><h2>更新与纠错</h2><p>内容发生实质修订时，应说明变更内容。读者发现问题，可通过<a href="/contact/">联系与纠错</a>提供文章地址、具体段落和参考来源。</p>'''),
  'privacy':('隐私与广告说明','网站广告、第三方资源、邮件订阅与浏览器本地存储说明。','''<p>本说明适用于Global Business Insight网站及其工具。更新日期：2026年10月4日。</p><h2>Google广告与第三方服务</h2><p>本站部分页面使用Google AdSense。Google及其他第三方广告供应商可能使用Cookie，根据您之前访问本站或其他网站的情况展示广告；Google的广告Cookie可使其及合作伙伴根据浏览活动投放广告。广告服务也可能使用网络信标、IP地址和设备信息。</p><p>您可以访问<a href="https://myadcenter.google.com/">Google广告设置</a>管理个性化广告，或访问<a href="https://optout.aboutads.info/">第三方广告退出工具</a>了解参与供应商的选择。更多信息见<a href="https://policies.google.com/technologies/partner-sites">Google在合作网站上使用数据的说明</a>。退出个性化广告不一定意味着停止所有广告或第三方请求。</p><h2>页面资源与托管</h2><p>网站由GitHub Pages托管。部分历史报告从字体、图表或其他资源提供方加载内容；这些请求可能向提供方传递IP地址和浏览器信息。相关服务按其自身隐私政策处理数据。参阅<a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub隐私声明</a>。</p><h2>工具与本地记录</h2><p>英语训练的学习记录与笔记保存在当前浏览器的本地存储中，不通过该工具上传到本站服务器。录音功能需由您授权麦克风，录音在页面内临时保存，可自行下载。清除浏览器数据可能删除学习记录，请先导出备份。市场工具也可能保存界面偏好。</p><h2>邮件订阅</h2><p>订阅表单当前只在浏览器内生成邮件草稿或可复制的申请内容，不向本站专用服务器上传信息。站长收到邮件后会手动维护订阅名单，并仅用于发送读者选择的文章更新；可随时回复退订。Brevo尚未接入，接入后会更新本说明。</p><h2>搜索与反馈</h2><p>报告目录搜索在浏览器内进行，不将搜索词发送到本站专用搜索服务器。目录加载及访问仍会产生正常网页请求。通过GitHub提交的问题会公开显示，请勿填写密码、付款资料或其他敏感信息。</p><h2>您的选择</h2><p>您可以通过浏览器管理Cookie、本地存储及麦克风权限，通过广告提供方管理广告偏好。适用的广告隐私提示与选择以实际显示的界面为准。如需反馈隐私问题，请使用<a href="/contact/">联系入口</a>。</p>'''),
  'contact':('联系与纠错','提交文章问题、来源补充与网站使用反馈。','''<p>欢迎指出事实错误、失效链接、图表口径问题，或提出值得继续研究的主题。</p><h2>反馈时请提供</h2><ol><li>文章或工具的完整地址。</li><li>具体段落、图表或操作步骤。</li><li>您认为需要更正的内容及可核验来源。</li></ol><p><a class="action" href="https://github.com/GlobalBusinessInsight/globalbusinessinsight.github.io/issues/new">在GitHub提交反馈 ↗</a></p><p>提交需要GitHub账号，反馈默认公开。请勿提交个人敏感信息、账号密码或付款资料。广告展示和付款问题由相应服务提供方处理。</p>'''),
  'subscribe':('订阅更新','按板块接收全球商业洞察的精选文章。','''<p>留下邮箱并选择你想追踪的板块。当前阶段由站长手动发送精选文章；Brevo 接入后，再升级为自动分组和定期邮件。</p>'''+subscribe_panel()+'''<p class="notice">点击提交后，浏览器会生成一封订阅申请邮件。若尚未配置收件地址，请复制生成的内容并使用你的邮件客户端发送；配置完成后会直接打开收件地址。</p>''')}
@@ -443,5 +494,6 @@ def generate():
   locations.append(canonical(path))
  write('sitemap.xml','<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+''.join('  <url><loc>'+escape(u)+'</loc></url>\n' for u in sorted(set(locations)))+'</urlset>\n')
  robots='User-agent: *\nAllow: /\n\nSitemap: '+BASE+'/sitemap.xml\n';write('robots.txt',robots);write('robot.txt','# Legacy filename. Crawlers should use /robots.txt.\n'+robots)
- print(f'Built portal, {len(records)} catalog entries, {pages} archive pages and {len(set(locations))} sitemap URLs.')
+ low_count=sum(1 for r in records if r.get('qualityScore',100)<70)
+ print(f'Built portal, {len(records)} catalog entries ({low_count} below 70), {pages} archive pages and {len(set(locations))} sitemap URLs.')
 if __name__=='__main__':generate()
