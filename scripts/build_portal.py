@@ -123,6 +123,8 @@ def quality_score(source,parsed):
  score+=4 if re.search(r'\d[\d,.]*\s*(%|％|亿美元|亿元|万|亿|GW|MW|吨|台|辆|家|人|billion|million|\$|€|£)',plain,re.I) else 0
  # Editorial clarity (15 points), with a penalty for generic filler.
  score+=5 if re.search(r'关键在于|这意味着|核心问题|决定.*是否|the question is|the test is|what matters',plain,re.I) else 0
+ score+=5 if re.search(r'结论|建议|因此|优先|进入门槛|盈利兑现|our view|the implication|we conclude',plain,re.I) else 0
+ score+=5 if re.search(r'而非|不等于|不能.*混为|相比|相较|条件是|取决于|rather than|not the same as|depends on',plain,re.I) else 0
  filler=len(re.findall(r'值得注意的是|总的来说|综上所述|在当今快速变化的|随着全球化不断深入|it is worth noting|in today.s rapidly changing|in conclusion',plain,re.I))
  score=max(0,min(100,score-min(12,filler*3)))
  return score
@@ -170,7 +172,7 @@ def shell(title,desc,path,body,active='/',lang='zh-CN',ads=True,og_title=None,og
  return f'''<!doctype html><!-- GBI generated --><html lang="{lang}"><head>{head(title,desc,path,lang,ads,og_title=og_title,og_desc=og_desc)}<script type="application/ld+json">{schema}</script></head><body><a class="skip" href="#content">{'Skip to content' if english else '跳到正文'}</a><div class="topline"><div class="wrap"><span>GLOBAL PERSPECTIVE · PRACTICAL CONTEXT</span><span>{'Selected English research' if english else '中文视角 · 全球商业'}</span></div></div><header class="wrap masthead"><a class="brand" href="/" aria-label="全球商业洞察首页"><span class="brand-mark" aria-hidden="true">GB</span><span><strong>全球商业洞察</strong><small>GLOBAL BUSINESS INSIGHT</small></span></a><div class="tagline">看懂产业变化，理解企业出海。<br>产业 · 市场 · 企业 · 技术</div></header><nav class="primary-nav" aria-label="主导航"><div class="wrap nav-inner">{menu}<a class="nav-search" href="/archive/">{'All reports / 搜索' if english else '报告目录 / 搜索'}</a></div></nav><main id="content" class="wrap">{body}</main>{evaluator}<footer class="site-footer"><div class="wrap"><div class="footer-main"><div><strong>Global Business Insight</strong><p>{'Put business questions in their wider context.' if english else '把商业问题放进更完整的背景。'}</p></div><nav class="footer-links" aria-label="{'Footer' if english else '页脚'}">{footer_links}</nav></div><div class="footer-bottom">{'Archived reports retain their original dates and assumptions. Check primary sources before relying on figures.' if english else '历史报告保留原文。数据日期、估计与预测请以正文和原始出处为准。'} · © Global Business Insight</div></div></footer></body></html>'''
 
 def card(r):
- status='档案 / 质量门槛未达70分' if r.get('qualityScore',100)<70 else '日期与口径见正文'
+ status=f'档案 / {r.get("qualityScore",0)}分（未达70分）' if r.get('qualityScore',100)<70 else '日期与口径见正文'
  return f'<article class="report"><div class="eyebrow">{escape(r["categoryLabel"])} / {escape(r["languageLabel"])}</div><h3><a href="{r["url"]}">{escape(r["title"])}</a></h3><p>{escape(r["description"])}</p><small>{status}</small></article>'
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by and by[p].get('qualityScore',100)>=70)
 def share_card(r, kind):
