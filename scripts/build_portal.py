@@ -299,7 +299,7 @@ def share_card(r, kind):
 
 def share_section(industry_path,company_path,by):
  industry=by.get(industry_path); company=by.get(company_path)
- if not industry or not company:return ''
+ if not industry or not company or industry.get('qualityScore',0)<70 or company.get('qualityScore',0)<70:return ''
  return '<section class="share-section" id="latest"><div class="section-head"><div><div class="eyebrow">GLOBAL BRIEFINGS / SHARE & READ</div><h2>Start with the signal. Share the full story.</h2></div><span>English first · bilingual summaries</span></div><div class="share-grid">'+share_card(industry,'industry')+share_card(company,'company')+'</div><p class="share-help">Use the repost icon to copy a bilingual post, then share it on your platform. / 点击 repost 图标复制双语文案，再自行发布。</p></section>'
 
 def intro(label,title,desc):return f'<div class="page-intro"><div class="eyebrow">{label}</div><h1>{title}</h1><p>{desc}</p></div>'
@@ -399,9 +399,9 @@ def generate():
  for candidate in (global_paths[0] if global_paths else '', 'reports/e-invoicing/03-why-e-invoicing-matters.html', 'us-manufacturing-orders-2026.html', 'asean-cooling-market-2026.html'):
   if candidate in by and by[candidate].get('qualityScore',0)>=70 and candidate!=lead_path and candidate not in side_paths:side_paths.append(candidate)
  side=''.join('<li><span>'+escape(by[p]['categoryLabel'])+'</span><a href="'+by[p]['url']+'">'+escape(by[p]['title'])+'</a><small>'+escape(by[p]['description'])+'</small></li>' for p in side_paths[:3])
- hero='<section class="front-lead"><div class="front-intro"><div class="eyebrow">GLOBAL BUSINESS INSIGHT / EDITORIAL DESK</div><h1>看清变化，<br>再判断机会。</h1><p>产业、市场与中国企业全球化。每篇研究先交代数据和来源，再给出明确判断。</p><div class="front-links"><a class="action" href="/category/global/">中国企业出海 →</a><a class="action secondary" href="/archive/">查找全部研究</a></div></div><article class="lead-story"><div class="eyebrow">重点市场 / INDUSTRY × REGION</div><h2><a href="{lead.get('url','#')}">{escape(lead.get('title','全球市场研究'))}</a></h2><p>{escape(lead.get('description',''))}</p><a class="lead-more" href="{lead.get('url','#')}">阅读分析 ↗</a></article><aside class="latest-briefs"><div class="eyebrow">MORE BRIEFINGS / 延伸阅读</div><ol>'+side+'</ol><a class="text-link" href="/markets/">打开市场数据与工具 →</a></aside></section>'
+ hero=f'''<section class="front-lead"><div class="front-intro"><div class="eyebrow">GLOBAL BUSINESS INSIGHT / EDITORIAL DESK</div><h1>看清变化，<br>再判断机会。</h1><p>产业、市场与中国企业全球化。每篇研究先交代数据和来源，再给出明确判断。</p><div class="front-links"><a class="action" href="/category/global/">中国企业出海 →</a><a class="action secondary" href="/archive/">查找全部研究</a></div></div><article class="lead-story"><div class="eyebrow">重点市场 / INDUSTRY × REGION</div><h2><a href="{lead.get("url","#")}">{escape(lead.get("title","全球市场研究"))}</a></h2><p>{escape(lead.get("description",""))}</p><a class="lead-more" href="{lead.get("url","#")}">阅读分析 ↗</a></article><aside class="latest-briefs"><div class="eyebrow">MORE BRIEFINGS / 延伸阅读</div><ol>{side}</ol><a class="text-link" href="/markets/">打开市场数据与工具 →</a></aside></section>'''
  company_path=global_paths[0] if global_paths else ''
- featured_industry=FEATURED['industry'][0]
+ featured_industry=next((p for p in FEATURED['industry'] if p in by and by[p].get('qualityScore',0)>=70),'')
  social=share_section(featured_industry,company_path,by)
  daily_cards=global_paths[:3]
  global_section='<div class="section-head"><div><div class="eyebrow">CHINA GOING GLOBAL / COMPANY BRIEFINGS</div><h2>中国企业全球化</h2></div><a href="/category/global/">全部企业出海案例 →</a></div><div class="collection global-daily">'+cards(daily_cards,by)+'</div>'
