@@ -10,11 +10,13 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/04-e-invoice-lifecycle.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'eu-heat-pump-market-2026.html':'依据欧盟委员会与欧洲热泵协会资料，分析欧洲热泵销量复苏、国家差异、能源价格、安装服务与供应商进入门槛。',
+'midea-global-2026.html':'依据美的集团2025年年报及2026年中期报告，分析海外收入、OBM品牌化、本地研发制造、服务网络及全球经营风险。',
 'north-america-transformers-market-2026.html':'依据美国能源部与NERC公开资料，分析配电变压器需求、交付周期、规格碎片化、能效标准与供应商准入；区分美国行业数据与北美区域预测。',
 'sungrow-global-2026.html':'依据阳光电源2025年年报与2026年半年报，分析境外收入、地区毛利率、海外服务网络、产品认证及集团业绩变化。',
 'latin-america-power-resilience-2026.html':'依据IEA 2026年10月拉美电力系统评估与气候资料，分析厄尔尼诺对水电、备用电源、区域互联和电网投资的影响。',
@@ -132,7 +134,15 @@ def card(r):return f'<article class="report"><div class="eyebrow">{escape(r["cat
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='north-america-transformers-market-2026.html':
+ if r['path']=='eu-heat-pump-market-2026.html':
+  en='European heat-pump sales rose 13% to 2.9 million units across 21 countries in 2025, but the recovery is uneven. Electricity pricing, stable incentives, installers, compliance and service determine whether regional demand becomes profitable local business.'
+  zh='欧洲21国热泵销量2025年增长13%至290万台，但各国复苏并不同步。电力与燃气价格、补贴稳定性、安装能力、合规与售后决定区域需求能否转化为可盈利的本地业务。'
+  tags='#Europe #HeatPumps #MarketEntry'
+ elif r['path']=='midea-global-2026.html':
+  en='Midea earned RMB113.1bn outside mainland China in H1 2026, up 5.5% and about 43.3% of group revenue by calculation. Owned-brand business exceeded 50% of overseas smart-home revenue. The next proof points are country-level profit, service economics and cash conversion.'
+  zh='美的2026年上半年中国大陆以外收入1131亿元，同比增长5.5%，按集团收入计算约占43.3%；智能家居海外收入中OBM占比超过50%。下一步要验证国别利润、服务成本和现金转换。'
+  tags='#Midea #ChinaGoingGlobal #GlobalBrands'
+ elif r['path']=='north-america-transformers-market-2026.html':
   en='DOE says U.S. distribution-transformer demand is up 41% since 2019, while 2024 lead times remained 1–2+ years. With 80,000+ configurations and rising replacement needs, qualification and procurement standardization matter as much as factory capacity.'
   zh='DOE称美国配电变压器需求较2019年升41%，2024年交期仍达1–2年以上；约8万种配置、老旧设备更换与新增负荷共同挤压供应。标准化、资质与交付能力决定供应商能否进入。'
   tags='#NorthAmerica #GridInfrastructure #Transformers'
