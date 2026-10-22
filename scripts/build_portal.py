@@ -10,11 +10,13 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/04-e-invoice-lifecycle.html'],
 'markets':['usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'middle-east-solar-storage-market-2026.html':'依据沙特、阿联酋政府目标及ACWA Power、Masdar项目公告，区分政策规划、融资关闭与商业运营，分析光伏储能并网、融资与本地交付门槛。',
+'catl-globalization-q3-2026.html':'依据宁德时代2026年三季报、半年报及欧洲项目公告，分析海外收入、经营现金流、匈牙利模组装配和西班牙项目的本地化进度与回报风险。',
 'eu-heat-pump-market-2026.html':'依据欧盟委员会与欧洲热泵协会资料，分析欧洲热泵销量复苏、国家差异、能源价格、安装服务与供应商进入门槛。',
 'midea-global-2026.html':'依据美的集团2025年年报及2026年中期报告，分析海外收入、OBM品牌化、本地研发制造、服务网络及全球经营风险。',
 'north-america-transformers-market-2026.html':'依据美国能源部与NERC公开资料，分析配电变压器需求、交付周期、规格碎片化、能效标准与供应商准入；区分美国行业数据与北美区域预测。',
@@ -177,6 +179,14 @@ def card(r):
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by and by[p].get('qualityScore',100)>=70)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
+ if r['path']=='middle-east-solar-storage-market-2026.html':
+  en='Saudi Arabia has closed financing for seven renewables projects totaling 15 GW; the UAE has financed a 5.2 GW solar-plus-storage project targeting 1 GW of continuous clean power. Both remain execution stories, not operating results. Grid access, dispatch, finance and long-term service are the commercial gates.'
+  zh='沙特7个可再生能源项目合计15GW，已完成融资关闭；阿联酋5.2GW光伏与19GWh储能项目规划提供1GW连续清洁电力。两者都仍待建设投运。本文关注并网、调度、融资和长期服务。'
+  tags='#MiddleEast #SolarStorage #EnergyInfrastructure'
+ elif r['path']=='catl-globalization-q3-2026.html':
+  en='CATL’s nine-month 2026 revenue grew 56.2%, while attributable profit rose 31.6% and operating cash flow fell 23.6%. H1 overseas revenue was RMB87.1bn, or 31.46% of total, but the Q3 filing gives no regional split. Hungary module assembly has started; cell production still awaits permits, and Spain remains under construction. The next test is local cash and returns.'
+  zh='宁德时代前三季度收入增长56.2%、归母净利增长31.6%，经营现金流下降23.6%。上半年境外收入871.3亿元，占31.46%，但三季报未披露地区拆分。匈牙利已启动模组装配，电芯生产仍待许可；西班牙项目仍在建设。'
+  tags='#CATL #ChinaGoingGlobal #BatterySupplyChain'
  if r['path']=='eu-heat-pump-market-2026.html':
   en='European heat-pump sales rose 13% to 2.9 million units across 21 countries in 2025, but the recovery is uneven. Electricity pricing, stable incentives, installers, compliance and service determine whether regional demand becomes profitable local business.'
   zh='欧洲21国热泵销量2025年增长13%至290万台，但各国复苏并不同步。电力与燃气价格、补贴稳定性、安装能力、合规与售后决定区域需求能否转化为可盈利的本地业务。'
