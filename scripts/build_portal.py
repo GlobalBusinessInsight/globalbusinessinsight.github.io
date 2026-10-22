@@ -187,7 +187,7 @@ def share_card(r, kind):
   en='CATL’s nine-month 2026 revenue grew 56.2%, while attributable profit rose 31.6% and operating cash flow fell 23.6%. H1 overseas revenue was RMB87.1bn, or 31.46% of total, but the Q3 filing gives no regional split. Hungary module assembly has started; cell production still awaits permits, and Spain remains under construction. The next test is local cash and returns.'
   zh='宁德时代前三季度收入增长56.2%、归母净利增长31.6%，经营现金流下降23.6%。上半年境外收入871.3亿元，占31.46%，但三季报未披露地区拆分。匈牙利已启动模组装配，电芯生产仍待许可；西班牙项目仍在建设。'
   tags='#CATL #ChinaGoingGlobal #BatterySupplyChain'
- if r['path']=='eu-heat-pump-market-2026.html':
+ elif r['path']=='eu-heat-pump-market-2026.html':
   en='European heat-pump sales rose 13% to 2.9 million units across 21 countries in 2025, but the recovery is uneven. Electricity pricing, stable incentives, installers, compliance and service determine whether regional demand becomes profitable local business.'
   zh='欧洲21国热泵销量2025年增长13%至290万台，但各国复苏并不同步。电力与燃气价格、补贴稳定性、安装能力、合规与售后决定区域需求能否转化为可盈利的本地业务。'
   tags='#Europe #HeatPumps #MarketEntry'
