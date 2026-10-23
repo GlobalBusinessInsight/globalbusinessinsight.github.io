@@ -15,7 +15,8 @@ FEATURED={
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/04-e-invoice-lifecycle.html'],
 'markets':['import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
-'import-complexity-processgo-bilingual.html':'结合全球进口复杂度比较与各国海关规则，分析商品准入、税费、许可、申报及放行后财务流程如何衔接。','eu-data-centre-grid-2026.html':'依据欧盟委员会和爱尔兰统计局资料，分析数据中心用电预测、电网接入、效率规则与国家差异。',\n'middle-east-solar-storage-market-2026.html':'依据沙特、阿联酋政府目标及ACWA Power、Masdar项目公告，区分政策规划、融资关闭与商业运营，分析光伏储能并网、融资与本地交付门槛。',
+'import-complexity-processgo-bilingual.html':'结合全球进口复杂度比较与各国海关规则，分析商品准入、税费、许可、申报及放行后财务流程如何衔接。','eu-data-centre-grid-2026.html':'依据欧盟委员会和爱尔兰统计局资料，分析数据中心用电预测、电网接入、效率规则与国家差异。',
+'middle-east-solar-storage-market-2026.html':'依据沙特、阿联酋政府目标及ACWA Power、Masdar项目公告，区分政策规划、融资关闭与商业运营，分析光伏储能并网、融资与本地交付门槛。',
 'catl-globalization-q3-2026.html':'依据宁德时代2026年三季报、半年报及欧洲项目公告，分析海外收入、经营现金流、匈牙利模组装配和西班牙项目的本地化进度与回报风险。',
 'eu-heat-pump-market-2026.html':'依据欧盟委员会与欧洲热泵协会资料，分析欧洲热泵销量复苏、国家差异、能源价格、安装服务与供应商进入门槛。',
 'midea-global-2026.html':'依据美的集团2025年年报及2026年中期报告，分析海外收入、OBM品牌化、本地研发制造、服务网络及全球经营风险。',
