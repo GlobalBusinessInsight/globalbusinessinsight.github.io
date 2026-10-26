@@ -16,7 +16,7 @@ FEATURED={
 'markets':['import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
 'import-complexity-processgo-bilingual.html':'结合全球进口复杂度比较与各国海关规则，分析商品准入、税费、许可、申报及放行后财务流程如何衔接。','eu-packaging-ppwr-market-2026.html':'依据欧盟包装与包装废弃物法规、Eurostat 2024年数据及委员会实施指南，分析包装设计、再生料、标签和各国回收差异。',
-'yutong-global-2026.html':'依据宇通客车2025年年报与2026年半年报，分析海外主营收入、地区毛利率、服务网络、配件库与KD组装的运营含义。',
+'yutong-global-2026.html':'依据宇通客车2025年年报、2026年三季报与产销快报，分析海外收入、地区毛利率、服务网络、本地组装和最新经营节奏。',
 'eu-data-centre-grid-2026.html':'依据欧盟委员会和爱尔兰统计局资料，分析数据中心用电预测、电网接入、效率规则与国家差异。',
 'middle-east-solar-storage-market-2026.html':'依据沙特、阿联酋政府目标及ACWA Power、Masdar项目公告，区分政策规划、融资关闭与商业运营，分析光伏储能并网、融资与本地交付门槛。',
 'catl-globalization-q3-2026.html':'依据宁德时代2026年三季报、半年报及欧洲项目公告，分析海外收入、经营现金流、匈牙利模组装配和西班牙项目的本地化进度与回报风险。',
@@ -235,8 +235,8 @@ def share_card(r, kind):
   zh='欧盟PPWR自2026年8月起适用，但要求分阶段落地。2024年欧盟包装废弃物达8,150万吨，塑料包装回收率为42.4%，成员国差异明显。包装设计、再生料与当地回收体系将被放到同一条链路上。'
   tags='#EU #Packaging #CircularEconomy'
  elif r['path']=='yutong-global-2026.html':
-  en='Yutong’s overseas core-business revenue rose 38.9% in 2025, with a 29.62% gross margin. By mid-2026, it reported 400+ overseas service outlets, 40+ parts warehouses and nearly 900 service staff. The business is moving beyond exports; local service and assembly now shape how long vehicles stay in operation.'
-  zh='宇通客车2025年海外主营收入增长38.87%，毛利率29.62%。截至2026年中，公司披露海外服务网点超400个、配件库40余个、服务人员近900名。出口之后的服务与组装，关系到车辆能否长期运营。'
+  en='Yutong’s overseas core-business revenue rose 38.9% in 2025, with a 29.62% gross margin. In the first nine months of 2026, total bus sales fell 7.83% and group revenue fell 2.09%; filings do not break out current overseas sales. Its 400+ service outlets and 40+ parts warehouses show the operating footprint behind exports.'
+  zh='宇通客车2025年海外主营收入增长38.87%、毛利率29.62%；2026年前三季度集团销量下降7.83%、营收下降2.09%，但没有单列海外销售。公司披露海外服务网点超400个、配件库40余个，出口后的服务网络正在形成。'
   tags='#Yutong #ChinaGoingGlobal #PublicTransport'
  elif r['path']=='eu-data-centre-grid-2026.html':
   en='EU data centres used an estimated 68 TWh of electricity in 2024; the Commission projects 114 TWh by 2030. That forecast is not committed demand. Grid access, location, energy and water performance are shaping where new capacity can operate. Minimum performance standards are still under consultation.'
