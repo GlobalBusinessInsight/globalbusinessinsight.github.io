@@ -10,12 +10,14 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/04-e-invoice-lifecycle.html'],
 'markets':['import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
-'import-complexity-processgo-bilingual.html':'结合全球进口复杂度比较与各国海关规则，分析商品准入、税费、许可、申报及放行后财务流程如何衔接。','eu-data-centre-grid-2026.html':'依据欧盟委员会和爱尔兰统计局资料，分析数据中心用电预测、电网接入、效率规则与国家差异。',
+'import-complexity-processgo-bilingual.html':'结合全球进口复杂度比较与各国海关规则，分析商品准入、税费、许可、申报及放行后财务流程如何衔接。','eu-packaging-ppwr-market-2026.html':'依据欧盟包装与包装废弃物法规、Eurostat 2024年数据及委员会实施指南，分析包装设计、再生料、标签和各国回收差异。',
+'yutong-global-2026.html':'依据宇通客车2025年年报与2026年半年报，分析海外主营收入、地区毛利率、服务网络、配件库与KD组装的运营含义。',
+'eu-data-centre-grid-2026.html':'依据欧盟委员会和爱尔兰统计局资料，分析数据中心用电预测、电网接入、效率规则与国家差异。',
 'middle-east-solar-storage-market-2026.html':'依据沙特、阿联酋政府目标及ACWA Power、Masdar项目公告，区分政策规划、融资关闭与商业运营，分析光伏储能并网、融资与本地交付门槛。',
 'catl-globalization-q3-2026.html':'依据宁德时代2026年三季报、半年报及欧洲项目公告，分析海外收入、经营现金流、匈牙利模组装配和西班牙项目的本地化进度与回报风险。',
 'eu-heat-pump-market-2026.html':'依据欧盟委员会与欧洲热泵协会资料，分析欧洲热泵销量复苏、国家差异、能源价格、安装服务与供应商进入门槛。',
@@ -228,6 +230,14 @@ def share_card(r, kind):
   en='Transsion’s 2025 revenue fell 4.5%, while attributable profit dropped 53.5%. Revenue rebounded 30.1% in the four months to April 2026, but operating cash flow was negative RMB5.28bn, largely alongside inventory build. Its multi-brand and after-sales footprint is real; durable cash conversion is the next test.'
   zh='传音2025年收入下降4.5%、归母利润下降53.5%；2026年前四个月收入回升30.1%，经营现金流仍净流出52.8亿元，存货增加占用现金。多品牌与售后网络已形成，盈利恢复还需现金流验证。'
   tags='#Transsion #ChinaGoingGlobal #EmergingMarkets'
+ elif r['path']=='eu-packaging-ppwr-market-2026.html':
+  en='EU packaging rules began applying in August 2026, but the commercial change will unfold over several years. Eurostat recorded 81.5m tonnes of packaging waste in 2024; plastic packaging recycling was 42.4%, with wide country differences. The new regime connects package design, recycled materials and local recovery systems.'
+  zh='欧盟PPWR自2026年8月起适用，但要求分阶段落地。2024年欧盟包装废弃物达8,150万吨，塑料包装回收率为42.4%，成员国差异明显。包装设计、再生料与当地回收体系将被放到同一条链路上。'
+  tags='#EU #Packaging #CircularEconomy'
+ elif r['path']=='yutong-global-2026.html':
+  en='Yutong’s overseas core-business revenue rose 38.9% in 2025, with a 29.62% gross margin. By mid-2026, it reported 400+ overseas service outlets, 40+ parts warehouses and nearly 900 service staff. The business is moving beyond exports; local service and assembly now shape how long vehicles stay in operation.'
+  zh='宇通客车2025年海外主营收入增长38.87%，毛利率29.62%。截至2026年中，公司披露海外服务网点超400个、配件库40余个、服务人员近900名。出口之后的服务与组装，关系到车辆能否长期运营。'
+  tags='#Yutong #ChinaGoingGlobal #PublicTransport'
  elif r['path']=='eu-data-centre-grid-2026.html':
   en='EU data centres used an estimated 68 TWh of electricity in 2024; the Commission projects 114 TWh by 2030. That forecast is not committed demand. Grid access, location, energy and water performance are shaping where new capacity can operate. Minimum performance standards are still under consultation.'
   zh='欧盟数据中心2024年用电估算为68 TWh，委员会预测2030年升至114 TWh。预测不等于已落地需求；并网、选址、能效与用水将影响项目落地。最低能效标准仍在咨询中。'
