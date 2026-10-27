@@ -12,7 +12,7 @@ CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局�
 FEATURED={
 'industry':['mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
 'global':['gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
-'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/04-e-invoice-lifecycle.html'],
+'digital':['reports/e-invoicing/05-e-invoicing-architecture.html','reports/e-invoicing/04-e-invoice-lifecycle.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/01-what-is-an-e-invoice.html','aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
 'markets':['import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
 'mexico-auto-north-america-2026.html':'依据INEGI 2026年9月轻型汽车统计，比较生产、出口和国内销量的不同变化，并结合USMCA规则说明北美供应链背景。',
@@ -32,6 +32,7 @@ DESCS={
 'reports/e-invoicing/02-from-paper-to-digital-reporting.html':'沿着纸面凭证、EDI、语义标准、互联网络与税务数字报告，解释电子发票体系如何逐层演进。',
 'reports/e-invoicing/03-why-e-invoicing-matters.html':'结合企业调查、欧盟评估和秘鲁研究，分析电子发票的效率、合规、征管与数据价值及其实现条件。',
 'reports/e-invoicing/04-e-invoice-lifecycle.html':'从交易证据、开具校验、传输回执、接收审批到入账归档，拆解电子发票端到端流程、状态边界、异常处理与留存证据；监管平台并非所有国家的必经环节。',
+'reports/e-invoicing/05-e-invoicing-architecture.html':'解释企业ERP、数据映射、集成服务、税务机关平台、交换网络与买方系统的职责，并比较意大利、巴西和Peppol的不同交换路径。',
 'asean-power-grid-2026.html':'依据东盟能源中心第九版《东盟能源展望》、IEA《东盟能源安全评估》及东盟电网互联研究，分析区域电力需求、数据中心、灵活性与投资落地。',
 'middle-east-aviation-2026.html':'依据IATA 2026年8月客运统计与迪拜机场上半年运营披露，分析中东航司需求、运力、客座率及枢纽恢复。',
 'middle-east-desalination-2026.html':'基于沙特官方项目资料，分析海水淡化采购、私营融资、反渗透能效及水务基础设施投资风险。',
@@ -151,7 +152,7 @@ def scan():
  records=[]
  for p in sorted(ROOT.rglob('*.html')):
   rel=p.relative_to(ROOT).as_posix()
-  if rel.startswith(('.git/','_site/','assets/','tools/','category/','topics/','en/','about/','privacy/','editorial/','contact/','archive/','markets/')) or rel in ('index.html','404.html') or rel.startswith('mk/'):continue
+  if rel.startswith(('.git/','_site/','assets/','tools/','category/','topics/','en/','about/','privacy/','editorial/','contact/','archive/','markets/')) or rel in ('index.html','404.html','reports/e-invoicing/index.html') or rel.startswith('mk/'):continue
   s=p.read_text(errors='replace')
   if '<!-- GBI generated -->' in s:continue
   s=clean_generated(s);x=Extract();x.feed(s);title=' '.join(''.join(x.title).split())
@@ -354,7 +355,7 @@ def desk_tiles():
   ('LATIN AMERICA / MACHINERY','三一南美市场','经销网络、设备服务与本地执行。','/reports/sany-south-america/index.html'),
   ('AI / OPERATIONS','企业AI与流程转型','从业务流程和数据基础评估落地条件。','/aierp.html'),
   ('U.S. DATA / MARKET ATLAS','美国市场观察','指数、利率、就业与GDP放在同一条线上。','/mk/'),
-  ('E-INVOICING / KNOWLEDGE SERIES','电子发票专题','从文件、结构化数据到全球规则与系统落地。','/reports/e-invoicing/')
+  ('E-INVOICING / KNOWLEDGE SERIES','电子发票专题','从结构化数据和制度规则，读到企业系统、税务平台与交换网络如何协作。','/reports/e-invoicing/')
  ]
  tiles=''.join('<article class="desk-tile"><div class="eyebrow">'+label+'</div><h3><a href="'+href+'">'+title+'</a></h3><p>'+desc+'</p><a class="desk-cta" href="'+href+'">查看专题 →</a></article>' for label,title,desc,href in entries)
  return '<section class="research-desk"><div class="section-head"><div><div class="eyebrow">RESEARCH DESK / EXPLORE BY LENS</div><h2>五条研究线索，快速进入</h2></div><a href="/archive/">打开完整资料库 →</a></div><div class="desk-grid">'+tiles+'</div></section>'
@@ -436,7 +437,7 @@ def generate():
  records=scan();by={r['path']:r for r in records}
  write('assets/gbi/catalog.json',json.dumps(sorted(records,key=lambda r:(r['category']=='archive',r['title'])),ensure_ascii=False,separators=(',',':'))+'\n')
  hero=''
- selected=FEATURED['industry'][:2]+FEATURED['global'][:2]+FEATURED['digital'][:2]+['reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/04-e-invoice-lifecycle.html']
+ selected=FEATURED['industry'][:2]+FEATURED['global'][:2]+FEATURED['digital'][:2]+['reports/e-invoicing/05-e-invoicing-architecture.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/04-e-invoice-lifecycle.html']
  global_paths=global_feature_paths(records)
  lead_path=next((p for p in FEATURED['industry'] if p in by and by[p].get('qualityScore',0)>=70),None)
  lead=by.get(lead_path,{})
