@@ -10,11 +10,13 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html','reports/e-invoicing/01-what-is-an-e-invoice.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/04-e-invoice-lifecycle.html'],
 'markets':['import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'mexico-auto-north-america-2026.html':'依据INEGI 2026年9月轻型汽车统计，比较生产、出口和国内销量的不同变化，并结合USMCA规则说明北美供应链背景。',
+'gree-global-2026.html':'依据格力电器2026年半年报，分析海外主营收入下降、自主品牌出口占比及部分区域增长，并说明披露口径的局限。',
 'import-complexity-processgo-bilingual.html':'结合全球进口复杂度比较与各国海关规则，分析商品准入、税费、许可、申报及放行后财务流程如何衔接。','eu-packaging-ppwr-market-2026.html':'依据欧盟包装与包装废弃物法规、Eurostat 2024年数据及委员会实施指南，分析包装设计、再生料、标签和各国回收差异。',
 'yutong-global-2026.html':'依据宇通客车2025年年报、2026年三季报与产销快报，分析海外收入、地区毛利率、服务网络、本地组装和最新经营节奏。',
 'eu-data-centre-grid-2026.html':'依据欧盟委员会和爱尔兰统计局资料，分析数据中心用电预测、电网接入、效率规则与国家差异。',
@@ -310,12 +312,24 @@ def share_card(r, kind):
   en='BYD’s overseas growth is moving beyond exports. This briefing examines whether local manufacturing, product adaptation, R&D and service networks can turn shipments into durable operations, separating company disclosures from unproven outcomes.'
   zh='比亚迪全球化的重点正从出口销量延伸到本地制造、产品适配、研发和服务网络；本文区分公司披露与尚待验证的经营结果。'
   tags='#BYD #ChinaGoingGlobal #GlobalBusiness'
+ elif r['path']=='mexico-auto-north-america-2026.html':
+  en='Mexico produced 301,803 light vehicles and exported 277,369 in September 2026; both fell year over year, while domestic sales rose 7.9%. The three series tell different stories. USMCA negotiations matter as context, but INEGI does not attribute the monthly decline to them.'
+  zh='墨西哥2026年9月轻型汽车生产和出口同比下降，国内销量增长7.9%。三组数据方向不同；USMCA谈判是背景，INEGI并未将单月下降归因于谈判。'
+  tags='#Mexico #NorthAmerica #Automotive'
+ elif r['path']=='gree-global-2026.html':
+  en='Gree’s overseas core-business revenue fell 21.98% in H1 2026 to RMB12.744bn. The company says own brands made up 70% of exports and reported growth in parts of Europe. Those pockets of progress have not reversed the overall decline.'
+  zh='格力上半年海外主营收入下降21.98%；公司称自主品牌占出口总额七成，部分欧洲市场增长，但还未扭转整体收缩。'
+  tags='#Gree #ChinaGoingGlobal #ConsumerAppliances'
  else:
   en='A source-led briefing on '+r['title']+'. Read the full analysis for the evidence, market context, assumptions and risks.'
   zh=r['description']
   tags='#GlobalBusiness #MarketResearch'
  if r['path']=='north-america-transformers-market-2026.html':
   xcopy='U.S. transformer demand is up 41% since 2019, while 2024 lead times remained 1–2+ years. Qualification and standardization are key entry gates. '+tracked+' #GridInfrastructure'
+ elif r['path']=='mexico-auto-north-america-2026.html':
+  xcopy='Mexico Sep 2026: vehicle production and exports fell, domestic sales rose 7.9%. The three series tell different stories; USMCA is context, not a proven cause. '+tracked+' #Mexico #Automotive'
+ elif r['path']=='gree-global-2026.html':
+  xcopy='Gree H1 2026 overseas core revenue fell 21.98%. Own brands were 70% of exports, per company disclosure; regional growth has not reversed the overall decline. '+tracked+' #ChinaGoingGlobal'
  elif r['path']=='sungrow-global-2026.html':
   xcopy='Sungrow 2025 overseas revenue rose 48.8% to RMB54.0bn. H1 2026 group revenue fell 29.0%; local service and overseas returns remain the test. '+tracked+' #ChinaGoingGlobal'
  else:
