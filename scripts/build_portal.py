@@ -10,11 +10,13 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['latin-america-battery-storage-market-2026.html','us-hvac-refrigerant-transition-2026.html','mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['longi-global-2026.html','h3c-global-2026.html','gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['west-africa-cocoa-market-2026.html','latin-america-battery-storage-market-2026.html','us-hvac-refrigerant-transition-2026.html','mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['xiaomi-global-2026.html','longi-global-2026.html','h3c-global-2026.html','gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['reports/e-invoicing/05-e-invoicing-architecture.html','reports/e-invoicing/04-e-invoice-lifecycle.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/01-what-is-an-e-invoice.html','aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
 'markets':['import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'west-africa-cocoa-market-2026.html':'依据加纳、科特迪瓦官方新季收购价、ICCO全球供需修订和欧盟零毁林条例，解释西非可可价格机制、农户收入与出口追溯要求。',
+'xiaomi-global-2026.html':'依据小米2026年中期报告，分析中国大陆以外收入、海外手机市场与零售网络，并说明印度事项和披露边界。',
 'latin-america-battery-storage-market-2026.html':'依据OLACDE 2026年8月区域储能数据、巴西ANEEL最终招标文件和墨西哥官方接网规定，比较拉美电池储能的规模、收入机制与国别差异。',
 'longi-global-2026.html':'依据隆基绿能2026年半年度报告和国家能源局资料，分析海外组件销量、BC产品结构及集团收入、利润和现金流压力。',
 'us-hvac-refrigerant-transition-2026.html':'依据美国EPA 2026年修订后的HFC限制表与AHRI 2026年8月出货数据，说明住宅与轻商用空调换冷媒的规则边界、旧库存安装安排和渠道影响。',
@@ -189,7 +191,15 @@ def card(r):
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by and by[p].get('qualityScore',100)>=70)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='middle-east-solar-storage-market-2026.html':
+ if r['path']=='west-africa-cocoa-market-2026.html':
+  en='Côte d’Ivoire set its 2026/27 main-crop cocoa farmgate price at CFA 1,200/kg, down from CFA 2,800 last season; Ghana set GH¢42,400/tonne, or 71.18% of realised gross FOB. ICCO’s latest public balance covers 2024/25, not the new crop. The price resets and traceability rules now shape West African cocoa trade.'
+  zh='科特迪瓦2026/27主季可可收购价为1,200西非法郎/公斤，低于上季2,800；加纳定价为42,400塞地/吨，占实现FOB值71.18%。ICCO最新公开全球平衡表仍对应2024/25产季。价格重设与欧盟追溯要求共同影响西非贸易。'
+  tags='#WestAfrica #Cocoa #AgriculturalTrade'
+ elif r['path']=='xiaomi-global-2026.html':
+  en='Xiaomi generated RMB78.8bn outside mainland China in H1 2026, 37.9% of group revenue; the company says most of that revenue comes from Europe and India. It shipped 65m smartphones and had 640+ overseas new-retail stores. India-related proceedings remain unresolved, with RMB3.54bn in restricted cash equivalents disclosed. Scale is clear; local profitability is not.'
+  zh='小米2026年上半年中国大陆以外收入788.2亿元，占集团收入37.9%，公司称主要来自欧洲和印度；手机出货6,500万台，海外新零售门店超过640家。印度相关案件仍在审理，受限资金折合约35.36亿元人民币。海外规模已形成，地区盈利仍未单独披露。'
+  tags='#Xiaomi #ChinaGoingGlobal #ConsumerElectronics'
+ elif r['path']=='middle-east-solar-storage-market-2026.html':
   en='Saudi Arabia has closed financing for seven renewables projects totaling 15 GW; the UAE has financed a 5.2 GW solar-plus-storage project targeting 1 GW of continuous clean power. Both remain execution stories, not operating results. Grid access, dispatch, finance and long-term service are the commercial gates.'
   zh='沙特7个可再生能源项目合计15GW，已完成融资关闭；阿联酋5.2GW光伏与19GWh储能项目规划提供1GW连续清洁电力。两者都仍待建设投运。本文关注并网、调度、融资和长期服务。'
   tags='#MiddleEast #SolarStorage #EnergyInfrastructure'
