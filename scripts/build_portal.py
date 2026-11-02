@@ -15,7 +15,8 @@ FEATURED={
 'digital':['reports/e-invoicing/05-e-invoicing-architecture.html','reports/e-invoicing/04-e-invoice-lifecycle.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/01-what-is-an-e-invoice.html','aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
 'markets':['import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
-'latin-america-copper-market-2026.html':'结合COCHILCO铜供需预测、智利实际产量与能源水资源数据，以及秘鲁生产指数和矿业项目组合，分析拉美铜供应的短期波动和增量约束。',\n'west-africa-cocoa-market-2026.html':'依据加纳、科特迪瓦官方新季收购价、ICCO全球供需修订和欧盟零毁林条例，解释西非可可价格机制、农户收入与出口追溯要求。',
+'latin-america-copper-market-2026.html':'结合COCHILCO铜供需预测、智利实际产量与能源水资源数据，以及秘鲁生产指数和矿业项目组合，分析拉美铜供应的短期波动和增量约束。',
+'west-africa-cocoa-market-2026.html':'依据加纳、科特迪瓦官方新季收购价、ICCO全球供需修订和欧盟零毁林条例，解释西非可可价格机制、农户收入与出口追溯要求。',
 'xiaomi-global-2026.html':'依据小米2026年中期报告，分析中国大陆以外收入、海外手机市场与零售网络，并说明印度事项和披露边界。',
 'latin-america-battery-storage-market-2026.html':'依据OLACDE 2026年8月区域储能数据、巴西ANEEL最终招标文件和墨西哥官方接网规定，比较拉美电池储能的规模、收入机制与国别差异。',
 'longi-global-2026.html':'依据隆基绿能2026年半年度报告和国家能源局资料，分析海外组件销量、BC产品结构及集团收入、利润和现金流压力。',
