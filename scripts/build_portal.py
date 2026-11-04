@@ -10,12 +10,14 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['north-america-battery-market-2026.html','latin-america-copper-market-2026.html','west-africa-cocoa-market-2026.html','latin-america-battery-storage-market-2026.html','us-hvac-refrigerant-transition-2026.html','mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['jinko-global-q3-2026.html','tcl-electronics-global-2026.html','xiaomi-global-2026.html','longi-global-2026.html','h3c-global-2026.html','gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['thailand-medical-devices-market-2026.html','north-america-battery-market-2026.html','latin-america-copper-market-2026.html','west-africa-cocoa-market-2026.html','latin-america-battery-storage-market-2026.html','us-hvac-refrigerant-transition-2026.html','mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['yofc-global-q3-2026.html','jinko-global-q3-2026.html','tcl-electronics-global-2026.html','xiaomi-global-2026.html','longi-global-2026.html','h3c-global-2026.html','gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['reports/e-invoicing/05-e-invoicing-architecture.html','reports/e-invoicing/04-e-invoice-lifecycle.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/01-what-is-an-e-invoice.html','aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
 'markets':['import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'thailand-medical-devices-market-2026.html':'依据泰国医疗器械情报单位（MEDIU）数据、泰国FDA规则与BOI资料，分析泰国医疗器械贸易规模、进口结构、本地制造和产品准入。',
 'north-america-battery-market-2026.html':'基于美国能源信息署、能源部与加拿大能源监管机构数据，分析电网级储能部署、共址趋势、制造产能及美国与加拿大的市场差异。',
+'yofc-global-q3-2026.html':'依据长飞光纤2026年三季报和半年报，分析前三季度业绩增长、海外收入占比、多国生产网络及地区利润披露边界。',
 'jinko-global-q3-2026.html':'依据晶科控股2026年第三季度未经审计业绩，分析海外出货、组件毛利修复、储能业务和地区利润披露边界。',
 'latin-america-copper-market-2026.html':'结合COCHILCO铜供需预测、智利实际产量与能源水资源数据，以及秘鲁生产指数和矿业项目组合，分析拉美铜供应的短期波动和增量约束。',
 'west-africa-cocoa-market-2026.html':'依据加纳、科特迪瓦官方新季收购价、ICCO全球供需修订和欧盟零毁林条例，解释西非可可价格机制、农户收入与出口追溯要求。',
@@ -194,7 +196,15 @@ def card(r):
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by and by[p].get('qualityScore',100)>=70)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='north-america-battery-market-2026.html':
+ if r['path']=='thailand-medical-devices-market-2026.html':
+  en='Thailand is both a medical-device manufacturing base and an import market. MEDIU-based estimates put the 2024 market at US$8.25bn; imports were about THB96bn in 2025 (-1.4%), and H1 2026 imports and exports both declined. Product mix matters: high-tech equipment relies more on imports, while local output is stronger in selected consumables.'
+  zh='泰国医疗器械市场同时包含本地制造、进口和出口。MEDIU口径下2024年市场估算约82.46亿美元；2025年进口约960亿泰铢、下降1.4%，2026年上半年进出口均回落。高技术设备与本地耗材制造的结构不同。'
+  tags='#Thailand #MedicalDevices #SoutheastAsia'
+ elif r['path']=='yofc-global-q3-2026.html':
+  en='YOFC reported 9M 2026 revenue of RMB19.12bn (+86.1%) and attributable profit of RMB6.13bn. The company cites data-centre demand, product mix and changes in volumes and prices. Overseas revenue exceeded 40% in FY2025 and H1 2026; nine overseas plants span seven countries. Q3 figures are unaudited, and regional profit is not disclosed.'
+  zh='长飞光纤2026年前三季度收入191.25亿元、增长86.12%，归母净利润61.28亿元。公司将增长归因于数据中心需求、产品结构及销量价格变化。2025年与2026年上半年境外收入占比均超过四成；三季报未经审计，也未披露地区利润。'
+  tags='#YOFC #ChinaGoingGlobal #OpticalFiber'
+ elif r['path']=='north-america-battery-market-2026.html':
   en='North American battery markets are at different stages. U.S. grid-scale storage reached nearly 52 GW by June 2026, and batteries accompanied over 16% of new utility-scale solar capacity added through September. Canada is growing from a smaller base. DOE’s 179-to-707 GWh demand projection spans transport and storage; it is not a grid-storage order book. Local module assembly also does not mean local cells and materials are fully supplied.'
   zh='北美电池市场进度不一：美国电网级储能截至2026年6月接近52 GW，9月前新增公用事业太阳能中超过16%已与可运营电池共址；加拿大仍处较小规模。DOE的179至707 GWh预测覆盖交通与储能，不是电网储能订单。本地组装也不代表电芯和材料已实现自给。'
   tags='#NorthAmerica #BatteryStorage #EnergyTransition'
@@ -358,7 +368,11 @@ def share_card(r, kind):
   en='A source-led briefing on '+r['title']+'. Read the full analysis for the evidence, market context, assumptions and risks.'
   zh=r['description']
   tags='#GlobalBusiness #MarketResearch'
- if r['path']=='north-america-battery-market-2026.html':
+ if r['path']=='thailand-medical-devices-market-2026.html':
+  xcopy='Thailand medtech: 2025 imports fell 1.4%; H1 2026 imports and exports both declined. Production is stronger in selected consumables, while advanced equipment still relies on imports. '+tracked+' #MedicalDevices'
+ elif r['path']=='yofc-global-q3-2026.html':
+  xcopy='YOFC 9M 2026 revenue +86.1%; overseas revenue share >40% in FY25 and H1 2026. Q3 is unaudited; regional profit remains undisclosed. '+tracked+' #ChinaGoingGlobal'
+ elif r['path']=='north-america-battery-market-2026.html':
   xcopy='U.S. grid batteries reached nearly 52 GW by Jun 2026; co-located storage topped 16% of new utility solar through Sep. Demand forecasts are not orders. '+tracked+' #BatteryStorage'
  elif r['path']=='jinko-global-q3-2026.html':
   xcopy='Jinko Q3 2026: module shipments −25% y/y, gross margin 12.3% vs 4.2% in Q2; net loss remains. Overseas shipments ~70%. '+tracked+' #Solar'
