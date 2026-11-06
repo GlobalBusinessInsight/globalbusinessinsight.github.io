@@ -10,11 +10,13 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['eu-sustainable-aviation-fuel-market-2026.html','thailand-medical-devices-market-2026.html','north-america-battery-market-2026.html','latin-america-copper-market-2026.html','west-africa-cocoa-market-2026.html','latin-america-battery-storage-market-2026.html','us-hvac-refrigerant-transition-2026.html','mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['lenovo-global-q1-2026-2027.html','yofc-global-q3-2026.html','jinko-global-q3-2026.html','tcl-electronics-global-2026.html','xiaomi-global-2026.html','longi-global-2026.html','h3c-global-2026.html','gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['thailand-ev-market-2026.html','eu-sustainable-aviation-fuel-market-2026.html','thailand-medical-devices-market-2026.html','north-america-battery-market-2026.html','latin-america-copper-market-2026.html','west-africa-cocoa-market-2026.html','latin-america-battery-storage-market-2026.html','us-hvac-refrigerant-transition-2026.html','mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['geely-global-q3-2026.html','lenovo-global-q1-2026-2027.html','yofc-global-q3-2026.html','jinko-global-q3-2026.html','tcl-electronics-global-2026.html','xiaomi-global-2026.html','longi-global-2026.html','h3c-global-2026.html','gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['reports/e-invoicing/05-e-invoicing-architecture.html','reports/e-invoicing/04-e-invoice-lifecycle.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/01-what-is-an-e-invoice.html','aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
 'markets':['import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'thailand-ev-market-2026.html':'依据泰国工业联合会2026年前九个月乘用车注册、产量与出口数据，以及BOI电动车政策，分析纯电需求、本地制造和整车出口之间的差距。',
+'geely-global-q3-2026.html':'依据吉利汽车2026年前三季度未经审计业绩、上半年出口公告及十月销量，分析海外扩张、收入利润口径与盈利披露边界。',
 'eu-sustainable-aviation-fuel-market-2026.html':'依据EASA 2026年度技术报告，分析欧盟ReFuelEU Aviation首年SAF供应、进口原料、价格差距、2030年目标和合成燃料建设进度。',
 'lenovo-global-q1-2026-2027.html':'依据联想集团2026/27财年第一季度业绩，分析AI相关收入、三大业务分部、服务器增长、全球本地供应链，以及法定亏损与调整后利润的差异。',
 'thailand-medical-devices-market-2026.html':'依据泰国医疗器械情报单位（MEDIU）数据、泰国FDA规则与BOI资料，分析泰国医疗器械贸易规模、进口结构、本地制造和产品准入。',
@@ -198,7 +200,15 @@ def card(r):
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by and by[p].get('qualityScore',100)>=70)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='thailand-medical-devices-market-2026.html':
+ if r['path']=='thailand-ev-market-2026.html':
+  en='Thailand registered 165,040 new battery-electric passenger cars in Jan–Sep 2026 (+95.2% y/y), while BEV passenger-car exports were 13,002 units. Total vehicle exports fell 4.9%, and pickups remained 61.2% of shipments. Demand is moving faster than the export mix.'
+  zh='泰国2026年1—9月新注册纯电乘用车165,040辆，同比增长95.2%；同期纯电乘用车出口13,002辆。整车出口总量下降4.9%，皮卡仍占61.2%。需求变化快于出口结构转型。'
+  tags='#Thailand #ElectricVehicles #SoutheastAsia'
+ elif r['path']=='geely-global-q3-2026.html':
+  en='Geely Auto’s 9M 2026 sales rose 3% to 2.235m vehicles, revenue grew 13% to RMB272.6bn, and HKFRS attributable profit rose 7%. Company-defined core profit rose 41%, partly reflecting FX comparisons. October exports reached 107,153; overseas profitability is not disclosed.'
+  zh='吉利汽车2026年前三季度销量增长3%至223.55万辆，收入增长13%至2,725.64亿元，HKFRS归母利润增长7%；公司定义的核心利润增长41%，部分受汇兑比较影响。十月出口107,153辆，海外利润未披露。'
+  tags='#Geely #ChinaGoingGlobal #Automotive'
+ elif r['path']=='thailand-medical-devices-market-2026.html':
   en='Thailand is both a medical-device manufacturing base and an import market. MEDIU-based estimates put the 2024 market at US$8.25bn; imports were about THB96bn in 2025 (-1.4%), and H1 2026 imports and exports both declined. Product mix matters: high-tech equipment relies more on imports, while local output is stronger in selected consumables.'
   zh='泰国医疗器械市场同时包含本地制造、进口和出口。MEDIU口径下2024年市场估算约82.46亿美元；2025年进口约960亿泰铢、下降1.4%，2026年上半年进出口均回落。高技术设备与本地耗材制造的结构不同。'
   tags='#Thailand #MedicalDevices #SoutheastAsia'
@@ -378,7 +388,11 @@ def share_card(r, kind):
   en='A source-led briefing on '+r['title']+'. Read the full analysis for the evidence, market context, assumptions and risks.'
   zh=r['description']
   tags='#GlobalBusiness #MarketResearch'
- if r['path']=='thailand-medical-devices-market-2026.html':
+ if r['path']=='thailand-ev-market-2026.html':
+  xcopy='Thailand BEV registrations +95% in Jan–Sep 2026; passenger BEV exports were 13,002 units. Overall vehicle exports fell 4.9%, with pickups still 61.2% of exports. '+tracked+' #ElectricVehicles'
+ elif r['path']=='geely-global-q3-2026.html':
+  xcopy='Geely 9M 2026 sales +3%, revenue +13%, HKFRS profit +7%; company-defined core profit +41%. October exports: 107,153. Overseas profitability remains undisclosed. '+tracked+' #ChinaGoingGlobal'
+ elif r['path']=='thailand-medical-devices-market-2026.html':
   xcopy='Thailand medtech: 2025 imports fell 1.4%; H1 2026 imports and exports both declined. Production is stronger in selected consumables, while advanced equipment still relies on imports. '+tracked+' #MedicalDevices'
  elif r['path']=='yofc-global-q3-2026.html':
   xcopy='YOFC 9M 2026 revenue +86.1%; overseas revenue share >40% in FY25 and H1 2026. Q3 is unaudited; regional profit remains undisclosed. '+tracked+' #ChinaGoingGlobal'
