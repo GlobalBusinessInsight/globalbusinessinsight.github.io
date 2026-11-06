@@ -201,12 +201,12 @@ def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by and by[
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
  if r['path']=='thailand-ev-market-2026.html':
-  en='Thailand registered 165,040 new battery-electric passenger cars in Jan–Sep 2026 (+95.2% y/y), while BEV passenger-car exports were 13,002 units. Total vehicle exports fell 4.9%, and pickups remained 61.2% of shipments. Demand is moving faster than the export mix.',
-  zh='泰国2026年1—9月新注册纯电乘用车165,040辆，同比增长95.2%；同期纯电乘用车出口13,002辆。整车出口总量下降4.9%，皮卡仍占61.2%。需求变化快于出口结构转型。',
+  en='Thailand registered 165,040 new battery-electric passenger cars in Jan–Sep 2026 (+95.2% y/y), while BEV passenger-car exports were 13,002 units. Total vehicle exports fell 4.9%, and pickups remained 61.2% of shipments. Demand is moving faster than the export mix.'
+  zh='泰国2026年1—9月新注册纯电乘用车165,040辆，同比增长95.2%；同期纯电乘用车出口13,002辆。整车出口总量下降4.9%，皮卡仍占61.2%。需求变化快于出口结构转型。'
   tags='#Thailand #ElectricVehicles #SoutheastAsia'
  elif r['path']=='geely-global-q3-2026.html':
-  en='Geely Auto’s 9M 2026 sales rose 3% to 2.235m vehicles, revenue grew 13% to RMB272.6bn, and HKFRS attributable profit rose 7%. Company-defined core profit rose 41%, partly reflecting FX comparisons. October exports reached 107,153; overseas profitability is not disclosed.',
-  zh='吉利汽车2026年前三季度销量增长3%至223.55万辆，收入增长13%至2,725.64亿元，HKFRS归母利润增长7%；公司定义的核心利润增长41%，部分受汇兑比较影响。十月出口107,153辆，海外利润未披露。',
+  en='Geely Auto’s 9M 2026 sales rose 3% to 2.235m vehicles, revenue grew 13% to RMB272.6bn, and HKFRS attributable profit rose 7%. Company-defined core profit rose 41%, partly reflecting FX comparisons. October exports reached 107,153; overseas profitability is not disclosed.'
+  zh='吉利汽车2026年前三季度销量增长3%至223.55万辆，收入增长13%至2,725.64亿元，HKFRS归母利润增长7%；公司定义的核心利润增长41%，部分受汇兑比较影响。十月出口107,153辆，海外利润未披露。'
   tags='#Geely #ChinaGoingGlobal #Automotive'
  elif r['path']=='thailand-medical-devices-market-2026.html':
   en='Thailand is both a medical-device manufacturing base and an import market. MEDIU-based estimates put the 2024 market at US$8.25bn; imports were about THB96bn in 2025 (-1.4%), and H1 2026 imports and exports both declined. Product mix matters: high-tech equipment relies more on imports, while local output is stronger in selected consumables.'
