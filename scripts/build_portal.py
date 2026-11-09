@@ -210,7 +210,7 @@ def share_card(r, kind):
   en="Sanhua reported H1 2026 overseas sales of RMB7.05bn (-2.2%), 41.7% of core revenue, with a 29.77% gross margin vs 26.84% in China. 9M revenue rose 5.18%, while attributable profit fell 5.4%. Regional operating profit is not disclosed."
   zh="三花智控上半年境外销售70.52亿元、同比下降2.2%，占主营业务41.7%；境外毛利率29.77%，高于国内，但地区营业利润未完整披露。前三季度收入增长、归母净利润下降。"
   tags='#Sanhua #ChinaGoingGlobal #Manufacturing'
- if r['path']=='thailand-ev-market-2026.html':
+ elif r['path']=='thailand-ev-market-2026.html':
   en='Thailand registered 165,040 new battery-electric passenger cars in Jan–Sep 2026 (+95.2% y/y), while BEV passenger-car exports were 13,002 units. Total vehicle exports fell 4.9%, and pickups remained 61.2% of shipments. Demand is moving faster than the export mix.'
   zh='泰国2026年1—9月新注册纯电乘用车165,040辆，同比增长95.2%；同期纯电乘用车出口13,002辆。整车出口总量下降4.9%，皮卡仍占61.2%。需求变化快于出口结构转型。'
   tags='#Thailand #ElectricVehicles #SoutheastAsia'
@@ -402,7 +402,7 @@ def share_card(r, kind):
   xcopy='U.S. firms held 53.4% of global chip sales in 2025; Q3 2026 global sales reached US$517.7bn. Announced investment is not operating capacity. '+tracked+' #Semiconductors'
  elif r['path']=='sanhua-global-q3-2026.html':
   xcopy='Sanhua H1 2026 overseas sales fell 2.2% to RMB7.05bn; 9M group revenue rose, attributable profit fell. Regional operating profit is not disclosed. '+tracked+' #ChinaGoingGlobal'
- if r['path']=='thailand-ev-market-2026.html':
+ elif r['path']=='thailand-ev-market-2026.html':
   xcopy='Thailand BEV registrations +95% in Jan–Sep 2026; passenger BEV exports were 13,002 units. Overall vehicle exports fell 4.9%, with pickups still 61.2% of exports. '+tracked+' #ElectricVehicles'
  elif r['path']=='geely-global-q3-2026.html':
   xcopy='Geely 9M 2026 sales +3%, revenue +13%, HKFRS profit +7%; company-defined core profit +41%. October exports: 107,153. Overseas profitability remains undisclosed. '+tracked+' #ChinaGoingGlobal'
