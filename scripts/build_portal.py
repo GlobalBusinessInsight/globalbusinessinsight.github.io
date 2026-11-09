@@ -10,11 +10,13 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['thailand-ev-market-2026.html','eu-sustainable-aviation-fuel-market-2026.html','thailand-medical-devices-market-2026.html','north-america-battery-market-2026.html','latin-america-copper-market-2026.html','west-africa-cocoa-market-2026.html','latin-america-battery-storage-market-2026.html','us-hvac-refrigerant-transition-2026.html','mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['geely-global-q3-2026.html','lenovo-global-q1-2026-2027.html','yofc-global-q3-2026.html','jinko-global-q3-2026.html','tcl-electronics-global-2026.html','xiaomi-global-2026.html','longi-global-2026.html','h3c-global-2026.html','gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['us-semiconductor-market-2026.html','thailand-ev-market-2026.html','eu-sustainable-aviation-fuel-market-2026.html','thailand-medical-devices-market-2026.html','north-america-battery-market-2026.html','latin-america-copper-market-2026.html','west-africa-cocoa-market-2026.html','latin-america-battery-storage-market-2026.html','us-hvac-refrigerant-transition-2026.html','mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['sanhua-global-q3-2026.html','geely-global-q3-2026.html','lenovo-global-q1-2026-2027.html','yofc-global-q3-2026.html','jinko-global-q3-2026.html','tcl-electronics-global-2026.html','xiaomi-global-2026.html','longi-global-2026.html','h3c-global-2026.html','gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['reports/e-invoicing/05-e-invoicing-architecture.html','reports/e-invoicing/04-e-invoice-lifecycle.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/01-what-is-an-e-invoice.html','aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
 'markets':['import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'us-semiconductor-market-2026.html':'依据SIA引用WSTS的2026年第三季度全球销售数据及SIA/BCG产能情景，区分美国企业市场份额、本土制造能力和投资公告。',
+'sanhua-global-q3-2026.html':'依据三花智控2026年半年报和三季报，梳理海外收入、地区毛利、产品结构、汇兑影响与出海业务的经营表现。',
 'thailand-ev-market-2026.html':'依据泰国工业联合会2026年前九个月乘用车注册、产量与出口数据，以及BOI电动车政策，分析纯电需求、本地制造和整车出口之间的差距。',
 'geely-global-q3-2026.html':'依据吉利汽车2026年前三季度未经审计业绩、上半年出口公告及十月销量，分析海外扩张、收入利润口径与盈利披露边界。',
 'eu-sustainable-aviation-fuel-market-2026.html':'依据EASA 2026年度技术报告，分析欧盟ReFuelEU Aviation首年SAF供应、进口原料、价格差距、2030年目标和合成燃料建设进度。',
@@ -200,6 +202,14 @@ def card(r):
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by and by[p].get('qualityScore',100)>=70)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
+ if r['path']=='us-semiconductor-market-2026.html':
+  en="U.S. semiconductor firms held 53.4% of global sales in 2025; worldwide sales reached US$517.7bn in Q3 2026 (+24.1% q/q). More than US$770bn in announced U.S. ecosystem investment is not operating capacity. We separate market share, production and project delivery."
+  zh="美国总部企业2025年占全球芯片销售额53.4%；2026年Q3全球销售额达5,177亿美元、环比增长24.1%。美国投资公告超过7,700亿美元，但公告不等于产能。"
+  tags='#USSemiconductors #Chips #MarketResearch'
+ elif r['path']=='sanhua-global-q3-2026.html':
+  en="Sanhua reported H1 2026 overseas sales of RMB7.05bn (-2.2%), 41.7% of core revenue, with a 29.77% gross margin vs 26.84% in China. 9M revenue rose 5.18%, while attributable profit fell 5.4%. Regional operating profit is not disclosed."
+  zh="三花智控上半年境外销售70.52亿元、同比下降2.2%，占主营业务41.7%；境外毛利率29.77%，高于国内，但地区营业利润未完整披露。前三季度收入增长、归母净利润下降。"
+  tags='#Sanhua #ChinaGoingGlobal #Manufacturing'
  if r['path']=='thailand-ev-market-2026.html':
   en='Thailand registered 165,040 new battery-electric passenger cars in Jan–Sep 2026 (+95.2% y/y), while BEV passenger-car exports were 13,002 units. Total vehicle exports fell 4.9%, and pickups remained 61.2% of shipments. Demand is moving faster than the export mix.'
   zh='泰国2026年1—9月新注册纯电乘用车165,040辆，同比增长95.2%；同期纯电乘用车出口13,002辆。整车出口总量下降4.9%，皮卡仍占61.2%。需求变化快于出口结构转型。'
@@ -388,6 +398,10 @@ def share_card(r, kind):
   en='A source-led briefing on '+r['title']+'. Read the full analysis for the evidence, market context, assumptions and risks.'
   zh=r['description']
   tags='#GlobalBusiness #MarketResearch'
+ if r['path']=='us-semiconductor-market-2026.html':
+  xcopy='U.S. firms held 53.4% of global chip sales in 2025; Q3 2026 global sales reached US$517.7bn. Announced investment is not operating capacity. '+tracked+' #Semiconductors'
+ elif r['path']=='sanhua-global-q3-2026.html':
+  xcopy='Sanhua H1 2026 overseas sales fell 2.2% to RMB7.05bn; 9M group revenue rose, attributable profit fell. Regional operating profit is not disclosed. '+tracked+' #ChinaGoingGlobal'
  if r['path']=='thailand-ev-market-2026.html':
   xcopy='Thailand BEV registrations +95% in Jan–Sep 2026; passenger BEV exports were 13,002 units. Overall vehicle exports fell 4.9%, with pickups still 61.2% of exports. '+tracked+' #ElectricVehicles'
  elif r['path']=='geely-global-q3-2026.html':
