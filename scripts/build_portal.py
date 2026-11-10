@@ -10,11 +10,13 @@ ROOT=Path(__file__).resolve().parents[1]
 BASE='https://globalbusinessinsight.github.io'
 CATEGORIES={'industry':('产业与供应链','理解行业结构、竞争格局与运营方式。'), 'global':('企业出海','从市场选择到渠道、服务与本地运营。'), 'digital':('AI与数字化','把技术放回企业的真实业务流程。'), 'markets':('市场观察','从数据口径出发，观察市场与经济。'), 'archive':('综合资料','保留历史专题，按需查阅。')}
 FEATURED={
-'industry':['us-semiconductor-market-2026.html','thailand-ev-market-2026.html','eu-sustainable-aviation-fuel-market-2026.html','thailand-medical-devices-market-2026.html','north-america-battery-market-2026.html','latin-america-copper-market-2026.html','west-africa-cocoa-market-2026.html','latin-america-battery-storage-market-2026.html','us-hvac-refrigerant-transition-2026.html','mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
-'global':['sanhua-global-q3-2026.html','geely-global-q3-2026.html','lenovo-global-q1-2026-2027.html','yofc-global-q3-2026.html','jinko-global-q3-2026.html','tcl-electronics-global-2026.html','xiaomi-global-2026.html','longi-global-2026.html','h3c-global-2026.html','gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
+'industry':['us-aircraft-mro-workforce-2026.html','us-semiconductor-market-2026.html','thailand-ev-market-2026.html','eu-sustainable-aviation-fuel-market-2026.html','thailand-medical-devices-market-2026.html','north-america-battery-market-2026.html','latin-america-copper-market-2026.html','west-africa-cocoa-market-2026.html','latin-america-battery-storage-market-2026.html','us-hvac-refrigerant-transition-2026.html','mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
+'global':['sinovac-global-h1-2026.html','sanhua-global-q3-2026.html','geely-global-q3-2026.html','lenovo-global-q1-2026-2027.html','yofc-global-q3-2026.html','jinko-global-q3-2026.html','tcl-electronics-global-2026.html','xiaomi-global-2026.html','longi-global-2026.html','h3c-global-2026.html','gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['reports/e-invoicing/05-e-invoicing-architecture.html','reports/e-invoicing/04-e-invoice-lifecycle.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/01-what-is-an-e-invoice.html','aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
 'markets':['import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
+'us-aircraft-mro-workforce-2026.html':'依据GAO、BLS、FAA及航空维修行业劳动力资料，分析美国航空维修技师培养、认证、招聘与留任之间的差距。',
+'sinovac-global-h1-2026.html':'依据科兴生物向SEC提交的2026年上半年未经审计业绩，分析海外销售增长、产品来源、市场准入与亏损变化。',
 'us-semiconductor-market-2026.html':'依据SIA引用WSTS的2026年第三季度全球销售数据及SIA/BCG产能情景，区分美国企业市场份额、本土制造能力和投资公告。',
 'sanhua-global-q3-2026.html':'依据三花智控2026年半年报和三季报，梳理海外收入、地区毛利、产品结构、汇兑影响与出海业务的经营表现。',
 'thailand-ev-market-2026.html':'依据泰国工业联合会2026年前九个月乘用车注册、产量与出口数据，以及BOI电动车政策，分析纯电需求、本地制造和整车出口之间的差距。',
@@ -202,7 +204,15 @@ def card(r):
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by and by[p].get('qualityScore',100)>=70)
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='us-semiconductor-market-2026.html':
+ if r['path']=='us-aircraft-mro-workforce-2026.html':
+  en='The FAA issued 11,100+ mechanic certificates in 2025, nearly double 2016. But the FAA does not track how many certificate holders work in aviation maintenance. U.S. training capacity is growing; jobs, experience and retention remain the real constraints.'
+  zh='美国2025年新增航空维修技师证书超过1.1万张，接近2016年的两倍；FAA却没有追踪持证者是否进入维修行业。培训在扩张，岗位转化、经验和留任仍是约束。'
+  tags='#AviationMaintenance #Workforce #NorthAmerica'
+ elif r['path']=='sinovac-global-h1-2026.html':
+  en='Sinovac’s H1 2026 overseas sales rose 82.3% to US$66.5m, or 45.2% of total sales, led by varicella and sIPV vaccines. The company still posted a US$91.4m net loss. Market access is expanding; profit conversion is not yet established.'
+  zh='科兴生物2026年上半年海外收入增长82.3%至6,650万美元，占总销售45.2%，主要由水痘和sIPV疫苗带动；公司同期净亏损9,140万美元。市场准入在扩张，利润转化仍待验证。'
+  tags='#Sinovac #ChinaGoingGlobal #Biopharma'
+ elif r['path']=='us-semiconductor-market-2026.html':
   en="U.S. semiconductor firms held 53.4% of global sales in 2025; worldwide sales reached US$517.7bn in Q3 2026 (+24.1% q/q). More than US$770bn in announced U.S. ecosystem investment is not operating capacity. We separate market share, production and project delivery."
   zh="美国总部企业2025年占全球芯片销售额53.4%；2026年Q3全球销售额达5,177亿美元、环比增长24.1%。美国投资公告超过7,700亿美元，但公告不等于产能。"
   tags='#USSemiconductors #Chips #MarketResearch'
@@ -398,7 +408,11 @@ def share_card(r, kind):
   en='A source-led briefing on '+r['title']+'. Read the full analysis for the evidence, market context, assumptions and risks.'
   zh=r['description']
   tags='#GlobalBusiness #MarketResearch'
- if r['path']=='us-semiconductor-market-2026.html':
+ if r['path']=='us-aircraft-mro-workforce-2026.html':
+  xcopy='FAA mechanic certificates hit 11,100+ in 2025, but certification is not employment. School seats, practical experience and retention still constrain aviation maintenance capacity. '+tracked+' #AviationMaintenance'
+ elif r['path']=='sinovac-global-h1-2026.html':
+  xcopy='Sinovac H1 2026 overseas revenue +82.3% to US$66.5m; total sales +12.9%, but net loss was US$91.4m. Product registrations are expanding; profitability remains unproven. '+tracked+' #ChinaGoingGlobal'
+ elif r['path']=='us-semiconductor-market-2026.html':
   xcopy='U.S. firms held 53.4% of global chip sales in 2025; Q3 2026 global sales reached US$517.7bn. Announced investment is not operating capacity. '+tracked+' #Semiconductors'
  elif r['path']=='sanhua-global-q3-2026.html':
   xcopy='Sanhua H1 2026 overseas sales fell 2.2% to RMB7.05bn; 9M group revenue rose, attributable profit fell. Regional operating profit is not disclosed. '+tracked+' #ChinaGoingGlobal'
