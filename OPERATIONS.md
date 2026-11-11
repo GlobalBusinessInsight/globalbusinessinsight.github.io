@@ -1,5 +1,13 @@
 # 运营与验收
 
+## 2026-11-11：英文优先研究首页与全站归档筛查
+
+- Root homepage now uses a compact, searchable research feed with an editor's selection, topic filters, active research desks and a manual email opt-in.
+- 500 report pages were screened. 108 remain in the active research catalogue; 392 are classified as archive (355 score below 70; 37 are legacy demos, prototypes, promotional material or outside current research scope).
+- Archived reports are not linked from current homepage/topic features or default search, are omitted from the sitemap, and carry `noindex,follow`. Their original URLs remain available from the archive directory for historical reference.
+- Audit decisions and limits: `scripts/CONTENT-AUDIT-2026-11.md`.
+- Validation: `python3 scripts/build_portal.py`, `python3 scripts/check_portal.py`, and `node --check assets/gbi/site.js`. Local Jekyll build may require the Bundler version pinned in `Gemfile.lock`; GitHub Actions performs the production Jekyll build.
+
 ## 本次改版
 
 恢复商业门户；三条研究路线；四类内容入口；438篇有标题历史资料目录（后续以生成结果为准）；英文精选；旧文章导航、摘要与canonical；两个真实中英对应组；纠错与隐私说明；正确robots.txt和自动站点地图。历史正文与图表不被当作已更新研究。

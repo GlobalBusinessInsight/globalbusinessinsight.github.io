@@ -27,6 +27,7 @@ def main():
  for r in catalog:
   require(r['path'] not in paths,'Duplicate catalog path: '+r['path']);paths.add(r['path']);p=ROOT/r['path'];require(p.is_file(),'Missing report: '+r['path']);s=p.read_text();h=Page(s)
   require(len(h.canon)==1,'Canonical count: '+r['path']);require(h.ads==1,'Expected one AdSense loader on editorial report: '+r['path']);require(s.count('id="gbi-reader"')==1,'Missing reading navigation: '+r['path'])
+  if r.get('editorialStatus')=='archive':require('noindex' in s.lower(),'Archived page remains indexable: '+r['path'])
   for u in re.findall(r'href="(/[^"#]*)"',s.split('<!-- GBI reader start -->')[-1].split('<!-- GBI reader end -->')[0]):require(exists(u),'Broken reading link: '+u)
  require(len(catalog)>400,'Catalog unexpectedly lost reports')
  generated=[]
@@ -41,14 +42,17 @@ def main():
  urls=[v.text for v in ET.parse(ROOT/'sitemap.xml').getroot().iter('{http://www.sitemaps.org/schemas/sitemap/0.9}loc')];require(len(urls)==len(set(urls)),'Duplicate sitemap URLs')
  for u in urls:
   require(u.startswith('https://globalbusinessinsight.github.io/'),'Wrong sitemap origin: '+u);require(exists(u),'Sitemap route missing: '+u)
- for path in paths:
-  route=quote(path,safe='/');route=route.removesuffix('index.html') if path.endswith('/index.html') else route
-  require('https://globalbusinessinsight.github.io/'+route in urls,'Report sitemap coverage: '+path)
+ for r in catalog:
+  path=r['path'];route=quote(path,safe='/');route=route.removesuffix('index.html') if path.endswith('/index.html') else route
+  in_sitemap='https://globalbusinessinsight.github.io/'+route in urls
+  if r.get('editorialStatus')=='archive':require(not in_sitemap,'Archived report remains in sitemap: '+path)
+  else:require(in_sitemap,'Report sitemap coverage: '+path)
  robots=(ROOT/'robots.txt').read_text();require('Disallow: /' not in robots,'Site crawling blocked');require('Allow: /' in robots,'Missing crawl permission')
  english=(ROOT/'tools/english/index.html').read_text();require('src="/app.js"' in english and 'src="/curriculum.js"' in english,'English migration asset paths');require("KEY='nj-english-v1'" in (ROOT/'app.js').read_text(),'English progress storage changed')
  require('English, Every Day' not in (ROOT/'index.html').read_text(),'Root homepage is still English app');require(not (ROOT/'index.md').exists(),'Two root homepage sources');require(not (ROOT/'about.md').exists(),'Two about page sources')
  require((ROOT/'subscribe/index.html').is_file(),'Missing subscription page');require((ROOT/'assets/gbi/subscribe.js').is_file(),'Missing subscription script')
  home=(ROOT/'index.html').read_text();require('https://obbdeep.com/' in home,'Missing OBB evaluator link');require('https://inossem.com/' in home,'Missing INOSSEM link');require('data-manual-subscribe' in home,'Missing manual subscription form')
+ require('<html lang="en">' in home,'Homepage is not English-first');require('The business signals' in home,'Missing research feed homepage');require('/assets/gbi/home.css' in home,'Missing homepage stylesheet')
  for cn,en in [('50909us3pl.html','50909us3plen.html'),('aierp.html','aierpen.html')]:
   for path in [cn,en]:
    s=(ROOT/path).read_text();require('hreflang="zh-CN"' in s and 'hreflang="en"' in s,'Missing reciprocal language pair: '+path)

@@ -1,11 +1,11 @@
 # Global Business Insight
 
-中文优先的全球产业、企业出海与数字化研究站。现有报告地址保持不变，网站继续发布到 GitHub Pages。
+Global Business Insight publishes English-first research on markets, industry and cross-border business, alongside original Chinese-language research. The homepage is a compact research feed; original report URLs remain in place.
 
-- 商业首页：`/`
+- English-first research homepage: `/`
 - 栏目：`/category/industry/`、`/category/global/`、`/category/digital/`
 - 市场与工具：`/markets/`，Market Atlas 仍在 `/mk/`
-- 报告目录与搜索：`/archive/`
+- Research archive and search: `/archive/` (active research is the default; archived material is marked separately)
 - 英文精选：`/en/`
 - 更多工具：`/tools/`；30天英语训练：`/tools/english/`
 
@@ -13,7 +13,7 @@
 
 运行 `python3 scripts/build_portal.py`，然后运行 `python3 scripts/check_portal.py`。
 
-生成器在发布构建中生成门户、栏目、专题、静态分页、浏览器内搜索目录、历史报告元数据与导航、站点地图。历史报告的增强内容在构建时应用，仓库原报告正文保留不动。不要手动修改带有 `GBI generated` 标记的门户页；请修改生成器里的内容配置。历史报告正文仍可直接编辑；不要改动 `GBI metadata` 和 `GBI reader` 标记块。
+生成器在发布构建中生成门户、栏目、专题、静态分页、浏览器内搜索目录、历史报告元数据与导航、站点地图。`scripts/build_portal.py` 对全部报告运行编辑筛查：低于70分或不属于当前研究栏目的页面标记为 Archive，从首页、栏目、默认搜索和站点地图移除，并设为 `noindex,follow`。旧网址保留。筛查只判断结构和研究呈现，不会自动更新正文中的事实。不要手动修改带有 `GBI generated` 标记的门户页；请修改生成器里的内容配置。不要改动 `GBI metadata` 和 `GBI reader` 标记块。
 
 目录归类有自动规则，重要文章以 `FEATURED` 显式配置为准。`DESCS` 可指定准确摘要。`PAIRS` 仅加入正文实际对应的语言版本。新增没有标题的HTML片段不会被自动收入目录。
 
