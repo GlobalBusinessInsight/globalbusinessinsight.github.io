@@ -13,7 +13,7 @@ FEATURED={
 'industry':['eu-steel-import-rules-2026.html','us-aircraft-mro-workforce-2026.html','us-semiconductor-market-2026.html','thailand-ev-market-2026.html','eu-sustainable-aviation-fuel-market-2026.html','thailand-medical-devices-market-2026.html','north-america-battery-market-2026.html','latin-america-copper-market-2026.html','west-africa-cocoa-market-2026.html','latin-america-battery-storage-market-2026.html','us-hvac-refrigerant-transition-2026.html','mexico-auto-north-america-2026.html','eu-packaging-ppwr-market-2026.html','eu-data-centre-grid-2026.html','middle-east-solar-storage-market-2026.html','eu-heat-pump-market-2026.html','north-america-transformers-market-2026.html','latin-america-power-resilience-2026.html','asean-power-grid-2026.html','middle-east-aviation-2026.html','eu-solar-grid-flexibility-2026.html','latin-american-manufacturing-fdi-2026.html','north-america-freight-rail-2026.html','middle-east-desalination-2026.html','us-manufacturing-orders-2026.html','us-datacenter-power-2026.html','asean-cooling-market-2026.html','eu-ev-market-2026.html','50909us3pl.html','50906ussteel.html','50911usfurniture.html','etruck.html','zomlion_deep_dive_2025.html','reports/cat_visionlink_deep_dive.html'],
 'global':['hangcha-thailand-manufacturing-2026.html','sinovac-global-h1-2026.html','sanhua-global-q3-2026.html','geely-global-q3-2026.html','lenovo-global-q1-2026-2027.html','yofc-global-q3-2026.html','jinko-global-q3-2026.html','tcl-electronics-global-2026.html','xiaomi-global-2026.html','longi-global-2026.html','h3c-global-2026.html','gree-global-2026.html','yutong-global-2026.html','popmart-global-2026.html','catl-globalization-q3-2026.html','midea-global-2026.html','sungrow-global-2026.html','superhi-global-2026.html','xpeng-global-2026.html','transsion-global-2026.html','zte-global-2026.html','alibaba-global-2026.html','huhutech-global-2026.html','catl-global-2026.html','xcmg-global-2026.html','anker-global-2026.html','haier-global-2026.html','byd_global_2026.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','51104eu.html','51103latin.html','antaglobal.html','51028cacn.html'],
 'digital':['reports/e-invoicing/05-e-invoicing-architecture.html','reports/e-invoicing/04-e-invoice-lifecycle.html','reports/e-invoicing/03-why-e-invoicing-matters.html','reports/e-invoicing/02-from-paper-to-digital-reporting.html','reports/e-invoicing/01-what-is-an-e-invoice.html','aierp.html','ai4og.html','51005aibanking.html','s4pp.html','50919costing.html','51020workflow.html'],
-'markets':['import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
+'markets':['china-cross-border-ecommerce-2026.html','import-complexity-processgo-bilingual.html','usrate.html','useconomic.html','ustreasury.html']}
 DESCS={
 'eu-steel-import-rules-2026.html':'依据欧盟钢铁条例2026/1384、配额分配事实说明与实施条例，解释2026年配额、超额关税、熔炼地证明与CBAM之间的边界。',
 'hangcha-thailand-manufacturing-2026.html':'依据杭叉集团2026年半年度报告、公司海外业务披露及泰国工厂公告，分析海外收入、本地制造进度和规划产能的区别。',
@@ -38,7 +38,7 @@ DESCS={
 'h3c-global-2026.html':'依据紫光股份2026年半年报，分析新华三海外收入增速、市场覆盖、行业项目与本地交付的经营条件。',
 'mexico-auto-north-america-2026.html':'依据INEGI 2026年9月轻型汽车统计，比较生产、出口和国内销量的不同变化，并结合USMCA规则说明北美供应链背景。',
 'gree-global-2026.html':'依据格力电器2026年半年报，分析海外主营收入下降、自主品牌出口占比及部分区域增长，并说明披露口径的局限。',
-'import-complexity-processgo-bilingual.html':'结合全球进口复杂度比较与各国海关规则，分析商品准入、税费、许可、申报及放行后财务流程如何衔接。','eu-packaging-ppwr-market-2026.html':'依据欧盟包装与包装废弃物法规、Eurostat 2024年数据及委员会实施指南，分析包装设计、再生料、标签和各国回收差异。',
+'import-complexity-processgo-bilingual.html':'结合全球进口复杂度比较与各国海关规则，分析商品准入、税费、许可、申报及放行后财务流程如何衔接。','china-cross-border-ecommerce-2026.html':'依据中国海关、美国CBP和欧盟理事会资料，梳理跨境电商规模、统计口径、低值包裹规则及直邮、海外仓和本地履约的成本变化。','eu-packaging-ppwr-market-2026.html':'依据欧盟包装与包装废弃物法规、Eurostat 2024年数据及委员会实施指南，分析包装设计、再生料、标签和各国回收差异。',
 'yutong-global-2026.html':'依据宇通客车2025年年报、2026年三季报与产销快报，分析海外收入、地区毛利率、服务网络、本地组装和最新经营节奏。',
 'eu-data-centre-grid-2026.html':'依据欧盟委员会和爱尔兰统计局资料，分析数据中心用电预测、电网接入、效率规则与国家差异。',
 'middle-east-solar-storage-market-2026.html':'依据沙特、阿联酋政府目标及ACWA Power、Masdar项目公告，区分政策规划、融资关闭与商业运营，分析光伏储能并网、融资与本地交付门槛。',
@@ -207,6 +207,7 @@ def card(r):
  return f'<article class="report"><div class="eyebrow">{escape(r["categoryLabel"])} / {escape(r["languageLabel"])}</div><h3><a href="{r["url"]}">{escape(r["title"])}</a></h3><p>{escape(r["description"])}</p><small>{status}</small></article>'
 def cards(paths,by):return ''.join(card(by[p]) for p in paths if p in by and by[p].get('qualityScore',100)>=70 and by[p].get('editorialStatus')!='archive')
 HOME_COPY={
+ 'china-cross-border-ecommerce-2026.html':('China’s Cross-Border E-Commerce Is Growing. Its Operating Model Is Changing.','China’s customs data show continued growth, while U.S. and EU rules alter low-value parcel costs. The briefing explains what direct shipping, overseas stock and local fulfilment each change—and what they do not.'),
  'eu-steel-import-rules-2026.html':('EU Steel Imports: Quotas, Origin Records and Carbon Rules Are Separate Checks','The new safeguard changes both quota exposure and origin reporting. This briefing separates the tariff-rate quota from melt-and-pour documentation and the EU carbon mechanism.'),
  'hangcha-thailand-manufacturing-2026.html':('Hangcha’s Thailand Plant Moves Overseas Growth Closer to Local Production','The company opened its first self-owned overseas factory in Thailand. The 10,000-unit annual capacity figure is a 2028 target, not current output.'),
  'us-semiconductor-market-2026.html':('U.S. Chip Sales Are Strong; Domestic Capacity Takes Longer to Build','Market share, announced investment and operating production are different measures. The briefing puts recent U.S. and global figures in their proper context.'),
@@ -238,13 +239,13 @@ def homepage(records,by):
  lead=by[lead_path]
  dynamic=global_feature_paths(records)
  paths=[]
- for p in dynamic+industry_paths+FEATURED['global']+FEATURED['digital']+['reports/e-invoicing/04-e-invoice-lifecycle.html']:
+ for p in ['china-cross-border-ecommerce-2026.html']+dynamic+industry_paths+FEATURED['global']+FEATURED['digital']+['reports/e-invoicing/04-e-invoice-lifecycle.html']:
   if p in HOME_COPY and p!=lead_path and p not in paths and p in by and by[p].get('qualityScore',0)>=70:paths.append(p)
  stories=''.join(home_card_zh(p,by) for p in paths[:9] if by[p].get('language','').startswith('zh'))
- english_paths=[p for p in paths if p in HOME_COPY and by[p].get('language','').startswith('en')][:5]
+ english_paths=[p for p in paths if p in HOME_COPY and (by[p].get('language','').startswith('en') or p=='china-cross-border-ecommerce-2026.html')][:5]
  if len(english_paths)<4:
   english_paths += [p for p in paths if p in HOME_COPY and p not in english_paths][:4-len(english_paths)]
- english_cards=''.join(f'<article class="english-story"><span class="english-kicker">{escape(HOME_COPY[p][0] and {"industry":"INDUSTRY × REGION","global":"CHINA GOING GLOBAL","digital":"TECHNOLOGY","markets":"MARKETS"}.get(by[p]["category"],"RESEARCH"))}</span><h3><a href="{by[p]["url"]}">{escape(HOME_COPY[p][0])}</a></h3><p>{escape(HOME_COPY[p][1])}</p><a class="english-link" href="{by[p]["url"]}">Read briefing ↗</a></article>' for p in english_paths)
+ english_cards=''.join(f'<article class="english-story"><span class="english-kicker">{escape(HOME_COPY[p][0] and {"industry":"INDUSTRY × REGION","global":"CHINA GOING GLOBAL","digital":"TECHNOLOGY","markets":"MARKETS"}.get(by[p]["category"],"RESEARCH"))}</span><h3><a href="{by[p]["url"]+"#english" if p=="china-cross-border-ecommerce-2026.html" else by[p]["url"]}">{escape(HOME_COPY[p][0])}</a></h3><p>{escape(HOME_COPY[p][1])}</p><a class="english-link" href="{by[p]["url"]+"#english" if p=="china-cross-border-ecommerce-2026.html" else by[p]["url"]}">Read briefing ↗</a></article>' for p in english_paths)
  body=f'''<div class="home-ticker"><span>研究台</span><b>产业 · 市场 · 企业全球化</b><a href="/archive/">浏览全部研究 →</a></div>
  <div class="home-newspaper-grid"><div class="home-main-column">
  <section class="home-intro"><div><div class="home-eyebrow">GLOBAL BUSINESS INSIGHT / 编辑部</div><h1>看懂产业变化，<br>找到出海方向。</h1><p>聚焦产业、区域市场与中国企业全球化。先把事实和口径说清，再解释它们意味着什么。</p><a class="home-cta" href="#latest">浏览最新研究 <span>↓</span></a></div><div class="home-intro-note"><span class="pulse"></span><div><b>研究，不追噪音。</b><small>用数据和现场变化理解跨境商业。</small></div></div></section>
@@ -257,7 +258,11 @@ def homepage(records,by):
  return body,lead_path
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='us-aircraft-mro-workforce-2026.html':
+ if r['path']=='china-cross-border-ecommerce-2026.html':
+  en='China’s cross-border e-commerce trade reached RMB2.84tn in 2025, up 4.8%, while U.S. and EU rules are changing the cost of low-value parcels. This briefing separates customs trade values from platform GMV and explains the trade-offs among direct shipping, overseas stock and local fulfilment.'
+  zh='中国跨境电商2025年进出口总值为2.84万亿元，同比增长4.8%。美国和欧盟规则正在改变低值包裹的成本。本文区分海关贸易额与平台GMV，并解释直邮、海外仓和本地履约各自改变了什么。'
+  tags='#CrossBorderEcommerce #ChinaGoingGlobal #Trade'
+ elif r['path']=='us-aircraft-mro-workforce-2026.html':
   en='The FAA issued 11,100+ mechanic certificates in 2025, nearly double 2016. But the FAA does not track how many certificate holders work in aviation maintenance. U.S. training capacity is growing; jobs, experience and retention remain the real constraints.'
   zh='美国2025年新增航空维修技师证书超过1.1万张，接近2016年的两倍；FAA却没有追踪持证者是否进入维修行业。培训在扩张，岗位转化、经验和留任仍是约束。'
   tags='#AviationMaintenance #Workforce #NorthAmerica'
