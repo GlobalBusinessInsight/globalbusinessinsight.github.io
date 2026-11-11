@@ -1,8 +1,8 @@
 # Global Business Insight
 
-Global Business Insight publishes English-first research on markets, industry and cross-border business, alongside original Chinese-language research. The homepage is a compact research feed; original report URLs remain in place.
+Global Business Insight publishes Chinese-first research on markets, industry and cross-border business, with a dedicated English research column on the right side of the homepage. Original report URLs remain in place.
 
-- English-first research homepage: `/`
+- Chinese research homepage with a separate English desk: `/`
 - 栏目：`/category/industry/`、`/category/global/`、`/category/digital/`
 - 市场与工具：`/markets/`，Market Atlas 仍在 `/mk/`
 - Research archive and search: `/archive/` (active research is the default; archived material is marked separately)

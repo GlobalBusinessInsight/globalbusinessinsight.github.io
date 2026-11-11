@@ -1,8 +1,9 @@
 # 运营与验收
 
-## 2026-11-11：英文优先研究首页与全站归档筛查
+## 2026-11-11：中文报纸式首页、独立英文栏目与全站归档筛查
 
-- Root homepage now uses a compact, searchable research feed with an editor's selection, topic filters, active research desks and a manual email opt-in.
+- The homepage uses Chinese as its main language, with a dedicated newspaper-style English research column on the right on desktop; the English column stacks below the main feed on mobile.
+- Root homepage includes an editor's selection, searchable research feed, topic filters, active research desks and a manual email opt-in.
 - 500 report pages were screened. 108 remain in the active research catalogue; 392 are classified as archive (355 score below 70; 37 are legacy demos, prototypes, promotional material or outside current research scope).
 - Archived reports are not linked from current homepage/topic features or default search, are omitted from the sitemap, and carry `noindex,follow`. Their original URLs remain available from the archive directory for historical reference.
 - Audit decisions and limits: `scripts/CONTENT-AUDIT-2026-11.md`.

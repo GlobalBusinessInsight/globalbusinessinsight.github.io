@@ -18,7 +18,7 @@ The score is a consistent editorial screen. It checks for a clear title, enough 
 - Active research cards are used on the home page, topic pages and default archive search.
 - Archived pages are removed from active topic lists, default search results and the sitemap.
 - Archived pages carry `noindex,follow` and remain at their original URLs to preserve incoming links. The archive directory remains available for readers who deliberately search historical material.
-- No article body was rewritten as part of this screening. The current 2026 research remains in its original authored language; the new homepage is English-first and links to the original reports.
+- No article body was rewritten as part of this screening. The current 2026 research remains in its original authored language; the homepage presents Chinese as the main language and links to a separate English research column.
 
 ## Recheck before restoring an archived page
 
