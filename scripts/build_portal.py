@@ -84,7 +84,10 @@ DESCS={
 'zomlion_deep_dive_2025.html':'围绕工程机械企业的海外渠道、服务和竞争策略展开比较。',
 '50919costing.html':'理解生产成本核算如何支持业务分析与管理判断。',
 's4pp.html':'沿着离散制造业务流程，理解SAP生产计划的主要环节。',
-'usrate.html':'结合历史背景理解美联储利率决策；数据截止时间与口径以正文为准。','brazil-data-center-power-market-2026.html':'依据巴西能源研究公司EPE十年能源规划、Redata法案与财政部说明，分析数据中心用电预测、电网接入申请及税收优惠实施条件。','luckin-overseas-expansion-q3-2026.html':'依据瑞幸咖啡2026年第三季度业绩、电话会与SEC年报，分析新加坡自营、马来西亚合作经营和美国小规模网络的不同阶段。','eu-industrial-production-september-2026.html':'依据Eurostat于2026年11月16日发布的初步估算，分析欧盟9月工业生产环比回升、同比仍降，以及行业与成员国分化。','h-world-international-q3-2026.html':'依据华住集团2026年第三季度未经审计业绩，分析国际业务RevPAR、酒店营业额、分部收入、门店调整与欧洲关店影响。'}
+'usrate.html':'结合历史背景理解美联储利率决策；数据截止时间与口径以正文为准。','brazil-data-center-power-market-2026.html':'依据巴西能源研究公司EPE十年能源规划、Redata法案与财政部说明，分析数据中心用电预测、电网接入申请及税收优惠实施条件。','luckin-overseas-expansion-q3-2026.html':'依据瑞幸咖啡2026年第三季度业绩、电话会与SEC年报，分析新加坡自营、马来西亚合作经营和美国小规模网络的不同阶段。','eu-industrial-production-september-2026.html':'依据Eurostat于2026年11月16日发布的初步估算，分析欧盟9月工业生产环比回升、同比仍降，以及行业与成员国分化。','h-world-international-q3-2026.html':'依据华住集团2026年第三季度未经审计业绩，分析国际业务RevPAR、酒店营业额、分部收入、门店调整与欧洲关店影响。',
+'brazil-eu-agrifood-exports-2026.html':'依据巴西农业部与欧盟委员会资料，分析对欧出口增长、品类集中、协定关税与原产地条件，以及数据无法证明因果的边界。',
+'yonyou-overseas-business-q3-2026.html':'依据用友网络2026年三季报，分析海外收入和合同增长、集团收入占比、亏损变化及海外盈利与续费披露边界。'
+}
 PAIRS=[('50909us3pl.html','50909us3plen.html'),('aierp.html','aierpen.html')]
 ENGLISH=['50909us3plen.html','aierpen.html','51028cacn.html','xcmg.html','tariff2en.html']
 TOPICS=[('warehousing','美国仓储与供应链','从服务模式、产业结构到数字化运营，建立一条可反复查阅的研究路线。','industry',['50909us3pl.html','50906ussteel.html','50911usfurniture.html','50919costing.html']),('global-machinery','工程机械的海外竞争','把海外业务拆成市场、渠道、服务和数字化四个问题。','global',['zomlion_deep_dive_2025.html','reports/sany-south-america/index.html','reports/zoomlion-series/index.html','reports/cat_visionlink_deep_dive.html']),('enterprise-ai','企业AI与数字化','先理解业务问题和数据条件，再比较系统能力与实施方式。','digital',['aierp.html','ai4og.html','51005aibanking.html','s4pp.html'])]
@@ -282,7 +285,15 @@ def homepage(records,by):
  return body,lead_path
 def share_card(r, kind):
  tracked=canonical(r['path'])+'?utm_source=homepage&utm_medium=social&utm_campaign=share_'+kind
- if r['path']=='us-retail-channels-october-2026.html':
+ if r['path']=='brazil-eu-agrifood-exports-2026.html':
+  en='Brazilian agrifood exports to the EU rose 14.8% in value and 8.1% in volume in May–September 2026. Gains were concentrated in soy and meat. The interim trade deal lowers tariffs for qualifying goods; origin rules and EU food standards still apply. Read the briefing. '+tracked
+  zh='2026年5—9月，巴西对欧农产品出口额同比增长14.8%，出口量增长8.1%，增量集中于大豆链和肉类。协定优惠仍须符合原产地及欧盟食品规则。 '+tracked
+  tags='#Brazil #EUTrade #Agrifood'
+ elif r['path']=='yonyou-overseas-business-q3-2026.html':
+  en='Yonyou’s overseas revenue grew 60.7% in 9M 2026, but remained about 5.7% of group revenue. New contracts grew faster than recognized sales; the group remained loss-making and overseas profit was not separately reported. Read the briefing. '+tracked
+  zh='用友网络前三季度海外收入增长60.7%，但约占集团收入5.7%；新签合同增速高于已确认收入，公司仍亏损，且未单独披露海外利润。 '+tracked
+  tags='#Yonyou #ChinaGoingGlobal #EnterpriseSoftware'
+ elif r['path']=='us-retail-channels-october-2026.html':
   en='U.S. retail and food-service sales rose just 0.2% in October, a change within the Census Bureau’s margin of error. Nonstore retailers grew 11.8% year on year, while furniture stores fell 2.3% month on month. These are nominal sales, not real volumes—and “nonstore” is a business category, not every online sale. Read the full market brief. '+tracked
   zh='美国10月零售与餐饮销售环比仅增0.2%，统计误差范围包含零；非店铺零售同比增长11.8%，家具门店环比下降2.3%。数据未扣除价格变化，“非店铺零售”也不等于全渠道电商。 '+tracked
   tags='#USRetail #RetailTrade #MarketResearch'
