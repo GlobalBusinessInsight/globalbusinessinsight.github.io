@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="index,follow">
+<title>电子发票技术路线与交换协议：格式、网络和税务报送如何配合｜E-Invoice Protocols and Routes</title>
+<meta name="description" content="拆解电子发票的语义模型、UBL/CII/EDI载荷、业务规则配置、AS4/API等传输方式与税务报送模式，并提供企业选型框架。">
+<meta property="og:type" content="article"><meta property="og:site_name" content="Global Business Insight">
+<style>
+body{margin:0;background:#f2f3ee;color:#17333b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.88}main{max-width:940px;margin:28px auto;background:#fffefa;padding:48px 56px 64px;box-sizing:border-box}h1{font-size:32px;line-height:1.42;letter-spacing:-.03em;margin:0 0 14px;color:#17333b}h2{font-size:23px;line-height:1.5;color:#17634f;margin:43px 0 15px}h3{font-size:18px;color:#17333b;margin:25px 0 10px}p,li{font-size:16px;color:#354d53}p{margin:0 0 18px;text-align:justify}strong{color:#17333b}a{color:#17634f}.kicker{font-size:11px;letter-spacing:.16em;color:#17634f;font-weight:700}.deck{font-size:19px;line-height:1.7;color:#526569;margin:0 0 18px}.meta{font-size:12px;color:#71807c;border-bottom:1px solid #d6ddd6;padding-bottom:20px;margin-bottom:24px}.lead{font-size:18px;line-height:1.85;color:#17333b}.callout{background:#eaf0e9;border-left:4px solid #17634f;padding:17px 20px;margin:24px 0}.figure{background:#f7f5ef;padding:12px;border:1px solid #e4e4dc;margin:28px -8px 30px}.figure img{display:block;width:100%;height:auto}.figure figcaption{font-size:13px;color:#62716f;margin:8px 4px 0}.model{border-collapse:collapse;width:100%;font-size:14px;margin:20px 0 26px}.model th,.model td{border:1px solid #d6ddd6;padding:10px;vertical-align:top;text-align:left}.model th{background:#eaf0e9;color:#17333b}.takeaway{background:#f2f4ef;padding:18px 22px;margin:28px 0}.sources{font-size:13px;color:#526569;border-top:1px solid #d6ddd6;padding-top:20px;margin-top:42px}.sources li{font-size:13px;margin:9px 0;overflow-wrap:anywhere}.langnav{display:flex;gap:9px;margin:10px 0 28px;flex-wrap:wrap}.langnav a{border:1px solid #c8d4cc;padding:7px 13px;text-decoration:none;border-radius:3px;font-size:13px}.en{border-top:5px solid #17634f;margin-top:68px;padding-top:34px}.series{font-size:13px;color:#526569;margin-top:38px;padding-top:18px;border-top:1px solid #d6ddd6}.series-links{display:flex;gap:10px;flex-wrap:wrap}.series-links a{padding:7px 10px;background:#eaf0e9;border-radius:3px;text-decoration:none;font-size:13px}@media(max-width:680px){main{margin:0;padding:28px 19px 42px}h1{font-size:27px}h2{font-size:21px;margin-top:36px}.deck{font-size:17px}p,li{font-size:15px}.figure{margin:22px -4px}.lead{font-size:16px}.model{font-size:12px}.model th,.model td{padding:7px}}
+</style></head><body><main>
+<div class="kicker">GLOBAL BUSINESS INSIGHT · 电子发票系列 06</div>
+<h1>电子发票技术路线与交换协议：格式、网络和税务报送如何配合</h1>
+<p class="deck">UBL、CII、Peppol、AS4、API 和“实时清关”不是同一类东西。把它们放回各自的技术层，才能判断系统怎样连接、哪里需要转换，以及什么样的回执才算完成。</p>
+<p class="meta">阅读约 16 分钟 ｜ 中文 · English below ｜ 技术路线篇 ｜ 资料核对截至 2026-11-23</p>
+<nav class="langnav"><a href="#cn">中文阅读</a><a href="#en">Read in English ↓</a><a href="https://github.com/GlobalBusinessInsight/globalbusinessinsight.github.io/blob/main/reports/e-invoicing/06-wechat-copy.md">公众号复制稿 / WeChat copy</a><a href="/reports/e-invoicing/">电子发票专题目录</a></nav>
+
+<section id="cn" lang="zh-CN">
+<p class="lead">讨论电子发票“用什么协议”时，常把数据格式、业务规则、传输协议和税务平台混在一起。它们彼此相关，却不能互换。一个可运行的方案至少要回答：双方对发票字段是否理解一致？消息按什么结构编码？使用哪一套行业或国家规则？怎样发现收件人并安全送达？当地税务机关要求何时、以什么方式收到数据？</p>
+<figure class="figure"><img src="/assets/e-invoice-series/einvoice-routes.svg" alt="电子发票技术路线分层图：语义模型、载荷格式、实施规则、发现与传输、监管报送及状态回执"><figcaption>图 1｜从交易语义到载荷和传输，再到监管处理。监管报送是与商业交换路径相交的另一条流程，不等同于传输协议。图示为通用模型，不代表任何单一国家的法定流程。</figcaption></figure>
+
+<h2>一、先分清五层：每层解决不同问题</h2>
+<table class="model"><thead><tr><th>层次</th><th>要回答的问题</th><th>常见技术对象</th></tr></thead><tbody>
+<tr><td>业务语义</td><td>“卖方名称、税额、到期日”代表什么？</td><td>EN 16931 核心模型、UN/CEFACT 业务语义</td></tr>
+<tr><td>载荷语法</td><td>字段按什么机器可读结构写入文件？</td><td>UBL XML、UN/CEFACT CII XML、EDIFACT INVOIC；某些混合格式将XML嵌入可读文件</td></tr>
+<tr><td>实施规则</td><td>本行业、本地区或本流程要求哪些字段、代码和校验？</td><td>CIUS、国家扩展、Peppol BIS/PINT、代码表、Schematron 校验</td></tr>
+<tr><td>发现、封装与传输</td><td>买方在哪里、支持什么文档类型，怎样安全送达？</td><td>Peppol SMP/SML 与 AS4；双边 API、EDI 网络；TLS、证书、消息封装</td></tr>
+<tr><td>监管报送</td><td>税务机关何时收到什么数据，如何返回状态？</td><td>开票前授权/清关、集中平台转发、近实时报告、定期或事后检查等本地制度</td></tr>
+</tbody></table>
+<p>这几层可以搭配。比如，企业按某个业务模型生成 UBL 发票，套用当地规则校验，通过服务商 API 或 Peppol 网络发送，同时再按当地法律把完整发票或部分交易数据报送给税务机关。也可能由税务平台兼具接收和转发职责。决定顺序的是适用制度与交易场景，而不是“电子发票”这个词本身。</p>
+
+<h2>二、语义模型不等于文件格式</h2>
+<p>语义模型规定业务信息的含义，例如卖方标识、发票行、税种、应付金额以及订单引用。语法则是把这些概念放进计算机可解析的结构。欧盟委员会对 EN 16931 的说明明确区分核心语义模型和语法绑定：在公共采购适用框架中，UBL 2.1 与 UN/CEFACT CII D16B 是对应的合规语法；另有 EDIFACT INVOIC 的语法绑定，但公共机构没有因此被要求必须接收 EDIFACT。具体适用范围和国家实施要求仍须核对。</p>
+<p>这一区分很实际。同一个“卖方名称”可被映射到不同语法中的不同 XML 路径；如果只做字段改名、不统一金额、税类、单位和代码含义，文件虽然能解析，买方仍可能算出不同结果。反过来，两个系统即使都用 XML，也可能因代码表、必填条件和业务规则不同而无法互通。</p>
+<p>UBL 是广泛使用的结构化 XML 载荷；CII 是另一套覆盖跨行业交易信息的 XML 载荷；EDIFACT INVOIC 是成熟的 EDI 消息格式，常见于大型贸易伙伴和既有 EDI 网络。它们是载荷语法，不是传输网络。把一份 PDF 发到 SFTP，也不会因为文件传过去了就自动成为机器可处理、符合法规的电子发票。</p>
+
+<h2>三、CIUS、国家配置与 PINT：标准如何落地</h2>
+<p>核心标准留出一定扩展空间，实际网络需要更明确的实施约束。CIUS（Core Invoice Usage Specification）通常从核心语义模型中选择并约束可用字段与规则；国家配置还会增加当地税务字段、税码、标识符及验证条件。Peppol BIS Billing 3.0 是 EN 16931 的一种 CIUS，针对特定业务流程补充规则、代码表与验证要求。PINT（Peppol International Invoice）则提供可进一步按司法辖区特化的国际发票模型。</p>
+<p>“都支持 EN 16931”仍不足以保证互通。上线前必须确认双方采用同一业务流程标识、文档类型、语法版本、代码表版本和国家规则版本。还要约定边界情形：贷项通知单、预付款、跨境税务处理、自开票、多税率、附件、采购订单引用、负数行、币种精度与舍入。每次规范或代码表升级都要有迁移窗口、双版本策略、回归样例和停用日期。</p>
+<p>以 Peppol 为例，参与方能力不是由“接入 Peppol”四个字决定的，而与参与方标识、其登记的文档类型和流程、端点元数据、访问点所支持的传输配置有关。业务规则验证可以在发送侧、接收侧或服务端分层执行；仍须保留校验版本和结果，以便解释为何一张发票被接受或拒绝。</p>
+
+<h2>四、传输路线：网络、协议、API 各司其职</h2>
+<h3>1. Peppol 四角网络与 AS4</h3>
+<p>在四角模式中，卖方系统连接发送方服务商/接入点，买方系统连接接收方服务商/接入点。Peppol AS4 配置用于接入点之间异步传输消息；Peppol 的规范还定义了网络专用的证书、消息签名与加密、SMP/SML 动态发现等要求。因此，AS4 是特定网络中的传输配置，不是发票字段格式，也不是税务清关本身。若一张消息得到 AS4 层面的成功回执，能够说明的是传输层处理结果，不能据此推断税务机关已批准、买方已接受或款项已到账。</p>
+<h3>2. 双边 API 或政府网关</h3>
+<p>REST/JSON、SOAP/XML 等 API 常用于企业系统与服务商、税务平台或买方系统之间的连接。API 提供调用接口，不自动规定发票的共同语义，也不保证两国接口兼容。企业还要处理 OAuth 或证书认证、幂等键、速率限制、超时、重试、版本迁移和异步结果查询。若 API 先返回“已受理”，最终验证还要轮询或接收回调，应把两种状态分别保存。</p>
+<h3>3. EDI 网络、VAN 与文件交换</h3>
+<p>成熟的供应链可能继续使用 EDIFACT、X12 等消息，通过专有网络、增值网络（VAN）、MFT、SFTP 或其他双边通道发送。它们的优势是可承接既有订单、发货、收货与发票映射；成本是伙伴间映射、连接参数和异常处理可能各不相同。传输成功只表示文件到达指定端点；语法、商业规则和税务申报合规需要分别验证。一个企业常需同时维护 Peppol、国家税务接口、EDI 伙伴和门户下载入口。</p>
+<h3>4. 门户上传和人工交换</h3>
+<p>供应商门户或税务门户适合低频、过渡或小规模场景，但通常需要人工录入、逐票下载或手工核对。它可作为应急渠道，却很难天然提供规模化自动对账。启用之前要评估是否可以批量提交、下载原始结构化文件、获取机器可读状态，以及如何处理重复提交和更正。</p>
+
+<h2>五、传输路线与税务监管模式是两条轴</h2>
+<p>常见监管模式包括：发票开具后须在交付买方前获得税务平台授权的“清关/授权”模式；平台接收并按规则转发发票的集中交换模式；交易数据在开具后近实时或短期内报送的持续报告；以及仍以保存凭证、定期申报和审计为主的模式。不同司法辖区会组合这些安排，名称也不总有统一定义。</p>
+<p>因此，“实时电子发票”本身说不清消息走哪条商业网络；“使用 Peppol”也不意味着免于当地税务报告。系统设计要单独画出商业发票给买方的路径和监管数据给税务机关的路径，并记录两边各自的状态、时限、失败补报方式与责任团队。OECD 2026 年报告指出，各司法辖区持续交易报告制度发展并不协调，带来跨境合规复杂度；其报告讨论设计考量，并未建议所有国家采用同一种制度。</p>
+
+<h2>六、企业怎样选择：按交易组合，而不是追一个“万能协议”</h2>
+<table class="model"><thead><tr><th>业务场景</th><th>先确认</th><th>常见路线组合</th></tr></thead><tbody>
+<tr><td>政府采购（B2G）</td><td>招标/采购方要求的语义标准、格式、门户或网络、身份标识</td><td>UBL/CII + 指定 CIUS/国家规则 + 政府网关或认可网络</td></tr>
+<tr><td>大型企业对企业（B2B）</td><td>伙伴覆盖、自动化比例、既有 EDI 与跨境税务申报</td><td>Peppol/服务商网络、双边 API、EDI VAN 并行，配统一内部发票模型</td></tr>
+<tr><td>多国集团</td><td>每个国家的生效日期、授权时点、留存和更正规则</td><td>集中映射与监控 + 本地连接器 + 国家规则包；避免把本地口径硬编码进单一格式</td></tr>
+<tr><td>中小企业/低频开票</td><td>客户接受方式、费用、手工负担、原始文件和回执是否可取回</td><td>服务商/门户起步，达到交易量阈值后评估 API 或网络直连</td></tr>
+</tbody></table>
+<p>评估供应商时，应要求现场演示从内部订单到发票、验证、传输、拒绝重发、更正、撤销/贷项、报税回执、买方状态和归档的完整链路；同时索取支持国家/版本矩阵、数据导出方案、服务中断和重放机制、责任划分及退出迁移方案。供应商说“支持某协议”并不等于覆盖了指定国家的所有字段、流程、报送时限和审计要求。</p>
+
+<h2>七、上线前的运行控制清单</h2>
+<ul>
+<li><strong>规范与版本：</strong>为语义模型、语法、CIUS/国家规则、代码表、端点协议和证书设版本台账及生效日期。</li>
+<li><strong>数据质量：</strong>在发送前校验税号、参与方标识、税类税率、汇总金额、币种、订单/交付引用和必填字段。</li>
+<li><strong>可靠投递：</strong>使用唯一业务编号和幂等控制；区分可重试的网络错误、不可重试的规则拒绝与等待异步处理的状态。</li>
+<li><strong>状态分层：</strong>分别保存传输回执、接收方业务响应、税务平台受理/拒绝、会计过账及付款状态；按状态设 SLA 和责任人。</li>
+<li><strong>安全与留档：</strong>落实身份认证、证书轮换、传输加密、最小访问权限、原始消息和回执留存、日志完整性及灾备恢复演练。</li>
+<li><strong>变更治理：</strong>用沙箱和双方样例测试字段映射、版本升级、异常重发及更正业务；规则变更时保留可追溯的判断依据。</li>
+</ul>
+<div class="takeaway"><strong>结论：</strong>先选业务语义和本地规则，再确定载荷语法、发现机制与传输网络，最后将监管报送和商业交换的状态分别闭环。真正可互操作的系统，不只“把文件送出去”，还要能证明字段含义一致、规则版本正确、收件方与税务机关分别收到什么，以及异常由谁处理。</div>
+
+<div class="sources"><strong>主要资料与延伸阅读</strong><ol>
+<li>欧盟委员会，<a href="https://ec.europa.eu/digital-building-blocks/sites/spaces/DIGITAL/pages/467108926/Compliance%2Bwith%2BeInvoicing%2Bstandard" target="_blank" rel="noopener">EN 16931 合规说明：语义模型和语法绑定</a>；<a href="https://ec.europa.eu/digital-building-blocks/sites/spaces/DIGITAL/pages/467108934/Required%2Bsyntaxes" target="_blank" rel="noopener">必需语法与 UBL/CII 绑定</a>。</li>
+<li>OpenPeppol，<a href="https://docs.peppol.eu/poacc/billing/3.0/bis/" target="_blank" rel="noopener">Peppol BIS Billing 3.0</a>；<a href="https://docs.peppol.eu/poac/pint/pint/" target="_blank" rel="noopener">Peppol PINT 国际发票模型</a>。</li>
+<li>OpenPeppol，<a href="https://docs.peppol.eu/edelivery/as4/specification/" target="_blank" rel="noopener">Peppol AS4 Profile</a>；<a href="https://docs.peppol.eu/edelivery/" target="_blank" rel="noopener">eDelivery 规范目录（含 AS4、SMP、SML 等）</a>。</li>
+<li>OECD (2026), <a href="https://www.oecd.org/en/publications/2026/01/digital-continuous-transactional-reporting-for-value-added-tax_09f49627.html" target="_blank" rel="noopener">Digital Continuous Transactional Reporting for VAT: Policy and Design Considerations</a>。</li>
+</ol><p>本文聚焦结构化 B2B 发票与增值税/商品服务税相关报告。政府采购、消费收据、海关单据和工资凭证可能适用不同制度。规范和实施日期会变化，请以主管机关、标准组织和网络运营方的最新资料为准；本文不构成法律、税务或采购建议。</p></div>
+</section>
+
+<section id="en" lang="en" class="en">
+<div class="kicker">TECHNICAL ROUTES / PROTOCOLS</div>
+<h1>Electronic Invoicing Protocols: How Formats, Networks and Tax Reporting Fit Together</h1>
+<p class="deck">UBL, CII, Peppol, AS4, APIs and “real-time clearance” are not interchangeable terms. Putting each one at the right layer shows how systems connect, where conversion is needed and what a receipt actually confirms.</p>
+<p class="meta">About 16 minutes ｜ English edition ｜ Research checked through 23 November 2026</p>
+<p class="lead">When people ask which protocol an e-invoice uses, they often mix the data format, business rules, transport protocol and tax platform. A working design must answer separate questions: do both parties understand the invoice terms in the same way; how is the message structured; which process and jurisdictional rules apply; how is the receiver discovered and reached securely; and when must tax data be reported?</p>
+
+<h2>1. Five layers solve five different problems</h2>
+<table class="model"><thead><tr><th>Layer</th><th>Question</th><th>Typical examples</th></tr></thead><tbody>
+<tr><td>Business semantics</td><td>What do “seller name,” tax amount or due date mean?</td><td>EN 16931 core model; UN/CEFACT business semantics</td></tr>
+<tr><td>Payload syntax</td><td>How are those terms encoded for machines?</td><td>UBL XML, UN/CEFACT CII XML, EDIFACT INVOIC; some hybrid formats embed XML in a human-readable file</td></tr>
+<tr><td>Implementation rules</td><td>Which fields, codes and validations apply to this process or country?</td><td>CIUS, national profiles, Peppol BIS/PINT, code lists and Schematron rules</td></tr>
+<tr><td>Discovery, envelope and transport</td><td>Where is the buyer, what document types can it receive, and how is delivery secured?</td><td>Peppol SMP/SML and AS4; bilateral APIs and EDI networks; TLS, certificates and envelopes</td></tr>
+<tr><td>Regulatory reporting</td><td>When does the tax authority receive which data, and what status does it return?</td><td>Pre-issue authorisation, central exchange, near-real-time reporting or periodic/post-audit regimes</td></tr>
+</tbody></table>
+<p>The layers can be combined. A business may create a UBL invoice from a common internal model, validate it against local rules, send it through a provider API or Peppol, and separately report the complete invoice or selected transaction data to the tax authority. In some jurisdictions a government platform also receives and forwards the invoice. The applicable law and trading context determine the sequence; the label “e-invoice” does not.</p>
+
+<h2>2. A semantic model is not a file format</h2>
+<p>A semantic model defines business meaning: seller identity, invoice lines, tax categories, amount payable and order references. A syntax maps those concepts into a machine-readable structure. The European Commission explicitly distinguishes the EN 16931 core semantic model from its syntax bindings. In the relevant European public-procurement framework, UBL 2.1 and UN/CEFACT CII D16B are compliant syntaxes; a binding for EDIFACT INVOIC also exists, but public entities are not thereby required to support EDIFACT. Applicability and national implementation details still need to be checked.</p>
+<p>This distinction matters in practice. “Seller name” may map to different XML paths, but renaming fields is not enough if systems disagree on amount, tax category, unit or code meaning. Two XML documents can parse successfully and still fail business interoperability because their code lists, mandatory fields or validation rules differ.</p>
+<p>UBL is a widely used structured XML payload. CII is another cross-industry XML payload. EDIFACT INVOIC is a mature EDI message often found in established supply chains. These are payload syntaxes, not transport networks. Sending a PDF over SFTP does not by itself make it a structured, machine-processable or legally compliant invoice.</p>
+
+<h2>3. CIUS, national profiles and PINT put standards into practice</h2>
+<p>A core standard leaves room for implementation. A Core Invoice Usage Specification (CIUS) typically constrains the core semantic model for a defined use. National profiles may add tax fields, tax codes, identifiers and validation rules. Peppol BIS Billing 3.0 is a CIUS of EN 16931 with process, code-list and validation requirements. PINT (Peppol International Invoice) provides an international model that can be specialised for different jurisdictions.</p>
+<p>“Both systems support EN 16931” is not enough to guarantee interoperability. Confirm the same business-process identifier, document type, syntax version, code-list version and country rules. Test credit notes, prepayments, cross-border tax treatment, self-billing, multiple tax rates, attachments, purchase-order references, negative lines, currency precision and rounding. Every specification update needs a migration window, regression examples and a retirement date.</p>
+<p>In Peppol, “connected to Peppol” does not define a participant’s capabilities. They depend on participant identifiers, registered document types and processes, endpoint metadata and the transport profile supported by the Access Point. Validation can happen at more than one point; retain the rule version and result so a later reviewer can understand why an invoice passed or failed.</p>
+
+<h2>4. Transport routes: networks, protocols and APIs have different roles</h2>
+<h3>Peppol’s four-corner network and AS4</h3>
+<p>In a four-corner model, the supplier’s system connects to a sender-side provider or Access Point, while the buyer’s system connects to a receiving provider or Access Point. The Peppol AS4 profile is used for asynchronous message transmission between Access Points. Peppol also defines network-specific certificate, message-signing and encryption, and SMP/SML dynamic-discovery requirements. AS4 is therefore a transport profile within a particular network; it is neither an invoice syntax nor tax clearance. A successful AS4-level receipt indicates a transport-layer outcome. It does not prove tax approval, buyer acceptance or payment.</p>
+<h3>Bilateral APIs and government gateways</h3>
+<p>REST/JSON and SOAP/XML APIs commonly connect business systems to service providers, tax platforms or buyers. An API defines an interface, not common invoice semantics or cross-country compatibility. Implementers still need to manage authentication, idempotency keys, rate limits, timeouts, retries, version changes and asynchronous status checks. If the API first responds “accepted for processing” and returns final validation later, store those as separate states.</p>
+<h3>EDI networks, VANs and file transfer</h3>
+<p>Supply chains may retain EDIFACT, X12 or other messages over private networks, value-added networks (VANs), managed file transfer, SFTP or bilateral channels. These routes can preserve existing mappings for orders, despatch advice, receiving advice and invoices. The trade-off is partner-specific mappings, connection settings and exception handling. Delivery to an endpoint is only transport success; syntax, business-rule and tax-reporting compliance need separate validation. A multinational may operate Peppol, tax APIs, EDI partners and portal downloads at the same time.</p>
+<h3>Portals and manual exchange</h3>
+<p>Supplier or tax portals can suit low-volume, transitional or emergency use. They often require manual entry, downloads or reconciliation and do not automatically provide scalable matching. Before relying on a portal, confirm bulk submission, access to the original structured file, machine-readable status, duplicate-submission controls and correction procedures.</p>
+
+<h2>5. Transport and tax regimes are separate axes</h2>
+<p>Common regulatory arrangements include pre-issue clearance or authorisation; central exchange platforms that receive and route invoices; continuous or near-real-time transaction reporting after issuance; and regimes centred on record retention, periodic returns and audit. Countries may combine these arrangements, and the labels are not always used consistently.</p>
+<p>“Real-time e-invoicing” does not say which commercial network carries the invoice. “Using Peppol” does not remove a local reporting obligation. Draw the buyer-delivery path and the tax-reporting path separately, then define their states, deadlines, recovery procedures and owners. The OECD’s 2026 report notes that digital continuous transactional reporting regimes are developing in an uncoordinated way and add cross-border complexity. It discusses design considerations; it does not recommend one regime for every country.</p>
+
+<h2>6. Choose for the transaction mix, not a mythical universal protocol</h2>
+<table class="model"><thead><tr><th>Scenario</th><th>Confirm first</th><th>Typical combination</th></tr></thead><tbody>
+<tr><td>Public procurement (B2G)</td><td>Buyer/tender syntax, semantic requirements, portal or network, identifiers</td><td>UBL/CII + required CIUS or national rules + government gateway or approved network</td></tr>
+<tr><td>Large B2B</td><td>Partner coverage, automation, existing EDI and cross-border reporting</td><td>Peppol/provider network, bilateral APIs and EDI in parallel over a common internal model</td></tr>
+<tr><td>Multinational group</td><td>Country deadlines, authorisation timing, retention and correction rules</td><td>Central mapping and monitoring + local connectors and country rule packs</td></tr>
+<tr><td>SME or low volume</td><td>Buyer acceptance, cost, manual effort, retrieval of originals and receipts</td><td>Start with a provider or portal; evaluate API/network integration when volume warrants it</td></tr>
+</tbody></table>
+<p>Ask vendors to demonstrate the complete path from order to invoice, validation, delivery, rejection and resubmission, correction or credit note, tax receipt, buyer response, posting and archive. Request a country/version matrix, export and exit plan, outage recovery, replay behaviour, responsibility boundaries and evidence retention. “We support this protocol” does not establish coverage of every local field, workflow, deadline and audit duty.</p>
+
+<h2>7. Operational controls before go-live</h2>
+<ul>
+<li><strong>Specifications and versions:</strong> track the semantic model, syntax, CIUS/country rules, code lists, endpoint profile and certificates with effective dates.</li>
+<li><strong>Data quality:</strong> validate tax identifiers, participant IDs, tax categories/rates, totals, currency, order/delivery references and mandatory terms before transmission.</li>
+<li><strong>Reliable delivery:</strong> use unique business IDs and idempotency controls; distinguish retryable network failures from non-retryable business rejections and asynchronous processing.</li>
+<li><strong>Separate statuses:</strong> retain transport receipts, buyer responses, tax-authority acceptance/rejection, accounting posting and payment separately, with an SLA and owner for each.</li>
+<li><strong>Security and evidence:</strong> apply authentication, certificate rotation, encryption, least privilege, original-message and receipt retention, log integrity and recovery exercises.</li>
+<li><strong>Change governance:</strong> test mapping, upgrades, resubmissions and corrections using a sandbox and bilateral examples; keep a traceable basis for each rule decision.</li>
+</ul>
+<div class="takeaway"><strong>Conclusion:</strong> Choose the business semantics and local rules first, then the payload syntax, discovery mechanism and transport network. Close the loop separately for tax reporting and commercial exchange. Interoperability means more than sending a file: the fields must mean the same thing, the right rule version must be applied, each receiver’s outcome must be known and exceptions must have an owner.</div>
+
+<div class="sources"><strong>Primary sources and further reading</strong><ol>
+<li>European Commission: <a href="https://ec.europa.eu/digital-building-blocks/sites/spaces/DIGITAL/pages/467108926/Compliance%2Bwith%2BeInvoicing%2Bstandard" target="_blank" rel="noopener">EN 16931 compliance: semantics and syntax bindings</a>; <a href="https://ec.europa.eu/digital-building-blocks/sites/spaces/DIGITAL/pages/467108934/Required%2Bsyntaxes" target="_blank" rel="noopener">required syntaxes and UBL/CII bindings</a>.</li>
+<li>OpenPeppol: <a href="https://docs.peppol.eu/poacc/billing/3.0/bis/" target="_blank" rel="noopener">Peppol BIS Billing 3.0</a>; <a href="https://docs.peppol.eu/poac/pint/pint/" target="_blank" rel="noopener">PINT international invoice model</a>.</li>
+<li>OpenPeppol: <a href="https://docs.peppol.eu/edelivery/as4/specification/" target="_blank" rel="noopener">Peppol AS4 Profile</a>; <a href="https://docs.peppol.eu/edelivery/" target="_blank" rel="noopener">eDelivery specifications, including AS4, SMP and SML</a>.</li>
+<li>OECD (2026), <a href="https://www.oecd.org/en/publications/2026/01/digital-continuous-transactional-reporting-for-value-added-tax_09f49627.html" target="_blank" rel="noopener">Digital Continuous Transactional Reporting for VAT: Policy and Design Considerations</a>.</li>
+</ol><p><strong>Scope:</strong> This article focuses on structured B2B invoices and VAT/GST-related reporting. Public procurement, consumer receipts, customs documents and payroll may follow different regimes. Specifications and effective dates change; verify them with the competent authority, standards body and network operator. This article is not legal, tax or procurement advice.</p></div>
+</section>
+<nav class="series"><strong>电子发票系列 / E-invoicing series</strong><p>从数据结构与制度演进，走到业务价值、生命周期、系统架构和技术路线。</p><div class="series-links">
+<a href="/reports/e-invoicing/01-what-is-an-e-invoice.html">01 概念 / Concept</a><a href="/reports/e-invoicing/02-from-paper-to-digital-reporting.html">02 演进 / Evolution</a><a href="/reports/e-invoicing/03-why-e-invoicing-matters.html">03 价值 / Value</a><a href="/reports/e-invoicing/04-e-invoice-lifecycle.html">04 生命周期 / Lifecycle</a><a href="/reports/e-invoicing/05-e-invoicing-architecture.html">05 架构 / Architecture</a><a href="/reports/e-invoicing/06-e-invoicing-protocols.html" aria-current="page">06 技术路线 / Protocols</a><a href="/reports/e-invoicing/">专题目录 / Series index</a>
+</div></nav></main></body></html>
